@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ConfirmationModal from "./ConfirmationModal";
+import { PowerIcon, GasIcon } from "./icons";
 
 type EnergyType = "power" | "gas";
 interface EnergyData {
@@ -78,46 +79,7 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
   };
 
   const getTypeIcon = (type: EnergyType) => {
-    if (type === 'power') {
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-5 h-5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M13.5 21v-5.25a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7.393 2.25 1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7.393 2.25 1.015a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72l1.189-1.19A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72M6.75 18h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .414.336.75.75.75z"
-          />
-        </svg>
-      );
-    } else {
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-5 h-5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z"
-          />
-        </svg>
-      );
-    }
+    return type === 'power' ? <PowerIcon /> : <GasIcon />;
   };
 
   return (
