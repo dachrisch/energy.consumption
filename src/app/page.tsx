@@ -2,19 +2,29 @@
 
 import { useState, useEffect } from "react";
 import AddEnergyForm from "./components/AddEnergyForm";
-
-type EnergyType = "power" | "gas";
-interface EnergyData {
-  _id: string;
-  date: string;
-  type: EnergyType;
-  amount: number;
-}
+import { CSVDropZone } from './components/CSVImportModal';
+import Toast from './components/Toast';
+import { EnergyData, EnergyType, SortField, SortOrder } from './types';
+import { 
+  handleAddEnergy, 
+  handleDelete, 
+  handleCSVImport, 
+  getLatestValues, 
+  getFilteredAndSortedData 
+} from './handlers/energyHandlers';
 
 export default function Home() {
   const [energyData, setEnergyData] = useState<EnergyData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [typeFilter, setTypeFilter] = useState<EnergyType | 'all'>('all');
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: '',
+    end: ''
+  });
 
   useEffect(() => {
     fetchEnergyData();
@@ -34,19 +44,9 @@ export default function Home() {
     }
   };
 
-  const handleAddEnergy = async (newData: Omit<EnergyData, '_id'>) => {
+  const onAddEnergy = async (newData: Omit<EnergyData, '_id'>) => {
     try {
-      const response = await fetch('/api/energy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newData),
-      });
-
-      if (!response.ok) throw new Error('Failed to add data');
-      
-      // Refresh the data after successful addition
+      await handleAddEnergy(newData);
       fetchEnergyData();
     } catch (err) {
       setError('Failed to add energy data');
@@ -54,19 +54,40 @@ export default function Home() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const onDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/energy?id=${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('Failed to delete data');
-      
-      // Refresh the data after successful deletion
+      await handleDelete(id);
       fetchEnergyData();
     } catch (err) {
       setError('Failed to delete energy data');
       console.error(err);
+    }
+  };
+
+  const onCSVImport = async (data: EnergyData[]) => {
+    try {
+      const result = await handleCSVImport(data, energyData);
+      
+      // Show import results
+      const message = [
+        result.success > 0 && `${result.success} entries imported`,
+        result.skipped > 0 && `${result.skipped} entries skipped (already exist)`,
+        result.error > 0 && `${result.error} entries failed`
+      ].filter(Boolean).join(', ');
+
+      setToast({
+        message,
+        type: result.error > 0 ? 'error' : 'success'
+      });
+
+      // Refresh the data
+      fetchEnergyData();
+    } catch (error) {
+      console.error('Error importing CSV data:', error);
+      setToast({
+        message: 'Failed to import CSV data',
+        type: 'error'
+      });
     }
   };
 
@@ -113,19 +134,18 @@ export default function Home() {
     }
   };
 
-  const getLatestValues = () => {
-    const latestPower = energyData
-      .filter(data => data.type === 'power')
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.amount || 0;
-    
-    const latestGas = energyData
-      .filter(data => data.type === 'gas')
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.amount || 0;
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
 
-    return {
-      power: latestPower,
-      gas: latestGas
-    };
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) return null;
+    return sortOrder === 'asc' ? '↑' : '↓';
   };
 
   if (isLoading) {
@@ -144,6 +164,10 @@ export default function Home() {
       <main className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Energy Consumption Monitor</h1>
         
+        <div className="mb-8">
+          <CSVDropZone onDrop={onCSVImport} />
+        </div>
+        
         {error && (
           <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
             {error}
@@ -151,35 +175,86 @@ export default function Home() {
         )}
         
         <AddEnergyForm 
-          onSubmit={handleAddEnergy} 
-          latestValues={getLatestValues()}
+          onSubmit={onAddEnergy} 
+          latestValues={getLatestValues(energyData)}
         />
 
+        {/* Filters */}
+        <div className="mb-4 flex gap-4 items-center flex-wrap">
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-foreground">Type:</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as EnergyType | 'all')}
+              className="p-2 border rounded bg-input text-foreground border-border"
+            >
+              <option value="all">All</option>
+              <option value="power">Power</option>
+              <option value="gas">Gas</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-foreground">Date Range:</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                className="p-2 border rounded bg-input text-foreground border-border"
+                placeholder="Start date"
+              />
+              <span className="text-foreground">to</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                className="p-2 border rounded bg-input text-foreground border-border"
+                placeholder="End date"
+              />
+            </div>
+          </div>
+        </div>
+        
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white dark:bg-gray-800 rounded-lg">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+              <tr className="bg-secondary text-secondary-foreground">
+                <th 
+                  className="p-2 border border-border cursor-pointer hover:bg-secondary/80"
+                  onClick={() => handleSort('date')}
+                >
+                  Date {getSortIcon('date')}
+                </th>
+                <th 
+                  className="p-2 border border-border cursor-pointer hover:bg-secondary/80"
+                  onClick={() => handleSort('type')}
+                >
+                  Type {getSortIcon('type')}
+                </th>
+                <th 
+                  className="p-2 border border-border cursor-pointer hover:bg-secondary/80"
+                  onClick={() => handleSort('amount')}
+                >
+                  Amount {getSortIcon('amount')}
+                </th>
+                <th className="p-2 border border-border">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {energyData.map((data) => (
-                <tr key={data._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 whitespace-nowrap">{data.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+            <tbody>
+              {getFilteredAndSortedData(energyData, typeFilter, dateRange, sortField, sortOrder).map((data) => (
+                <tr key={data._id} className="border-b border-border">
+                  <td className="p-2 border border-border">{data.date}</td>
+                  <td className="p-2 border border-border">
                     <div className="flex items-center gap-2">
                       {getTypeIcon(data.type)}
                       <span className="capitalize">{data.type}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{data.amount}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="p-2 border border-border">{data.amount}</td>
+                  <td className="p-2 border border-border">
                     <button
-                      onClick={() => handleDelete(data._id)}
-                      className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20"
+                      onClick={() => onDelete(data._id)}
+                      className="text-destructive hover:text-destructive/80 p-1 rounded-full hover:bg-destructive/10"
                       title="Delete entry"
                     >
                       <svg
@@ -203,6 +278,14 @@ export default function Home() {
             </tbody>
           </table>
         </div>
+
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
       </main>
     </div>
   );
