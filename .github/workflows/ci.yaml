@@ -19,7 +19,7 @@ jobs:
       project: .
 
 
-  deploy-fe:
+  deploy-next:
     needs:
       - build-project
     secrets: inherit
