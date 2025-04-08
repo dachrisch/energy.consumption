@@ -4,10 +4,16 @@ if (!process.env.MONGODB_URI) {
   throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
 }
 
-const uri = process.env.MONGODB_URI;
-const options = {};
+export function getMongoClient(): MongoClient {
+  const uri = process.env.MONGODB_URI;
 
-let client;
+  if (!uri) {
+    throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
+  }
+
+  return new MongoClient(uri);
+}
+
 let clientPromise: Promise<MongoClient>;
 
 if (process.env.NODE_ENV === "development") {
@@ -18,14 +24,12 @@ if (process.env.NODE_ENV === "development") {
   };
 
   if (!globalWithMongo._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    globalWithMongo._mongoClientPromise = client.connect();
+    globalWithMongo._mongoClientPromise = getMongoClient().connect();
   }
   clientPromise = globalWithMongo._mongoClientPromise;
 } else {
   // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect();
+  clientPromise = getMongoClient().connect();
 }
 
 // Export a module-scoped MongoClient promise. By doing this in a
