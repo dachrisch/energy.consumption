@@ -1,18 +1,12 @@
-import { useState, useCallback } from 'react';
-import { EnergyData } from '../types';
-import { UploadIcon } from './icons';
-
-interface CSVData {
-  date: string;
-  type: 'power' | 'gas';
-  amount: number;
-}
+import { useState, useCallback } from "react";
+import { EnergyData, EnergyType } from "../types";
+import { UploadIcon } from "./icons";
 
 interface CSVImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (data: CSVData[]) => void;
-  previewData: CSVData[];
+  onConfirm: (data: Omit<EnergyData, "_id">[]) => void;
+  previewData: Omit<EnergyData, "_id">[];
 }
 
 export default function CSVImportModal({
@@ -42,7 +36,9 @@ export default function CSVImportModal({
                 {previewData.map((row, index) => (
                   <tr key={index} className="border-b border-border">
                     <td className="p-2 border border-border">{row.date}</td>
-                    <td className="p-2 border border-border capitalize">{row.type}</td>
+                    <td className="p-2 border border-border capitalize">
+                      {row.type}
+                    </td>
                     <td className="p-2 border border-border">{row.amount}</td>
                   </tr>
                 ))}
@@ -70,63 +66,73 @@ export default function CSVImportModal({
 }
 
 interface CSVDropZoneProps {
-  onDrop: (data: EnergyData[]) => void;
+  onDrop: (data: Omit<EnergyData, "_id">[]) => void;
 }
 
 export function CSVDropZone({ onDrop }: CSVDropZoneProps) {
-  const [isDragging, setIsDragging] = useState(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [isDropModalOpen, setIsDropModalOpen] = useState<boolean>(false);
+  const [previewData, setPreviewData] = useState<Omit<EnergyData, "_id">[]>([]);
 
-  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    async (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
 
-    const files = Array.from(e.dataTransfer.files);
-    const csvFile = files.find(file => file.type === 'text/csv' || file.name.endsWith('.csv'));
+      const files = Array.from(e.dataTransfer.files);
+      const csvFile = files.find(
+        (file) => file.type === "text/csv" || file.name.endsWith(".csv")
+      );
 
-    if (!csvFile) {
-      alert('Please drop a CSV file');
-      return;
-    }
+      if (!csvFile) {
+        alert("Please drop a CSV file");
+        return;
+      }
 
-    try {
-      const text = await csvFile.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      
-      const data = lines.slice(1)
-        .filter(line => line.trim())
-        .map(line => {
-          const values = line.split(',').map(v => v.trim());
-          const row: Record<string, string> = {};
-          headers.forEach((header, i) => {
-            row[header] = values[i];
-          });
-          return row;
-        })
-        .map(row => ({
-          _id: crypto.randomUUID(),
-          date: row.date,
-          type: row.type as 'power' | 'gas',
-          amount: parseFloat(row.amount)
-        }))
-        .filter(item => 
-          item.date && 
-          (item.type === 'power' || item.type === 'gas') && 
-          !isNaN(item.amount)
-        );
+      try {
+        const text = await csvFile.text();
+        const lines = text.split("\n");
+        const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
 
-      onDrop(data);
-    } catch (error) {
-      console.error('Error parsing CSV:', error);
-      alert('Error parsing CSV file');
-    }
-  }, [onDrop]);
+        const data = lines
+          .slice(1)
+          .filter((line) => line.trim())
+          .map((line) => {
+            const values = line.split(",").map((v) => v.trim());
+            const row: Record<string, string> = {};
+            headers.forEach((header, i) => {
+              row[header] = values[i];
+            });
+            return row;
+          })
+          .map((row) => ({
+            date: row.date,
+            type: row.type as "power" | "gas",
+            amount: parseFloat(row.amount),
+          }))
+          .filter(
+            (item) =>
+              item.date &&
+              (item.type === "power" || item.type === "gas") &&
+              !isNaN(item.amount)
+          );
+
+        setIsDropModalOpen(true);
+
+        setPreviewData(data);
+      } catch (error) {
+        console.error("Error parsing CSV:", error);
+        alert("Error parsing CSV file");
+      }
+    },
+    [setPreviewData, setIsDropModalOpen]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const hasFiles = Array.from(e.dataTransfer.items).some(item => 
-      item.kind === 'file' && 
-      (item.type === 'text/csv' || item.type === '')
+    const hasFiles = Array.from(e.dataTransfer.items).some(
+      (item) =>
+        item.kind === "file" && (item.type === "text/csv" || item.type === "")
     );
     if (hasFiles) {
       setIsDragging(true);
@@ -138,12 +144,22 @@ export function CSVDropZone({ onDrop }: CSVDropZoneProps) {
     setIsDragging(false);
   }, []);
 
+  const onCloseModal=(): void =>{
+    setPreviewData([]);
+    setIsDropModalOpen(false);
+  }
+
+  const onConfirmModal=(data: Omit<EnergyData, "_id">[]): void =>{
+    onDrop(data);
+    setIsDropModalOpen(false);
+  }
+
   return (
     <div
       className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
         isDragging
-          ? 'border-primary bg-primary/10'
-          : 'border-border hover:border-primary'
+          ? "border-primary bg-primary/10"
+          : "border-border hover:border-primary"
       }`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
@@ -156,6 +172,12 @@ export function CSVDropZone({ onDrop }: CSVDropZoneProps) {
           The file should have columns: date, type, amount
         </p>
       </div>
+      <CSVImportModal
+        isOpen={isDropModalOpen}
+        onClose={onCloseModal}
+        onConfirm={onConfirmModal}
+        previewData={previewData}
+      />
     </div>
   );
-} 
+}

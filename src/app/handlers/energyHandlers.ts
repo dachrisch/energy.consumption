@@ -34,7 +34,7 @@ export const handleDelete = async (id: string) => {
   }
 };
 
-export const handleCSVImport = async (data: EnergyData[], existingData: EnergyData[]) => {
+export const handleCSVImport = async (data: Omit<EnergyData, '_id'>[], existingData: EnergyData[]) => {
   try {
     // Sort data by date to ensure proper order
     const sortedData = [...data].sort((a, b) => 

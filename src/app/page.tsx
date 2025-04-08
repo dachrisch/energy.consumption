@@ -57,7 +57,7 @@ export default function Home() {
     }
   };
 
-  const onCSVImport = async (data: EnergyData[]) => {
+  const onCSVImport = async (data: Omit<EnergyData, '_id'>[]) => {
     try {
       const result = await handleCSVImport(data, energyData);
       
