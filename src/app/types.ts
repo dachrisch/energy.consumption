@@ -2,7 +2,7 @@ export type EnergyType = "power" | "gas";
 
 export interface EnergyData {
   _id: string;
-  date: string;
+  date: Date;
   type: EnergyType;
   amount: number;
 }

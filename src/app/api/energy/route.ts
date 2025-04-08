@@ -9,7 +9,7 @@ export async function GET() {
     const energyData = await db.collection('energy_data').find({}).toArray();
     return NextResponse.json(energyData);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch energy data' }, { status: 500 });
+    return NextResponse.json({ error: `Failed to fetch energy data: ${error}` }, { status: 500 });
   }
 }
 
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const result = await db.collection('energy_data').insertOne(data);
     return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to add energy data' }, { status: 500 });
+    return NextResponse.json({ error: `Failed to add energy data: ${error}` }, { status: 500 });
   }
 }
 
@@ -31,7 +31,7 @@ export async function DELETE(request: Request) {
     const id = searchParams.get('id');
     
     if (!id) {
-      return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
+      return NextResponse.json({ error: `Missing ID parameter in searchParams: ${searchParams}` }, { status: 400 });
     }
 
     const client = await clientPromise;
@@ -39,11 +39,11 @@ export async function DELETE(request: Request) {
     const result = await db.collection('energy_data').deleteOne({ _id: new ObjectId(id) });
     
     if (result.deletedCount === 0) {
-      return NextResponse.json({ error: 'Entry not found' }, { status: 404 });
+      return NextResponse.json({ error: `Entry not found: ${id}` }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete energy data' }, { status: 500 });
+    return NextResponse.json({ error: `Failed to delete energy data: ${error}` }, { status: 500 });
   }
 } 

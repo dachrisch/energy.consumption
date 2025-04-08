@@ -28,7 +28,11 @@ export default function Home() {
       const response = await fetch('/api/energy');
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
-      setEnergyData(data);
+      const parsed = data.map(item => ({
+        ...item,
+        date: new Date(item.date),
+      }));
+      setEnergyData(parsed);
     } catch (err) {
       setError('Failed to load energy data');
       console.error(err);
@@ -101,7 +105,7 @@ export default function Home() {
         <h1 className="text-3xl font-bold mb-8">Energy Consumption Monitor</h1>
         
         <div className="mb-8">
-          <CSVDropZone onDrop={onCSVImport} />
+          <CSVDropZone onDataImported={onCSVImport} />
         </div>
         
         {error && (

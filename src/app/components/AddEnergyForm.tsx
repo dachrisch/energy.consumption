@@ -1,16 +1,11 @@
 import { useState, useEffect } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import { PowerIcon, GasIcon } from "./icons";
-
-type EnergyType = "power" | "gas";
-interface EnergyData {
-  date: string;
-  type: EnergyType;
-  amount: number;
-}
+import { EnergyData, EnergyType } from "../types";
+import { formatDateToIso, parseDateFlexible } from "../utils/dateUtils";
 
 interface AddEnergyFormProps {
-  onSubmit: (data: EnergyData) => void;
+  onSubmit: (data: Omit<EnergyData, '_id'>) => void;
   latestValues: {
     power: number;
     gas: number;
@@ -18,14 +13,14 @@ interface AddEnergyFormProps {
 }
 
 export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormProps) {
-  const [newData, setNewData] = useState<EnergyData>({
-    date: new Date().toISOString().split("T")[0],
+  const [newData, setNewData] = useState<Omit<EnergyData, '_id'>>({
+    date: new Date(),
     type: "power",
     amount: latestValues.power || 0,
   });
   const [error, setError] = useState<string>("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingSubmission, setPendingSubmission] = useState<EnergyData | null>(null);
+  const [pendingSubmission, setPendingSubmission] = useState<Omit<EnergyData, '_id'> | null>(null);
 
   // Update amount when type changes
   useEffect(() => {
@@ -55,11 +50,11 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
     submitData(newData);
   };
 
-  const submitData = (data: EnergyData) => {
+  const submitData = (data: Omit<EnergyData, '_id'>) => {
     setError("");
     onSubmit(data);
     setNewData({
-      date: new Date().toISOString().split("T")[0],
+      date: new Date(),
       type: "power",
       amount: latestValues.power || 0,
     });
@@ -90,8 +85,8 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
             <label className="block text-sm font-medium mb-1 text-foreground">Date</label>
             <input
               type="date"
-              value={newData.date}
-              onChange={(e) => setNewData({ ...newData, date: e.target.value })}
+              value={formatDateToIso(newData.date)}
+              onChange={(e) => setNewData({ ...newData, date: parseDateFlexible(e.target.value) })}
               className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
               required
             />

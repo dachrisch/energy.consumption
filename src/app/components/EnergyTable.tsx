@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { EnergyData, EnergyType, SortField, SortOrder } from '../types';
 import { PowerIcon, GasIcon, DeleteIcon } from './icons';
 import { getFilteredAndSortedData } from '../handlers/energyHandlers';
+import { formatDateToBrowserLocale } from '../utils/dateUtils';
 
 interface EnergyTableProps {
   energyData: EnergyData[];
@@ -158,7 +159,7 @@ export function EnergyTable({ energyData, onDelete }: EnergyTableProps) {
           <tbody>
             {getFilteredAndSortedData(energyData, typeFilter, dateRange, sortField, sortOrder).map((data) => (
               <tr key={data._id} className="hover:bg-secondary/10">
-                <td className="p-2 text-center align-middle">{data.date}</td>
+                <td className="p-2 text-center align-middle">{formatDateToBrowserLocale(data.date)}</td>
                 <td className="p-2 text-center align-middle">
                   <div className="flex items-center justify-center gap-2">
                     {getTypeIcon(data.type)}
