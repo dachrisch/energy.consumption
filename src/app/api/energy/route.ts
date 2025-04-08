@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/app/lib/mongodb';
+import  { getClientPromise } from '@/app/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export async function GET() {
   try {
-    const client = await clientPromise;
+    const client = await getClientPromise();
     const db = client.db('energy_consumption');
     const energyData = await db.collection('energy_data').find({}).toArray();
     return NextResponse.json(energyData);
@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const client = await clientPromise;
+    const client = await getClientPromise();
     const db = client.db('energy_consumption');
     const result = await db.collection('energy_data').insertOne(data);
     return NextResponse.json(result);
@@ -34,7 +34,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: `Missing ID parameter in searchParams: ${searchParams}` }, { status: 400 });
     }
 
-    const client = await clientPromise;
+    const client = await getClientPromise();
     const db = client.db('energy_consumption');
     const result = await db.collection('energy_data').deleteOne({ _id: new ObjectId(id) });
     

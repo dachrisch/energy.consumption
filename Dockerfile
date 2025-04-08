@@ -1,7 +1,7 @@
 # Dockerfile
 
 # Use official Node.js image
-FROM node:20-alpine AS builder
+FROM node:slim AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY . .
 RUN npm run build
 
 # Production image
-FROM node:20-alpine
+FROM node:slim
 
 WORKDIR /app
 
