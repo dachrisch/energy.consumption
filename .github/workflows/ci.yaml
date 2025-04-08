@@ -1,0 +1,30 @@
+name: 🏗️🧪🚀 Build, Test and Deploy everything
+
+on:
+  push:
+    branches:
+      - 'deploy/**'  # Matches all branches under deploy/
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  checks: write
+  security-events: write
+
+jobs:
+  build-project:
+    uses: ./.github/workflows/part_node_build.yaml
+    secrets: inherit
+    with:
+      project: .
+
+
+  deploy-fe:
+    needs:
+      - build-project
+    secrets: inherit
+    uses: ./.github/workflows/part_docker_push.yaml
+    with:
+      image_name: dachrisch/energy.consumption
+      dockerfile: Dockerfile
+      test: false

@@ -28,7 +28,7 @@ export default function Home() {
       const response = await fetch('/api/energy');
       if (!response.ok) throw new Error('Failed to fetch data');
       const data = await response.json();
-      const parsed = data.map(item => ({
+      const parsed = data.map((item: { date: string | number | Date; }) => ({
         ...item,
         date: new Date(item.date),
       }));
