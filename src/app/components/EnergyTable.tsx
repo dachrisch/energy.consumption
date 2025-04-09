@@ -1,15 +1,17 @@
+'use client';
+
 import { useState } from 'react';
-import { EnergyData, EnergyType, SortField, SortOrder } from '../types';
+import { EnergyDataType, EnergyType, SortField, SortOrder } from '../types';
 import { PowerIcon, GasIcon, DeleteIcon } from './icons';
 import { getFilteredAndSortedData } from '../handlers/energyHandlers';
 import { formatDateToBrowserLocale } from '../utils/dateUtils';
 
 interface EnergyTableProps {
-  energyData: EnergyData[];
+  energyData: EnergyDataType[];
   onDelete: (id: string) => void;
 }
 
-export function EnergyTable({ energyData, onDelete }: EnergyTableProps) {
+const EnergyTable = ({ energyData, onDelete }: EnergyTableProps) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [typeFilter, setTypeFilter] = useState<EnergyType | 'all'>('all');
@@ -184,3 +186,4 @@ export function EnergyTable({ energyData, onDelete }: EnergyTableProps) {
     </div>
   );
 } 
+export default EnergyTable;

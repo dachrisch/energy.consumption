@@ -1,49 +1,56 @@
-import { NextResponse } from 'next/server';
-import  { getClientPromise } from '@/app/lib/mongodb';
-import { ObjectId } from 'mongodb';
+"use server";
 
-export async function GET() {
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import EnergyData from "@/models/EnergyData";
+
+export const GET = async () => {
   try {
-    const client = await getClientPromise();
-    const db = client.db('energy_consumption');
-    const energyData = await db.collection('energy_data').find({}).toArray();
+    await connectDB();
+    const energyData = await EnergyData.find({});
     return NextResponse.json(energyData);
   } catch (error) {
-    return NextResponse.json({ error: `Failed to fetch energy data: ${error}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Failed to fetch energy data: ${error}` },
+      { status: 500 }
+    );
   }
-}
+};
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   try {
     const data = await request.json();
-    const client = await getClientPromise();
-    const db = client.db('energy_consumption');
-    const result = await db.collection('energy_data').insertOne(data);
-    return NextResponse.json(result);
+    const energyData = new EnergyData({...data});
+    await connectDB();
+    energyData.save();
+    return NextResponse.json(energyData);
   } catch (error) {
-    return NextResponse.json({ error: `Failed to add energy data: ${error}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Failed to add energy data: ${error}` },
+      { status: 500 }
+    );
   }
-}
+};
 
-export async function DELETE(request: Request) {
+export const DELETE = async (request: Request) => {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    
+    const id = searchParams.get("id");
+
     if (!id) {
-      return NextResponse.json({ error: `Missing ID parameter in searchParams: ${searchParams}` }, { status: 400 });
+      return NextResponse.json(
+        { error: `Missing ID parameter in searchParams: ${searchParams}` },
+        { status: 400 }
+      );
     }
 
-    const client = await getClientPromise();
-    const db = client.db('energy_consumption');
-    const result = await db.collection('energy_data').deleteOne({ _id: new ObjectId(id) });
-    
-    if (result.deletedCount === 0) {
-      return NextResponse.json({ error: `Entry not found: ${id}` }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true });
+    await connectDB();
+    EnergyData.deleteOne({_id: id});
+       return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: `Failed to delete energy data: ${error}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Failed to delete energy data: ${error}` },
+      { status: 500 }
+    );
   }
-} 
+};

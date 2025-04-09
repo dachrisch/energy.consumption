@@ -1,38 +1,44 @@
 import { useState, useEffect } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import { PowerIcon, GasIcon } from "./icons";
-import { EnergyData, EnergyType } from "../types";
+import { EnergyDataType, EnergyType } from "../types";
 import { formatDateToIso, parseDateFlexible } from "../utils/dateUtils";
 
 interface AddEnergyFormProps {
-  onSubmit: (data: Omit<EnergyData, '_id'>) => void;
+  onSubmit: (data: Omit<EnergyDataType, "_id">) => void;
   latestValues: {
     power: number;
     gas: number;
   };
 }
 
-export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormProps) {
-  const [newData, setNewData] = useState<Omit<EnergyData, '_id'>>({
+const AddEnergyForm = ({
+  onSubmit,
+  latestValues,
+}: AddEnergyFormProps) => {
+  const [newData, setNewData] = useState<Omit<EnergyDataType, "_id">>({
     date: new Date(),
     type: "power",
     amount: latestValues.power || 0,
   });
   const [error, setError] = useState<string>("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingSubmission, setPendingSubmission] = useState<Omit<EnergyData, '_id'> | null>(null);
+  const [pendingSubmission, setPendingSubmission] = useState<Omit<
+    EnergyDataType,
+    "_id"
+  > | null>(null);
 
   // Update amount when type changes
   useEffect(() => {
-    setNewData(prev => ({
+    setNewData((prev) => ({
       ...prev,
-      amount: latestValues[prev.type] || 0
+      amount: latestValues[prev.type] || 0,
     }));
   }, [newData.type, latestValues]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate amount
     if (isNaN(newData.amount) || newData.amount <= 0) {
       setError("Please enter a valid amount greater than 0");
@@ -46,11 +52,11 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
       setShowConfirmation(true);
       return;
     }
-    
+
     submitData(newData);
   };
 
-  const submitData = (data: Omit<EnergyData, '_id'>) => {
+  const submitData = (data: Omit<EnergyDataType, "_id">) => {
     setError("");
     onSubmit(data);
     setNewData({
@@ -74,25 +80,37 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
   };
 
   const getTypeIcon = (type: EnergyType) => {
-    return type === 'power' ? <PowerIcon /> : <GasIcon />;
+    return type === "power" ? <PowerIcon /> : <GasIcon />;
   };
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="mb-8 p-6 bg-card text-card-foreground rounded-lg border border-border">
+      <form
+        onSubmit={handleSubmit}
+        className="mb-8 p-6 bg-card text-card-foreground rounded-lg border border-border"
+      >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-foreground">Date</label>
+            <label className="block text-sm font-medium mb-1 text-foreground">
+              Date
+            </label>
             <input
               type="date"
               value={formatDateToIso(newData.date)}
-              onChange={(e) => setNewData({ ...newData, date: parseDateFlexible(e.target.value) })}
+              onChange={(e) =>
+                setNewData({
+                  ...newData,
+                  date: parseDateFlexible(e.target.value),
+                })
+              }
               className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-foreground">Type</label>
+            <label className="block text-sm font-medium mb-1 text-foreground">
+              Type
+            </label>
             <div className="flex gap-2">
               {(["power", "gas"] as const).map((type) => (
                 <label
@@ -108,7 +126,12 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
                     name="type"
                     value={type}
                     checked={newData.type === type}
-                    onChange={(e) => setNewData({ ...newData, type: e.target.value as EnergyType })}
+                    onChange={(e) =>
+                      setNewData({
+                        ...newData,
+                        type: e.target.value as EnergyType,
+                      })
+                    }
                     className="hidden"
                   />
                   {getTypeIcon(type)}
@@ -118,11 +141,15 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-foreground">Amount</label>
+            <label className="block text-sm font-medium mb-1 text-foreground">
+              Amount
+            </label>
             <input
               type="number"
               value={newData.amount || ""}
-              onChange={(e) => setNewData({ ...newData, amount: parseFloat(e.target.value) })}
+              onChange={(e) =>
+                setNewData({ ...newData, amount: parseFloat(e.target.value) })
+              }
               className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
               step="0.01"
               required
@@ -148,4 +175,6 @@ export default function AddEnergyForm({ onSubmit, latestValues }: AddEnergyFormP
       />
     </>
   );
-} 
+};
+
+export default AddEnergyForm;

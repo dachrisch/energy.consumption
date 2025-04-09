@@ -7,14 +7,14 @@ interface ConfirmationModalProps {
   type: "power" | "gas";
 }
 
-export default function ConfirmationModal({
+const ConfirmationModal=({
   isOpen,
   onClose,
   onConfirm,
   currentValue,
   newValue,
   type,
-}: ConfirmationModalProps) {
+}: ConfirmationModalProps) =>{
   if (!isOpen) return null;
 
   return (
@@ -42,3 +42,5 @@ export default function ConfirmationModal({
     </div>
   );
 } 
+
+export default ConfirmationModal;
