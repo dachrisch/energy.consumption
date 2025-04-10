@@ -2,8 +2,6 @@ name: 🏗️🧪🚀 Build, Test and Deploy everything
 
 on:
   push:
-    branches:
-      - 'deploy/**'  # Matches all branches under deploy/
     tags:
       - '*'  # Matches all tags
   workflow_dispatch:
@@ -29,4 +27,5 @@ jobs:
     with:
       image_name: dachrisch/energy.consumption
       dockerfile: Dockerfile
-      test: false
+      test: true
+      version: "${{ github.ref_name }}"
