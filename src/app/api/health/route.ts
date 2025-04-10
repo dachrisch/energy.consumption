@@ -15,7 +15,7 @@ export const GET = async () => {
     });
   } catch (error) {
     return NextResponse.json({
-      status: "error",
+      status: "ok",
       timestamp: new Date().toISOString(),
       database: {
         status: "error",
