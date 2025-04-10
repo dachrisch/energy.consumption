@@ -51,10 +51,14 @@ export const importCSV = async (
     // Add each entry individually
     for (const entry of sortedData) {
       try {
+        console.log(
+          `entry: ${JSON.stringify(entry)} in ${JSON.stringify(existingData)}`
+        );
         // Check if entry already exists
         const exists = existingData.some(
           (existing) =>
-            existing.date === entry.date && existing.type === entry.type
+            existing.date.getTime() == entry.date.getTime() &&
+            existing.type == entry.type
         );
 
         if (exists) {
