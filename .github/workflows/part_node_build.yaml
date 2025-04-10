@@ -22,8 +22,8 @@ jobs:
       - name: 🟢⚙️ Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
-          cache: 'npm'
+          node-version: "20.x"
+          cache: "npm"
           cache-dependency-path: ${{ inputs.project }}/package.json
       - name: 🔍 Run eslint ${{ inputs.project }}
         run: |
@@ -35,3 +35,5 @@ jobs:
         uses: DerLev/eslint-annotations@v2
         with:
           typescript-log: ${{ inputs.project }}/typescript.log
+      - name: 🧪 Run jest
+        run: npm run test

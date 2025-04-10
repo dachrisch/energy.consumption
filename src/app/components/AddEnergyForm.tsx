@@ -12,10 +12,7 @@ interface AddEnergyFormProps {
   };
 }
 
-const AddEnergyForm = ({
-  onSubmit,
-  latestValues,
-}: AddEnergyFormProps) => {
+const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
   const [newData, setNewData] = useState<Omit<EnergyDataType, "_id">>({
     date: new Date(),
     type: "power",
@@ -91,10 +88,14 @@ const AddEnergyForm = ({
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1 text-foreground">
+            <label
+              htmlFor="add-energy-date"
+              className="block text-sm font-medium mb-1 text-foreground"
+            >
               Date
             </label>
             <input
+              id="add-energy-date"
               type="date"
               value={formatDateToIso(newData.date)}
               onChange={(e) =>
@@ -114,6 +115,7 @@ const AddEnergyForm = ({
             <div className="flex gap-2">
               {(["power", "gas"] as const).map((type) => (
                 <label
+                  htmlFor={"add-energy-type-" + type}
                   key={type}
                   className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded cursor-pointer transition-colors ${
                     newData.type === type
@@ -122,6 +124,8 @@ const AddEnergyForm = ({
                   }`}
                 >
                   <input
+                    id={"add-energy-type-" + type}
+                    data-testid={"add-energy-type-" + type}
                     type="radio"
                     name="type"
                     value={type}
@@ -141,10 +145,14 @@ const AddEnergyForm = ({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-foreground">
+            <label
+              htmlFor="add-energy-amount"
+              className="block text-sm font-medium mb-1 text-foreground"
+            >
               Amount
             </label>
             <input
+              id="add-energy-amount"
               type="number"
               value={newData.amount || ""}
               onChange={(e) =>
