@@ -27,4 +27,8 @@ COPY --from=builder /app/tsconfig.json ./
 
 EXPOSE 3000
 
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -fs http://localhost:3000/api/health | \
+    grep -q '"status":"ok"' && grep -q '"database":{"status":"connected"}'
+
 CMD ["npm", "start"]
