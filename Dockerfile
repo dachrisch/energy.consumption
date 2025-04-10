@@ -26,6 +26,8 @@ COPY --from=builder /app/next.config.ts ./
 COPY --from=builder /app/tsconfig.json ./
 
 EXPOSE 3000
+RUN apt -y update
+RUN apt -y install curl
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -fs http://localhost:3000/api/health | \
