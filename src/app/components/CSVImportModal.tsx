@@ -21,7 +21,7 @@ const CSVImportModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-card/95 backdrop-blur-sm flex items-center justify-center z-50">
+    <div data-testid="csv-import-modal" className="fixed inset-0 bg-card/95 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-card text-card-foreground p-6 rounded-lg shadow-lg max-w-4xl w-full border border-border">
         <h3 className="text-lg font-semibold mb-4">Confirm CSV Import</h3>
         
