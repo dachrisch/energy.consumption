@@ -1,0 +1,10 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## 1.0.0 (2025-04-10)
+
+
+### Features
+
+* **energy:** copy from clipboard ([daca7e5](https://github.com/dachrisch/energy.consumption/commit/daca7e5847fbd2d9bed6407841d08a08ad8ff166))
