@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import AddEnergyForm from "../components/AddEnergyForm";
 import Toast from "../components/Toast";
 import { EnergyDataType } from "../types";
-import {  getLatestValues } from "../handlers/energyHandlers";
+import { getLatestValues } from "../handlers/energyHandlers";
 import CSVDropZone from "../components/CSVDropZone";
-import EnergyTable from "../components/EnergyTable";
 import { addEnergy, deleteEnergy, importCSV } from "@/actions/energyData";
+import EnergyTabs from "../components/EnergyTabs";
 
 const Dashboard = () => {
   const [energyData, setEnergyDataType] = useState<EnergyDataType[]>([]);
@@ -50,7 +50,7 @@ const Dashboard = () => {
     }
   };
 
-  const onDelete = async (id: string) => {
+  const onDelete = async (id: string): Promise<void> => {
     try {
       await deleteEnergy(id);
       fetchEnergyDataType();
@@ -123,7 +123,7 @@ const Dashboard = () => {
           latestValues={getLatestValues(energyData)}
         />
 
-        <EnergyTable energyData={energyData} onDelete={onDelete} />
+        <EnergyTabs energyData={energyData} onDelete={onDelete} />
 
         {toast && (
           <Toast

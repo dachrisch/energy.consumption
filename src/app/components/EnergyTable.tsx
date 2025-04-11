@@ -1,25 +1,26 @@
 'use client';
 
-import { useState } from 'react';
 import { EnergyDataType, EnergyType, SortField, SortOrder } from '../types';
 import { PowerIcon, GasIcon, DeleteIcon } from './icons';
 import { getFilteredAndSortedData } from '../handlers/energyHandlers';
 import { formatDateToBrowserLocale } from '../utils/dateUtils';
-import EnergyTableFilters from './EnergyTableFilters';
+import { useState } from 'react';
 
 interface EnergyTableProps {
   energyData: EnergyDataType[];
   onDelete: (id: string) => void;
+  typeFilter: EnergyType | 'all';
+  dateRange: { start: string; end: string };
 }
 
-const EnergyTable = ({ energyData, onDelete }: EnergyTableProps) => {
-  const [sortField, setSortField] = useState<SortField>('date');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-  const [typeFilter, setTypeFilter] = useState<EnergyType | 'all'>('all');
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
-    start: '',
-    end: ''
-  });
+const EnergyTable = ({ 
+  energyData, 
+  onDelete,
+  typeFilter,
+  dateRange,
+}: EnergyTableProps) => {
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   const getTypeIcon = (type: EnergyType) => {
     return type === 'power' ? <PowerIcon /> : <GasIcon />;
@@ -39,26 +40,9 @@ const EnergyTable = ({ energyData, onDelete }: EnergyTableProps) => {
     return sortOrder === 'asc' ? '↑' : '↓';
   };
 
-  const handleResetFilters = () => {
-    setTypeFilter('all');
-    setDateRange({ start: '', end: '' });
-    setSortField('date');
-    setSortOrder('desc');
-  };
 
   return (
-    <div className="border border-border rounded-lg p-4">
-      <EnergyTableFilters
-        typeFilter={typeFilter}
-        setTypeFilter={setTypeFilter}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        sortField={sortField}
-        setSortField={setSortField}
-        sortOrder={sortOrder}
-        setSortOrder={setSortOrder}
-        onReset={handleResetFilters}
-      />
+  
       
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -110,7 +94,7 @@ const EnergyTable = ({ energyData, onDelete }: EnergyTableProps) => {
           </tbody>
         </table>
       </div>
-    </div>
+    
   );
 };
 

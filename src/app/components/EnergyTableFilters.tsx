@@ -1,6 +1,6 @@
 'use client';
 
-import { EnergyType, SortField, SortOrder } from '../types';
+import { EnergyType } from '../types';
 import { PowerIcon, GasIcon } from './icons';
 
 interface EnergyTableFiltersProps {
@@ -8,10 +8,6 @@ interface EnergyTableFiltersProps {
   setTypeFilter: (type: EnergyType | 'all') => void;
   dateRange: { start: string; end: string };
   setDateRange: (range: { start: string; end: string }) => void;
-  sortField: SortField;
-  setSortField: (field: SortField) => void;
-  sortOrder: SortOrder;
-  setSortOrder: (order: SortOrder) => void;
   onReset: () => void;
 }
 
