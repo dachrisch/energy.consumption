@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/dachrisch/energy.consumption/compare/v1.2.0...v1.3.0) (2025-04-11)
+
+
+### Features
+
+* **chat:** energy chats ([0263ed4](https://github.com/dachrisch/energy.consumption/commit/0263ed419da75a29688aaa83d0f3a9aaeda24888))
+
 ## [1.2.0](https://github.com/dachrisch/energy.consumption/compare/v1.1.0...v1.2.0) (2025-04-11)
 
 ## [1.1.0](https://github.com/dachrisch/energy.consumption/compare/v1.0.7...v1.1.0) (2025-04-11)
