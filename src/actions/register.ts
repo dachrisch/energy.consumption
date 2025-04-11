@@ -4,8 +4,16 @@ import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { NewUserType } from "../app/types";
 import { InsertOneResult } from "mongodb";
+import { isFeatureEnabled } from "@/lib/featureFlags";
 
 export const register = async (newUser: NewUserType) => {
+  const registrationEnabled = await isFeatureEnabled("registration");
+  if (!registrationEnabled) {
+    return {
+      error: "Registration is currently disabled",
+    };
+  }
+
   const { email, password, name } = newUser;
   await connectDB();
   const userFound = await User.findOne({ email });
