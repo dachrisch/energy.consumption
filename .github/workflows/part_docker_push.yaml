@@ -83,7 +83,7 @@ jobs:
             status=$(docker inspect --format='{{.State.Health.Status}}' test_container)
             echo "Health status: $status"
             if [ "$status" == "healthy" ]; then break; fi
-            sleep 3
+            sleep 6
           done
           # Fail the step if not healthy after 10 retries
           if [ "$status" != "healthy" ]; then
