@@ -7,3 +7,16 @@ export default withAuth({
 
   },
 });
+
+
+// Allow anonymous access to /api/health
+export const config = {
+  matcher: [
+    /*
+     * Match all routes except for:
+     * - /api/health
+     * - static files (e.g., /_next/, /favicon.ico, etc.)
+     */
+    "/((?!api/health|_next/static|_next/image|favicon.ico).*)",
+  ],
+};
