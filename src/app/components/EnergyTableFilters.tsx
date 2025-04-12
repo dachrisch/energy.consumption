@@ -22,9 +22,9 @@ const EnergyTableFilters = ({
 }: EnergyTableFiltersProps) => {
   return (
     <div className="mb-4 p-4 rounded-lg border border-dotted">
-      <div className="flex flex-wrap gap-4 items-center justify-center"> {/* Center content */}
+      <div className="flex flex-wrap gap-4 items-center justify-center">
         {/* Type Filter Buttons */}
-        <div className="flex gap-2 flex-wrap justify-center"> {/* Ensure type filter buttons are centered */}
+        <div className="flex gap-2 flex-wrap justify-center"> 
           {[
             { label: "All", value: "all" },
             { label: "Power", value: "power", icon: <PowerIcon /> },
@@ -56,7 +56,7 @@ const EnergyTableFilters = ({
         </div>
 
         {/* Date Picker */}
-        <div className="flex-grow min-w-[200px] sm:min-w-[250px] text-center"> {/* Center date picker */}
+        <div className="flex-grow min-w-[200px] sm:min-w-[250px] text-center"> 
           <DatePicker
             selectsRange
             startDate={dateRange.start}
