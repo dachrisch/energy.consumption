@@ -1,13 +1,15 @@
-'use client';
+"use client";
 
-import { EnergyType } from '../types';
-import { PowerIcon, GasIcon } from './icons';
+import { EnergyType } from "../types";
+import { PowerIcon, GasIcon, ResetIcon } from "./icons";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface EnergyTableFiltersProps {
-  typeFilter: EnergyType | 'all';
-  setTypeFilter: (type: EnergyType | 'all') => void;
-  dateRange: { start: string; end: string };
-  setDateRange: (range: { start: string; end: string }) => void;
+  typeFilter: EnergyType | "all";
+  setTypeFilter: (type: EnergyType | "all") => void;
+  dateRange: { start: Date | null; end: Date | null };
+  setDateRange: (range: { start: Date | null; end: Date | null }) => void;
   onReset: () => void;
 }
 
@@ -19,93 +21,67 @@ const EnergyTableFilters = ({
   onReset,
 }: EnergyTableFiltersProps) => {
   return (
-    <div className="mb-4 flex gap-4 items-center flex-wrap">
-      <div className="flex items-center gap-4">
-        <label className="block text-sm font-medium text-foreground">Type:</label>
-        <div className="flex gap-2">
-          <label
-            className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded cursor-pointer transition-colors ${
-              typeFilter === 'all'
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-input text-foreground border-border hover:bg-secondary"
-            }`}
-          >
-            <input
-              type="radio"
-              name="typeFilter"
-              value="all"
-              checked={typeFilter === 'all'}
-              onChange={(e) => setTypeFilter(e.target.value as EnergyType | 'all')}
-              className="hidden"
-            />
-            All
-          </label>
-          <label
-            className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded cursor-pointer transition-colors ${
-              typeFilter === 'power'
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-input text-foreground border-border hover:bg-secondary"
-            }`}
-          >
-            <input
-              type="radio"
-              name="typeFilter"
-              value="power"
-              checked={typeFilter === 'power'}
-              onChange={(e) => setTypeFilter(e.target.value as EnergyType | 'all')}
-              className="hidden"
-            />
-            <PowerIcon />
-            Power
-          </label>
-          <label
-            className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded cursor-pointer transition-colors ${
-              typeFilter === 'gas'
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-input text-foreground border-border hover:bg-secondary"
-            }`}
-          >
-            <input
-              type="radio"
-              name="typeFilter"
-              value="gas"
-              checked={typeFilter === 'gas'}
-              onChange={(e) => setTypeFilter(e.target.value as EnergyType | 'all')}
-              className="hidden"
-            />
-            <GasIcon />
-            Gas
-          </label>
+    <div className="mb-4 p-4 rounded-lg border border-dotted">
+      <div className="flex flex-wrap gap-4 items-center justify-center"> {/* Center content */}
+        {/* Type Filter Buttons */}
+        <div className="flex gap-2 flex-wrap justify-center"> {/* Ensure type filter buttons are centered */}
+          {[
+            { label: "All", value: "all" },
+            { label: "Power", value: "power", icon: <PowerIcon /> },
+            { label: "Gas", value: "gas", icon: <GasIcon /> },
+          ].map(({ label, value, icon }) => (
+            <label
+              key={value}
+              className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer transition-colors min-w-[80px] justify-center text-sm
+                ${
+                  typeFilter === value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-input text-foreground border-border hover:bg-secondary"
+                }`}
+            >
+              <input
+                type="radio"
+                name="typeFilter"
+                value={value}
+                checked={typeFilter === value}
+                onChange={(e) =>
+                  setTypeFilter(e.target.value as EnergyType | "all")
+                }
+                className="hidden"
+              />
+              {icon}
+              {label}
+            </label>
+          ))}
         </div>
-      </div>
-      <div className="flex items-center gap-4">
-        <label className="block text-sm font-medium text-foreground">Date Range:</label>
-        <div className="flex gap-2 items-center">
-          <input
-            type="date"
-            value={dateRange.start}
-            onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-            className="p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="Start date"
-          />
-          <span className="text-foreground">to</span>
-          <input
-            type="date"
-            value={dateRange.end}
-            onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-            className="p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="End date"
+
+        {/* Date Picker */}
+        <div className="flex-grow min-w-[200px] sm:min-w-[250px] text-center"> {/* Center date picker */}
+          <DatePicker
+            selectsRange
+            startDate={dateRange.start}
+            endDate={dateRange.end}
+            onChange={(dates: [Date | null, Date | null]) => {
+              const [start, end] = dates;
+              setDateRange({ start, end });
+            }}
+            dateFormat="yyyy-MM-dd"
+            className="w-full px-3 py-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+            placeholderText="Date range"
           />
         </div>
+
+        {/* Reset Button */}
+        <button
+          onClick={onReset}
+          className="ml-auto p-2 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80"
+          title="Reset filters"
+        >
+          <ResetIcon />
+        </button>
       </div>
-      <button
-        onClick={onReset}
-        className="ml-auto px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80"
-      >
-        Reset Filters
-      </button>
     </div>
   );
 };
 
-export default EnergyTableFilters; 
+export default EnergyTableFilters;

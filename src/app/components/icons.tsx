@@ -1,4 +1,8 @@
-export const UploadIcon = ({ className = "w-12 h-12 text-primary" }: { className?: string }) => (
+export const UploadIcon = ({
+  className = "w-12 h-12 text-primary",
+}: {
+  className?: string;
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -15,7 +19,11 @@ export const UploadIcon = ({ className = "w-12 h-12 text-primary" }: { className
   </svg>
 );
 
-export const PowerIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+export const PowerIcon = ({
+  className = "w-5 h-5",
+}: {
+  className?: string;
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -54,7 +62,11 @@ export const GasIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
-export const DeleteIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+export const DeleteIcon = ({
+  className = "w-5 h-5",
+}: {
+  className?: string;
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -71,7 +83,11 @@ export const DeleteIcon = ({ className = "w-5 h-5" }: { className?: string }) =>
   </svg>
 );
 
-export const ClipboardIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+export const ClipboardIcon = ({
+  className = "w-4 h-4",
+}: {
+  className?: string;
+}) => (
   <svg
     className={className}
     xmlns="http://www.w3.org/2000/svg"
@@ -109,4 +125,21 @@ export const ViewIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
       d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
     />
   </svg>
-); 
+);
+
+export const ResetIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+    />
+  </svg>
+);

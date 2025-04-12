@@ -15,5 +15,5 @@ export const connectDB = async (): Promise<boolean> => {
     .connect(uri, {dbName: 'energy_consumption'})
     .then(({ connection }) => connection.readyState === 1);
 };
-
 export default connectDB;
+

@@ -127,7 +127,7 @@ const EnergyCharts = ({
   };
 
   return (
-    <div className="h-[400px]">
+    <div className="w-full aspect-[2/1] min-h-[300px]">
       <Line options={options} data={chartData} />
     </div>
   );
