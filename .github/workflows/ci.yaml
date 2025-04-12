@@ -27,5 +27,5 @@ jobs:
     with:
       image_name: dachrisch/energy.consumption
       dockerfile: Dockerfile
-      test: true
+      test: false
       version: "${{ github.ref_name }}"
