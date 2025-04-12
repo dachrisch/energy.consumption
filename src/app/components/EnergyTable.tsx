@@ -10,7 +10,7 @@ interface EnergyTableProps {
   energyData: EnergyDataType[];
   onDelete: (id: string) => void;
   typeFilter: EnergyType | 'all';
-  dateRange: { start: string; end: string };
+  dateRange: { start: Date | null; end: Date | null };
 }
 
 const EnergyTable = ({ 

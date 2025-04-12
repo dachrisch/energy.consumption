@@ -27,7 +27,7 @@ ChartJS.register(
 interface EnergyChartsProps {
   energyData: EnergyDataType[];
   typeFilter: EnergyType | "all";
-  dateRange: { start: string; end: string };
+  dateRange: { start: Date | null; end: Date | null };
 }
 
 const EnergyCharts = ({

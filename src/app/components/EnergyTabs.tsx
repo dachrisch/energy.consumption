@@ -15,14 +15,14 @@ const Tabs = ({ energyData, onDelete }: TabsProps) => {
   const [activeTab, setActiveTab] = useState("table");
   // Shared filter state
   const [typeFilter, setTypeFilter] = useState<EnergyType | "all">("all");
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
-    start: "",
-    end: "",
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
+    start: null,
+    end: null,
   });
 
   const handleResetFilters = () => {
     setTypeFilter("all");
-    setDateRange({ start: "", end: "" });
+    setDateRange({ start: null, end: null });
   };
 
   const tabs = [
