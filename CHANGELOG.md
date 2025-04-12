@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Features
 
-* **chat:** energy chats ([0263ed4](https://github.com/dachrisch/energy.consumption/commit/0263ed419da75a29688aaa83d0f3a9aaeda24888))
+* **chart:** energy charts ([0263ed4](https://github.com/dachrisch/energy.consumption/commit/0263ed419da75a29688aaa83d0f3a9aaeda24888))
 
 ## [1.2.0](https://github.com/dachrisch/energy.consumption/compare/v1.1.0...v1.2.0) (2025-04-11)
 
