@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/dachrisch/energy.consumption/compare/v1.3.4...v1.4.0) (2025-04-12)
+
+
+### Features
+
+* **EnergyTableFilters:** Added React Date Picker with date range selection ([4eeacf6](https://github.com/dachrisch/energy.consumption/commit/4eeacf6a4faf783bb2c39259b1698d6b9a2e507d))
+
 ### [1.3.4](https://github.com/dachrisch/energy.consumption/compare/v1.3.3...v1.3.4) (2025-04-12)
 
 ### [1.3.3](https://github.com/dachrisch/energy.consumption/compare/v1.3.2...v1.3.3) (2025-04-12)
