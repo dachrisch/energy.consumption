@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.1](https://github.com/dachrisch/energy.consumption/compare/v1.5.0...v1.5.1) (2025-04-13)
+
+
+### Bug Fixes
+
+* **user profile:** add user id to the database request ([298a641](https://github.com/dachrisch/energy.consumption/commit/298a641f2a18f3888d4190eb20dff453d2f667b2))
+
 ## [1.5.0](https://github.com/dachrisch/energy.consumption/compare/v1.4.1...v1.5.0) (2025-04-13)
 
 
