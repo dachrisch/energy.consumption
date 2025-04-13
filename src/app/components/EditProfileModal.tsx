@@ -73,11 +73,12 @@ export default function EditProfileModal({
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <input
               type="email"
+              id="email"
               value={session?.user?.email || ""}
               disabled
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"

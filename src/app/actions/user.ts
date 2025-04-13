@@ -4,7 +4,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import User from '@/models/User';
 import { connectDB } from '@/lib/mongodb';
-import { getToken } from 'next-auth/jwt';
 
 export async function updateProfile(name: string) {
   try {
