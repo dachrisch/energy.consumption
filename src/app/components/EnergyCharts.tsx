@@ -90,6 +90,7 @@ const EnergyCharts = ({
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top" as const,
@@ -127,7 +128,8 @@ const EnergyCharts = ({
   };
 
   return (
-    <div className="w-full aspect-[2/1] min-h-[300px]">
+    <div className="w-full min-h-[300px] sm:aspect-[2/1] aspect-[1/1]">
+
       <Line options={options} data={chartData} />
     </div>
   );
