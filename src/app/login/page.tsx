@@ -1,15 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+
+// Assume this is a client-compatible feature flag function
+import { isFeatureEnabled } from "@/lib/featureFlags"; // Adjust path accordingly
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [registrationEnabled, setRegistrationEnabled] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkFeature = async () => {
+      const enabled = await isFeatureEnabled("registration");
+      setRegistrationEnabled(enabled);
+    };
+    checkFeature();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,11 +32,12 @@ const LoginPage = () => {
       password,
       redirect: false,
     });
+
     if (loginResult?.error) {
       setError(loginResult.error as string);
     }
     if (loginResult?.ok) {
-      return router.push("/");
+      router.push("/");
     }
   };
 
@@ -86,11 +99,15 @@ const LoginPage = () => {
             </button>
           </div>
         </form>
-        <Link
-          href="/register"
-          className="text-sm text-[#888] transition duration-150 ease hover:text-black">
-          Need an account?
-        </Link>
+
+        {registrationEnabled && (
+          <Link
+            href="/register"
+            className="text-sm text-[#888] transition duration-150 ease hover:text-black"
+          >
+            Need an account?
+          </Link>
+        )}
       </div>
     </section>
   );

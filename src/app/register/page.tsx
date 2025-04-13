@@ -24,7 +24,7 @@ export default function Register() {
       if (registerResult?.success) {
         return router.push("/login");
       } else {
-        setError(`${registerResult}`);
+        setError(registerResult.error);
         return;
       }
     }

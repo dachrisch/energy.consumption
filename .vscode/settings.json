@@ -3,6 +3,7 @@
         "release",
         "deploy",
         "profile",
-        "user profile"
+        "user profile",
+        "registration"
     ]
 }

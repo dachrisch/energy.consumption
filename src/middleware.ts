@@ -17,6 +17,6 @@ export const config = {
      * - /api/health
      * - static files (e.g., /_next/, /favicon.ico, etc.)
      */
-    "/((?!api/health|_next/static|_next/image|favicon.ico).*)",
+    "/((?!api/health|register|_next/static|_next/image|favicon.ico).*)",
   ],
 };
