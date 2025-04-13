@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/dachrisch/energy.consumption/compare/v1.4.1...v1.5.0) (2025-04-13)
+
+
+### Features
+
+* **profile:** update user profile ([8d8fe7e](https://github.com/dachrisch/energy.consumption/commit/8d8fe7e67175e702ff939098c93211954e3f6e75))
+* **user:** add data per user ([5e3c784](https://github.com/dachrisch/energy.consumption/commit/5e3c7844ff83e923d827e2b4982a2e9084437a57))
+
 ### [1.4.1](https://github.com/dachrisch/energy.consumption/compare/v1.4.0...v1.4.1) (2025-04-12)
 
 ## [1.4.0](https://github.com/dachrisch/energy.consumption/compare/v1.3.4...v1.4.0) (2025-04-12)
