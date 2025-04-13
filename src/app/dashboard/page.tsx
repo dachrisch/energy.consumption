@@ -106,8 +106,6 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen p-8">
       <main className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Energy Consumption Monitor</h1>
-
         <div className="mb-8">
           <CSVDropZone onDataImported={onCSVImport} />
         </div>

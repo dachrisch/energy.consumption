@@ -34,12 +34,12 @@ const Toast = ({ message, type, onClose }: ToastProps) => {
     <div className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${getBackgroundColor()}`}>
       <div className="flex items-center">
         <p className="mr-4">{message}</p>
-        <button
+        <div
           onClick={onClose}
           className="text-current hover:text-opacity-75 focus:outline-none"
         >
           ×
-        </button>
+        </div>
       </div>
     </div>
   );

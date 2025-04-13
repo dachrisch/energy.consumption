@@ -143,3 +143,46 @@ export const ResetIcon = ({ className = "w-5 h-5" }: { className?: string }) => 
     />
   </svg>
 );
+
+export const UserIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+    />
+  </svg>
+);
+
+export const EnergyLogo = ({ className = "w-8 h-8" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    {/* Sun rays */}
+    <circle cx="12" cy="12" r="4" className="text-primary" fill="currentColor" />
+    <path d="M12 2v3" />
+    <path d="M12 19v3" />
+    <path d="M4.93 4.93l2.12 2.12" />
+    <path d="M16.95 16.95l2.12 2.12" />
+    <path d="M2 12h3" />
+    <path d="M19 12h3" />
+    <path d="M4.93 19.07l2.12-2.12" />
+    <path d="M16.95 7.05l2.12-2.12" />
+    {/* Energy indicators */}
+    <circle cx="12" cy="12" r="2" fill="white" />
+  </svg>
+);

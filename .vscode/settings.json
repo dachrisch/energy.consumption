@@ -1,6 +1,7 @@
 {
     "conventionalCommits.scopes": [
         "release",
-        "deploy"
+        "deploy",
+        "profile"
     ]
 }

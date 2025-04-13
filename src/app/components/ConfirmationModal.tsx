@@ -18,22 +18,22 @@ const ConfirmationModal=({
   if (!isOpen) return null;
 
   return (
-    <div data-testid="confirmation-modal" className="fixed inset-0 bg-card/95 backdrop-blur-sm  flex items-center justify-center z-50">
-      <div className="bg-card text-card-foreground p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h3 className="text-lg font-semibold mb-4">Confirm Lower Value</h3>
-        <p className="mb-4">
+    <div data-testid="confirmation-modal" className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md border border-gray-100">
+        <h3 className="text-xl font-semibold mb-4">Confirm Lower Value</h3>
+        <p className="mb-4 text-gray-700">
           You are about to enter a lower {type} value ({newValue}) than the previous value ({currentValue}). Are you sure this is correct?
         </p>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-secondary text-secondary-foreground rounded hover:opacity-90"
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-md"
           >
             Confirm
           </button>
