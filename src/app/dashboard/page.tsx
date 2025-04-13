@@ -41,8 +41,10 @@ const Dashboard = () => {
   };
 
   const onAddEnergy = async (newData: Omit<EnergyDataType, "_id">) => {
+    console.log("onAddEnergy");
     try {
-      await addEnergy(newData);
+      const addResult = await addEnergy(newData);
+      console.log(`addResult: ${JSON.stringify(addResult)}`);
       fetchEnergyDataType();
     } catch (err) {
       setError("Failed to add energy data");

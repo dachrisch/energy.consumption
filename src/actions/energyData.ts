@@ -4,6 +4,8 @@ import EnergyData from "@/models/EnergyData";
 import { EnergyDataType } from "../app/types";
 import { InsertOneResult } from "mongodb";
 import { DeleteResult } from "mongoose";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export type ApiResult = { success: boolean } | Error;
 
@@ -11,14 +13,25 @@ export const addEnergy = async (
   newData: Omit<EnergyDataType, "_id">
 ): Promise<ApiResult> => {
   await connectDB();
-  const energyData = new EnergyData(newData);
-  console.log(`addEnergy: ${energyData}, newData: ${JSON.stringify(newData)}`);
-  return energyData
-    .save()
-    .then((createResult: InsertOneResult) => ({
-      success: "_id" in createResult,
-    }))
-    .catch((error: Error) => error);
+  // Get the session
+  const session = await getServerSession(authOptions);
+  console.log(`session ${session?.user}`)
+
+  if (!session?.user?.id) {
+    // If the user is not logged in or doesn't have an `id`, return an error
+    return { success: false };
+  }
+  // Add userId to the energy data
+  const energyData = new EnergyData({
+    ...newData,
+    userId: session.user.id,
+  });
+
+  console.log(`energyData ${energyData}`)
+
+  return energyData.save().then((createResult: InsertOneResult) => ({
+    success: "_id" in createResult,
+  }));
 };
 
 export const deleteEnergy = async (id: string): Promise<ApiResult> => {

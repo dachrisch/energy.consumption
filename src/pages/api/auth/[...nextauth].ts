@@ -37,12 +37,23 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     // Using the `...rest` parameter to be able to narrow down the type based on `trigger`
-    jwt({ token, trigger, session }) {
+    jwt({ token, trigger, session, user }) {
       if (trigger === "update" && session?.name) {
         // Note, that `session` can be any arbitrary object, remember to validate it!
         token.name = session.name;
       }
+      if (user) {
+        console.log(`user.id ${user.id}`)
+        token.userId = user.id;
+      }
       return token;
+    },
+    async session({ session, token }) {
+      if (session?.user) {
+        console.log(`token.userId ${token.userId}`)
+        session.user.id = token.userId as string;
+      }
+      return session;
     },
   },
 };
