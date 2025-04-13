@@ -5,6 +5,7 @@ export type EnergyDataType = {
   date: Date;
   type: EnergyType;
   amount: number;
+  userId: string;
 };
 
 export type ImportResult = {
