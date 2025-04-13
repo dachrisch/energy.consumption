@@ -40,7 +40,7 @@ const Dashboard = () => {
     }
   };
 
-  const onAddEnergy = async (newData: Omit<EnergyDataType, "_id">) => {
+  const onAddEnergy = async (newData: Omit<EnergyDataType, "_id" | "userId">) => {
     console.log("onAddEnergy");
     try {
       const addResult = await addEnergy(newData);

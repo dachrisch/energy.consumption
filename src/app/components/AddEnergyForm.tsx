@@ -5,7 +5,7 @@ import { EnergyDataType, EnergyType } from "../types";
 import { formatDateToIso, parseDateFlexible } from "../utils/dateUtils";
 
 interface AddEnergyFormProps {
-  onSubmit: (data: Omit<EnergyDataType, "_id">) => void;
+  onSubmit: (data: Omit<EnergyDataType, "_id" | "userId">) => void;
   latestValues: {
     power: number;
     gas: number;
@@ -13,7 +13,7 @@ interface AddEnergyFormProps {
 }
 
 const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
-  const [newData, setNewData] = useState<Omit<EnergyDataType, "_id">>({
+  const [newData, setNewData] = useState<Omit<EnergyDataType, "_id" | "userId">>({
     date: new Date(),
     type: "power",
     amount: latestValues.power || 0,
@@ -22,7 +22,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingSubmission, setPendingSubmission] = useState<Omit<
     EnergyDataType,
-    "_id"
+    "_id" | "userId"
   > | null>(null);
 
   // Update amount when type changes
@@ -53,7 +53,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
     submitData(newData);
   };
 
-  const submitData = (data: Omit<EnergyDataType, "_id">) => {
+  const submitData = (data: Omit<EnergyDataType, "_id" | "userId">) => {
     setError("");
     onSubmit(data);
     setNewData({

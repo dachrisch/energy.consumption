@@ -10,7 +10,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 export type ApiResult = { success: boolean } | Error;
 
 export const addEnergy = async (
-  newData: Omit<EnergyDataType, "_id">
+  newData: Omit<EnergyDataType, "_id" | "userId">
 ): Promise<ApiResult> => {
   await connectDB();
   // Get the session
