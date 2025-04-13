@@ -18,7 +18,7 @@ const EnergyDataSchema = new Schema<EnergyDataType>({
     type: String,
     ref: 'User',
     required: true,
-    index: true // Add index for better query performance
+    index: true 
   }
 }, {
   timestamps: true
