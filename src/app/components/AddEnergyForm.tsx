@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import ConfirmationModal from "./ConfirmationModal";
 import { PowerIcon, GasIcon } from "./icons";
-import { EnergyDataType, EnergyType } from "../types";
+import { EnergyDataType, EnergyType, NewEnergyDataType } from "../types";
 import { formatDateToIso, parseDateFlexible } from "../utils/dateUtils";
 
 interface AddEnergyFormProps {
-  onSubmit: (data: Omit<EnergyDataType, "_id" | "userId">) => void;
+  onSubmit: (data: NewEnergyDataType) => void;
   latestValues: {
     power: number;
     gas: number;
@@ -13,7 +13,7 @@ interface AddEnergyFormProps {
 }
 
 const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
-  const [newData, setNewData] = useState<Omit<EnergyDataType, "_id" | "userId">>({
+  const [newData, setNewData] = useState<NewEnergyDataType>({
     date: new Date(),
     type: "power",
     amount: latestValues.power || 0,
@@ -27,7 +27,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
 
   // Update amount when type changes
   useEffect(() => {
-    setNewData((prev) => ({
+    setNewData((prev:NewEnergyDataType) => ({
       ...prev,
       amount: latestValues[prev.type] || 0,
     }));

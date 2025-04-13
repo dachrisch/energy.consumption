@@ -8,6 +8,8 @@ export type EnergyDataType = {
   userId: string;
 };
 
+export type NewEnergyDataType = Omit<EnergyDataType, "_id" | "userId">;
+
 export type ImportResult = {
   success: number;
   skipped: number;

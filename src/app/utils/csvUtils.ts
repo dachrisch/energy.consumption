@@ -1,4 +1,4 @@
-import { EnergyDataType } from "../types";
+import {  NewEnergyDataType } from "../types";
 import { parseDateFlexible } from "./dateUtils";
 import csv from "csv-parser";
 import stream from "stream";
@@ -6,7 +6,7 @@ import stream from "stream";
 export type Separator = "," | "\t";
 
 export interface CSVParseResult {
-  data: Omit<EnergyDataType, "_id">[];
+  data: NewEnergyDataType[];
   errors: string[];
 }
 
@@ -14,7 +14,7 @@ export const parseCSVData = async (
   csvData: string,
   separator: Separator
 ): Promise<CSVParseResult> => {
-  const energyData: Omit<EnergyDataType, "_id">[] = [];
+  const energyData: NewEnergyDataType[] = [];
 
   const csvStream = new stream.PassThrough();
 

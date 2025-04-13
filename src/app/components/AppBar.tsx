@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { signOut, useSession } from 'next-auth/react';
-import { UserIcon, EnergyLogo } from './icons';
-import EditProfileModal from './EditProfileModal';
-import Toast from './Toast';
+import { useState, useEffect, useRef } from "react";
+import { signOut, useSession } from "next-auth/react";
+import { UserIcon, EnergyLogo } from "./icons";
+import EditProfileModal from "./EditProfileModal";
+import Toast from "./Toast";
 
 export default function AppBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,23 +23,31 @@ export default function AppBar() {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/login' });
+    await signOut({ callbackUrl: "/login" });
   };
 
   return (
-    <nav className="bg-white">
+    <nav className="">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 shadow-md">
         <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-center space-x-3">
             <EnergyLogo className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold">Energy Consumption Monitor</h1>
+            <h1 className="font-bold text-3xl hidden sm:inline">
+              Energy Consumption Monitor
+            </h1>
+            <h1
+              className="font-bold text-xl inline sm:hidden"
+              title="Energy Consumption Monitor"
+            >
+              ECM
+            </h1>
           </div>
           <div className="relative" ref={menuRef}>
             <div
@@ -52,8 +60,12 @@ export default function AppBar() {
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10 border border-gray-100">
                 <div className="px-4 py-2 border-b border-gray-100">
-                  <div className="text-sm font-medium text-gray-900">{session?.user?.name}</div>
-                  <div className="text-xs text-gray-500 truncate">{session?.user?.email}</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {session?.user?.name}
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {session?.user?.email}
+                  </div>
                 </div>
                 <div
                   onClick={() => {
@@ -81,7 +93,7 @@ export default function AppBar() {
         onSuccess={() => {
           setToast({
             message: "Profile updated successfully",
-            type: "success"
+            type: "success",
           });
         }}
       />
@@ -94,4 +106,4 @@ export default function AppBar() {
       )}
     </nav>
   );
-} 
+}

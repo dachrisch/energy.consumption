@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import AddEnergyForm from "../components/AddEnergyForm";
 import Toast from "../components/Toast";
-import { EnergyDataType } from "../types";
+import { EnergyDataType, NewEnergyDataType } from "../types";
 import { getLatestValues } from "../handlers/energyHandlers";
 import CSVDropZone from "../components/CSVDropZone";
 import { addEnergy, deleteEnergy, importCSV } from "@/actions/energyData";
@@ -40,7 +40,7 @@ const Dashboard = () => {
     }
   };
 
-  const onAddEnergy = async (newData: Omit<EnergyDataType, "_id" | "userId">) => {
+  const onAddEnergy = async (newData: NewEnergyDataType) => {
     console.log("onAddEnergy");
     try {
       const addResult = await addEnergy(newData);
