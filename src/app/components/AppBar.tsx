@@ -37,13 +37,15 @@ export default function AppBar() {
     <nav className="">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 shadow-md">
         <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center justify-center space-x-3">
-            <EnergyLogo className="w-8 h-8 text-primary" />
-            <h1 className="font-bold text-3xl hidden sm:inline">
+          <div className="relative flex-1 flex items-center justify-center">
+            <div className="absolute left-0 flex items-center space-x-3">
+              <EnergyLogo className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="font-bold text-3xl hidden sm:inline text-center">
               Energy Consumption Monitor
             </h1>
             <h1
-              className="font-bold text-xl inline sm:hidden"
+              className="font-bold text-xl inline sm:hidden text-center"
               title="Energy Consumption Monitor"
             >
               ECM
