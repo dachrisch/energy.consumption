@@ -1,6 +1,5 @@
 'use client';
-
-import { EnergyDataType } from "../types";
+import {  NewEnergyDataType } from "../types";
 import { formatDateToBrowserLocale } from "../utils/dateUtils";
 
 interface CSVImportModalProps {
