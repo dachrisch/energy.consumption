@@ -62,7 +62,7 @@ const Dashboard = () => {
     }
   };
 
-  const onCSVImport = async (data: Omit<EnergyDataType, "_id">[]) => {
+  const onCSVImport = async (data: NewEnergyDataType[]) => {
     try {
       const result = await importCSV(data, energyData);
 

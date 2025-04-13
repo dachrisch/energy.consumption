@@ -46,7 +46,7 @@ export const deleteEnergy = async (id: string): Promise<ApiResult> => {
 };
 
 export const importCSV = async (
-  data: Omit<EnergyDataType, "_id">[],
+  data: NewEnergyDataType[],
   existingData: EnergyDataType[]
 ) => {
   try {

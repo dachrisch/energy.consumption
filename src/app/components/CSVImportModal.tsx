@@ -6,8 +6,8 @@ import { formatDateToBrowserLocale } from "../utils/dateUtils";
 interface CSVImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (data: Omit<EnergyDataType, "_id">[]) => void;
-  previewData: Omit<EnergyDataType, "_id">[];
+  onConfirm: (data: NewEnergyDataType[]) => void;
+  previewData: NewEnergyDataType[];
   parseErrors: string[];
 }
 
