@@ -15,7 +15,7 @@ const EnergyDataSchema = new Schema<EnergyDataType>({
     required: true,
   },
   userId: {
-    type: Schema.Types.ObjectId,
+    type: String,
     ref: 'User',
     required: true,
     index: true // Add index for better query performance
