@@ -20,8 +20,8 @@ const CSVImportModal = ({
   if (!isOpen) return null;
 
   return (
-    <div data-testid="csv-import-modal" className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl border border-gray-100">
+    <div data-testid="csv-import-modal" className="modal-overlay">
+      <div className="modal-container">
         <h3 className="text-xl font-semibold mb-4">Confirm CSV Import</h3>
         
         {parseErrors.length > 0 && (
@@ -65,14 +65,14 @@ const CSVImportModal = ({
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"
+            className="modal-button-cancel"
           >
             Cancel
           </button>
           {previewData.length > 0 && (
             <button
               onClick={() => onConfirm(previewData)}
-              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-md"
+              className="modal-button-confirm"
             >
               Import {previewData.length} Rows
             </button>

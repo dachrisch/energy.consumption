@@ -4,6 +4,7 @@
         "deploy",
         "profile",
         "user profile",
-        "registration"
+        "registration",
+        "modal"
     ]
 }

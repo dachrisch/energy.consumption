@@ -52,8 +52,8 @@ export default function EditProfileModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+    <div className="modal-overlay">
+      <div className="modal-container">
         <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -89,14 +89,14 @@ export default function EditProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md"
+              className="modal-button-cancel"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-md disabled:opacity-50"
+              className="modal-button-confirm disabled:opacity-50"
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
