@@ -186,3 +186,37 @@ export const EnergyLogo = ({ className = "w-8 h-8" }: { className?: string }) =>
     <circle cx="12" cy="12" r="2" fill="white" />
   </svg>
 );
+
+export const DoubleArrowLeftIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11 19l-7-7 7-7M18 19l-7-7 7-7"
+    />
+  </svg>
+);
+
+export const DoubleArrowRightIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className={className}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M13 5l7 7-7 7M6 5l7 7-7 7"
+      />
+  </svg>
+);

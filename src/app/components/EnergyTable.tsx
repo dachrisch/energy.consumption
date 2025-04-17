@@ -5,6 +5,7 @@ import { PowerIcon, GasIcon, DeleteIcon } from './icons';
 import { getFilteredAndSortedData } from '../handlers/energyHandlers';
 import { formatDateToBrowserLocale } from '../utils/dateUtils';
 import { useState } from 'react';
+import Pagination from './Pagination';
 
 interface EnergyTableProps {
   energyData: EnergyDataType[];
@@ -13,14 +14,16 @@ interface EnergyTableProps {
   dateRange: { start: Date | null; end: Date | null };
 }
 
-const EnergyTable = ({ 
-  energyData, 
+const EnergyTable = ({
+  energyData,
   onDelete,
   typeFilter,
   dateRange,
 }: EnergyTableProps) => {
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const getTypeIcon = (type: EnergyType) => {
     return type === 'power' ? <PowerIcon /> : <GasIcon />;
@@ -41,26 +44,37 @@ const EnergyTable = ({
   };
 
 
+  const filteredAndSortedData = getFilteredAndSortedData(energyData, typeFilter, dateRange, sortField, sortOrder);
+  const totalItems = filteredAndSortedData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const currentData = filteredAndSortedData.slice(startIndex, endIndex);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
+  };
+
   return (
-  
-      
+
+    <>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-secondary text-secondary-foreground">
-              <th 
+              <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('date')}
               >
                 Date {getSortIcon('date')}
               </th>
-              <th 
+              <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('type')}
               >
                 Type {getSortIcon('type')}
               </th>
-              <th 
+              <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('amount')}
               >
@@ -70,7 +84,7 @@ const EnergyTable = ({
             </tr>
           </thead>
           <tbody>
-            {getFilteredAndSortedData(energyData, typeFilter, dateRange, sortField, sortOrder).map((data) => (
+            {currentData.map((data) => (
               <tr key={data._id} className="hover:bg-secondary/10">
                 <td className="p-2 text-center align-middle">{formatDateToBrowserLocale(data.date)}</td>
                 <td className="p-2 text-center align-middle">
@@ -94,8 +108,8 @@ const EnergyTable = ({
           </tbody>
         </table>
       </div>
-    
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+    </>
   );
 };
-
 export default EnergyTable;
