@@ -1,7 +1,7 @@
 import React from "react";
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import EditProfileModal from "../modals/EditProfileModal";
+import EditProfileModal from "../EditProfileModal";
 import { useSession } from "next-auth/react";
 import { updateProfile } from "@/app/actions/user";
 

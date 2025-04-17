@@ -59,7 +59,7 @@ export default function EditProfileModal({
           <div className="form-group">
             <label
               htmlFor="name"
-              className=""
+              className="form-label"
             >
               Name
             </label>
@@ -73,7 +73,7 @@ export default function EditProfileModal({
             />
           </div>
           <div className="form-group">
-            <label htmlFor="email" className="">
+            <label htmlFor="email" className="form-label">
               Email
             </label>
             <input

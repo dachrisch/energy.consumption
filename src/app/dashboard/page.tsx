@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AddEnergyForm from "../components/AddEnergyForm";
 import Toast from "../components/Toast";
 import { EnergyDataType, NewEnergyDataType } from "../types";
 import { getLatestValues } from "../handlers/energyHandlers";
-import CSVDropZone from "../components/CSVDropZone";
 import { addEnergy, deleteEnergy, importCSV } from "@/actions/energyData";
 import EnergyTabs from "../components/EnergyTabs";
+import { CSVDropZone } from "../components/add/CSVDropZone";
+import AddEnergyForm from "../components/add/AddEnergyForm";
 
 const Dashboard = () => {
   const [energyData, setEnergyDataType] = useState<EnergyDataType[]>([]);

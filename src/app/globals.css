@@ -9,6 +9,8 @@
   --secondary-foreground: #171717;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
+  --disabled: #e5e7eb; /* Tailwind's gray-200 */
+  --disabled-foreground: #9ca3af; /* Tailwind's gray-400 */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +23,9 @@
     --secondary-foreground: #fafafa;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
+
+    --disabled: #3f3f46; /* Tailwind's gray-700 */
+    --disabled-foreground: #a1a1aa; /* Tailwind's gray-400 */
   }
 }
 
@@ -33,6 +38,8 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-disabled: var(--disabled);
+  --color-disabled-foreground: var(--disabled-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -74,8 +81,10 @@ td {
 
 /* Button */
 button {
-  @apply bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-2 rounded font-semibold cursor-pointer transition-colors duration-200;
+  @apply px-4 py-2 rounded font-semibold cursor-pointer transition-colors duration-200;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  background-color: var(--color-primary);
+  color: var(--primary-foreground);
 }
 
 button:not(:disabled):hover {
@@ -97,16 +106,18 @@ button:not(:disabled):hover {
 
 .modal-container {
   @apply max-w-md rounded-lg p-6 w-full border border-gray-100;
-  background-color: var(--background); /* This ensures the modal container's background is solid */
-  color: var(--foreground); /* Ensures the text color matches the theme */
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 .modal-actions {
-  @apply flex justify-end space-x-3
+  @apply flex justify-end space-x-3;
 }
 
 .modal-button-cancel {
-  @apply px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md;
+  @apply px-4 py-2 text-sm font-medium  rounded-md;
+  background-color: var(--color-secondary);
+  color: var(--color-foreground);
 }
 
 .modal-button-confirm {
@@ -160,7 +171,7 @@ button:not(:disabled):hover {
   @apply mb-4;
 }
 
-form label {
+.form-label {
   @apply block text-sm font-medium text-gray-700 mb-1;
 }
 
@@ -173,5 +184,7 @@ form input:focus {
 }
 
 form input:disabled {
-  @apply bg-gray-50;
+  background-color: var(--color-disabled);
+  color: var(--color-disabled-foreground);
+  cursor: not-allowed;
 }

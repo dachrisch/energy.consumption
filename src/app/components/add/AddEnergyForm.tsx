@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import ConfirmationModal from "./modals/ConfirmationModal";
-import { PowerIcon, GasIcon } from "./icons";
-import { EnergyDataType, EnergyType, NewEnergyDataType } from "../types";
-import { formatDateToIso, parseDateFlexible } from "../utils/dateUtils";
+import ConfirmationModal from "@/app/components/modals/ConfirmationModal";
+import { PowerIcon, GasIcon } from "@/app/components/icons";
+import { EnergyDataType, EnergyType, NewEnergyDataType } from "@/app/types";
+import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
 
 interface AddEnergyFormProps {
   onSubmit: (data: NewEnergyDataType) => void;

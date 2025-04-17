@@ -1,8 +1,8 @@
+import { NewEnergyDataType } from "@/app/types";
+import { Separator, parseCSVData } from "@/app/utils/csvUtils";
 import { useState, useCallback, useEffect } from "react";
-import {  NewEnergyDataType } from "../types";
-import { parseCSVData, Separator } from "../utils/csvUtils";
-import { UploadIcon, ClipboardIcon } from "./icons";
-import CSVImportModal from "./modals/CSVImportModal";
+import { UploadIcon, ClipboardIcon } from "../icons";
+import CSVImportModal from "../modals/CSVImportModal";
 
 interface CSVDropZoneProps {
   onDataImported: (data: NewEnergyDataType[]) => void;
