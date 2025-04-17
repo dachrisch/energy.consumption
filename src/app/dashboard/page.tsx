@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Toast from "../components/Toast";
-import { EnergyDataType, NewEnergyDataType } from "../types";
-import { getLatestValues } from "../handlers/energyHandlers";
-import { addEnergy, deleteEnergy, importCSV } from "@/actions/energyData";
+import { EnergyDataType } from "../types";
+import {  deleteEnergy } from "@/actions/energyData";
 import EnergyTabs from "../components/EnergyTabs";
-import { CSVDropZone } from "../components/add/CSVDropZone";
-import AddEnergyForm from "../components/add/AddEnergyForm";
 
 const Dashboard = () => {
+  const router = useRouter();
   const [energyData, setEnergyDataType] = useState<EnergyDataType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,18 +39,6 @@ const Dashboard = () => {
     }
   };
 
-  const onAddEnergy = async (newData: NewEnergyDataType) => {
-    console.log("onAddEnergy");
-    try {
-      const addResult = await addEnergy(newData);
-      console.log(`addResult: ${JSON.stringify(addResult)}`);
-      fetchEnergyDataType();
-    } catch (err) {
-      setError("Failed to add energy data");
-      console.error(err);
-    }
-  };
-
   const onDelete = async (id: string): Promise<void> => {
     try {
       await deleteEnergy(id);
@@ -59,36 +46,6 @@ const Dashboard = () => {
     } catch (err) {
       setError("Failed to delete energy data");
       console.error(err);
-    }
-  };
-
-  const onCSVImport = async (data: NewEnergyDataType[]) => {
-    try {
-      const result = await importCSV(data, energyData);
-
-      // Show import results
-      const message = [
-        result.success > 0 && `${result.success} entries imported`,
-        result.skipped > 0 &&
-          `${result.skipped} entries skipped (already exist)`,
-        result.error > 0 && `${result.error} entries failed`,
-      ]
-        .filter(Boolean)
-        .join(", ");
-
-      setToast({
-        message,
-        type: result.error > 0 ? "error" : "success",
-      });
-
-      // Refresh the data
-      fetchEnergyDataType();
-    } catch (error) {
-      console.error("Error importing CSV data:", error);
-      setToast({
-        message: "Failed to import CSV data",
-        type: "error",
-      });
     }
   };
 
@@ -108,22 +65,33 @@ const Dashboard = () => {
   return (
     <div className="app-root">
       <main className="dashboard-main">
-        <div className="csv-dropzone-container">
-          <CSVDropZone onDataImported={onCSVImport} />
-        </div>
-
         {error && (
           <div className="alert-error">
             {error}
           </div>
         )}
 
-        <AddEnergyForm
-          onSubmit={onAddEnergy}
-          latestValues={getLatestValues(energyData)}
-        />
-
         <EnergyTabs energyData={energyData} onDelete={onDelete} />
+
+        <button
+          onClick={() => router.push("/add")}
+          className="fixed bottom-8 right-8 p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+        </button>
 
         {toast && (
           <Toast

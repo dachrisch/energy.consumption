@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { UserIcon, EnergyLogo } from "./icons";
 import EditProfileModal from "./modals/EditProfileModal";
@@ -14,6 +15,7 @@ export default function AppBar() {
     type: "success" | "error" | "info";
   } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -37,7 +39,10 @@ export default function AppBar() {
     <nav className="nav-container">
       <div className="nav-inner">
         <div className="logo-container">
-          <div className="logo-left">
+          <div
+            className="logo-left cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => router.push("/dashboard")}
+          >
             <EnergyLogo className="app-logo" />
           </div>
           <h1 className="logo-text-large">Energy Consumption Monitor</h1>
