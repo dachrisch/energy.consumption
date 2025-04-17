@@ -1,0 +1,34 @@
+/* Table */
+table {
+  border-color: var(--secondary);
+}
+
+th {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+td {
+  border-color: var(--secondary);
+}
+
+/* Table */
+.table-container {
+  @apply overflow-x-auto max-h-60 border border-gray-200 rounded;
+}
+
+.table {
+  @apply w-full border-collapse;
+}
+
+.table-header {
+  @apply sticky top-0 bg-gray-50;
+}
+
+.table-cell {
+  @apply p-2 border-b border-gray-200 text-left;
+}
+
+.table-row:hover {
+  @apply bg-gray-50;
+}

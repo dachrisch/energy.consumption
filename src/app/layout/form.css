@@ -1,0 +1,46 @@
+/* Form elements */
+input,
+select,
+textarea {
+  background-color: var(--secondary);
+  color: var(--foreground);
+  border-color: var(--secondary);
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5); /* adjust for dark mode */
+}
+
+@media (prefers-color-scheme: dark) {
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.9); /* adjust for dark mode */
+  }
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline-color: var(--primary);
+}
+
+/* Form */
+.form-group {
+  @apply mb-4;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+form input {
+  @apply px-3 py-2 border border-gray-300 rounded-md;
+}
+
+form input:focus {
+  @apply outline-none ring-2 ring-primary;
+}
+
+form input:disabled {
+  background-color: var(--color-disabled);
+  color: var(--color-disabled-foreground);
+  cursor: not-allowed;
+}

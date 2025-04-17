@@ -1,0 +1,30 @@
+/* Navigation */
+.nav-container {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 shadow-md;
+}
+
+.nav-inner {
+  @apply flex justify-between h-16 items-center;
+}
+
+.logo-container {
+  @apply relative flex-1 flex items-center justify-center;
+}
+
+.logo-left {
+  @apply absolute left-0 flex items-center space-x-3;
+}
+
+.logo-text-large {
+  @apply font-bold text-3xl hidden sm:inline text-center;
+}
+
+.logo-text-small {
+  @apply font-bold text-xl inline sm:hidden text-center;
+}
+
+.app-logo {
+  @apply w-8 h-8 text-primary;
+  width: 3rem;
+  height: 3rem;
+}
