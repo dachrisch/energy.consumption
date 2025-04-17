@@ -34,59 +34,52 @@ export default function AppBar() {
   };
 
   return (
-    <nav className="">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 shadow-md">
-        <div className="flex justify-between h-16 items-center">
-          <div className="relative flex-1 flex items-center justify-center">
-            <div className="absolute left-0 flex items-center space-x-3">
-              <EnergyLogo className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="font-bold text-3xl hidden sm:inline text-center">
-              Energy Consumption Monitor
-            </h1>
-            <h1
-              className="font-bold text-xl inline sm:hidden text-center"
-              title="Energy Consumption Monitor"
-            >
-              ECM
-            </h1>
+    <nav className="nav-container">
+      <div className="nav-inner">
+        <div className="logo-container">
+          <div className="logo-left">
+            <EnergyLogo className="app-logo" />
           </div>
-          <div className="relative" ref={menuRef}>
-            <div
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors"
-            >
-              <UserIcon className="w-5 h-5 text-gray-500" />
-            </div>
+          <h1 className="logo-text-large">Energy Consumption Monitor</h1>
+          <h1 className="logo-text-small" title="Energy Consumption Monitor">
+            ECM
+          </h1>
+        </div>
+        <div className="menu-container" ref={menuRef}>
+          <div
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="menu-button"
+          >
+            <UserIcon className="menu-icon" />
+          </div>
 
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10 border border-gray-100">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <div className="text-sm font-medium text-gray-900">
-                    {session?.user?.name}
-                  </div>
-                  <div className="text-xs text-gray-500 truncate">
-                    {session?.user?.email}
-                  </div>
+          {isMenuOpen && (
+            <div className="menu-dropdown">
+              <div className="menu-dropdown-group">
+                <div className="dropdown-user-name">
+                  {session?.user?.name}
                 </div>
-                <div
-                  onClick={() => {
-                    setIsEditModalOpen(true);
-                    setIsMenuOpen(false);
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 transition-colors border border-gray-100 last:border-b-0 cursor-pointer"
-                >
-                  Edit Profile
-                </div>
-                <div
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 transition-colors border border-gray-100 last:border-b-0 cursor-pointer"
-                >
-                  Logout
+                <div className="dropdown-user-email">
+                  {session?.user?.email}
                 </div>
               </div>
-            )}
-          </div>
+              <div
+                onClick={() => {
+                  setIsEditModalOpen(true);
+                  setIsMenuOpen(false);
+                }}
+                className="menu-dropdown-item-edit"
+              >
+                Edit Profile
+              </div>
+              <div
+                onClick={handleLogout}
+                className="menu-dropdown-item-logout"
+              >
+                Logout
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <EditProfileModal
