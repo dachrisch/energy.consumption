@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/dachrisch/energy.consumption/compare/v1.6.7...v1.7.0) (2025-04-17)
+
+
+### Features
+
+* **paging:** for table display ([eb322d5](https://github.com/dachrisch/energy.consumption/commit/eb322d5289b77b2c7edf981dddeaeca83486d2f3))
+
 ### [1.6.7](https://github.com/dachrisch/energy.consumption/compare/v1.6.6...v1.6.7) (2025-04-13)
 
 ### [1.6.6](https://github.com/dachrisch/energy.consumption/compare/v1.6.5...v1.6.6) (2025-04-13)
