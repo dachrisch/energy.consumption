@@ -1,0 +1,8 @@
+
+.dashboard-main {
+  @apply max-w-4xl mx-auto;
+}
+
+.csv-dropzone-container {
+  @apply mb-8;
+}

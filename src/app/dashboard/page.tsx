@@ -94,9 +94,9 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-8">
-        <main className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">
+      <div className="app-root">
+        <main className="dashboard-main">
+          <h1 className="app-heading">
             Energy Consumption Monitor
           </h1>
           <p>Loading...</p>
@@ -106,14 +106,14 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <main className="max-w-4xl mx-auto">
-        <div className="mb-8">
+    <div className="app-root">
+      <main className="dashboard-main">
+        <div className="csv-dropzone-container">
           <CSVDropZone onDataImported={onCSVImport} />
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+          <div className="alert-error">
             {error}
           </div>
         )}

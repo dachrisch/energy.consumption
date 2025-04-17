@@ -49,3 +49,10 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.app-root {
+  @apply min-h-screen p-8;
+}
+
+.app-heading {
+  @apply text-3xl font-bold mb-8
+}
