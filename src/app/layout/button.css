@@ -10,3 +10,18 @@ button:not(:disabled):hover {
   background-color: var(--primary);
   opacity: 0.9;
 }
+
+/* Floating Action Button */
+.fab {
+  @apply fixed bottom-8 right-8 p-4 rounded-full shadow-lg;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.fab:hover {
+  opacity: 0.9;
+}
+
+.fab svg {
+  @apply h-6 w-6;
+}

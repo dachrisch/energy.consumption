@@ -75,7 +75,7 @@ const Dashboard = () => {
 
         <button
           onClick={() => router.push("/add")}
-          className="fixed bottom-8 right-8 p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+          className="fab"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -40,7 +40,7 @@ export default function AppBar() {
       <div className="nav-inner">
         <div className="logo-container">
           <div
-            className="logo-left cursor-pointer hover:opacity-80 transition-opacity"
+            className="logo-left"
             onClick={() => router.push("/dashboard")}
           >
             <EnergyLogo className="app-logo" />
