@@ -119,6 +119,21 @@ describe("CSVDropZone", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows error when clipboard contains random data", async () => {
+    const randomData = "random data that doesn't match CSV format!";
+    (navigator.clipboard.readText as jest.Mock).mockResolvedValue(randomData);
+
+    render(<CSVDropZone onDataImported={mockOnDataImported} />);
+
+    const pasteButton = screen.getByText("Paste CSV Data from Clipboard");
+    fireEvent.click(pasteButton);
+
+    // The modal should show an error because the data is not valid CSV
+    expect(
+      await screen.findByText("No valid data rows found to import.")
+    ).toBeInTheDocument();
+  });
+
   it("calls onDataImported with correct data when import is confirmed", async () => {
     render(<CSVDropZone onDataImported={mockOnDataImported} />);
 

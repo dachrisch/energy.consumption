@@ -54,12 +54,12 @@ export default function EditProfileModal({
   return (
     <div className="modal-overlay">
       <div className="modal-container">
-        <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
+        <h2 className="modal-title">Edit Profile</h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+          <div className="form-group">
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className=""
             >
               Name
             </label>
@@ -68,12 +68,12 @@ export default function EditProfileModal({
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full form-input"
               required
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="form-group">
+            <label htmlFor="email" className="">
               Email
             </label>
             <input
@@ -81,11 +81,11 @@ export default function EditProfileModal({
               id="email"
               value={session?.user?.email || ""}
               disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+              className="w-full "
             />
           </div>
-          {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
-          <div className="flex justify-end space-x-3">
+          {error && <div className="alert-error alert-text">{error}</div>}
+          <div className="modal-actions">
             <button
               type="button"
               onClick={onClose}
@@ -96,7 +96,7 @@ export default function EditProfileModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="modal-button-confirm disabled:opacity-50"
+              className="modal-button-confirm"
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>

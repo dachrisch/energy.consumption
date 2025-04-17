@@ -9,11 +9,11 @@ interface PaginationProps {
 
 const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
   return (
-    <div className="flex justify-center mt-4">
+    <div className="flex justify-center items-center mt-4">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="btn btn-secondary mr-2 rounded-full"
+        className="btn mr-2 rounded-full"
       >
         <DoubleArrowLeftIcon />
       </button>
@@ -23,7 +23,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="btn btn-secondary ml-2 rounded-full"
+        className=" ml-2 rounded-full"
       >
         <DoubleArrowRightIcon />
       </button>

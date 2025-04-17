@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "./modals/ConfirmationModal";
 import { PowerIcon, GasIcon } from "./icons";
 import { EnergyDataType, EnergyType, NewEnergyDataType } from "../types";
 import { formatDateToIso, parseDateFlexible } from "../utils/dateUtils";
@@ -167,7 +167,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
         </div>
         <button
           type="submit"
-          className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
+          className="mt-4 px-4 py-2 "
         >
           Add Energy Data
         </button>

@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import {  NewEnergyDataType } from "../types";
 import { parseCSVData, Separator } from "../utils/csvUtils";
-import CSVImportModal from "./CSVImportModal";
 import { UploadIcon, ClipboardIcon } from "./icons";
+import CSVImportModal from "./modals/CSVImportModal";
 
 interface CSVDropZoneProps {
   onDataImported: (data: NewEnergyDataType[]) => void;
@@ -129,7 +129,7 @@ export const CSVDropZone = ({ onDataImported }: CSVDropZoneProps) => {
 
       <button
         onClick={handlePaste}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md"
+        className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm "
       >
         <ClipboardIcon className="h-5 w-5" />
         Paste CSV Data from Clipboard

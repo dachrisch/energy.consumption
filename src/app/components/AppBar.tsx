@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { UserIcon, EnergyLogo } from "./icons";
-import EditProfileModal from "./EditProfileModal";
+import EditProfileModal from "./modals/EditProfileModal";
 import Toast from "./Toast";
 
 export default function AppBar() {

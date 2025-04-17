@@ -44,13 +44,17 @@ body {
 }
 
 /* Form elements */
-input, select, textarea {
+input,
+select,
+textarea {
   background-color: var(--secondary);
   color: var(--foreground);
   border-color: var(--secondary);
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus,
+select:focus,
+textarea:focus {
   outline-color: var(--primary);
 }
 
@@ -70,11 +74,11 @@ td {
 
 /* Button */
 button {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
+  @apply bg-[var(--primary)] text-[var(--primary-foreground)] px-4 py-2 rounded font-semibold cursor-pointer transition-colors duration-200;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-button:hover {
+button:not(:disabled):hover {
   background-color: var(--primary);
   opacity: 0.9;
 }
@@ -93,6 +97,12 @@ button:hover {
 
 .modal-container {
   @apply max-w-md rounded-lg p-6 w-full border border-gray-100;
+  background-color: var(--background); /* This ensures the modal container's background is solid */
+  color: var(--foreground); /* Ensures the text color matches the theme */
+}
+
+.modal-actions {
+  @apply flex justify-end space-x-3
 }
 
 .modal-button-cancel {
@@ -101,4 +111,67 @@ button:hover {
 
 .modal-button-confirm {
   @apply px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary rounded-md;
+}
+
+.modal-title {
+  @apply text-xl font-semibold mb-4;
+}
+
+.modal-text {
+  @apply text-sm text-gray-500 mb-4;
+}
+
+/* Alert */
+.alert-error {
+  @apply mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded;
+}
+
+.alert-text {
+  @apply font-medium mb-1;
+}
+
+.alert-list {
+  @apply list-disc list-inside text-sm;
+}
+
+/* Table */
+.table-container {
+  @apply overflow-x-auto max-h-60 border border-gray-200 rounded;
+}
+
+.table {
+  @apply w-full border-collapse;
+}
+
+.table-header {
+  @apply sticky top-0 bg-gray-50;
+}
+
+.table-cell {
+  @apply p-2 border-b border-gray-200 text-left;
+}
+
+.table-row:hover {
+  @apply bg-gray-50;
+}
+
+/* Form */
+.form-group {
+  @apply mb-4;
+}
+
+form label {
+  @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+form input {
+  @apply px-3 py-2 border border-gray-300 rounded-md;
+}
+
+form input:focus {
+  @apply outline-none ring-2 ring-primary;
+}
+
+form input:disabled {
+  @apply bg-gray-50;
 }

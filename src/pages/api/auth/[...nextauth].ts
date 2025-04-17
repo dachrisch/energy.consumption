@@ -43,14 +43,12 @@ export const authOptions: NextAuthOptions = {
         token.name = session.name;
       }
       if (user) {
-        console.log(`user.id ${user.id}`)
         token.userId = user.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (session?.user) {
-        console.log(`token.userId ${token.userId}`)
         session.user.id = token.userId as string;
       }
       return session;
