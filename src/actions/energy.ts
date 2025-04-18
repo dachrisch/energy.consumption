@@ -1,5 +1,5 @@
 "use server";
-import  { connectDB } from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
 import Energy from "@/models/Energy";
 import { ApiResult, EnergyType, EnergyBase } from "../app/types";
 import { InsertOneResult } from "mongodb";
@@ -7,26 +7,21 @@ import { DeleteResult } from "mongoose";
 
 export const addEnergyAction = async (
   energyData: EnergyBase
-): Promise<ApiResult> => {
-  await connectDB();
-  // Add userId to the energy data
-  const energy = new Energy(energyData);
-
-  return energy.save().then((createResult: InsertOneResult) => ({
-    success: "_id" in createResult,
-  }));
-};
-
-export const deleteEnergyAction = async (id: string): Promise<ApiResult> => {
-  await connectDB();
-
-  console.log(`deleteEnergy: ${id}`);
-  return Energy.deleteOne({ _id: id })
-    .then((deleteResult: DeleteResult) => ({
-      success: deleteResult != undefined,
+): Promise<ApiResult> =>
+  await connectDB().then(() =>
+    new Energy(energyData).save().then((createResult: InsertOneResult) => ({
+      success: "_id" in createResult,
     }))
-    .catch((error: Error) => error);
-};
+  );
+
+export const deleteEnergyAction = async (id: string): Promise<ApiResult> =>
+  connectDB().then(() =>
+    Energy.deleteOne({ _id: id })
+      .then((deleteResult: DeleteResult) => ({
+        success: deleteResult != undefined,
+      }))
+      .catch((error: Error) => error)
+  );
 
 export const importCSVAction = async (
   data: EnergyBase[],
@@ -47,9 +42,6 @@ export const importCSVAction = async (
     // Add each entry individually
     for (const entry of sortedData) {
       try {
-        console.log(
-          `entry: ${JSON.stringify(entry)} in ${JSON.stringify(existingData)}`
-        );
         // Check if entry already exists
         const exists = existingData.some(
           (existing) =>

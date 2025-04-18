@@ -36,16 +36,12 @@ export const parseDateFlexible = (dateStr: string): Date => {
 
 type DateFormatter = (date: Date) => string;
 
-export const formatDateToBrowserLocale: DateFormatter = (
-  date: Date
-): string => {
-  console.log(`date: ${date}, type: ${typeof date}`)
-  return new Intl.DateTimeFormat(undefined, {
+export const formatDateToBrowserLocale: DateFormatter = (date: Date): string =>
+  new Intl.DateTimeFormat(undefined, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(date);
-};
 
 export const formatDateToIso: DateFormatter = (date: Date): string => {
   const year = date.getFullYear();

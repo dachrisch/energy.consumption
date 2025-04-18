@@ -1,7 +1,7 @@
 'use client';
 
 import { ContractType, EnergyOptions, ContractsSortField, SortOrder } from '../../types';
-import { PowerIcon, GasIcon, DeleteIcon } from '../icons';
+import { PowerIcon, GasIcon, DeleteIcon, AddContractIcon } from '../icons';
 import { formatDateToBrowserLocale } from '../../utils/dateUtils';
 import { useState } from 'react';
 import Pagination from '../Pagination';
@@ -68,6 +68,15 @@ const ContractTable = ({
     setCurrentPage(Math.max(1, Math.min(newPage, totalPages)));
   };
 
+  if (totalItems === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
+        <AddContractIcon className="w-12 h-12" />
+        <p className="text-lg">No Contracts available</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="overflow-x-auto">
@@ -77,34 +86,44 @@ const ContractTable = ({
               <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('type')}
+                data-testid="column-type"
               >
                 Type {getSortIcon('type')}
               </th>
               <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('startDate')}
+                data-testid="column-start"
               >
-                Start Date {getSortIcon('startDate')}
+                Start {getSortIcon('startDate')}
               </th>
               <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('endDate')}
+                data-testid="column-end"
               >
-                End Date {getSortIcon('endDate')}
+                End {getSortIcon('endDate')}
               </th>
               <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('basePrice')}
+                data-testid="column-base-price"
               >
                 Base Price {getSortIcon('basePrice')}
               </th>
               <th
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('workingPrice')}
+                data-testid="column-working-price"
               >
                 Working Price {getSortIcon('workingPrice')}
               </th>
-              <th className="p-2 text-center align-middle">Actions</th>
+              <th
+                className="p-2 text-center align-middle"
+                data-testid="column-actions"
+              >
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>

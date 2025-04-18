@@ -5,7 +5,7 @@ import ContractTable from "@/app/components/contracts/ContractTable";
 import Toast from "@/app/components/Toast";
 import { ContractBase, ContractType, ToastMessage } from "@/app/types";
 import ContractForm from "../components/contracts/ContractForm";
-import { addContractAction } from "@/actions/contract";
+import { addOrUpdateContractAction, deleteContractAction } from "@/actions/contract";
 
 const ContractsPage = () => {
   const [contracts, setContracts] = useState<ContractType[]>([]);
@@ -42,7 +42,10 @@ const ContractsPage = () => {
 
   const onAddContract = async (contractData: ContractBase) => {
     try {
-      await addContractAction(contractData);
+      await addOrUpdateContractAction({
+        ...contractData,
+        _id: editingContractData?._id
+      });
       setToast({
         message: editingContractData ? "Contract updated successfully" : "Contract added successfully",
         type: "success",
@@ -60,11 +63,7 @@ const ContractsPage = () => {
 
   const onDeleteContract = async (id: string) => {
     try {
-      const response = await fetch(`/api/contracts?id=${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete contract");
+      await deleteContractAction(id);
 
       setToast({
         message: "Contract deleted successfully",
