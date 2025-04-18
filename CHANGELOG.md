@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.2](https://github.com/dachrisch/energy.consumption/compare/v1.8.1...v1.8.2) (2025-04-18)
+
+
+### Features
+
+* Add cost analysis and contract validation ([d3516db](https://github.com/dachrisch/energy.consumption/commit/d3516db02c492bb272fdfce808a1eabd59b6cdfa))
+
 ### [1.8.1](https://github.com/dachrisch/energy.consumption/compare/v1.8.0...v1.8.1) (2025-04-18)
 
 ## [1.8.0](https://github.com/dachrisch/energy.consumption/compare/v1.7.3...v1.8.0) (2025-04-18)
