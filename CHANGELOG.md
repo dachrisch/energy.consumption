@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/dachrisch/energy.consumption/compare/v1.7.3...v1.8.0) (2025-04-18)
+
+
+### Features
+
+* **contract:** add and display contracts ([b8c87e4](https://github.com/dachrisch/energy.consumption/commit/b8c87e428c73536822fa94c339be2f060506ac42))
+* **contract:** add contract data ([297e2a8](https://github.com/dachrisch/energy.consumption/commit/297e2a8b71cf7f1727382eadc329349a3f9b9b77))
+* **contract:** add contract data ([d2a9635](https://github.com/dachrisch/energy.consumption/commit/d2a9635c6c9876da163f27a0ad24acb86390b004))
+* **contract:** add contract data ([b1ba528](https://github.com/dachrisch/energy.consumption/commit/b1ba5281eda9d322e5eca9b0b0b223df45bb20a7))
+
 ### [1.7.3](https://github.com/dachrisch/energy.consumption/compare/v1.7.2...v1.7.3) (2025-04-18)
 
 
