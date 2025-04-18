@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Toast from "../components/Toast";
 import { EnergyType, ToastMessage } from "../types";
 import { deleteEnergyAction as deleteEnergyAction } from "@/actions/energy";
-import EnergyTabs from "../components/energy/EnergyDisplay";
+import DashboardTabs from "../components/DashboardTabs";
 import { AddEnergyDataIcon } from "../components/icons";
 
 const Dashboard = () => {
@@ -73,7 +73,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        <EnergyTabs energyData={energyData} onDelete={onDelete} />
+        <DashboardTabs energyData={energyData} onDelete={onDelete} />
 
         <button
           onClick={() => router.push("/add")}

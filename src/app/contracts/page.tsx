@@ -6,6 +6,7 @@ import Toast from "@/app/components/Toast";
 import { ContractBase, ContractType, ToastMessage } from "@/app/types";
 import ContractForm from "../components/contracts/ContractForm";
 import { addOrUpdateContractAction, deleteContractAction } from "@/actions/contract";
+import { fetchAndConvert } from "../handlers/contractsHandler";
 
 const ContractsPage = () => {
   const [contracts, setContracts] = useState<ContractType[]>([]);
@@ -18,27 +19,16 @@ const ContractsPage = () => {
     fetchContracts();
   }, []);
 
-  const fetchContracts = async () => {
-    try {
-      const response = await fetch("/api/contracts");
-      if (!response.ok) throw new Error("Failed to fetch contracts");
-      const data = await response.json();
-      const parsed = data.map((item: { startDate: string | number | Date, endDate?: string | number | Date }) => ({
-        ...item,
-        startDate: new Date(item.startDate),
-        ...(item.endDate && { endDate: new Date(item.endDate) }),
-      }));
-      setContracts(parsed);
-    } catch (error) {
-      setToast({
-        message: "Failed to load contracts",
-        type: "error",
-      });
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const fetchContracts = async () =>
+    fetchAndConvert().then((data) => setContracts(data))
+      .catch((error) => {
+        setToast({
+          message: "Failed to load contracts",
+          type: "error",
+        });
+        console.error(error);
+      }).finally(() => setIsLoading(false));
+
 
   const onAddContract = async (contractData: ContractBase) => {
     try {
@@ -104,6 +94,7 @@ const ContractsPage = () => {
         <ContractForm
           onSubmit={onAddContract}
           initialData={editingContractData}
+          existingContracts={contracts}
           onCancel={() => setEditingContractData(null)}
         />
 

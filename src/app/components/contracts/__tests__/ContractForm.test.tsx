@@ -80,6 +80,34 @@ describe("ContractForm", () => {
     expect(screen.getByText("End date must be after start date")).toBeInTheDocument();
   });
 
+  it("prevents overlapping contracts for same type", async () => {
+    // Mock fetch to return existing contract
+    global.fetch = jest.fn().mockResolvedValue({
+      json: () => Promise.resolve([{
+        _id: "1",
+        type: "power",
+        startDate: "2025-01-01T00:00:00.000Z",
+        endDate: "2025-12-31T00:00:00.000Z"
+      }])
+    });
+
+    render(<ContractForm onSubmit={mockOnSubmit} />);
+
+    // Set dates that overlap with existing contract
+    const startDateInput = screen.getByLabelText("Start Date");
+    const endDateInput = screen.getByLabelText("End Date (optional)");
+    fireEvent.change(startDateInput, { target: { value: "2025-06-01" } });
+    fireEvent.change(endDateInput, { target: { value: "2026-01-01" } });
+
+    const submitButton = screen.getByText("Save Contract");
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockOnSubmit).not.toHaveBeenCalled();
+      expect(screen.getByText("Cannot have overlapping contract periods for the same energy type")).toBeInTheDocument();
+    });
+  });
+
   it("submits valid form data", async () => {
     render(<ContractForm onSubmit={mockOnSubmit} />);
 

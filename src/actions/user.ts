@@ -8,7 +8,7 @@ import { connectDB } from '@/lib/mongodb';
 export async function updateProfile(name: string) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       throw new Error('Unauthorized');
     }
 
@@ -18,7 +18,7 @@ export async function updateProfile(name: string) {
 
     await connectDB();
     const user = await User.findOneAndUpdate(
-      { email: session.user.email },
+      { _id: session.user.id },
       { name },
       { new: true }
     );

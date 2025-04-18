@@ -8,7 +8,7 @@ import { DeleteResult } from "mongoose";
 export const addEnergyAction = async (
   energyData: EnergyBase
 ): Promise<ApiResult> =>
-  await connectDB().then(() =>
+   connectDB().then(() =>
     new Energy(energyData).save().then((createResult: InsertOneResult) => ({
       success: "_id" in createResult,
     }))

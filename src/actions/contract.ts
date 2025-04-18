@@ -6,25 +6,21 @@ import { DeleteResult, InsertOneResult, ObjectId } from "mongodb";
 
 export const addOrUpdateContractAction = async (
   contractData: ContractBase & { _id?: string }
-): Promise<ApiResult> => {
-  await connectDB();
-
-  if (contractData._id) {
-    // Update existing contract
-    const result = await Contract.findByIdAndUpdate(
-      new ObjectId(contractData._id),
-      contractData,
-      { new: true }
-    );
-    return { success: !!result };
-  } else {
-    // Create new contract
-    const contract = new Contract(contractData);
-    return contract.save().then((createResult: InsertOneResult) => ({
-      success: "_id" in createResult,
-    }));
-  }
-};
+): Promise<ApiResult> =>
+  connectDB().then(async () => {
+    if (contractData._id) {
+      // Update existing contract
+      Contract.findByIdAndUpdate(new ObjectId(contractData._id), contractData, {
+        new: true,
+      }).then((result) => ({ success: !!result }));
+    } else {
+      // Create new contract
+      const contract = new Contract(contractData);
+      return contract.save().then((createResult: InsertOneResult) => ({
+        success: "_id" in createResult,
+      }));
+    }
+  });
 
 export const deleteContractAction = async (id: string): Promise<ApiResult> =>
   connectDB().then(() =>

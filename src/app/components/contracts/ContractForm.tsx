@@ -6,10 +6,11 @@ import { ContractBase, ContractType, EnergyOptions } from "@/app/types";
 interface ContractFormProps {
   onSubmit: (data: ContractBase) => void;
   initialData?: ContractType | null;
+  existingContracts: ContractType[];
   onCancel?: () => void;
 }
 
-const ContractForm = ({ onSubmit, initialData, onCancel }: ContractFormProps) => {
+const ContractForm = ({ onSubmit, initialData,existingContracts, onCancel }: ContractFormProps) => {
   const [contractData, setContractData] = useState<ContractBase>({
     type: "power" as EnergyOptions,
     startDate: new Date(),
@@ -31,7 +32,7 @@ const ContractForm = ({ onSubmit, initialData, onCancel }: ContractFormProps) =>
     }
   }, [initialData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate prices
@@ -46,8 +47,36 @@ const ContractForm = ({ onSubmit, initialData, onCancel }: ContractFormProps) =>
       return;
     }
 
-    setError("");
-    onSubmit(contractData);
+    try {
+      // Check for overlapping contracts
+      
+      const hasOverlap = existingContracts.some((contract: ContractType) => {
+        // Skip current contract if editing
+        if (initialData?._id === contract._id) return false;
+        
+        const existingStart = new Date(contract.startDate);
+        const existingEnd = contract.endDate ? new Date(contract.endDate) : null;
+        const newStart = contractData.startDate;
+        const newEnd = contractData.endDate || null;
+
+        // Check if periods overlap
+        return (
+          (newEnd === null || existingStart <= newEnd) &&
+          (existingEnd === null || newStart <= existingEnd)
+        );
+      });
+
+      if (hasOverlap) {
+        setError("Cannot have overlapping contract periods for the same energy type");
+        return;
+      }
+
+      setError("");
+      onSubmit(contractData);
+    } catch (error) {
+      console.error(error);
+      setError("Failed to validate contract dates");
+    }
   };
 
   const getTypeIcon = (type: EnergyOptions) => {
@@ -77,12 +106,13 @@ const ContractForm = ({ onSubmit, initialData, onCancel }: ContractFormProps) =>
                   name="type"
                   value={type}
                   checked={contractData.type === type}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setContractData({
                       ...contractData,
                       type: e.target.value as EnergyOptions,
-                    })
-                  }
+                    });
+                    setError("");
+                  }}
                   className="hidden"
                 />
                 {getTypeIcon(type)}
