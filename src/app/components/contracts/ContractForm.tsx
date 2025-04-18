@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PowerIcon, GasIcon } from "@/app/components/icons";
+import { PowerIcon, GasIcon, EditIcon } from "@/app/components/icons";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
 import { ContractBase, ContractType, EnergyOptions } from "@/app/types";
 

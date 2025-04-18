@@ -1,7 +1,7 @@
 'use client';
 
 import { ContractType, EnergyOptions, ContractsSortField, SortOrder } from '../../types';
-import { PowerIcon, GasIcon, DeleteIcon, AddContractIcon } from '../icons';
+import { PowerIcon, GasIcon, DeleteIcon, AddContractIcon, EditIcon } from '../icons';
 import { formatDateToBrowserLocale } from '../../utils/dateUtils';
 import { useState } from 'react';
 import Pagination from '../Pagination';
@@ -153,14 +153,14 @@ const ContractTable = ({
                     className="text-primary hover:text-primary/80 p-1 rounded-full hover:bg-primary/10"
                     title="Edit contract"
                   >
-                    Edit
+                    <EditIcon aria-label="Update contract" />
                   </button>
                   <button
                     onClick={() => onDelete(contract._id)}
                     className="text-destructive hover:text-destructive/80 p-1 rounded-full hover:bg-destructive/10"
                     title="Delete contract"
                   >
-                    <DeleteIcon />
+                    <DeleteIcon aria-label="Delete contract"/>
                   </button>
                 </td>
               </tr>
