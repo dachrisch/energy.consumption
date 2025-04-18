@@ -1,6 +1,13 @@
 /* Navigation */
 .nav-container {
-  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 shadow-md;
+  @apply w-full shadow-md;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.nav-inner {
+  @apply flex justify-between h-16 items-center max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
 .nav-inner {
@@ -20,7 +27,7 @@
 }
 
 .logo-text-small {
-  @apply font-bold text-xl inline sm:hidden text-center;
+  @apply font-bold text-3xl inline sm:hidden text-center;
 }
 
 .app-logo {
