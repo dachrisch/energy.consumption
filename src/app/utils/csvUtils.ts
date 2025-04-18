@@ -1,4 +1,4 @@
-import { NewEnergyDataType } from "../types";
+import { EnergyDataBase } from "../types";
 import { parseDateFlexible } from "./dateUtils";
 import csv from "csv-parser";
 import stream from "stream";
@@ -6,7 +6,7 @@ import stream from "stream";
 export type Separator = "," | "\t";
 
 export interface CSVParseResult {
-  data: NewEnergyDataType[];
+  data: EnergyDataBase[];
   errors: string[];
 }
 
@@ -14,7 +14,7 @@ export const parseCSVData = async (
   csvData: string,
   separator: Separator
 ): Promise<CSVParseResult> => {
-  const energyData: NewEnergyDataType[] = [];
+  const energyData: EnergyDataBase[] = [];
   const errors: string[] = [];
 
   // Check if the input data has any CSV-like structure

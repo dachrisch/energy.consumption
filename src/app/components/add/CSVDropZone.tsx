@@ -1,17 +1,17 @@
-import { NewEnergyDataType } from "@/app/types";
+import { EnergyDataBase } from "@/app/types";
 import { Separator, parseCSVData } from "@/app/utils/csvUtils";
 import { useState, useCallback, useEffect } from "react";
 import { UploadIcon, ClipboardIcon } from "../icons";
 import CSVImportModal from "../modals/CSVImportModal";
 
 interface CSVDropZoneProps {
-  onDataImported: (data: NewEnergyDataType[]) => void;
+  onDataImported: (data: EnergyDataBase[]) => void;
 }
 
 export const CSVDropZone = ({ onDataImported }: CSVDropZoneProps) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [previewData, setPreviewData] = useState<NewEnergyDataType[]>(
+  const [previewData, setPreviewData] = useState<EnergyDataBase[]>(
     []
   );
   const [parseErrors, setParseErrors] = useState<string[]>([]);
@@ -83,7 +83,7 @@ export const CSVDropZone = ({ onDataImported }: CSVDropZoneProps) => {
     setIsModalOpen(false);
   };
 
-  const onConfirmModal = (data: NewEnergyDataType[]): void => {
+  const onConfirmModal = (data: EnergyDataBase[]): void => {
     if (data.length > 0) {
       onDataImported(data);
     }

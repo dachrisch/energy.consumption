@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSession, useSession } from "next-auth/react";
-import { updateProfile } from "@/app/actions/user";
+import { updateProfile } from "@/actions/user";
 
 interface EditProfileModalProps {
   isOpen: boolean;

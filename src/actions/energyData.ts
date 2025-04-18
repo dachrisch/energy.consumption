@@ -1,21 +1,19 @@
 "use server";
 import { connectDB } from "@/lib/mongodb";
 import EnergyData from "@/models/EnergyData";
-import { EnergyDataType, NewEnergyDataType } from "../app/types";
+import { ApiResult, EnergyDataType, EnergyDataBase } from "../app/types";
 import { InsertOneResult } from "mongodb";
 import { DeleteResult } from "mongoose";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-export type ApiResult = { success: boolean } | Error;
-
 export const addEnergy = async (
-  newData: NewEnergyDataType
+  newData: EnergyDataBase
 ): Promise<ApiResult> => {
   await connectDB();
   // Get the session
   const session = await getServerSession(authOptions);
-  console.log(`session ${session?.user}`)
+  console.log(`session ${session?.user}`);
 
   if (!session?.user?.id) {
     // If the user is not logged in or doesn't have an `id`, return an error
@@ -27,7 +25,7 @@ export const addEnergy = async (
     userId: session.user.id,
   });
 
-  console.log(`energyData ${energyData}`)
+  console.log(`energyData ${energyData}`);
 
   return energyData.save().then((createResult: InsertOneResult) => ({
     success: "_id" in createResult,
@@ -46,7 +44,7 @@ export const deleteEnergy = async (id: string): Promise<ApiResult> => {
 };
 
 export const importCSV = async (
-  data: NewEnergyDataType[],
+  data: EnergyDataBase[],
   existingData: EnergyDataType[]
 ) => {
   try {

@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import EditProfileModal from "../EditProfileModal";
 import { useSession } from "next-auth/react";
-import { updateProfile } from "@/app/actions/user";
+import { updateProfile } from "@/actions/user";
 
 // Mock next-auth
 jest.mock("next-auth/react", () => ({

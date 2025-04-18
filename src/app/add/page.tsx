@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { EnergyDataType, NewEnergyDataType } from "../types";
+import { EnergyDataType, EnergyDataBase } from "../types";
 import { getLatestValues } from "../handlers/energyHandlers";
 import { addEnergy, importCSV } from "@/actions/energyData";
 import { CSVDropZone } from "../components/add/CSVDropZone";
@@ -48,7 +48,7 @@ const AddDataPage = () => {
     setTimeout(() => router.push("/dashboard"), 1000);
   };
 
-  const onAddEnergy = async (newData: NewEnergyDataType) => {
+  const onAddEnergy = async (newData: EnergyDataBase) => {
     try {
       await addEnergy(newData);
       setToast({
@@ -65,7 +65,7 @@ const AddDataPage = () => {
     }
   };
 
-  const onCSVImport = async (data: NewEnergyDataType[]) => {
+  const onCSVImport = async (data: EnergyDataBase[]) => {
     try {
       const result = await importCSV(data, energyData);
 
