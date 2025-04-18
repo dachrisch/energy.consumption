@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.3](https://github.com/dachrisch/energy.consumption/compare/v1.7.2...v1.7.3) (2025-04-18)
+
+
+### Features
+
+* Add reusable AddEnergyDataIcon component ([2f9c8c5](https://github.com/dachrisch/energy.consumption/commit/2f9c8c565a0b9471956a72965e8f8befea742aee))
+
 ### [1.7.2](https://github.com/dachrisch/energy.consumption/compare/v1.7.1...v1.7.2) (2025-04-18)
 
 ### [1.7.1](https://github.com/dachrisch/energy.consumption/compare/v1.7.0...v1.7.1) (2025-04-18)
