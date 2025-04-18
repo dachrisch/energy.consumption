@@ -1,12 +1,12 @@
 'use client';
-import { EnergyDataBase } from "../../types";
+import { EnergyBase } from "../../types";
 import { formatDateToBrowserLocale } from "../../utils/dateUtils";
 
 interface CSVImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (data: EnergyDataBase[]) => void;
-  previewData: EnergyDataBase[];
+  onConfirm: (data: EnergyBase[]) => void;
+  previewData: EnergyBase[];
   parseErrors: string[];
 }
 

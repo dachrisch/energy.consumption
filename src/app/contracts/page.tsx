@@ -1,38 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
-import EnergyContractTable from "@/app/components/contracts/EnergyContractTable";
+import { useEffect, useState } from "react";
+import ContractTable from "@/app/components/contracts/ContractTable";
 import Toast from "@/app/components/Toast";
-import { EnergyContractType } from "@/app/types";
-import EnergyContractForm from "../components/contracts/EnergyContractForm";
+import { ContractBase, ContractType, ToastMessage } from "@/app/types";
+import ContractForm from "../components/contracts/ContractForm";
+import { addContractAction } from "@/actions/contract";
 
 const ContractsPage = () => {
-  const router = useRouter();
-  const { data: session, status } = useSession();
-  const [contracts, setContracts] = useState<EnergyContractType[]>([]);
+  const [contracts, setContracts] = useState<ContractType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "info";
-  } | null>(null);
-  const [editingContractData, setEditingContractData] = useState<EnergyContractType | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [editingContractData, setEditingContractData] = useState<ContractType | null>(null);
+
 
   useEffect(() => {
-    if (status !== "authenticated") {
-      router.push("/login");
-      return;
-    }
     fetchContracts();
-  }, [status, router]);
+  }, []);
 
   const fetchContracts = async () => {
     try {
       const response = await fetch("/api/contracts");
       if (!response.ok) throw new Error("Failed to fetch contracts");
       const data = await response.json();
-      const parsed = data.map((item: { startDate: string | number | Date, endDate?: string | number | Date}) => ({
+      const parsed = data.map((item: { startDate: string | number | Date, endDate?: string | number | Date }) => ({
         ...item,
         startDate: new Date(item.startDate),
         ...(item.endDate && { endDate: new Date(item.endDate) }),
@@ -49,27 +40,9 @@ const ContractsPage = () => {
     }
   };
 
-  const onAddContract = async (contractData: {
-    type: "power" | "gas";
-    startDate: Date;
-    endDate?: Date;
-    basePrice: number;
-    workingPrice: number;
-  }) => {
+  const onAddContract = async (contractData: ContractBase) => {
     try {
-      const response = await fetch("/api/contracts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...contractData,
-          userId: session?.user?.id
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to save contract");
-
+      await addContractAction(contractData);
       setToast({
         message: editingContractData ? "Contract updated successfully" : "Contract added successfully",
         type: "success",
@@ -107,14 +80,10 @@ const ContractsPage = () => {
     }
   };
 
-  const onEditContract = (contract: EnergyContractType) => {
+  const onEditContract = (contract: ContractType) => {
     setEditingContractData(contract);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  if (status !== "authenticated") {
-    return null;
-  }
 
   if (isLoading) {
     return (
@@ -133,14 +102,14 @@ const ContractsPage = () => {
           {editingContractData ? "Edit Contract" : "Add New Contract"}
         </h1>
 
-        <EnergyContractForm 
+        <ContractForm
           onSubmit={onAddContract}
           initialData={editingContractData}
           onCancel={() => setEditingContractData(null)}
         />
 
         <h2 className="app-heading mt-12 mb-6">Existing Contracts</h2>
-        <EnergyContractTable
+        <ContractTable
           contracts={contracts}
           onDelete={onDeleteContract}
           onEdit={onEditContract}

@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
+import { ToastMessage } from '../types';
 
-interface ToastProps {
-  message: string;
-  type: 'success' | 'error' | 'info';
+type ToastProps = ToastMessage& {
   onClose: () => void;
 }
 

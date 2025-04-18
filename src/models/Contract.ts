@@ -1,8 +1,9 @@
-import { EnergyContractType } from "@/app/types";
+import { ContractType } from "@/app/types";
 import mongoose, { model, Schema } from "mongoose";
+import { applyPreFilter } from "./sessionFilter";
 
 
-const EnergyContractSchema = new Schema<EnergyContractType>({
+const ContractSchema = new Schema<ContractType>({
   type: {
     type: String,
     required: true,
@@ -26,23 +27,16 @@ const EnergyContractSchema = new Schema<EnergyContractType>({
   userId: {
     type: String,
     ref: 'User',
-    required: true,
     index: true
   }
 }, {
   timestamps: true
 });
 
-// Add schema validation to ensure userId is always present
-EnergyContractSchema.pre('save', function(next) {
-  if (!this.userId) {
-    throw new Error('userId is required');
-  }
-  next();
-});
+applyPreFilter(ContractSchema);
 
-const EnergyContract =
+const Contract =
   mongoose.models?.Contract ||
-  model<EnergyContractType>("EnergyContract", EnergyContractSchema);
+  model<ContractType>("Contract", ContractSchema);
 
-export default EnergyContract;
+export default Contract;

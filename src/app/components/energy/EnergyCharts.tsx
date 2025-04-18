@@ -1,7 +1,7 @@
 "use client";
 
-import { EnergyDataType, EnergyType } from "../types";
-import { getFilteredAndSortedData } from "../handlers/energyHandlers";
+import { EnergyType, EnergyOptions } from "../../types";
+import { getFilteredAndSortedData } from "../../handlers/energyHandlers";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,8 +25,8 @@ ChartJS.register(
 );
 
 interface EnergyChartsProps {
-  energyData: EnergyDataType[];
-  typeFilter: EnergyType | "all";
+  energyData: EnergyType[];
+  typeFilter: EnergyOptions | "all";
   dateRange: { start: Date | null; end: Date | null };
 }
 

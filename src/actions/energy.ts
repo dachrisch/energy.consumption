@@ -1,51 +1,36 @@
 "use server";
-import { connectDB } from "@/lib/mongodb";
-import EnergyData from "@/models/EnergyData";
-import { ApiResult, EnergyDataType, EnergyDataBase } from "../app/types";
+import  { connectDB } from "@/lib/mongodb";
+import Energy from "@/models/Energy";
+import { ApiResult, EnergyType, EnergyBase } from "../app/types";
 import { InsertOneResult } from "mongodb";
 import { DeleteResult } from "mongoose";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-export const addEnergy = async (
-  newData: EnergyDataBase
+export const addEnergyAction = async (
+  energyData: EnergyBase
 ): Promise<ApiResult> => {
   await connectDB();
-  // Get the session
-  const session = await getServerSession(authOptions);
-  console.log(`session ${session?.user}`);
-
-  if (!session?.user?.id) {
-    // If the user is not logged in or doesn't have an `id`, return an error
-    return { success: false };
-  }
   // Add userId to the energy data
-  const energyData = new EnergyData({
-    ...newData,
-    userId: session.user.id,
-  });
+  const energy = new Energy(energyData);
 
-  console.log(`energyData ${energyData}`);
-
-  return energyData.save().then((createResult: InsertOneResult) => ({
+  return energy.save().then((createResult: InsertOneResult) => ({
     success: "_id" in createResult,
   }));
 };
 
-export const deleteEnergy = async (id: string): Promise<ApiResult> => {
+export const deleteEnergyAction = async (id: string): Promise<ApiResult> => {
   await connectDB();
 
   console.log(`deleteEnergy: ${id}`);
-  return EnergyData.deleteOne({ _id: id })
+  return Energy.deleteOne({ _id: id })
     .then((deleteResult: DeleteResult) => ({
       success: deleteResult != undefined,
     }))
     .catch((error: Error) => error);
 };
 
-export const importCSV = async (
-  data: EnergyDataBase[],
-  existingData: EnergyDataType[]
+export const importCSVAction = async (
+  data: EnergyBase[],
+  existingData: EnergyType[]
 ) => {
   try {
     // Sort data by date to ensure proper order
@@ -77,7 +62,7 @@ export const importCSV = async (
           continue;
         }
 
-        const addedResult = await addEnergy(entry);
+        const addedResult = await addEnergyAction(entry);
         if ("success" in addedResult) {
           result.success++;
         } else {

@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { EnergyDataType, EnergyDataBase } from "../types";
+import { EnergyType, EnergyBase, ToastMessage } from "../types";
 import { getLatestValues } from "../handlers/energyHandlers";
-import { addEnergy, importCSV } from "@/actions/energyData";
+import { addEnergyAction, importCSVAction } from "@/actions/energy";
 import { CSVDropZone } from "../components/add/CSVDropZone";
 import AddEnergyForm from "../components/add/AddEnergyForm";
 import Toast from "../components/Toast";
@@ -13,12 +13,9 @@ import Toast from "../components/Toast";
 const AddDataPage = () => {
   const router = useRouter();
   const { status } = useSession();
-  const [energyData, setEnergyData] = useState<EnergyDataType[]>([]);
+  const [energyData, setEnergyData] = useState<EnergyType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "info";
-  } | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -48,9 +45,9 @@ const AddDataPage = () => {
     setTimeout(() => router.push("/dashboard"), 1000);
   };
 
-  const onAddEnergy = async (newData: EnergyDataBase) => {
+  const onAddEnergy = async (newData: EnergyBase) => {
     try {
-      await addEnergy(newData);
+      await addEnergyAction(newData);
       setToast({
         message: "Energy data added successfully",
         type: "success",
@@ -65,9 +62,9 @@ const AddDataPage = () => {
     }
   };
 
-  const onCSVImport = async (data: EnergyDataBase[]) => {
+  const onCSVImport = async (data: EnergyBase[]) => {
     try {
-      const result = await importCSV(data, energyData);
+      const result = await importCSVAction(data, energyData);
 
       // Show import results
       const message = [

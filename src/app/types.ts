@@ -1,17 +1,16 @@
-export type EnergyType = "power" | "gas";
+export type EnergyOptions = "power" | "gas";
 
 export type UserSpecific = {
   _id: string;
   userId: string;
 };
-export type EnergyDataType = UserSpecific & EnergyDataBase;
+export type EnergyType = UserSpecific & EnergyBase;
 
-export type EnergyDataBase = {
+export type EnergyBase = {
   date: Date;
-  type: EnergyType;
+  type: EnergyOptions;
   amount: number;
 };
-
 
 export type ImportResult = {
   success: number;
@@ -19,8 +18,13 @@ export type ImportResult = {
   error: number;
 };
 
-export type SortFieldContracts = "type" | "startDate" | "endDate" | "basePrice" | "workingPrice";
-export type SortFieldEnergy = "type" | "date" | "amount";
+export type ContractsSortField =
+  | "type"
+  | "startDate"
+  | "endDate"
+  | "basePrice"
+  | "workingPrice";
+export type EnergySortField = "type" | "date" | "amount";
 export type SortOrder = "asc" | "desc";
 
 export type NewUserType = {
@@ -29,15 +33,20 @@ export type NewUserType = {
   password: string;
 };
 
-export type EnergyContractBase = {
-  type: EnergyType;
+export type ContractBase = {
+  type: EnergyOptions;
   startDate: Date;
   endDate?: Date;
   basePrice: number;
   workingPrice: number;
 };
 
-export type EnergyContractType = UserSpecific & EnergyContractBase;
+export type ContractType = UserSpecific & ContractBase;
 
+export type Success = { success: boolean };
+export type ApiResult = Success | Error;
 
-export type ApiResult = { success: boolean } | Error;
+export type ToastMessage = {
+  message: string;
+  type: "success" | "error" | "info";
+};

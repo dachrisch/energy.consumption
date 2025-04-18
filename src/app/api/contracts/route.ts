@@ -2,12 +2,12 @@
 
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import EnergyContract from "@/models/EnergyContract";
+import Contract from "@/models/Contract";
 
 export const GET = async () => {
   try {
     await connectDB();
-    const contracts = await EnergyContract.find({});
+    const contracts = await Contract.find({});
     return NextResponse.json(contracts);
   } catch (error) {
     return NextResponse.json(

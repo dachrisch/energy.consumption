@@ -6,14 +6,12 @@ import { signOut, useSession } from "next-auth/react";
 import { UserIcon, EnergyLogo } from "./icons";
 import EditProfileModal from "./modals/EditProfileModal";
 import Toast from "./Toast";
+import { ToastMessage } from "../types";
 
 export default function AppBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "info";
-  } | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { data: session } = useSession();
@@ -78,7 +76,10 @@ export default function AppBar() {
                 Edit Profile
               </div>
               <div
-                onClick={() => router.push("/contracts")}
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  router.push("/contracts");
+                }}
                 className="menu-dropdown-item-edit"
               >
                 Contract Data

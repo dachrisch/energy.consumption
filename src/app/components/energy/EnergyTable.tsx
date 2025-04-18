@@ -1,16 +1,16 @@
 'use client';
 
-import { EnergyDataType, EnergyType, SortFieldEnergy, SortOrder } from '../types';
-import { PowerIcon, GasIcon, DeleteIcon } from './icons';
-import { getFilteredAndSortedData } from '../handlers/energyHandlers';
-import { formatDateToBrowserLocale } from '../utils/dateUtils';
+import { EnergyType, EnergyOptions, EnergySortField, SortOrder } from '../../types';
+import { PowerIcon, GasIcon, DeleteIcon } from '../icons';
+import { getFilteredAndSortedData } from '../../handlers/energyHandlers';
+import { formatDateToBrowserLocale } from '../../utils/dateUtils';
 import { useState } from 'react';
-import Pagination from './Pagination';
+import Pagination from '../Pagination';
 
 interface EnergyTableProps {
-  energyData: EnergyDataType[];
+  energyData: EnergyType[];
   onDelete: (id: string) => void;
-  typeFilter: EnergyType | 'all';
+  typeFilter: EnergyOptions | 'all';
   dateRange: { start: Date | null; end: Date | null };
 }
 
@@ -20,16 +20,16 @@ const EnergyTable = ({
   typeFilter,
   dateRange,
 }: EnergyTableProps) => {
-  const [sortField, setSortField] = useState<SortFieldEnergy>("date");
+  const [sortField, setSortField] = useState<EnergySortField>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  const getTypeIcon = (type: EnergyType) => {
+  const getTypeIcon = (type: EnergyOptions) => {
     return type === 'power' ? <PowerIcon /> : <GasIcon />;
   };
 
-  const handleSort = (field: SortFieldEnergy) => {
+  const handleSort = (field: EnergySortField) => {
     if (field === sortField) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -38,7 +38,7 @@ const EnergyTable = ({
     }
   };
 
-  const getSortIcon = (field: SortFieldEnergy) => {
+  const getSortIcon = (field: EnergySortField) => {
     if (field !== sortField) return null;
     return sortOrder === 'asc' ? '↑' : '↓';
   };

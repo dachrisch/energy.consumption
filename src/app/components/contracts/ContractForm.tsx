@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { PowerIcon, GasIcon } from "@/app/components/icons";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
-import { EnergyContractBase, EnergyContractType, EnergyType } from "@/app/types";
+import { ContractBase, ContractType, EnergyOptions } from "@/app/types";
 
-interface EnergyContractFormProps {
-  onSubmit: (data: EnergyContractBase) => void;
-  initialData?: EnergyContractType | null;
+interface ContractFormProps {
+  onSubmit: (data: ContractBase) => void;
+  initialData?: ContractType | null;
   onCancel?: () => void;
 }
 
-const EnergyContractForm = ({ onSubmit, initialData, onCancel }: EnergyContractFormProps) => {
-  const [contractData, setContractData] = useState<EnergyContractBase>({
-    type: "power" as EnergyType,
+const ContractForm = ({ onSubmit, initialData, onCancel }: ContractFormProps) => {
+  const [contractData, setContractData] = useState<ContractBase>({
+    type: "power" as EnergyOptions,
     startDate: new Date(),
     endDate: undefined as Date | undefined,
     basePrice: 0,
@@ -50,7 +50,7 @@ const EnergyContractForm = ({ onSubmit, initialData, onCancel }: EnergyContractF
     onSubmit(contractData);
   };
 
-  const getTypeIcon = (type: EnergyType) => {
+  const getTypeIcon = (type: EnergyOptions) => {
     return type === "power" ? <PowerIcon /> : <GasIcon />;
   };
 
@@ -80,7 +80,7 @@ const EnergyContractForm = ({ onSubmit, initialData, onCancel }: EnergyContractF
                   onChange={(e) =>
                     setContractData({
                       ...contractData,
-                      type: e.target.value as EnergyType,
+                      type: e.target.value as EnergyOptions,
                     })
                   }
                   className="hidden"
@@ -203,4 +203,4 @@ const EnergyContractForm = ({ onSubmit, initialData, onCancel }: EnergyContractF
   );
 };
 
-export default EnergyContractForm;
+export default ContractForm;

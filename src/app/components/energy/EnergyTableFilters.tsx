@@ -1,13 +1,13 @@
 "use client";
 
-import { EnergyType } from "../types";
-import { PowerIcon, GasIcon, ResetIcon } from "./icons";
+import { EnergyOptions } from "../../types";
+import { PowerIcon, GasIcon, ResetIcon } from "../icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 interface EnergyTableFiltersProps {
-  typeFilter: EnergyType | "all";
-  setTypeFilter: (type: EnergyType | "all") => void;
+  typeFilter: EnergyOptions | "all";
+  setTypeFilter: (type: EnergyOptions | "all") => void;
   dateRange: { start: Date | null; end: Date | null };
   setDateRange: (range: { start: Date | null; end: Date | null }) => void;
   onReset: () => void;
@@ -45,7 +45,7 @@ const EnergyTableFilters = ({
                 value={value}
                 checked={typeFilter === value}
                 onChange={(e) =>
-                  setTypeFilter(e.target.value as EnergyType | "all")
+                  setTypeFilter(e.target.value as EnergyOptions | "all")
                 }
                 className="hidden"
               />

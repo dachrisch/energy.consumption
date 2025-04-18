@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import EnergyTableFilters from "./EnergyTableFilters";
-import { EnergyDataType, EnergyType } from "../types";
+import { EnergyType, EnergyOptions } from "../../types";
 import EnergyCharts from "./EnergyCharts";
 import EnergyTable from "./EnergyTable";
 
 interface TabsProps {
-  energyData: EnergyDataType[];
+  energyData: EnergyType[];
   onDelete: (id: string) => Promise<void>;
 }
 
 const Tabs = ({ energyData, onDelete }: TabsProps) => {
   const [activeTab, setActiveTab] = useState("table");
   // Shared filter state
-  const [typeFilter, setTypeFilter] = useState<EnergyType | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<EnergyOptions | "all">("all");
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
     start: null,
     end: null,

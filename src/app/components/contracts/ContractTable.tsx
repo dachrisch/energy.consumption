@@ -1,34 +1,34 @@
 'use client';
 
-import { EnergyContractType, EnergyType, SortFieldContracts, SortOrder } from '../../types';
+import { ContractType, EnergyOptions, ContractsSortField, SortOrder } from '../../types';
 import { PowerIcon, GasIcon, DeleteIcon } from '../icons';
 import { formatDateToBrowserLocale } from '../../utils/dateUtils';
 import { useState } from 'react';
 import Pagination from '../Pagination';
 
-interface EnergyContractTableProps {
-  contracts: EnergyContractType[];
+interface ContractTableProps {
+  contracts: ContractType[];
   onDelete: (id: string) => void;
-  onEdit: (contract: EnergyContractType) => void;
-  typeFilter: EnergyType | 'all';
+  onEdit: (contract: ContractType) => void;
+  typeFilter: EnergyOptions | 'all';
 }
 
-const EnergyContractTable = ({
+const ContractTable = ({
   contracts,
   onDelete,
   onEdit,
   typeFilter,
-}: EnergyContractTableProps) => {
-  const [sortField, setSortField] = useState<SortFieldContracts>("startDate");
+}: ContractTableProps) => {
+  const [sortField, setSortField] = useState<ContractsSortField>("startDate");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  const getTypeIcon = (type: EnergyType) => {
+  const getTypeIcon = (type: EnergyOptions) => {
     return type === 'power' ? <PowerIcon /> : <GasIcon />;
   };
 
-  const handleSort = (field: SortFieldContracts) => {
+  const handleSort = (field: ContractsSortField) => {
     if (field === sortField) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -37,7 +37,7 @@ const EnergyContractTable = ({
     }
   };
 
-  const getSortIcon = (field: SortFieldContracts) => {
+  const getSortIcon = (field: ContractsSortField) => {
     if (field !== sortField) return null;
     return sortOrder === 'asc' ? '↑' : '↓';
   };
@@ -154,4 +154,4 @@ const EnergyContractTable = ({
   );
 };
 
-export default EnergyContractTable;
+export default ContractTable;

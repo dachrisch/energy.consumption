@@ -3,26 +3,23 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Toast from "../components/Toast";
-import { EnergyDataType } from "../types";
-import { deleteEnergy } from "@/actions/energyData";
-import EnergyTabs from "../components/EnergyDisplay";
+import { EnergyType, ToastMessage } from "../types";
+import { deleteEnergyAction as deleteEnergyAction } from "@/actions/energy";
+import EnergyTabs from "../components/energy/EnergyDisplay";
 import { AddEnergyDataIcon } from "../components/icons";
 
 const Dashboard = () => {
   const router = useRouter();
-  const [energyData, setEnergyDataType] = useState<EnergyDataType[]>([]);
+  const [energyData, setEnergyData] = useState<EnergyType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "info";
-  } | null>(null);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   useEffect(() => {
-    fetchEnergyDataType();
+    fetchEnergyData();
   }, []);
 
-  const fetchEnergyDataType = async () => {
+  const fetchEnergyData = async () => {
     try {
       const response = await fetch("/api/energy");
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -31,7 +28,7 @@ const Dashboard = () => {
         ...item,
         date: new Date(item.date),
       }));
-      setEnergyDataType(parsed);
+      setEnergyData(parsed);
     } catch (err) {
       setError("Failed to load energy data");
       console.error(err);
@@ -42,8 +39,12 @@ const Dashboard = () => {
 
   const onDelete = async (id: string): Promise<void> => {
     try {
-      await deleteEnergy(id);
-      fetchEnergyDataType();
+      await deleteEnergyAction(id);
+      fetchEnergyData();
+      setToast({
+        message: "Energy data deleted",
+        type: "success",
+      })
     } catch (err) {
       setError("Failed to delete energy data");
       console.error(err);

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import ConfirmationModal from "@/app/components/modals/ConfirmationModal";
 import { PowerIcon, GasIcon } from "@/app/components/icons";
-import { EnergyDataType, EnergyType, EnergyDataBase } from "@/app/types";
+import { EnergyType, EnergyOptions, EnergyBase } from "@/app/types";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
 
 interface AddEnergyFormProps {
-  onSubmit: (data: EnergyDataBase) => void;
+  onSubmit: (data: EnergyBase) => void;
   latestValues: {
     power: number;
     gas: number;
@@ -13,18 +13,18 @@ interface AddEnergyFormProps {
 }
 
 const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
-  const [newData, setNewData] = useState<EnergyDataBase>({
+  const [newData, setNewData] = useState<EnergyBase>({
     date: new Date(),
     type: "power",
     amount: latestValues.power || 0,
   });
   const [error, setError] = useState<string>("");
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingSubmission, setPendingSubmission] = useState<EnergyDataBase | null>(null);
+  const [pendingSubmission, setPendingSubmission] = useState<EnergyBase | null>(null);
 
   // Update amount when type changes
   useEffect(() => {
-    setNewData((prev:EnergyDataBase) => ({
+    setNewData((prev:EnergyBase) => ({
       ...prev,
       amount: latestValues[prev.type] || 0,
     }));
@@ -50,7 +50,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
     submitData(newData);
   };
 
-  const submitData = (data: Omit<EnergyDataType, "_id" | "userId">) => {
+  const submitData = (data: Omit<EnergyType, "_id" | "userId">) => {
     setError("");
     onSubmit(data);
     setNewData({
@@ -73,7 +73,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
     setPendingSubmission(null);
   };
 
-  const getTypeIcon = (type: EnergyType) => {
+  const getTypeIcon = (type: EnergyOptions) => {
     return type === "power" ? <PowerIcon /> : <GasIcon />;
   };
 
@@ -130,7 +130,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
                     onChange={(e) =>
                       setNewData({
                         ...newData,
-                        type: e.target.value as EnergyType,
+                        type: e.target.value as EnergyOptions,
                       })
                     }
                     className="hidden"
@@ -156,7 +156,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
                 setNewData({ ...newData, amount: parseFloat(e.target.value) })
               }
               className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
-              step="0.01"
+              step="10"
               required
             />
             {error && <p className="text-destructive text-sm mt-1">{error}</p>}
