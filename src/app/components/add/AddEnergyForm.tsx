@@ -84,7 +84,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
     <>
       <form
         onSubmit={handleSubmit}
-        className="mb-8 p-6 bg-card text-card-foreground rounded-lg border border-border"
+        className="mb-8 p-6  rounded-lg border border-border"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>

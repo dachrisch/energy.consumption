@@ -50,7 +50,7 @@ body {
 }
 
 .app-root {
-  @apply min-h-screen p-8;
+  @apply p-8;
 }
 
 .app-heading {

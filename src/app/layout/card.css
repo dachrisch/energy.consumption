@@ -1,6 +1,0 @@
-/* Card */
-.card {
-  background-color: var(--secondary);
-  color: var(--foreground);
-  border-color: var(--secondary);
-}
