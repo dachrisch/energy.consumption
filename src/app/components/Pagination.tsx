@@ -13,7 +13,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="btn mr-2 rounded-full"
+        className="mr-2"
       >
         <DoubleArrowLeftIcon />
       </button>
@@ -23,7 +23,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className=" ml-2 rounded-full"
+        className="ml-2"
       >
         <DoubleArrowRightIcon />
       </button>

@@ -69,8 +69,8 @@ const Tabs = ({ energyData, onDelete }: TabsProps) => {
             onClick={() => setActiveTab(tab.id)}
             className={`tab-base ${
               activeTab === tab.id
-                ? "tab-active"
-                : "tab-inactive"
+                ? "button-primary"
+                : "button-secondary"
             }`}
           >
             {tab.label}

@@ -22,9 +22,9 @@ const EnergyTableFilters = ({
 }: EnergyTableFiltersProps) => {
   return (
     <div className="dotted-container">
-      <div className="flex flex-wrap gap-4 items-center justify-center">
+      <div className="flow-group-big">
         {/* Type Filter Buttons */}
-        <div className="flex gap-2 flex-wrap justify-center"> 
+        <div className="flow-group-wrap"> 
           {[
             { label: "All", value: "all" },
             { label: "Power", value: "power", icon: <PowerIcon /> },
@@ -32,11 +32,11 @@ const EnergyTableFilters = ({
           ].map(({ label, value, icon }) => (
             <label
               key={value}
-              className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer transition-colors min-w-[80px] justify-center text-sm
+              className={`switch-label
                 ${
                   typeFilter === value
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-input text-foreground border-border hover:bg-secondary"
+                    ? "button-primary"
+                    : "highlight-secondary"
                 }`}
             >
               <input
@@ -56,7 +56,7 @@ const EnergyTableFilters = ({
         </div>
 
         {/* Date Picker */}
-        <div className="flex-grow min-w-[200px] sm:min-w-[250px] text-center"> 
+        <div className="flow-group-grow min-w-[200px] sm:min-w-[250px] "> 
           <DatePicker
             selectsRange
             startDate={dateRange.start}
@@ -74,7 +74,7 @@ const EnergyTableFilters = ({
         {/* Reset Button */}
         <button
           onClick={onReset}
-          className="ml-auto p-2 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80"
+          className="ml-auto p-2"
           title="Reset filters"
         >
           <ResetIcon />

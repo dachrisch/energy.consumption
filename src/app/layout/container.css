@@ -26,12 +26,6 @@
   transition-duration: var(--tw-duration, var(--default-transition-duration));
 }
 
-.tab-active {
-  @apply bg-primary text-primary-foreground border-primary;
-}
-.tab-inactive {
-  @apply bg-secondary text-foreground border-secondary hover:bg-primary;
-}
 .tab-outlet {
   @apply mt-4;
 }

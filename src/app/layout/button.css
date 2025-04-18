@@ -25,3 +25,16 @@ button:not(:disabled):hover {
 .fab svg {
   @apply h-6 w-6;
 }
+
+.highlight-secondary {
+  @apply text-foreground hover:bg-secondary;
+}
+
+.button-primary {
+  @apply bg-primary text-primary-foreground border-primary;
+}
+
+.button-secondary {
+  @apply bg-secondary text-foreground border-secondary hover:bg-primary;
+}
+
