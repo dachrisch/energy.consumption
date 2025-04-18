@@ -12,7 +12,7 @@ jest.mock("next-auth/react", () => ({
 }));
 
 // Mock the updateProfile action
-jest.mock("@/app/actions/user", () => ({
+jest.mock("@/actions/user", () => ({
   updateProfile: jest.fn(),
 }));
 const mockUpdateProfile = updateProfile as jest.MockedFunction<
