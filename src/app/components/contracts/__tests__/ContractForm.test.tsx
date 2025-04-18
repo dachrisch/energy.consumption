@@ -22,7 +22,7 @@ describe("ContractForm", () => {
   });
 
   it("renders the form with all fields", () => {
-    render(<ContractForm onSubmit={mockOnSubmit} />);
+    render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
 
     expect(screen.getByLabelText("Start Date")).toBeInTheDocument();
     expect(screen.getByLabelText("End Date (optional)")).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe("ContractForm", () => {
   });
 
   it("handles type selection", () => {
-    render(<ContractForm onSubmit={mockOnSubmit} />);
+    render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
 
     const gasRadio = screen.getByText("gas");
     fireEvent.click(gasRadio);
@@ -44,7 +44,7 @@ describe("ContractForm", () => {
   });
 
   it("validates prices must be positive", () => {
-    render(<ContractForm onSubmit={mockOnSubmit} />);
+    render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
     const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
     fireEvent.change(workingPriceInput, { target: { value: "1" } });
 
@@ -59,7 +59,7 @@ describe("ContractForm", () => {
   });
 
   it("validates end date must be after start date", () => {
-    render(<ContractForm onSubmit={mockOnSubmit} />);
+    render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
 
     const basePriceInput = screen.getByLabelText("Base Price (per year)");
     const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
@@ -81,35 +81,76 @@ describe("ContractForm", () => {
   });
 
   it("prevents overlapping contracts for same type", async () => {
-    // Mock fetch to return existing contract
-    global.fetch = jest.fn().mockResolvedValue({
-      json: () => Promise.resolve([{
-        _id: "1",
-        type: "power",
-        startDate: "2025-01-01T00:00:00.000Z",
-        endDate: "2025-12-31T00:00:00.000Z"
-      }])
-    });
+    const existingContracts = [{
+      _id: "1",
+      userId: "user-123",
+      type: "power" as EnergyOptions,
+      startDate: new Date("2025-01-01"),
+      endDate: new Date("2025-12-31"),
+      basePrice: 100,
+      workingPrice: 0.25
+    }];
 
-    render(<ContractForm onSubmit={mockOnSubmit} />);
+    render(
+      <ContractForm
+        onSubmit={mockOnSubmit}
+        existingContracts={existingContracts}
+      />
+    );
 
-    // Set dates that overlap with existing contract
-    const startDateInput = screen.getByLabelText("Start Date");
-    const endDateInput = screen.getByLabelText("End Date (optional)");
-    fireEvent.change(startDateInput, { target: { value: "2025-06-01" } });
-    fireEvent.change(endDateInput, { target: { value: "2026-01-01" } });
+    // Test different overlap scenarios
+    const scenarios = [
+      {
+        start: "2025-06-01",
+        end: "2026-01-01",
+        description: "new contract starts during existing contract"
+      },
+      {
+        start: "2024-06-01",
+        end: "2025-06-01",
+        description: "new contract ends during existing contract"
+      },
+      {
+        start: "2024-01-01",
+        end: "2026-12-31",
+        description: "new contract completely overlaps existing"
+      },
+      {
+        start: "2025-01-01",
+        end: "2025-12-31",
+        description: "new contract exactly matches existing"
+      }
+    ];
 
-    const submitButton = screen.getByText("Save Contract");
-    fireEvent.click(submitButton);
+    const basePriceInput = screen.getByLabelText("Base Price (per year)");
+    const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
 
-    await waitFor(() => {
-      expect(mockOnSubmit).not.toHaveBeenCalled();
-      expect(screen.getByText("Cannot have overlapping contract periods for the same energy type")).toBeInTheDocument();
-    });
+    fireEvent.change(basePriceInput, { target: { value: "150" } });
+    fireEvent.change(workingPriceInput, { target: { value: "0.30" } });
+
+    for (const scenario of scenarios) {
+      const startDateInput = screen.getByLabelText("Start Date");
+      const endDateInput = screen.getByLabelText("End Date (optional)");
+      
+      fireEvent.change(startDateInput, { target: { value: scenario.start } });
+      fireEvent.change(endDateInput, { target: { value: scenario.end } });
+
+      const submitButton = screen.getByText("Save Contract");
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+        expect(screen.getByText("Cannot have overlapping contract periods for the same energy type")).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText("Cannot have overlapping contract periods")).not.toBeInTheDocument();
+      });
+    }
   });
 
   it("submits valid form data", async () => {
-    render(<ContractForm onSubmit={mockOnSubmit} />);
+    render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
 
     const basePriceInput = screen.getByLabelText("Base Price (per year)");
     const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
@@ -131,7 +172,7 @@ describe("ContractForm", () => {
   });
 
   it("populates form with initial data", () => {
-    render(<ContractForm onSubmit={mockOnSubmit} initialData={initialData} onCancel={mockOnCancel} />);
+    render(<ContractForm onSubmit={mockOnSubmit} initialData={initialData} onCancel={mockOnCancel} existingContracts={[]} />);
 
     expect(screen.getByLabelText("Base Price (per year)")).toHaveValue(100);
     expect(screen.getByLabelText("Working Price (per unit)")).toHaveValue(0.25);
@@ -140,7 +181,7 @@ describe("ContractForm", () => {
   });
 
   it("handles cancel button", () => {
-    render(<ContractForm onSubmit={mockOnSubmit} initialData={initialData} onCancel={mockOnCancel} />);
+    render(<ContractForm onSubmit={mockOnSubmit} initialData={initialData} onCancel={mockOnCancel} existingContracts={[]} />);
 
     const cancelButton = screen.getByText("Cancel");
     fireEvent.click(cancelButton);
