@@ -217,6 +217,23 @@ export const DoubleArrowRightIcon = ({ className = "w-5 h-5" }: { className?: st
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M13 5l7 7-7 7M6 5l7 7-7 7"
-      />
+    />
   </svg>
 );
+
+export const AddEnergyDataIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 4v16m8-8H4"
+    />
+  </svg>
+)

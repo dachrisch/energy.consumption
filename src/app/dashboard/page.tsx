@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Toast from "../components/Toast";
 import { EnergyDataType } from "../types";
-import {  deleteEnergy } from "@/actions/energyData";
+import { deleteEnergy } from "@/actions/energyData";
 import EnergyTabs from "../components/EnergyTabs";
+import { AddEnergyDataIcon } from "../components/icons";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -77,20 +78,7 @@ const Dashboard = () => {
           onClick={() => router.push("/add")}
           className="fab"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
+          <AddEnergyDataIcon />
         </button>
 
         {toast && (
