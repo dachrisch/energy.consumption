@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import ContractForm from "@/app/components/contracts/ContractForm";
+import EnergyContractForm from "@/app/components/contracts/EnergyContractForm";
 import Toast from "@/app/components/Toast";
 import { EnergyContractBase } from "../types";
 import { addContract } from "@/actions/energyContract";
@@ -36,9 +36,9 @@ const ContractsPage = () => {
   return (
     <div className="app-root">
       <main className="dashboard-main">
-        <h1 className="app-heading mb-6">Edit Contracts</h1>
+        <h1 className="app-heading mb-6">Energy Contracts</h1>
 
-        <ContractForm onSubmit={onAddContract} />
+        <EnergyContractForm onSubmit={onAddContract} />
 
         {toast && (
           <Toast

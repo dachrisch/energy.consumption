@@ -81,7 +81,7 @@ export default function AppBar() {
                 onClick={() => router.push("/contracts")}
                 className="menu-dropdown-item-edit"
               >
-                Add Contract Data
+                Contract Data
               </div>
               <div
                 onClick={handleLogout}

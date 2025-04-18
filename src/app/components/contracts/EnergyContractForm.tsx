@@ -7,7 +7,7 @@ interface ContractFormProps {
   onSubmit: (data: EnergyContractBase) => void;
 }
 
-const ContractForm = ({ onSubmit }: ContractFormProps) => {
+const EnergyContractForm = ({ onSubmit }: ContractFormProps) => {
   const [contractData, setContractData] = useState<EnergyContractBase>({
     type: "power" as EnergyType,
     startDate: new Date(),
@@ -178,4 +178,4 @@ const ContractForm = ({ onSubmit }: ContractFormProps) => {
   );
 };
 
-export default ContractForm;
+export default EnergyContractForm;
