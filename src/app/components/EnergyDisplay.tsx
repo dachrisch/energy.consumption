@@ -52,8 +52,8 @@ const Tabs = ({ energyData, onDelete }: TabsProps) => {
   ];
 
   return (
-    <div className="border border-border rounded-lg p-4">
-    <div className="w-full">
+    <div className="solid-container">
+    <div className="container-inner">
       <EnergyTableFilters
         typeFilter={typeFilter}
         setTypeFilter={setTypeFilter}
@@ -62,22 +62,22 @@ const Tabs = ({ energyData, onDelete }: TabsProps) => {
         onReset={handleResetFilters}
       />
 
-      <div className="flex border-b border-border gap-2">
+      <div className="tabs-container">
         {tabs.map((tab) => (
           <div
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-t-lg ${
+            className={`tab-base ${
               activeTab === tab.id
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-secondary text-foreground border-secondary hover:bg-primary"
+                ? "tab-active"
+                : "tab-inactive"
             }`}
           >
             {tab.label}
           </div>
         ))}
       </div>
-      <div className="mt-4">
+      <div className="tab-outlet">
         {tabs.find((tab) => tab.id === activeTab)?.content}
       </div>
     </div>

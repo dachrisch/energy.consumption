@@ -21,7 +21,7 @@ const EnergyTableFilters = ({
   onReset,
 }: EnergyTableFiltersProps) => {
   return (
-    <div className="mb-4 p-4 rounded-lg border border-dotted">
+    <div className="dotted-container">
       <div className="flex flex-wrap gap-4 items-center justify-center">
         {/* Type Filter Buttons */}
         <div className="flex gap-2 flex-wrap justify-center"> 

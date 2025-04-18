@@ -1,0 +1,37 @@
+.solid-container {
+  @apply border rounded-lg p-4;
+}
+
+.dotted-container {
+  @apply mb-4 p-4 rounded-lg border border-dotted;
+}
+
+.container-inner {
+  @apply w-full;
+}
+
+.tabs-container {
+  @apply flex border-b gap-2;
+}
+
+.tab-base {
+  @apply flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg;
+  transition-property: color, background-color, border-color, outline-color,
+    text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via,
+    --tw-gradient-to;
+  transition-timing-function: var(
+    --tw-ease,
+    var(--default-transition-timing-function)
+  );
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+}
+
+.tab-active {
+  @apply bg-primary text-primary-foreground border-primary;
+}
+.tab-inactive {
+  @apply bg-secondary text-foreground border-secondary hover:bg-primary;
+}
+.tab-outlet {
+  @apply mt-4;
+}

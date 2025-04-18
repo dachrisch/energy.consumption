@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Toast from "../components/Toast";
 import { EnergyDataType } from "../types";
 import { deleteEnergy } from "@/actions/energyData";
-import EnergyTabs from "../components/EnergyTabs";
+import EnergyTabs from "../components/EnergyDisplay";
 import { AddEnergyDataIcon } from "../components/icons";
 
 const Dashboard = () => {
