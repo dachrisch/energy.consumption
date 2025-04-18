@@ -28,5 +28,4 @@ export const deleteContractAction = async (id: string): Promise<ApiResult> =>
       .then((deleteResult: DeleteResult) => ({
         success: deleteResult != undefined,
       }))
-      .catch((error: Error) => error)
   );

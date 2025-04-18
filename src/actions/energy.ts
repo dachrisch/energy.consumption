@@ -8,7 +8,7 @@ import { DeleteResult } from "mongoose";
 export const addEnergyAction = async (
   energyData: EnergyBase
 ): Promise<ApiResult> =>
-   connectDB().then(() =>
+  connectDB().then(() =>
     new Energy(energyData).save().then((createResult: InsertOneResult) => ({
       success: "_id" in createResult,
     }))
@@ -16,11 +16,9 @@ export const addEnergyAction = async (
 
 export const deleteEnergyAction = async (id: string): Promise<ApiResult> =>
   connectDB().then(() =>
-    Energy.deleteOne({ _id: id })
-      .then((deleteResult: DeleteResult) => ({
-        success: deleteResult != undefined,
-      }))
-      .catch((error: Error) => error)
+    Energy.deleteOne({ _id: id }).then((deleteResult: DeleteResult) => ({
+      success: deleteResult != undefined,
+    }))
   );
 
 export const importCSVAction = async (
