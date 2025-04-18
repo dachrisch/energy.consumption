@@ -1,0 +1,11 @@
+.flow-group-big {
+    @apply flex flex-wrap gap-4 items-center justify-center;
+}
+
+.flow-group-wrap {
+    @apply flex flex-wrap gap-2 text-center;
+}
+
+.flow-group-grow {
+    @apply flex-grow gap-2 text-center;
+}
