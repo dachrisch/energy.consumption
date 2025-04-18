@@ -1,9 +1,6 @@
 /* Profile Menu */
 .menu-button {
-  @apply w-8 h-8 rounded-4xl flex items-center justify-center cursor-pointer transition-colors duration-200;
-  background-color: var(
-    --primary
-  ); /* Background using secondary theme variable */
+  @apply w-8 h-8 rounded-4xl flex items-center justify-center cursor-pointer bg-secondary;
   color: var(--foreground); /* Icon color using foreground variable */
   width: 2rem;
   height: 2rem;
@@ -15,7 +12,7 @@
 }
 
 .menu-button:hover {
-  @apply bg-secondary;
+  @apply bg-primary;
 }
 
 /* Menu Dropdown */

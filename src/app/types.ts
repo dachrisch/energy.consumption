@@ -19,7 +19,8 @@ export type ImportResult = {
   error: number;
 };
 
-export type SortField = "date" | "type" | "amount";
+export type SortFieldContracts = "type" | "startDate" | "endDate" | "basePrice" | "workingPrice";
+export type SortFieldEnergy = "type" | "date" | "amount";
 export type SortOrder = "asc" | "desc";
 
 export type NewUserType = {

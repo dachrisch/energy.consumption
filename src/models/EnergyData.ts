@@ -9,6 +9,7 @@ const EnergyDataSchema = new Schema<EnergyDataType>({
   type: {
     type: String,
     required: true,
+    enum: ["power", "gas"]
   },
   date: {
     type: Date,

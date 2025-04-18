@@ -1,4 +1,5 @@
-import { EnergyDataType, EnergyType } from '../types';
+import { SortOrder } from 'mongoose';
+import { EnergyDataType, EnergyType, SortFieldEnergy } from '../types';
 
 
 export const getLatestValues = (energyData: EnergyDataType[]) => {
@@ -20,8 +21,8 @@ export const getFilteredAndSortedData = (
   energyData: EnergyDataType[],
   typeFilter: EnergyType | 'all',
   dateRange: { start: Date | null; end: Date | null },
-  sortField: 'date' | 'type' | 'amount',
-  sortOrder: 'asc' | 'desc'
+  sortField: SortFieldEnergy,
+  sortOrder: SortOrder
 ) => {
   let filtered = [...energyData];
 

@@ -39,6 +39,7 @@ type DateFormatter = (date: Date) => string;
 export const formatDateToBrowserLocale: DateFormatter = (
   date: Date
 ): string => {
+  console.log(`date: ${date}, type: ${typeof date}`)
   return new Intl.DateTimeFormat(undefined, {
     year: "numeric",
     month: "2-digit",

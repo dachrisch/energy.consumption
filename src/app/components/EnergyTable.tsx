@@ -1,6 +1,6 @@
 'use client';
 
-import { EnergyDataType, EnergyType, SortField, SortOrder } from '../types';
+import { EnergyDataType, EnergyType, SortFieldEnergy, SortOrder } from '../types';
 import { PowerIcon, GasIcon, DeleteIcon } from './icons';
 import { getFilteredAndSortedData } from '../handlers/energyHandlers';
 import { formatDateToBrowserLocale } from '../utils/dateUtils';
@@ -20,7 +20,7 @@ const EnergyTable = ({
   typeFilter,
   dateRange,
 }: EnergyTableProps) => {
-  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortField, setSortField] = useState<SortFieldEnergy>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -29,7 +29,7 @@ const EnergyTable = ({
     return type === 'power' ? <PowerIcon /> : <GasIcon />;
   };
 
-  const handleSort = (field: SortField) => {
+  const handleSort = (field: SortFieldEnergy) => {
     if (field === sortField) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -38,7 +38,7 @@ const EnergyTable = ({
     }
   };
 
-  const getSortIcon = (field: SortField) => {
+  const getSortIcon = (field: SortFieldEnergy) => {
     if (field !== sortField) return null;
     return sortOrder === 'asc' ? '↑' : '↓';
   };

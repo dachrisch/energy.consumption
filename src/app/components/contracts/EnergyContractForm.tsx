@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PowerIcon, GasIcon } from "@/app/components/icons";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
-import { EnergyContractBase, EnergyType } from "@/app/types";
+import { EnergyContractBase, EnergyContractType, EnergyType } from "@/app/types";
 
-interface ContractFormProps {
+interface EnergyContractFormProps {
   onSubmit: (data: EnergyContractBase) => void;
+  initialData?: EnergyContractType | null;
+  onCancel?: () => void;
 }
 
-const EnergyContractForm = ({ onSubmit }: ContractFormProps) => {
+const EnergyContractForm = ({ onSubmit, initialData, onCancel }: EnergyContractFormProps) => {
   const [contractData, setContractData] = useState<EnergyContractBase>({
     type: "power" as EnergyType,
     startDate: new Date(),
@@ -16,6 +18,18 @@ const EnergyContractForm = ({ onSubmit }: ContractFormProps) => {
     workingPrice: 0,
   });
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (initialData) {
+      setContractData({
+        type: initialData.type,
+        startDate: initialData.startDate,
+        endDate: initialData.endDate,
+        basePrice: initialData.basePrice,
+        workingPrice: initialData.workingPrice,
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,12 +182,23 @@ const EnergyContractForm = ({ onSubmit }: ContractFormProps) => {
 
       {error && <p className="text-destructive text-sm mt-2">{error}</p>}
 
-      <button
-        type="submit"
-        className="mt-4 px-4 py-2"
-      >
-        Save Contract
-      </button>
+      <div className="flex gap-2 mt-4">
+        <button
+          type="submit"
+          className="px-4 py-2"
+        >
+          {initialData ? "Update Contract" : "Save Contract"}
+        </button>
+        {initialData && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 };
