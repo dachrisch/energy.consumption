@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.4](https://github.com/dachrisch/energy.consumption/compare/v1.8.3...v1.8.4) (2025-04-18)
+
+
+### Features
+
+* **contracts:** add EditIcon to contract components ([ea58d5b](https://github.com/dachrisch/energy.consumption/commit/ea58d5bae79c790928b6d203605f6345c4258630))
+
 ### [1.8.3](https://github.com/dachrisch/energy.consumption/compare/v1.8.2...v1.8.3) (2025-04-18)
 
 ### [1.8.2](https://github.com/dachrisch/energy.consumption/compare/v1.8.1...v1.8.2) (2025-04-18)
