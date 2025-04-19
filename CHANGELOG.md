@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.5](https://github.com/dachrisch/energy.consumption/compare/v1.8.4...v1.8.5) (2025-04-19)
+
+
+### Features
+
+* Add app version to config and display in AppBar ([004f712](https://github.com/dachrisch/energy.consumption/commit/004f712cf2ff15f9dcc4ebfe3b6381c8121c7f17))
+
 ### [1.8.4](https://github.com/dachrisch/energy.consumption/compare/v1.8.3...v1.8.4) (2025-04-18)
 
 
