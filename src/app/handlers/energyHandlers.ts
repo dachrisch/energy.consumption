@@ -23,7 +23,7 @@ export const getFilteredAndSortedData = (
   dateRange: { start: Date | null; end: Date | null },
   sortField: EnergySortField,
   sortOrder: SortOrder
-) => {
+):EnergyType[] => {
   let filtered = [...energyData];
 
   // Apply type filter

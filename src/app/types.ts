@@ -12,12 +12,6 @@ export type EnergyBase = {
   amount: number;
 };
 
-export type CostData = EnergyType & {
-  cost: number;
-  workingPrice: number;
-  basePrice: number;
-};
-
 export type ImportResult = {
   success: number;
   skipped: number;
