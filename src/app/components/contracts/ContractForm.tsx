@@ -153,7 +153,7 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
                 htmlFor="contract-end-date"
                 className="block text-sm font-medium mb-1 text-foreground"
               >
-                End
+                End (optional)
               </label>
               <input
                 id="contract-end-date"
@@ -180,6 +180,7 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
               </label>
               <input
                 id="contract-base-price"
+                data-testid="contract-base-price"
                 type="number"
                 value={contractData.basePrice || ""}
                 onChange={(e) =>
@@ -202,6 +203,7 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
               </label>
               <input
                 id="contract-working-price"
+                data-testid="contract-working-price"
                 type="number"
                 value={contractData.workingPrice || ""}
                 onChange={(e) =>

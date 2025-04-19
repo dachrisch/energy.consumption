@@ -24,10 +24,10 @@ describe("ContractForm", () => {
   it("renders the form with all fields", () => {
     render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
 
-    expect(screen.getByLabelText("Start Date")).toBeInTheDocument();
-    expect(screen.getByLabelText("End Date (optional)")).toBeInTheDocument();
-    expect(screen.getByLabelText("Base Price (per year)")).toBeInTheDocument();
-    expect(screen.getByLabelText("Working Price (per unit)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Start")).toBeInTheDocument();
+    expect(screen.getByLabelText("End (optional)")).toBeInTheDocument();
+    expect(screen.getByTestId('contract-base-price')).toBeInTheDocument();
+    expect(screen.getByTestId('contract-working-price')).toBeInTheDocument();
     expect(screen.getByText("power")).toBeInTheDocument();
     expect(screen.getByText("gas")).toBeInTheDocument();
     expect(screen.getByText("Save Contract")).toBeInTheDocument();
@@ -39,16 +39,16 @@ describe("ContractForm", () => {
     const gasRadio = screen.getByText("gas");
     fireEvent.click(gasRadio);
 
-    expect(screen.getByText("gas").closest("label")).toHaveClass("button-primary");
-    expect(screen.getByText("power").closest("label")).not.toHaveClass("button-primary");
+    expect(screen.getByText("gas").closest("label")).toHaveClass("bg-primary");
+    expect(screen.getByText("power").closest("label")).not.toHaveClass("bg-primary");
   });
 
   it("validates prices must be positive", () => {
     render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
-    const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
+    const workingPriceInput = screen.getByTestId('contract-working-price');
     fireEvent.change(workingPriceInput, { target: { value: "1" } });
 
-    const basePriceInput = screen.getByLabelText("Base Price (per year)");
+    const basePriceInput = screen.getByTestId('contract-base-price');
     fireEvent.change(basePriceInput, { target: { value: "-10" } });
 
     const submitButton = screen.getByText("Save Contract");
@@ -61,14 +61,14 @@ describe("ContractForm", () => {
   it("validates end date must be after start date", () => {
     render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
 
-    const basePriceInput = screen.getByLabelText("Base Price (per year)");
-    const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
+    const basePriceInput = screen.getByTestId('contract-base-price');
+    const workingPriceInput = screen.getByTestId('contract-working-price');
 
     fireEvent.change(basePriceInput, { target: { value: "150" } });
     fireEvent.change(workingPriceInput, { target: { value: "0.30" } });
 
-    const startDateInput = screen.getByLabelText("Start Date");
-    const endDateInput = screen.getByLabelText("End Date (optional)");
+    const startDateInput = screen.getByLabelText("Start");
+    const endDateInput = screen.getByLabelText("End (optional)");
 
     fireEvent.change(startDateInput, { target: { value: "2025-12-31" } });
     fireEvent.change(endDateInput, { target: { value: "2025-01-01" } });
@@ -122,15 +122,15 @@ describe("ContractForm", () => {
       }
     ];
 
-    const basePriceInput = screen.getByLabelText("Base Price (per year)");
-    const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
+    const basePriceInput = screen.getByTestId('contract-base-price');
+    const workingPriceInput = screen.getByTestId('contract-working-price');
 
     fireEvent.change(basePriceInput, { target: { value: "150" } });
     fireEvent.change(workingPriceInput, { target: { value: "0.30" } });
 
     for (const scenario of scenarios) {
-      const startDateInput = screen.getByLabelText("Start Date");
-      const endDateInput = screen.getByLabelText("End Date (optional)");
+      const startDateInput = screen.getByLabelText("Start");
+      const endDateInput = screen.getByLabelText("End (optional)");
       
       fireEvent.change(startDateInput, { target: { value: scenario.start } });
       fireEvent.change(endDateInput, { target: { value: scenario.end } });
@@ -152,8 +152,8 @@ describe("ContractForm", () => {
   it("submits valid form data", async () => {
     render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
 
-    const basePriceInput = screen.getByLabelText("Base Price (per year)");
-    const workingPriceInput = screen.getByLabelText("Working Price (per unit)");
+    const basePriceInput = screen.getByTestId('contract-base-price');
+    const workingPriceInput = screen.getByTestId('contract-working-price');
     const submitButton = screen.getByText("Save Contract");
 
     fireEvent.change(basePriceInput, { target: { value: "150" } });
@@ -174,8 +174,8 @@ describe("ContractForm", () => {
   it("populates form with initial data", () => {
     render(<ContractForm onSubmit={mockOnSubmit} initialData={initialData} onCancel={mockOnCancel} existingContracts={[]} />);
 
-    expect(screen.getByLabelText("Base Price (per year)")).toHaveValue(100);
-    expect(screen.getByLabelText("Working Price (per unit)")).toHaveValue(0.25);
+    expect(screen.getByTestId('contract-base-price')).toHaveValue(100);
+    expect(screen.getByTestId('contract-working-price')).toHaveValue(0.25);
     expect(screen.getByText("Update Contract")).toBeInTheDocument();
     expect(screen.getByText("Cancel")).toBeInTheDocument();
   });

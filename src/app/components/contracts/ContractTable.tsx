@@ -152,6 +152,7 @@ const ContractTable = ({
                     onClick={() => onEdit(contract)}
                     className="text-primary hover:text-primary/80 p-1 rounded-full hover:bg-primary/10"
                     title="Edit contract"
+                    data-testid="contract-edit-button"
                   >
                     <EditIcon aria-label="Update contract" />
                   </button>

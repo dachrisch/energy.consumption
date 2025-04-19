@@ -122,7 +122,7 @@ describe("ContractTable", () => {
       />
     );
 
-    fireEvent.click(screen.getAllByText("Edit")[0]);
+    fireEvent.click(screen.getAllByTestId("contract-edit-button")[0]);
     expect(mockOnEdit).toHaveBeenCalledWith(mockContracts[0]);
   });
 
