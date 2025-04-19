@@ -43,10 +43,16 @@ export default function AppBar() {
           >
             <EnergyLogo className="app-logo" />
           </div>
-          <h1 className="logo-text-large">Energy Consumption Monitor</h1>
-          <h1 className="logo-text-small" title="Energy Consumption Monitor">
+          <div className="flex flex-col">
+            <h1 className="logo-text-large">Energy Consumption Monitor</h1>
+            <h1 className="logo-text-small" title="Energy Consumption Monitor">
             ECM
           </h1>
+            <span className="text-xs text-gray-400">
+              v{process.env.NEXT_PUBLIC_APP_VERSION}
+            </span>
+          </div>
+
         </div>
         <div className="menu-container" ref={menuRef}>
           <div
