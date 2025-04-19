@@ -5,7 +5,6 @@ import EnergyTableFilters from "./energy/EnergyTableFilters";
 import { EnergyType, EnergyOptions } from "../types";
 import EnergyCharts from "./energy/EnergyCharts";
 import EnergyTable from "./energy/EnergyTable";
-import CostCharts from "./energy/CostCharts";
 
 interface TabsProps {
   energyData: EnergyType[];
@@ -14,7 +13,6 @@ interface TabsProps {
 
 const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
   const [activeTab, setActiveTab] = useState("table");
-  const [activeCostChart, setActiveCostChart] = useState<"actual" | "monthly" | "prognosis">("actual");
   // Shared filter state
   const [typeFilter, setTypeFilter] = useState<EnergyOptions | "all">("all");
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
@@ -51,40 +49,7 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
         />
       ),
     },
-    {
-      id: "costs",
-      label: "Cost Analysis",
-      content: (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveCostChart("actual")}
-              className={`button-small ${activeCostChart === "actual" ? "button-primary" : "button-secondary"}`}
-            >
-              Actual
-            </button>
-            <button
-              onClick={() => setActiveCostChart("monthly")}
-              className={`button-small ${activeCostChart === "monthly" ? "button-primary" : "button-secondary"}`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setActiveCostChart("prognosis")}
-              className={`button-small ${activeCostChart === "prognosis" ? "button-primary" : "button-secondary"}`}
-            >
-              Prognosis
-            </button>
-          </div>
-          <CostCharts
-            energyData={energyData}
-            typeFilter={typeFilter}
-            dateRange={dateRange}
-            activeChart={activeCostChart}
-          />
-        </div>
-      ),
-    },
+   
   ];
 
   return (
