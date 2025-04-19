@@ -53,13 +53,13 @@ body {
   overflow: hidden;
 }
 
-main {
-  flex: 1;
-  overflow-y: auto;
-}
+  main {
+    flex: 1;
+    overflow-y: auto;
+  }
 
 .app-root {
-  @apply p-8;
+  @apply p-8 pb-16;
 }
 
 .app-heading {
