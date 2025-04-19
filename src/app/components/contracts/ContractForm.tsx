@@ -10,7 +10,7 @@ interface ContractFormProps {
   onCancel?: () => void;
 }
 
-const ContractForm = ({ onSubmit, initialData,existingContracts, onCancel }: ContractFormProps) => {
+const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: ContractFormProps) => {
   const [contractData, setContractData] = useState<ContractBase>({
     type: "power" as EnergyOptions,
     startDate: new Date(),
@@ -49,11 +49,11 @@ const ContractForm = ({ onSubmit, initialData,existingContracts, onCancel }: Con
 
     try {
       // Check for overlapping contracts
-      
+
       const hasOverlap = existingContracts.some((contract: ContractType) => {
         // Skip current contract if editing
         if (initialData?._id === contract._id) return false;
-        
+
         const existingStart = new Date(contract.startDate);
         const existingEnd = contract.endDate ? new Date(contract.endDate) : null;
         const newStart = contractData.startDate;
@@ -84,152 +84,160 @@ const ContractForm = ({ onSubmit, initialData,existingContracts, onCancel }: Con
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="solid-container"
-    >
-      <div className="grid grid-cols-1 gap-4">
-        <div className="flow-group-big">
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className="solid-container"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-foreground">
+              Type
+            </label>
+            <div className="flex gap-2">
+              {(["power", "gas"] as const).map((type) => (
+                <label
+                  htmlFor={"contract-type-" + type}
+                  key={type}
+                  className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded cursor-pointer transition-colors ${contractData.type === type
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-input text-foreground border-border hover:bg-secondary"
+                    }`}
+                >
+                  <input
+                    id={"contract-type-" + type}
+                    data-testid={"contract-type-" + type}
+                    type="radio"
+                    name="type"
+                    value={type}
+                    checked={contractData.type === type}
+                    onChange={(e) => {
+                      setContractData({
+                        ...contractData,
+                        type: e.target.value as EnergyOptions,
+                      });
+                      setError("");
+                    }}
+                    className="hidden"
+                  />
+                  {getTypeIcon(type)}
+                  <span className="capitalize">{type}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="flex gap-2">
-            {(["power", "gas"] as const).map((type) => (
+            <div>
               <label
-                htmlFor={"contract-type-" + type}
-                key={type}
-                className={`switch-label ${contractData.type === type
-                  ? "button-primary"
-                  : "highlight-secondary"
-                  }`}
+                htmlFor="contract-start-date"
+                className="block text-sm font-medium mb-1 text-foreground"
               >
-                <input
-                  id={"contract-type-" + type}
-                  type="radio"
-                  name="type"
-                  value={type}
-                  checked={contractData.type === type}
-                  onChange={(e) => {
-                    setContractData({
-                      ...contractData,
-                      type: e.target.value as EnergyOptions,
-                    });
-                    setError("");
-                  }}
-                  className="hidden"
-                />
-                {getTypeIcon(type)}
-                <span className="capitalize">{type}</span>
+                Start
               </label>
-            ))}
+              <input
+                id="contract-start-date"
+                type="date"
+                value={formatDateToIso(contractData.startDate)}
+                onChange={(e) =>
+                  setContractData({
+                    ...contractData,
+                    startDate: parseDateFlexible(e.target.value),
+                  })
+                }
+                className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="contract-end-date"
+                className="block text-sm font-medium mb-1 text-foreground"
+              >
+                End
+              </label>
+              <input
+                id="contract-end-date"
+                type="date"
+                value={contractData.endDate ? formatDateToIso(contractData.endDate) : ""}
+                onChange={(e) =>
+                  setContractData({
+                    ...contractData,
+                    endDate: e.target.value ? parseDateFlexible(e.target.value) : undefined,
+                  })
+                }
+                className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <div>
+              <label
+                htmlFor="contract-base-price"
+                className="block text-sm font-medium mb-1 text-foreground"
+              >
+                Base Price <span className="text-xs text-gray-400">/year</span>
+              </label>
+              <input
+                id="contract-base-price"
+                type="number"
+                value={contractData.basePrice || ""}
+                onChange={(e) =>
+                  setContractData({
+                    ...contractData,
+                    basePrice: parseFloat(e.target.value),
+                  })
+                }
+                className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
+                step="1"
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="contract-working-price"
+                className="block text-sm font-medium mb-1 text-foreground"
+              >
+                Working Price <span className="text-xs text-gray-400">/unit</span>
+              </label>
+              <input
+                id="contract-working-price"
+                type="number"
+                value={contractData.workingPrice || ""}
+                onChange={(e) =>
+                  setContractData({
+                    ...contractData,
+                    workingPrice: parseFloat(e.target.value),
+                  })
+                }
+                className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
+                step=".0001"
+                required
+              />
+            </div>
           </div>
         </div>
+        {error && <p className="text-destructive text-sm mt-2">{error}</p>}
 
-        <div className="flow-group-big">
-          <div>
-            <label
-              htmlFor="contract-start-date"
-              className="form-label"
-            >
-              Start Date
-            </label>
-            <input
-              id="contract-start-date"
-              type="date"
-              value={formatDateToIso(contractData.startDate)}
-              onChange={(e) =>
-                setContractData({
-                  ...contractData,
-                  startDate: parseDateFlexible(e.target.value),
-                })
-              }
-              className="form-input"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="contract-end-date"
-              className="form-label"
-            >
-              End Date (optional)
-            </label>
-            <input
-              id="contract-end-date"
-              type="date"
-              value={contractData.endDate ? formatDateToIso(contractData.endDate) : ""}
-              onChange={(e) =>
-                setContractData({
-                  ...contractData,
-                  endDate: e.target.value ? parseDateFlexible(e.target.value) : undefined,
-                })
-              }
-              className="form-input"
-            />
-          </div>
-        </div>
-        <div className="flow-group-big ">
-          <div>
-            <label htmlFor="contract-base-price" className="form-label">
-              Base Price (per year)
-            </label>
-            <input
-              id="contract-base-price"
-              type="number"
-              value={contractData.basePrice || ""}
-              onChange={(e) =>
-                setContractData({
-                  ...contractData,
-                  basePrice: parseFloat(e.target.value),
-                })
-              }
-              className="form-input w-40"
-              step="0.01"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="contract-working-price" className="form-label">
-              Working Price (per unit)
-            </label>
-            <input
-              id="contract-working-price"
-              type="number"
-              value={contractData.workingPrice || ""}
-              onChange={(e) =>
-                setContractData({
-                  ...contractData,
-                  workingPrice: parseFloat(e.target.value),
-                })
-              }
-              className="form-input w-40"
-              step="0.0001"
-              required
-            />
-          </div>
-        </div>
-
-      </div>
-
-      {error && <p className="text-destructive text-sm mt-2">{error}</p>}
-
-      <div className="flex gap-2 mt-4">
-        <button
-          type="submit"
-          className="px-4 py-2"
-        >
-          {initialData ? "Update Contract" : "Save Contract"}
-        </button>
-        {initialData && onCancel && (
+        <div className="flex gap-2 mt-4">
           <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20"
+            type="submit"
+            className="px-4 py-2"
           >
-            Cancel
+            {initialData ? "Update Contract" : "Save Contract"}
           </button>
-        )}
-      </div>
-    </form>
+          {initialData && onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 bg-destructive/10 text-destructive hover:bg-destructive/20"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+    </>
   );
 };
 
