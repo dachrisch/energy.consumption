@@ -2,9 +2,9 @@ import { TimeSeries } from "@/lib/pond/timeseries";
 import { timeEvent } from "@/lib/pond/event";
 import { time } from "@/lib/pond/time";
 import Immutable from "immutable";
-import { differences } from "../difference"; 
+import { differences } from "../timeSeries";
 
-describe("differences", () => {
+describe("Time Series calculations", () => {
   it("should compute month-over-month differences correctly", () => {
     // Arrange: Create a simple test TimeSeries
     const events = Immutable.List([
@@ -23,9 +23,9 @@ describe("differences", () => {
 
 
     expect(diffSeries.size()).toBe(3);
-    expect(diffSeries.at(0).get("difference")).toBe(100);
-    expect(diffSeries.at(1).get("difference")).toBe(50);
-    expect(diffSeries.at(2).get("difference")).toBe(30);
+    expect(diffSeries.at(0).get("amount")).toBe(100);
+    expect(diffSeries.at(1).get("amount")).toBe(50);
+    expect(diffSeries.at(2).get("amount")).toBe(30);
   });
 
   it("should handle null values gracefully", () => {
@@ -43,8 +43,8 @@ describe("differences", () => {
     const diffSeries = differences(series);
 
     expect(diffSeries.size()).toBe(3);
-    expect(diffSeries.at(0).get("difference")).toBe(100);
-    expect(diffSeries.at(1).get("difference")).toBeNull();
-    expect(diffSeries.at(2).get("difference")).toBeNull();
+    expect(diffSeries.at(0).get("amount")).toBe(100);
+    expect(diffSeries.at(1).get("amount")).toBeNull();
+    expect(diffSeries.at(2).get("amount")).toBeNull();
   });
 });

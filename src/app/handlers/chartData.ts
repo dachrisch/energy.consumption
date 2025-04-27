@@ -1,7 +1,6 @@
 import { ChartData } from "chart.js";
 import { EnergyTimeSeries, EnergyOptions } from "../types";
 
-
 export const getChartData = (
   seriesData: EnergyTimeSeries,
   typeFilter: EnergyOptions | "all"
@@ -36,7 +35,8 @@ export const getChartData = (
     label: type.charAt(0).toUpperCase() + type.slice(1),
     data: labels.map((date) => dataMap.get(date)?.[type] ?? null),
     borderColor: type === "power" ? "rgb(75, 192, 192)" : "rgb(255, 99, 132)",
-    backgroundColor: type === "power" ? "rgba(75, 192, 192, 0.5)" : "rgba(255, 99, 132, 0.5)",
+    backgroundColor:
+      type === "power" ? "rgba(75, 192, 192, 0.5)" : "rgba(255, 99, 132, 0.5)",
     tension: 0.1,
     hidden: typeFilter !== "all" && type !== typeFilter,
     spanGaps: true,

@@ -1,7 +1,9 @@
 "use client";
 
-import { EnergyType, EnergyOptions } from "@/app/types";
-import {  getFilteredAndSortedData } from "@/app/handlers/energyHandlers";
+import { useState } from "react";
+import { EnergyType, EnergyOptions, EnergyTimeSeries } from "@/app/types";
+import { differences } from "@/app/handlers/timeSeries";
+import { getFilteredAndSortedData } from "@/app/handlers/energyHandlers";
 import { getChartData } from "@/app/handlers/chartData";
 import {
   Chart as ChartJS,
@@ -46,9 +48,24 @@ const EnergyCharts = ({
     "asc"
   );
 
+  const [showDifference, setShowDifference] = useState(false);
+
   const timeSeriesData = createTimeSeriesByType(filteredData);
 
-  const chartData = getChartData(timeSeriesData, typeFilter);
+  const processedData: EnergyTimeSeries = showDifference
+    ? Object.fromEntries(
+      Object.entries(timeSeriesData).map(([type, series]) => [
+        type,
+        differences(series),
+      ])
+    ) as EnergyTimeSeries
+    : timeSeriesData;
+
+  const chartData = getChartData(processedData, typeFilter);
+
+  const toggleDifferenceMode = () => {
+    setShowDifference(!showDifference);
+  };
 
   const options = {
     responsive: true,
@@ -91,8 +108,32 @@ const EnergyCharts = ({
 
   return (
     <div className="w-full min-h-[300px] sm:aspect-[2/1] aspect-[1/1]">
-
-      <Line options={options} data={chartData} />
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={toggleDifferenceMode}
+          className={`px-3 py-1 rounded-md text-sm ${showDifference
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 text-gray-700"
+            }`}
+        >
+          {showDifference ? "Show Actual" : "Show Difference"}
+        </button>
+      </div>
+      <Line
+        options={{
+          ...options,
+          plugins: {
+            ...options.plugins,
+            title: {
+              ...options.plugins?.title,
+              text: showDifference
+                ? "Energy Consumption Differences Over Time"
+                : "Energy Consumption Over Time"
+            }
+          }
+        }}
+        data={chartData}
+      />
     </div>
   );
 };
