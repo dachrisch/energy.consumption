@@ -3,13 +3,7 @@ import {
   EnergyOptions,
   EnergySortField,
   EnergyData,
-  EnergyTimeSeries,
 } from "../types";
-import { ChartData } from "chart.js";
-import { timeEvent } from "@/lib/pond/event";
-import { time } from "@/lib/pond/time";
-import { TimeSeries } from "@/lib/pond/timeseries";
-import * as Immutable from 'immutable';
 
 export const getLatestValues = (energyData: EnergyData) => {
   const latestPower =
@@ -79,76 +73,3 @@ export const getFilteredAndSortedData = (
   return filtered;
 };
 
-export const getChartData = (
-  seriesData: EnergyTimeSeries,
-  typeFilter: EnergyOptions | "all"
-): ChartData<"line", (number | null)[], string> => {
-  const labelsSet = new Set<string>();
-  const dataMap = new Map<string, Partial<Record<EnergyOptions, number>>>();
-
-  (Object.keys(seriesData) as EnergyOptions[]).forEach((type) => {
-    const series = seriesData[type];
-    if (!series) return;
-
-    series.forEach((event) => {
-      if (undefined !== event) {
-        const dateStr = event.timestamp().toLocaleDateString();
-        labelsSet.add(dateStr);
-
-        if (!dataMap.has(dateStr)) {
-          dataMap.set(dateStr, {});
-        }
-
-        const entry = dataMap.get(dateStr)!;
-        entry[type] = event.get("amount");
-      }
-    });
-  });
-
-  const labels = Array.from(labelsSet).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
-  );
-
-  const datasets = (Object.keys(seriesData) as EnergyOptions[]).map((type) => ({
-    label: type.charAt(0).toUpperCase() + type.slice(1),
-    data: labels.map((date) => dataMap.get(date)?.[type] ?? null),
-    borderColor: type === "power" ? "rgb(75, 192, 192)" : "rgb(255, 99, 132)",
-    backgroundColor:
-      type === "power" ? "rgba(75, 192, 192, 0.5)" : "rgba(255, 99, 132, 0.5)",
-    tension: 0.1,
-    hidden: typeFilter !== "all" && type !== typeFilter,
-    spanGaps: true,
-  }));
-
-  return { labels, datasets };
-};
-
-export const createTimeSeriesByType = (
-  energyData: EnergyData
-): EnergyTimeSeries => {
-  const groupedData = energyData.reduce((acc, d) => {
-    if (!acc[d.type]) {
-      acc[d.type] = [];
-    }
-    acc[d.type].push(d);
-    return acc;
-  }, {} as Record<EnergyOptions, EnergyData>);
-
-  const result: EnergyTimeSeries = Object.fromEntries(
-    Object.entries(groupedData).map(([type, data]) => {
-      const events = data.map((d) =>
-        timeEvent(time(d.date), Immutable.Map({ amount: d.amount }))
-      );
-
-      return [
-        type,
-        new TimeSeries({
-          name: type,
-          events: Immutable.List(events),
-        }),
-      ];
-    })
-  ) as EnergyTimeSeries;
-
-  return result;
-};

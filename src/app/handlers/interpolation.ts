@@ -5,8 +5,8 @@ import { Time, time } from "@/lib/pond/time";
 import * as Immutable from 'immutable';
 import { FillMethod } from "@/lib/pond/types";
 import { endOfMonth, addDays } from "date-fns";
-import { createTimeSeriesByType } from "./energyHandlers";
 import { Key } from "@/lib/pond/key";
+import { createTimeSeriesByType } from "./timeSeries";
 
 export const interpolateMonthly = (energyData: EnergyData): EnergyTimeSeries =>
   Object.fromEntries(

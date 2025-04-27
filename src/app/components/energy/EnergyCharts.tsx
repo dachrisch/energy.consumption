@@ -1,7 +1,8 @@
 "use client";
 
-import { EnergyType, EnergyOptions } from "../../types";
-import { createTimeSeriesByType, getChartData, getFilteredAndSortedData } from "../../handlers/energyHandlers";
+import { EnergyType, EnergyOptions } from "@/app/types";
+import {  getFilteredAndSortedData } from "@/app/handlers/energyHandlers";
+import { getChartData } from "@/app/handlers/chartData";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +14,7 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { createTimeSeriesByType } from "@/app/handlers/timeSeries";
 
 ChartJS.register(
   CategoryScale,
