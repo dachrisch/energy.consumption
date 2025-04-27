@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/dachrisch/energy.consumption/compare/v1.8.10...v1.9.0) (2025-04-27)
+
+
+### Features
+
+* add time series handling for energy data ([c79f9f3](https://github.com/dachrisch/energy.consumption/commit/c79f9f3423e5354d42388df5d68a3bc3506de003))
+
 ### [1.8.10](https://github.com/dachrisch/energy.consumption/compare/v1.8.9...v1.8.10) (2025-04-19)
 
 ### [1.8.9](https://github.com/dachrisch/energy.consumption/compare/v1.8.8...v1.8.9) (2025-04-19)
