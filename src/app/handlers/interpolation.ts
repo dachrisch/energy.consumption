@@ -1,42 +1,46 @@
 import { TimeSeries } from "@/lib/pond/timeseries";
-import { EnergyBase } from "../types";
+import { EnergyData, EnergyTimeSeries } from "../types";
 import { timeEvent } from "@/lib/pond/event";
 import { Time, time } from "@/lib/pond/time";
-import Immutable from "immutable";
+import * as Immutable from 'immutable';
 import { FillMethod } from "@/lib/pond/types";
 import { endOfMonth, addDays } from "date-fns";
+import { createTimeSeriesByType } from "./energyHandlers";
+import { Key } from "@/lib/pond/key";
 
-export const interpolateMonthly = (
-  energyData: EnergyBase[]
-): TimeSeries<Time> => {
-  // Create events using timeEvent and Immutable.Map
-  const events = energyData.map((d) =>
-    timeEvent(time(d.date), Immutable.Map({ amount: d.amount }))
-  );
+export const interpolateMonthly = (energyData: EnergyData): EnergyTimeSeries =>
+  Object.fromEntries(
+    Object.entries(createTimeSeriesByType(energyData)).map(([type, series]) => {
+      const events = [];
+      const timerange = series.timerange();
+      let currentDateInSeries = endOfMonth(timerange.begin());
+      const endOfSeries = timerange.end();
 
-  const timerangeSeries = new TimeSeries({
-    name: "energy",
-    events: Immutable.List(events),
-  }).timerange();
+      while (currentDateInSeries < endOfSeries) {
+        events.push(
+          timeEvent(time(currentDateInSeries), Immutable.Map({ amount: null }))
+        );
+        currentDateInSeries = endOfMonth(addDays(currentDateInSeries, 1));
+      }
 
-  let currentDateInSeries = endOfMonth(timerangeSeries.begin());
-  const endOfSeries = timerangeSeries.end();
-  // iterate from begin to end and add empty amount to events
-  while (currentDateInSeries < endOfSeries) {
-    events.push(
-      timeEvent(time(currentDateInSeries), Immutable.Map({ amount: null }))
-    );
-    currentDateInSeries = endOfMonth(addDays(currentDateInSeries, 1));
-  }
-  const series = new TimeSeries({
-    name: "energy",
-    events: Immutable.List(events),
-  });
+      const endOfMonthSeries = new TimeSeries({
+        name: type,
+        events: Immutable.List(events),
+      });
 
-  const filledSeries = series.fill({
-    fieldSpec: ["amount"],
-    method: FillMethod.Linear,
-  });
+      const extendedSeries = TimeSeries.timeSeriesListMerge<Time>({
+        name: type,
+        seriesList: [
+          series as unknown as TimeSeries<Key>,
+          endOfMonthSeries as unknown as TimeSeries<Key>,
+        ],
+      });
 
-  return filledSeries;
-};
+      const filledSeries = extendedSeries.fill({
+        fieldSpec: ["amount"],
+        method: FillMethod.Linear,
+      });
+
+      return [type, filledSeries];
+    })
+  ) as EnergyTimeSeries;

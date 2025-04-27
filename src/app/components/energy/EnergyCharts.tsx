@@ -1,7 +1,7 @@
 "use client";
 
 import { EnergyType, EnergyOptions } from "../../types";
-import { getChartData, getFilteredAndSortedData } from "../../handlers/energyHandlers";
+import { createTimeSeriesByType, getChartData, getFilteredAndSortedData } from "../../handlers/energyHandlers";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,6 +35,7 @@ const EnergyCharts = ({
   typeFilter,
   dateRange,
 }: EnergyChartsProps) => {
+
   const filteredData = getFilteredAndSortedData(
     energyData,
     typeFilter,
@@ -43,8 +44,9 @@ const EnergyCharts = ({
     "asc"
   );
 
+  const timeSeriesData = createTimeSeriesByType(filteredData);
 
-  const chartData = getChartData(filteredData, typeFilter);
+  const chartData = getChartData(timeSeriesData, typeFilter);
 
   const options = {
     responsive: true,

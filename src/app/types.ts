@@ -1,3 +1,6 @@
+import { Time } from "@/lib/pond/time";
+import { TimeSeries } from "@/lib/pond/timeseries";
+
 export type EnergyOptions = "power" | "gas";
 
 export type UserSpecific = {
@@ -50,3 +53,6 @@ export type ToastMessage = {
   message: string;
   type: "success" | "error" | "info";
 };
+
+export type EnergyData = EnergyBase[];
+export type EnergyTimeSeries = Record<EnergyOptions, TimeSeries<Time>>;
