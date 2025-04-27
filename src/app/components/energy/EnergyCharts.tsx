@@ -1,7 +1,7 @@
 "use client";
 
 import { EnergyType, EnergyOptions } from "../../types";
-import { getFilteredAndSortedData } from "../../handlers/energyHandlers";
+import { getChartData, getFilteredAndSortedData } from "../../handlers/energyHandlers";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -43,50 +43,8 @@ const EnergyCharts = ({
     "asc"
   );
 
-  // Create a map of dates to power and gas values
-  const dataMap = new Map<string, { power?: number; gas?: number }>();
 
-  filteredData.forEach((data) => {
-    const dateStr = new Date(data.date).toLocaleDateString();
-    if (!dataMap.has(dateStr)) {
-      dataMap.set(dateStr, {});
-    }
-    const entry = dataMap.get(dateStr)!;
-    if (data.type === "power") {
-      entry.power = data.amount;
-    } else {
-      entry.gas = data.amount;
-    }
-  });
-
-  // Convert the map to arrays for the chart
-  const labels = Array.from(dataMap.keys());
-  const powerData = labels.map((date) => dataMap.get(date)?.power ?? null);
-  const gasData = labels.map((date) => dataMap.get(date)?.gas ?? null);
-
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: "Power",
-        data: powerData,
-        borderColor: "rgb(75, 192, 192)",
-        backgroundColor: "rgba(75, 192, 192, 0.5)",
-        tension: 0.1,
-        hidden: typeFilter === "gas",
-        spanGaps: true, // This will connect points even when there are gaps
-      },
-      {
-        label: "Gas",
-        data: gasData,
-        borderColor: "rgb(255, 99, 132)",
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
-        tension: 0.1,
-        hidden: typeFilter === "power",
-        spanGaps: true, // This will connect points even when there are gaps
-      },
-    ],
-  };
+  const chartData = getChartData(filteredData, typeFilter);
 
   const options = {
     responsive: true,
