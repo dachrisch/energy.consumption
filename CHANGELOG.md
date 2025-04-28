@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.1](https://github.com/dachrisch/energy.consumption/compare/v1.8.10...v1.9.1) (2025-04-28)
+
+
+### Features
+
+* add pond library ([f49134a](https://github.com/dachrisch/energy.consumption/commit/f49134ae3ae58e8a4e93ef246e9defc135bdd494))
+* add time series handling for energy data ([86f6f32](https://github.com/dachrisch/energy.consumption/commit/86f6f3257f1ade14d139538bde349d9262c449b8))
+* monthly view ([6eb5243](https://github.com/dachrisch/energy.consumption/commit/6eb5243e93f47ed608960da722bac846646e16bd))
+
 ## [1.9.0](https://github.com/dachrisch/energy.consumption/compare/v1.8.10...v1.9.0) (2025-04-27)
 
 
