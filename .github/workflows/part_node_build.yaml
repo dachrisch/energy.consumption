@@ -36,4 +36,5 @@ jobs:
         with:
           typescript-log: ${{ inputs.project }}/typescript.log
       - name: 🧪 Run jest
-        run: npm run test -- --reporters=default --reporters=jest-junit
+        run: |
+          npm run test -- --reporters=default --reporters=jest-junit

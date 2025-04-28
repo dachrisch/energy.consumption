@@ -10,14 +10,14 @@ export const getLatestValues = (energyData: EnergyData) => {
     energyData
       .filter((data) => data.type === "power")
       .sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        (a, b) => b.date.getTime() - a.date.getTime()
       )[0]?.amount || 0;
 
   const latestGas =
     energyData
       .filter((data) => data.type === "gas")
       .sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        (a, b) => b.date.getTime() - a.date.getTime()
       )[0]?.amount || 0;
 
   return {
@@ -43,9 +43,9 @@ export const getFilteredAndSortedData = (
   // Apply date range filter
   if (dateRange.start || dateRange.end) {
     filtered = filtered.filter((data) => {
-      const date = new Date(data.date);
-      const start = dateRange.start ? new Date(dateRange.start) : null;
-      const end = dateRange.end ? new Date(dateRange.end) : null;
+      const date = data.date;
+      const start = dateRange.start ? dateRange.start : null;
+      const end = dateRange.end ? dateRange.end : null;
 
       if (start && date < start) return false;
       if (end && date > end) return false;
@@ -58,7 +58,7 @@ export const getFilteredAndSortedData = (
     let comparison = 0;
     switch (sortField) {
       case "date":
-        comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+        comparison = a.date.getTime() - b.date.getTime();
         break;
       case "type":
         comparison = a.type.localeCompare(b.type);

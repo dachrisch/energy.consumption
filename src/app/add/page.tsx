@@ -31,7 +31,7 @@ const AddDataPage = () => {
       const data = await response.json();
       const parsed = data.map((item: { date: string | number | Date }) => ({
         ...item,
-        date: new Date(item.date),
+        date: item.date,
       }));
       setEnergyData(parsed);
     } catch (err) {

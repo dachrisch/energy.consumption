@@ -28,7 +28,7 @@ export const importCSVAction = async (
   try {
     // Sort data by date to ensure proper order
     const sortedData = [...data].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      (a, b) => a.date.getTime() - b.date.getTime()
     );
 
     const result = {

@@ -7,13 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "TZ=Europe/Berlin jest",
     "release": "standard-version && git push --follow-tags origin main",
     "release:patch": "standard-version --release-as patch && git push --follow-tags origin main",
     "release:minor": "standard-version --release-as minor && git push --follow-tags origin main",
     "release:major": "standard-version --release-as major && git push --follow-tags origin main"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.2.0",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.8",
     "csv-parser": "^3.2.0",

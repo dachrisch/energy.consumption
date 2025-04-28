@@ -54,8 +54,8 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
         // Skip current contract if editing
         if (initialData?._id === contract._id) return false;
 
-        const existingStart = new Date(contract.startDate);
-        const existingEnd = contract.endDate ? new Date(contract.endDate) : null;
+        const existingStart = contract.startDate;
+        const existingEnd = contract.endDate ? contract.endDate : null;
         const newStart = contractData.startDate;
         const newEnd = contractData.endDate || null;
 
