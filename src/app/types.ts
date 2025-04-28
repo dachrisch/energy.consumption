@@ -54,5 +54,5 @@ export type ToastMessage = {
   type: "success" | "error" | "info";
 };
 
-export type EnergyData = EnergyBase[];
+export type EnergyData = EnergyType[];
 export type EnergyTimeSeries = Record<EnergyOptions, TimeSeries<Time>>;

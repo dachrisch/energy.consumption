@@ -4,28 +4,38 @@ import { endOfMonth } from "date-fns";
 
 describe("Interpolate values for energy data", () => {
   it("aggregates monthly energy data by type", () => {
-    const sampleData: EnergyData = [
+    const sampleData :EnergyData= [
       {
+        _id:"0",
+        userId:"0",
         date: new Date("2024-04-01T10:00:00Z"),
         type: "power",
         amount: 100,
       },
       {
+        _id:"0",
+        userId:"0",
         date: new Date("2024-05-01T15:00:00Z"),
         type: "power",
         amount: 150,
       },
       {
+        _id:"0",
+        userId:"0",
         date: new Date("2024-06-02T10:00:00Z"),
         type: "power",
         amount: 200,
       },
       {
+        _id:"0",
+        userId:"0",
         date: new Date("2024-04-15T08:00:00Z"),
         type: "gas",
         amount: 50,
       },
       {
+        _id:"0",
+        userId:"0",
         date: new Date("2024-05-20T12:00:00Z"),
         type: "gas",
         amount: 75,
