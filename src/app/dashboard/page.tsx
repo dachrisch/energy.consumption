@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Toast from "../components/Toast";
 import { EnergyType, ToastMessage } from "../types";
-import { deleteEnergyAction as deleteEnergyAction } from "@/actions/energy";
+import { deleteEnergyAction } from "@/actions/energy";
 import DashboardTabs from "../components/DashboardTabs";
 import { AddEnergyDataIcon } from "../components/icons";
 
@@ -26,7 +26,7 @@ const Dashboard = () => {
       const data = await response.json();
       const parsed = data.map((item: { date: string | number | Date }) => ({
         ...item,
-        date: item.date,
+        date: new Date(item.date),
       }));
       setEnergyData(parsed);
     } catch (err) {
@@ -65,7 +65,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="app-root">
+    <div className="app-root" data-testid="dashboard">
       <main className="dashboard-main">
         {error && (
           <div className="alert-error">

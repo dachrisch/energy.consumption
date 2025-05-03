@@ -9,7 +9,7 @@ export const fetchAndConvert = async (): Promise<ContractType[]> =>
         endDate?: string | number | Date;
       }) => ({
         ...item,
-        startDate: item.startDate,
+        startDate: new Date(item.startDate),
         ...(item.endDate && { endDate: item.endDate }),
       })
     ));
