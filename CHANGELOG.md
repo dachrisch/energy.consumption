@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.5](https://github.com/dachrisch/energy.consumption/compare/v1.9.4...v1.9.5) (2025-05-03)
+
+
+### Bug Fixes
+
+* add dashboard test ([0068238](https://github.com/dachrisch/energy.consumption/commit/0068238c6099f320e59035d6162bd8279f97841e))
+* Parse dates correctly in API responses ([8d56dc2](https://github.com/dachrisch/energy.consumption/commit/8d56dc26b21ac239d333bc0df9dfcda6e764db3d))
+
 ### [1.9.4](https://github.com/dachrisch/energy.consumption/compare/v1.9.3...v1.9.4) (2025-04-28)
 
 ### [1.9.3](https://github.com/dachrisch/energy.consumption/compare/v1.9.2...v1.9.3) (2025-04-28)
