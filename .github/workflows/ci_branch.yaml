@@ -21,3 +21,11 @@ jobs:
     secrets: inherit
     with:
       project: .
+
+  deploy-test:
+    needs:
+      - build-project
+    secrets: inherit
+    uses: ./.github/workflows/part_docker_test.yaml
+    with:
+      image_name: dachrisch/energy.consumption

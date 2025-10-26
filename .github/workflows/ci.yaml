@@ -17,14 +17,19 @@ jobs:
     with:
       project: .
 
+  deploy-test:
+    needs:
+      - build-project
+    secrets: inherit
+    uses: ./.github/workflows/part_docker_test.yaml
+    with:
+      image_name: dachrisch/energy.consumption
 
   deploy-next:
     needs:
-      - build-project
+      - deploy-test
     secrets: inherit
     uses: ./.github/workflows/part_docker_push.yaml
     with:
       image_name: dachrisch/energy.consumption
-      dockerfile: Dockerfile
-      test: true
       version: "${{ github.ref_name }}"
