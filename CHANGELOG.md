@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.1](https://github.com/dachrisch/energy.consumption/compare/v1.11.0...v1.11.1) (2025-10-26)
+
+
+### Bug Fixes
+
+* middleware to proxy ([016413b](https://github.com/dachrisch/energy.consumption/commit/016413bd905f110aad3b725ad0903b5d2bf70252))
+
 ## [1.11.0](https://github.com/dachrisch/energy.consumption/compare/v1.10.1...v1.11.0) (2025-10-26)
 
 ### [1.10.1](https://github.com/dachrisch/energy.consumption/compare/v1.10.0...v1.10.1) (2025-10-26)
