@@ -3,12 +3,12 @@ name: 🏗️🧪🍂 Build & Test branches
 on:
   push:
     branches:
-      - '*'
+      - "*"
     tags-ignore:
-      - '*'
+      - "*"
   pull_request:
     branches:
-      - '*'
+      - "*"
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ permissions:
   security-events: write
 
 jobs:
-   build-project:
+  build-project:
     uses: ./.github/workflows/part_node_build.yaml
     secrets: inherit
     with:
