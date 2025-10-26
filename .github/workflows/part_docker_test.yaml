@@ -30,7 +30,6 @@ jobs:
 
       # Test run the container
       - name: 🐳📦 Build and export 'test' to Docker
-        if: ${{ inputs.test }}
         uses: docker/build-push-action@v6
         with:
           file: ${{ inputs.dockerfile }}
