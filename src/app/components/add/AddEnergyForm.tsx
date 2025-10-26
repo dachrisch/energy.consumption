@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ConfirmationModal from "@/app/components/modals/ConfirmationModal";
 import { PowerIcon, GasIcon } from "@/app/components/icons";
 import { EnergyType, EnergyOptions, EnergyBase } from "@/app/types";
@@ -23,12 +23,14 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
   const [pendingSubmission, setPendingSubmission] = useState<EnergyBase | null>(null);
 
   // Update amount when type changes
-  useEffect(() => {
-    setNewData((prev:EnergyBase) => ({
+  const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newType = event.target.value as EnergyOptions;
+    setNewData(prev => ({
       ...prev,
-      amount: latestValues[prev.type] || 0,
+      type: newType,
+      amount: latestValues[newType] || 0,
     }));
-  }, [newData.type, latestValues]);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,11 +116,10 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
                 <label
                   htmlFor={"add-energy-type-" + type}
                   key={type}
-                  className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded cursor-pointer transition-colors ${
-                    newData.type === type
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-input text-foreground border-border hover:bg-secondary"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded cursor-pointer transition-colors ${newData.type === type
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-input text-foreground border-border hover:bg-secondary"
+                    }`}
                 >
                   <input
                     id={"add-energy-type-" + type}
@@ -127,12 +128,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
                     name="type"
                     value={type}
                     checked={newData.type === type}
-                    onChange={(e) =>
-                      setNewData({
-                        ...newData,
-                        type: e.target.value as EnergyOptions,
-                      })
-                    }
+                    onChange={handleTypeChange}
                     className="hidden"
                   />
                   {getTypeIcon(type)}
