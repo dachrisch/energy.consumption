@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.10.1](https://github.com/dachrisch/energy.consumption/compare/v1.10.0...v1.10.1) (2025-10-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v8.16.3 ([#66](https://github.com/dachrisch/energy.consumption/issues/66)) ([2d38d3e](https://github.com/dachrisch/energy.consumption/commit/2d38d3ea1848df626748dfe8f01eec6120fbe39f))
+* **deps:** update dependency mongoose to v8.16.4 ([#71](https://github.com/dachrisch/energy.consumption/issues/71)) ([ba258a2](https://github.com/dachrisch/energy.consumption/commit/ba258a28ba8078273eede2a361c26a4bea09cfdb))
+* **deps:** update dependency mongoose to v8.16.5 ([#78](https://github.com/dachrisch/energy.consumption/issues/78)) ([cdbb63d](https://github.com/dachrisch/energy.consumption/commit/cdbb63d5770113acd410d6f36a19fd34b2078a94))
+* **deps:** update dependency mongoose to v8.17.0 ([#86](https://github.com/dachrisch/energy.consumption/issues/86)) ([7a84aa9](https://github.com/dachrisch/energy.consumption/commit/7a84aa992083614f8689770afe3889584fbcc0ae))
+* **deps:** update dependency mongoose to v8.17.1 ([#92](https://github.com/dachrisch/energy.consumption/issues/92)) ([0adb121](https://github.com/dachrisch/energy.consumption/commit/0adb12137b6a8fa200660968c7665f904d82e611))
+* **deps:** update dependency mongoose to v8.17.2 ([#103](https://github.com/dachrisch/energy.consumption/issues/103)) ([541631a](https://github.com/dachrisch/energy.consumption/commit/541631a91fbb5e393f68c4f3a53bd58c2bb11cd6))
+* **deps:** update dependency mongoose to v8.18.0 ([#110](https://github.com/dachrisch/energy.consumption/issues/110)) ([f3a28f5](https://github.com/dachrisch/energy.consumption/commit/f3a28f5e733cf2faf7e387bcd1da870df0274b4a))
+* **deps:** update dependency mongoose to v8.18.1 ([#126](https://github.com/dachrisch/energy.consumption/issues/126)) ([e4d3a47](https://github.com/dachrisch/energy.consumption/commit/e4d3a471ec7d8f26ebf30a1cdc97ec1a6afa2485))
+* **deps:** update dependency mongoose to v8.18.2 ([#139](https://github.com/dachrisch/energy.consumption/issues/139)) ([73afe3d](https://github.com/dachrisch/energy.consumption/commit/73afe3d842a4646ef9fc80bc5ba88ba3ee069da2))
+* **deps:** update dependency react-datepicker to v8.5.0 ([#101](https://github.com/dachrisch/energy.consumption/issues/101)) ([ee3d124](https://github.com/dachrisch/energy.consumption/commit/ee3d1249100d3fcc62d9732624630090b1b28be7))
+* **deps:** update dependency react-datepicker to v8.6.0 ([#105](https://github.com/dachrisch/energy.consumption/issues/105)) ([16f1efa](https://github.com/dachrisch/energy.consumption/commit/16f1efa0abb2c98b82a18b2c98e47243cc2fabe8))
+* **deps:** update dependency react-datepicker to v8.7.0 ([#107](https://github.com/dachrisch/energy.consumption/issues/107)) ([1451bba](https://github.com/dachrisch/energy.consumption/commit/1451bba65c9591bf79b143b3c76182e3afce7dc9))
+* **deps:** update nextjs monorepo to v15.4.1 ([#69](https://github.com/dachrisch/energy.consumption/issues/69)) ([45072ba](https://github.com/dachrisch/energy.consumption/commit/45072ba7a03cb066f714353648279417e82a5997))
+* **deps:** update nextjs monorepo to v15.4.2 ([#72](https://github.com/dachrisch/energy.consumption/issues/72)) ([054003e](https://github.com/dachrisch/energy.consumption/commit/054003e13bc6a37552dc9f7f253027d1e8cbaca4))
+* **deps:** update nextjs monorepo to v15.4.3 ([#76](https://github.com/dachrisch/energy.consumption/issues/76)) ([d6b0b74](https://github.com/dachrisch/energy.consumption/commit/d6b0b744a0a23e2e93ed397793b9f085446add6f))
+* **deps:** update nextjs monorepo to v15.4.4 ([#77](https://github.com/dachrisch/energy.consumption/issues/77)) ([af4050d](https://github.com/dachrisch/energy.consumption/commit/af4050daecba496b0427d9cc269fbf008274a964))
+* **deps:** update nextjs monorepo to v15.4.5 ([#85](https://github.com/dachrisch/energy.consumption/issues/85)) ([21bae6a](https://github.com/dachrisch/energy.consumption/commit/21bae6a1740beb40cc11e81611c957e809183467))
+* **deps:** update nextjs monorepo to v15.4.6 ([#91](https://github.com/dachrisch/energy.consumption/issues/91)) ([e7ca98a](https://github.com/dachrisch/energy.consumption/commit/e7ca98a626598c4dbced19a0f0936f80b3f50eb6))
+* **deps:** update nextjs monorepo to v15.4.7 ([#104](https://github.com/dachrisch/energy.consumption/issues/104)) ([58e93c3](https://github.com/dachrisch/energy.consumption/commit/58e93c37493dd782d8f32eaf495caa11011f93ac))
+* **deps:** update nextjs monorepo to v15.5.0 ([#106](https://github.com/dachrisch/energy.consumption/issues/106)) ([6825099](https://github.com/dachrisch/energy.consumption/commit/6825099e3706227effc8b5667935180acaaab5a6))
+* **deps:** update nextjs monorepo to v15.5.2 ([#115](https://github.com/dachrisch/energy.consumption/issues/115)) ([d19176c](https://github.com/dachrisch/energy.consumption/commit/d19176c1648a785bae69414cf29790346a0dfc9b))
+* **deps:** update nextjs monorepo to v15.5.3 ([#127](https://github.com/dachrisch/energy.consumption/issues/127)) ([02498ba](https://github.com/dachrisch/energy.consumption/commit/02498bac901bebc149185721762781330d77c231))
+* **deps:** update nextjs monorepo to v15.5.4 ([#140](https://github.com/dachrisch/energy.consumption/issues/140)) ([31b5ddc](https://github.com/dachrisch/energy.consumption/commit/31b5ddc4ca2cf339f86d4d18dcde50148fd079ff))
+* **deps:** update nextjs monorepo to v15.5.5 ([#167](https://github.com/dachrisch/energy.consumption/issues/167)) ([55e6a11](https://github.com/dachrisch/energy.consumption/commit/55e6a11002ba30de7ac016310f826543c83b311b))
+* **deps:** update nextjs monorepo to v15.5.6 ([#171](https://github.com/dachrisch/energy.consumption/issues/171)) ([3fbec10](https://github.com/dachrisch/energy.consumption/commit/3fbec10002b3a80213e459e53f0061b02118abf6))
+* **deps:** update nextjs monorepo to v16 ([5afcdf9](https://github.com/dachrisch/energy.consumption/commit/5afcdf951e41cb53d9ead39fba6c3335b8f0c682))
+* **deps:** update nextjs monorepo to v16 ([65f46d5](https://github.com/dachrisch/energy.consumption/commit/65f46d5ea0b504aea0d9e381bdec1da764801b3f))
+* **deps:** update react monorepo to v19.1.1 ([#82](https://github.com/dachrisch/energy.consumption/issues/82)) ([acad228](https://github.com/dachrisch/energy.consumption/commit/acad2283ae02b3a8ce2c43f57dd2772d0c5f0a83))
+* next lint to eslint and setState fixes ([41ab008](https://github.com/dachrisch/energy.consumption/commit/41ab008d401d3425cc99bd7cc7d8bfe08ab6198c))
+* next lint to eslint and setState fixes ([b7b7f62](https://github.com/dachrisch/energy.consumption/commit/b7b7f62839910b3f0d109edd376d828911f7de58))
+* npm i ([02ed1fb](https://github.com/dachrisch/energy.consumption/commit/02ed1fbfb4f7dfb548af3e14fa016b87f3084cf4))
+* override nextauth nexus dependency unti l https://github.com/nextauthjs/next-auth/issues/13302 is fixed ([a167836](https://github.com/dachrisch/energy.consumption/commit/a167836304d149b84e58723b115e9a2c6e48da7e))
+* override nextauth nexus dependency unti l https://github.com/nextauthjs/next-auth/issues/13302 is fixed ([d70d476](https://github.com/dachrisch/energy.consumption/commit/d70d47688ef113cd1d60c86658842b39993c2019))
+* The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs: ([11a7c08](https://github.com/dachrisch/energy.consumption/commit/11a7c088ed686af3236497ceddda6348dcdb6fb3))
+* The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs: ([d5d8c87](https://github.com/dachrisch/energy.consumption/commit/d5d8c87fdc58a3cd89a1160aa866241e557ccc30))
+
 ## [1.10.0](https://github.com/dachrisch/energy.consumption/compare/v1.9.5...v1.10.0) (2025-07-07)
 
 
