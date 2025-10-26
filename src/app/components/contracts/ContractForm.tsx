@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PowerIcon, GasIcon } from "@/app/components/icons";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
 import { ContractBase, ContractType, EnergyOptions } from "@/app/types";
@@ -11,26 +11,14 @@ interface ContractFormProps {
 }
 
 const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: ContractFormProps) => {
-  const [contractData, setContractData] = useState<ContractBase>({
-    type: "power" as EnergyOptions,
-    startDate: new Date(),
-    endDate: undefined as Date | undefined,
-    basePrice: 0,
-    workingPrice: 0,
-  });
+  const [contractData, setContractData] = useState<ContractBase>(() => ({
+    type: initialData?.type ?? "power",
+    startDate: initialData?.startDate ?? new Date(),
+    endDate: initialData?.endDate,
+    basePrice: initialData?.basePrice ?? 0,
+    workingPrice: initialData?.workingPrice ?? 0,
+  }));
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (initialData) {
-      setContractData({
-        type: initialData.type,
-        startDate: initialData.startDate,
-        endDate: initialData.endDate,
-        basePrice: initialData.basePrice,
-        workingPrice: initialData.workingPrice,
-      });
-    }
-  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "TZ=Europe/Berlin jest",
     "release": "standard-version && git push --follow-tags origin main",
     "release:patch": "standard-version --release-as patch && git push --follow-tags origin main",
@@ -35,7 +35,6 @@
     }
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@jest/globals": "^30.0.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",

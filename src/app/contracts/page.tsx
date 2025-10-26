@@ -14,11 +14,6 @@ const ContractsPage = () => {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [editingContractData, setEditingContractData] = useState<ContractType | null>(null);
 
-
-  useEffect(() => {
-    fetchContracts();
-  }, []);
-
   const fetchContracts = async () =>
     fetchAndConvert().then((data) => setContracts(data))
       .catch((error) => {
@@ -29,6 +24,9 @@ const ContractsPage = () => {
         console.error(error);
       }).finally(() => setIsLoading(false));
 
+  useEffect(() => {
+    fetchContracts();
+  }, []);
 
   const onAddContract = async (contractData: ContractBase) => {
     try {
