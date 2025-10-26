@@ -1,0 +1,57 @@
+name: 🐳🏗️🚀 Build & Deploy docker image
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        description: The name of the image
+        type: string
+      dockerfile:
+        required: false
+        description: The dockerfile used to build the image
+        type: string
+        default: Dockerfile
+
+permissions:
+  contents: read
+
+env:
+  DOCKER_IMAGE_NAME: ${{ inputs.image_name }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: 🐳🛠️ Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Test run the container
+      - name: 🐳📦 Build and export 'test' to Docker
+        uses: docker/build-push-action@v6
+        with:
+          file: ${{ inputs.dockerfile }}
+          load: true
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🐳🧪Test
+        run: |
+          docker run --rm --detach --name test_container ${{ env.DOCKER_IMAGE_NAME }}:test
+          for i in {1..10}; do
+            status=$(docker inspect --format='{{.State.Health.Status}}' test_container)
+            health_details=$(docker inspect --format='{{json .State.Health}}' test_container)
+            echo "Health status: $status"
+            echo "Health details: $health_details"
+            if [ "$status" = "healthy" ]; then break; fi
+            sleep 6
+          done
+          # Fail the step if not healthy after 10 retries
+          if [ "$status" != "healthy" ]; then
+            echo "Container did not become healthy after 10 attempts."
+            exit 1
+          fi
+          docker stop test_container

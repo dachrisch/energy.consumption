@@ -15,19 +15,19 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
-    "chart.js": "^4.4.8",
+    "chart.js": "^4.5.1",
     "csv-parser": "^3.2.0",
     "date-fns": "^4.1.0",
-    "immutable": "^5.1.1",
+    "immutable": "^5.1.4",
     "moment": "^2.30.1",
     "moment-timezone": "^0.6.0",
-    "mongoose": "^8.13.2",
+    "mongoose": "^8.19.2",
     "next": "16.0.0",
     "next-auth": "^4.24.11",
-    "react": "^19.0.0",
+    "react": "^19.2.0",
     "react-chartjs-2": "^5.3.0",
-    "react-datepicker": "^8.3.0",
-    "react-dom": "^19.0.0"
+    "react-datepicker": "^8.8.0",
+    "react-dom": "^19.2.0"
   },
   "overrides": {
     "next-auth": {
@@ -35,23 +35,23 @@
     }
   },
   "devDependencies": {
-    "@jest/globals": "^30.0.0",
+    "@jest/globals": "^30.2.0",
     "@tailwindcss/postcss": "^4",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.9.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
-    "jest": "^30.0.0",
-    "jest-environment-jsdom": "^30.0.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "jest-junit": "^16.0.0",
     "standard-version": "^9.5.0",
     "tailwindcss": "^4",
-    "ts-jest": "^29.3.1",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   }
 }
