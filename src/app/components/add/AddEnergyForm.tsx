@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ConfirmationModal from "@/app/components/modals/ConfirmationModal";
 import { EnergyType, EnergyOptions, EnergyBase } from "@/app/types";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
@@ -16,11 +16,17 @@ interface AddEnergyFormProps {
 }
 
 const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
-  const [newData, setNewData] = useState<EnergyBase>({
+  const [newData, setNewData] = useState<EnergyBase>(() => ({
     date: new Date(),
     type: "power",
     amount: latestValues.power || 0,
-  });
+  }));
+
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   const [error, setError] = useState<string>("");
   const confirmationModal = useConfirmationModal<EnergyBase>();
 
@@ -56,11 +62,13 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
   const submitData = (data: Omit<EnergyType, "_id" | "userId">) => {
     setError("");
     onSubmit(data);
-    setNewData({
-      date: new Date(),
-      type: "power",
-      amount: latestValues.power || 0,
-    });
+    if (isClient) {
+      setNewData({
+        date: new Date(),
+        type: "power",
+        amount: latestValues.power || 0,
+      });
+    }
   };
 
   const handleConfirm = () => {

@@ -12,10 +12,12 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [registrationEnabled, setRegistrationEnabled] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    setIsClient(true);
     const checkFeature = async () => {
       const enabled = await isFeatureEnabled("registration");
       setRegistrationEnabled(enabled);
@@ -100,7 +102,7 @@ const LoginPage = () => {
           </div>
         </form>
 
-        {registrationEnabled && (
+        {isClient && registrationEnabled && (
           <Link
             href="/register"
             className="text-sm text-[#888] transition duration-150 ease hover:text-black"

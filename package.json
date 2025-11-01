@@ -3,7 +3,8 @@
   "version": "1.11.1",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "concurrently --names \"DB,NEXT\" --prefix-colors \"cyan,green\" \"npm run db:memory\" \"npm run dev:next\"",
+    "dev:next": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -16,7 +17,8 @@
     "release": "standard-version && git push --follow-tags origin main",
     "release:patch": "standard-version --release-as patch && git push --follow-tags origin main",
     "release:minor": "standard-version --release-as minor && git push --follow-tags origin main",
-    "release:major": "standard-version --release-as major && git push --follow-tags origin main"
+    "release:major": "standard-version --release-as major && git push --follow-tags origin main",
+    "db:memory": "node scripts/startMemoryMongo.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -48,12 +50,14 @@
     "@types/node": "^24.9.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "jest-junit": "^16.0.0",
+    "mongodb-memory-server": "^10.3.0",
     "standard-version": "^9.5.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.5",
