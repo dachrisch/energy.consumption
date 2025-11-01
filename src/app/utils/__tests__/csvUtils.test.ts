@@ -1,4 +1,4 @@
-import { parseCSVData, CSVParseResult, Separator } from '../csvUtils';
+import { parseCSVData, CSVParseResult } from '../csvUtils';
 
 describe('csvUtils', () => {
   describe('parseCSVData', () => {

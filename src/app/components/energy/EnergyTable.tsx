@@ -62,7 +62,7 @@ const EnergyTable = ({
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('amount')}
               >
-                Amount {getSortIcon('amount')}
+                Meter Reading {getSortIcon('amount')}
               </th>
               <th className="p-2 text-center align-middle">Actions</th>
             </tr>

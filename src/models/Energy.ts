@@ -32,6 +32,6 @@ applyPreFilter(EnergySchema);
 
 const Energy =
   mongoose.models?.Energy ||
-  model<EnergyType>("Energy", EnergySchema);
+  model<EnergyType>("Energy", EnergySchema, "energies");
 
 export default Energy;

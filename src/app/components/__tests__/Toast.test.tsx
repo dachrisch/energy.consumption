@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import Toast from '../Toast';
 import { ToastMessage } from '../../types';
 
@@ -116,7 +116,7 @@ describe('Toast', () => {
     const onClose = jest.fn();
     const toast: ToastMessage = { message: 'Test message', type: 'success' };
 
-    const { container } = render(<Toast {...toast} onClose={onClose} />);
+    render(<Toast {...toast} onClose={onClose} />);
 
     const closeButton = screen.getByText('×');
     expect(closeButton).toHaveClass('text-current', 'hover:text-opacity-75', 'focus:outline-none');

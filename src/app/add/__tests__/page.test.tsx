@@ -2,7 +2,7 @@ import React from "react";
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import AddDataPage from "../page";
-import { addEnergyAction, importCSVAction } from "@/actions/energy";
+import { addEnergyAction } from "@/actions/energy";
 
 // Mock next/navigation
 const mockPush = jest.fn();
@@ -100,11 +100,13 @@ describe("AddDataPage", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it("should render CSVDropZone and AddEnergyForm after loading", async () => {
+  it("should render tabs and AddEnergyForm after loading", async () => {
     render(<AddDataPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("Drop your CSV file here")).toBeInTheDocument();
+      expect(screen.getByText("Manual Entry")).toBeInTheDocument();
+      expect(screen.getByText("CSV File")).toBeInTheDocument();
+      expect(screen.getByText("Clipboard")).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Add Energy Data" })).toBeInTheDocument();
     });
   });

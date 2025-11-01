@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect } from "react";
 import ConfirmationModal from "@/app/components/modals/ConfirmationModal";
 import { EnergyType, EnergyOptions, EnergyBase } from "@/app/types";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
@@ -24,7 +24,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
 
   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsClient(true);
   }, []);
   const [error, setError] = useState<string>("");
@@ -142,7 +142,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
               htmlFor="add-energy-amount"
               className="block text-sm font-medium mb-1 text-foreground"
             >
-              Amount
+              Meter Reading
             </label>
             <input
               id="add-energy-amount"
@@ -154,6 +154,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
               className="w-full p-2 border rounded bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring"
               step="10"
               required
+              placeholder="Enter current meter reading"
             />
             {error && <p className="text-destructive text-sm mt-1">{error}</p>}
           </div>

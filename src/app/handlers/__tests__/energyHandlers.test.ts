@@ -1,6 +1,5 @@
 import { getLatestValues, getFilteredAndSortedData } from '../energyHandlers';
-import { EnergyData, EnergyOptions, EnergySortField } from '../../types';
-import { SortOrder } from 'mongoose';
+import { EnergyData, EnergyOptions } from '../../types';
 
 describe('energyHandlers', () => {
   describe('getLatestValues', () => {

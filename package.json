@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently --names \"DB,NEXT\" --prefix-colors \"cyan,green\" \"npm run db:memory\" \"npm run dev:next\"",
-    "dev:next": "next dev --turbopack",
+    "dev:next": "next dev --turbopack --port 3100",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

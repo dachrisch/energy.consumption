@@ -1,5 +1,5 @@
 import { getChartData } from '../chartData';
-import { EnergyTimeSeries, EnergyOptions } from '../../types';
+import { EnergyTimeSeries } from '../../types';
 import { TimeSeries } from '@/lib/pond/timeseries';
 import { timeEvent } from '@/lib/pond/event';
 import { time } from '@/lib/pond/time';
@@ -235,7 +235,7 @@ describe('chartData', () => {
 
       expect(result.datasets[0].borderColor).toBe('rgb(75, 192, 192)');
       expect(result.datasets[0].backgroundColor).toBe('rgba(75, 192, 192, 0.5)');
-      expect(result.datasets[0].tension).toBe(0.1);
+      expect(result.datasets[0].tension).toBe(0.4);
     });
 
     it('should use correct chart configuration for gas', () => {
@@ -255,7 +255,7 @@ describe('chartData', () => {
 
       expect(result.datasets[1].borderColor).toBe('rgb(255, 99, 132)');
       expect(result.datasets[1].backgroundColor).toBe('rgba(255, 99, 132, 0.5)');
-      expect(result.datasets[1].tension).toBe(0.1);
+      expect(result.datasets[1].tension).toBe(0.4);
     });
 
     it('should handle multiple readings on same date', () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
 import { ContractBase, ContractType, EnergyOptions } from "@/app/types";
 import { getTypeIcon } from "@/app/utils/iconUtils";
@@ -13,8 +13,6 @@ interface ContractFormProps {
 }
 
 const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: ContractFormProps) => {
-  const [isClient, setIsClient] = useState(false);
-
   const [contractData, setContractData] = useState<ContractBase>(() => ({
     type: initialData?.type ?? "power",
     startDate: initialData?.startDate ?? new Date(),
@@ -22,17 +20,6 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
     basePrice: initialData?.basePrice ?? 0,
     workingPrice: initialData?.workingPrice ?? 0,
   }));
-
-  useEffect(() => {
-    setIsClient(true);
-    // Only set default date on client if no initialData
-    if (!initialData) {
-      setContractData(prev => ({
-        ...prev,
-        startDate: new Date()
-      }));
-    }
-  }, [initialData]);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {

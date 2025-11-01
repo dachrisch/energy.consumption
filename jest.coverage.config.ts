@@ -41,6 +41,12 @@ const customConfig: Config = {
     "!src/app/provider.tsx", // Simple wrapper
   ],
   coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+    },
     // Per-file thresholds for NEW/REFACTORED code only
     "./src/app/hooks/**/*.ts": {
       branches: 100,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -16,8 +16,11 @@ const LoginPage = () => {
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useLayoutEffect(() => {
     const checkFeature = async () => {
       const enabled = await isFeatureEnabled("registration");
       setRegistrationEnabled(enabled);
