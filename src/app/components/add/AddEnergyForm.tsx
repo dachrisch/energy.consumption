@@ -1,8 +1,11 @@
 import { useState } from "react";
 import ConfirmationModal from "@/app/components/modals/ConfirmationModal";
-import { PowerIcon, GasIcon } from "@/app/components/icons";
 import { EnergyType, EnergyOptions, EnergyBase } from "@/app/types";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
+import { getTypeIcon } from "@/app/utils/iconUtils";
+import { EnergyValidationService } from "@/app/services/validationService";
+import { useConfirmationModal } from "@/app/hooks/useConfirmationModal";
+import { ENERGY_TYPES } from "@/app/constants/energyTypes";
 
 interface AddEnergyFormProps {
   onSubmit: (data: EnergyBase) => void;
@@ -19,8 +22,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
     amount: latestValues.power || 0,
   });
   const [error, setError] = useState<string>("");
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [pendingSubmission, setPendingSubmission] = useState<EnergyBase | null>(null);
+  const confirmationModal = useConfirmationModal<EnergyBase>();
 
   // Update amount when type changes
   const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,16 +38,15 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
     e.preventDefault();
 
     // Validate amount
-    if (isNaN(newData.amount) || newData.amount <= 0) {
-      setError("Please enter a valid amount greater than 0");
+    const validation = EnergyValidationService.validateAmount(newData.amount);
+    if (!validation.isValid) {
+      setError(validation.error || "Invalid amount");
       return;
     }
 
     // Check if the new value is lower than the previous value
-    const currentValue = latestValues[newData.type];
-    if (newData.amount < currentValue) {
-      setPendingSubmission(newData);
-      setShowConfirmation(true);
+    if (EnergyValidationService.shouldConfirmLowerReading(newData, latestValues)) {
+      confirmationModal.show(newData);
       return;
     }
 
@@ -63,20 +64,11 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
   };
 
   const handleConfirm = () => {
-    if (pendingSubmission) {
-      submitData(pendingSubmission);
-    }
-    setShowConfirmation(false);
-    setPendingSubmission(null);
-  };
-
-  const handleCancel = () => {
-    setShowConfirmation(false);
-    setPendingSubmission(null);
-  };
-
-  const getTypeIcon = (type: EnergyOptions) => {
-    return type === "power" ? <PowerIcon /> : <GasIcon />;
+    confirmationModal.confirm((data) => {
+      if (data) {
+        submitData(data);
+      }
+    });
   };
 
   return (
@@ -112,7 +104,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
               Type
             </label>
             <div className="flex gap-2">
-              {(["power", "gas"] as const).map((type) => (
+              {ENERGY_TYPES.map((type) => (
                 <label
                   htmlFor={"add-energy-type-" + type}
                   key={type}
@@ -167,11 +159,11 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
       </form>
 
       <ConfirmationModal
-        isOpen={showConfirmation}
-        onClose={handleCancel}
+        isOpen={confirmationModal.isOpen}
+        onClose={confirmationModal.cancel}
         onConfirm={handleConfirm}
         currentValue={latestValues[newData.type]}
-        newValue={pendingSubmission?.amount || 0}
+        newValue={confirmationModal.pendingData?.amount || 0}
         type={newData.type}
       />
     </>

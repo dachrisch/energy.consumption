@@ -3,6 +3,7 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import ContractForm from "../ContractForm";
 import { EnergyOptions } from "@/app/types";
+import { ContractValidationService } from "@/app/services/validationService";
 
 describe("ContractForm", () => {
   const mockOnSubmit = jest.fn();
@@ -55,7 +56,7 @@ describe("ContractForm", () => {
     fireEvent.click(submitButton);
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
-    expect(screen.getByText("Prices must be positive numbers")).toBeInTheDocument();
+    expect(screen.getByText("Prices cannot be negative")).toBeInTheDocument();
   });
 
   it("validates end date must be after start date", () => {
@@ -140,7 +141,7 @@ describe("ContractForm", () => {
 
       await waitFor(() => {
         expect(mockOnSubmit).not.toHaveBeenCalled();
-        expect(screen.getByText("Cannot have overlapping contract periods for the same energy type")).toBeInTheDocument();
+        expect(screen.getByText(/power contract already exists for this date range/i)).toBeInTheDocument();
       });
 
       await waitFor(() => {
@@ -187,5 +188,31 @@ describe("ContractForm", () => {
     fireEvent.click(cancelButton);
 
     expect(mockOnCancel).toHaveBeenCalled();
+  });
+
+  it("handles validation service error", async () => {
+    // Mock validateContract to throw an error
+    const mockValidateContract = jest.spyOn(ContractValidationService, 'validateContract');
+    mockValidateContract.mockImplementation(() => {
+      throw new Error("Validation service error");
+    });
+
+    render(<ContractForm onSubmit={mockOnSubmit} existingContracts={[]} />);
+
+    const basePriceInput = screen.getByTestId('contract-base-price');
+    const workingPriceInput = screen.getByTestId('contract-working-price');
+    const submitButton = screen.getByText("Save Contract");
+
+    fireEvent.change(basePriceInput, { target: { value: "150" } });
+    fireEvent.change(workingPriceInput, { target: { value: "0.30" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockOnSubmit).not.toHaveBeenCalled();
+      expect(screen.getByText("Failed to validate contract")).toBeInTheDocument();
+    });
+
+    // Clean up mock
+    mockValidateContract.mockRestore();
   });
 });

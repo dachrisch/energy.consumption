@@ -5,6 +5,7 @@ import { EnergyType, EnergyOptions, EnergyTimeSeries } from "@/app/types";
 import { differences } from "@/app/handlers/timeSeries";
 import { getFilteredAndSortedData } from "@/app/handlers/energyHandlers";
 import { getChartData } from "@/app/handlers/chartData";
+import { TOGGLE_BUTTON_STYLES } from "@/app/constants/ui";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -111,10 +112,9 @@ const EnergyCharts = ({
       <div className="flex justify-end mb-2">
         <button
           onClick={toggleDifferenceMode}
-          className={`px-3 py-1 rounded-md text-sm ${showDifference
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700"
-            }`}
+          className={`px-3 py-1 rounded-md text-sm ${
+            showDifference ? TOGGLE_BUTTON_STYLES.active : TOGGLE_BUTTON_STYLES.inactive
+          }`}
         >
           {showDifference ? "Show Actual" : "Show Difference"}
         </button>
