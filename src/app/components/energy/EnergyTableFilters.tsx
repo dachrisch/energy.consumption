@@ -4,6 +4,7 @@ import { EnergyOptions } from "../../types";
 import { PowerIcon, GasIcon, ResetIcon } from "../icons";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { ButtonGroupRadio, ButtonOption } from "../shared/ButtonGroup";
 
 interface EnergyTableFiltersProps {
   typeFilter: EnergyOptions | "all";
@@ -20,40 +21,23 @@ const EnergyTableFilters = ({
   setDateRange,
   onReset,
 }: EnergyTableFiltersProps) => {
+  const typeFilterOptions: ButtonOption<EnergyOptions | "all">[] = [
+    { label: "All", value: "all" },
+    { label: "Power", value: "power", icon: <PowerIcon /> },
+    { label: "Gas", value: "gas", icon: <GasIcon /> },
+  ];
+
   return (
     <div className="dotted-container">
       <div className="flow-group-big">
         {/* Type Filter Buttons */}
-        <div className="flow-group-wrap"> 
-          {[
-            { label: "All", value: "all" },
-            { label: "Power", value: "power", icon: <PowerIcon /> },
-            { label: "Gas", value: "gas", icon: <GasIcon /> },
-          ].map(({ label, value, icon }) => (
-            <label
-              key={value}
-              className={`switch-label
-                ${
-                  typeFilter === value
-                    ? "button-primary"
-                    : "highlight-secondary"
-                }`}
-            >
-              <input
-                type="radio"
-                name="typeFilter"
-                value={value}
-                checked={typeFilter === value}
-                onChange={(e) =>
-                  setTypeFilter(e.target.value as EnergyOptions | "all")
-                }
-                className="hidden"
-              />
-              {icon}
-              {label}
-            </label>
-          ))}
-        </div>
+        <ButtonGroupRadio
+          options={typeFilterOptions}
+          value={typeFilter}
+          onChange={setTypeFilter}
+          name="typeFilter"
+          variant="primary"
+        />
 
         {/* Date Picker */}
         <div className="flow-group-grow min-w-[200px] sm:min-w-[250px] "> 
