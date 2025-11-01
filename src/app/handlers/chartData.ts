@@ -39,9 +39,19 @@ export const getChartData = (
       data: labels.map((date) => energyValuesByDate.get(date)?.[type] ?? null),
       borderColor: config.borderColor,
       backgroundColor: config.backgroundColor,
-      tension: 0.1,
+      borderWidth: 2.5,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: config.borderColor,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointHoverBackgroundColor: config.borderColor,
+      pointHoverBorderColor: '#fff',
+      pointHoverBorderWidth: 2,
+      tension: 0.4,
       hidden: typeFilter !== "all" && type !== typeFilter,
       spanGaps: true,
+      fill: false,
     };
   });
 
