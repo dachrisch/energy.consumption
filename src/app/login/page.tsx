@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -12,10 +12,15 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [registrationEnabled, setRegistrationEnabled] = useState(false);
+  const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useLayoutEffect(() => {
     const checkFeature = async () => {
       const enabled = await isFeatureEnabled("registration");
       setRegistrationEnabled(enabled);
@@ -100,7 +105,7 @@ const LoginPage = () => {
           </div>
         </form>
 
-        {registrationEnabled && (
+        {isClient && registrationEnabled && (
           <Link
             href="/register"
             className="text-sm text-[#888] transition duration-150 ease hover:text-black"

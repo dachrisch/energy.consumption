@@ -6,9 +6,12 @@ import { useState, useEffect } from "react";
 import { EnergyType, EnergyBase, ToastMessage } from "../types";
 import { getLatestValues } from "../handlers/energyHandlers";
 import { addEnergyAction, importCSVAction } from "@/actions/energy";
-import { CSVDropZone } from "../components/add/CSVDropZone";
 import AddEnergyForm from "../components/add/AddEnergyForm";
 import Toast from "../components/Toast";
+import TabNavigation from "../components/add/TabNavigation";
+import CSVFileUpload from "../components/add/CSVFileUpload";
+import CSVClipboardPaste from "../components/add/CSVClipboardPaste";
+import { UploadIcon, ClipboardIcon } from "../components/icons";
 
 const AddDataPage = () => {
   const router = useRouter();
@@ -16,6 +19,7 @@ const AddDataPage = () => {
   const [energyData, setEnergyData] = useState<EnergyType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("manual");
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -108,17 +112,64 @@ const AddDataPage = () => {
     );
   }
 
+  const tabs = [
+    { id: "manual", label: "Manual Entry", icon: <span className="text-lg">✏️</span> },
+    { id: "file", label: "CSV File", icon: <UploadIcon className="w-4 h-4" /> },
+    { id: "clipboard", label: "Clipboard", icon: <ClipboardIcon className="w-4 h-4" /> },
+  ];
+
   return (
     <div className="app-root">
       <main className="dashboard-main">
-        <h1 className="app-heading mb-6">Add Energy Data</h1>
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="p-2 hover:bg-secondary rounded-lg transition-colors flex-shrink-0"
+            aria-label="Back to dashboard"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h1 className="app-heading mb-0">Add Energy Data</h1>
+        </div>
 
-        <div className="space-y-6">
-          <CSVDropZone onDataImported={onCSVImport} />
-          <AddEnergyForm
-            onSubmit={onAddEnergy}
-            latestValues={getLatestValues(energyData)}
+        {/* Tab Navigation */}
+        <div className="solid-container p-0 overflow-hidden">
+          <TabNavigation
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
           />
+
+          {/* Tab Content */}
+          <div className="p-4 md:p-6">
+            {activeTab === "manual" && (
+              <AddEnergyForm
+                onSubmit={onAddEnergy}
+                latestValues={getLatestValues(energyData)}
+              />
+            )}
+
+            {activeTab === "file" && (
+              <CSVFileUpload onDataImported={onCSVImport} />
+            )}
+
+            {activeTab === "clipboard" && (
+              <CSVClipboardPaste onDataImported={onCSVImport} />
+            )}
+          </div>
         </div>
 
         {toast && (

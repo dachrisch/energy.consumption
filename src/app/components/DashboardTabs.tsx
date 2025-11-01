@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import EnergyTableFilters from "./energy/EnergyTableFilters";
-import { EnergyType, EnergyOptions } from "../types";
-import EnergyCharts from "./energy/EnergyCharts";
+import { EnergyType, ContractType, EnergyOptions } from "../types";
+import UnifiedEnergyChart from "./energy/UnifiedEnergyChart";
 import EnergyTable from "./energy/EnergyTable";
+import { TableIcon, ChartIcon } from "./icons";
 
 interface TabsProps {
   energyData: EnergyType[];
+  contracts: ContractType[];
   onDelete: (id: string) => Promise<void>;
 }
 
-const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
+const DashboardTabs = ({ energyData, contracts, onDelete }: TabsProps) => {
   const [activeTab, setActiveTab] = useState("table");
   // Shared filter state
   const [typeFilter, setTypeFilter] = useState<EnergyOptions | "all">("all");
@@ -29,6 +31,7 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
     {
       id: "table",
       label: "Table View",
+      icon: <TableIcon className="w-4 h-4" />,
       content: (
         <EnergyTable
           energyData={energyData}
@@ -40,16 +43,17 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
     },
     {
       id: "charts",
-      label: "Charts View",
+      label: "Charts",
+      icon: <ChartIcon className="w-4 h-4" />,
       content: (
-        <EnergyCharts
+        <UnifiedEnergyChart
           energyData={energyData}
+          contracts={contracts}
           typeFilter={typeFilter}
           dateRange={dateRange}
         />
       ),
     },
-   
   ];
 
   return (
@@ -73,7 +77,10 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
                   : "button-secondary"
                 }`}
             >
-              {tab.label}
+              <span className="flex items-center justify-center gap-2">
+                {tab.icon}
+                <span>{tab.label}</span>
+              </span>
             </div>
           ))}
         </div>

@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { PowerIcon, GasIcon } from "@/app/components/icons";
 import { formatDateToIso, parseDateFlexible } from "@/app/utils/dateUtils";
 import { ContractBase, ContractType, EnergyOptions } from "@/app/types";
+import { getTypeIcon } from "@/app/utils/iconUtils";
+import { ContractValidationService } from "@/app/services/validationService";
+import { ENERGY_TYPES } from "@/app/constants/energyTypes";
 
 interface ContractFormProps {
   onSubmit: (data: ContractBase) => void;
@@ -23,39 +25,20 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate prices
-    if (contractData.basePrice < 0 || contractData.workingPrice < 0) {
-      setError("Prices must be positive numbers");
-      return;
-    }
-
-    // Validate dates
-    if (contractData.endDate && contractData.endDate < contractData.startDate) {
-      setError("End date must be after start date");
-      return;
-    }
-
     try {
-      // Check for overlapping contracts
+      // Filter out current contract if editing to avoid self-overlap detection
+      const otherContracts = existingContracts.filter(
+        (contract) => initialData?._id !== contract._id
+      );
 
-      const hasOverlap = existingContracts.some((contract: ContractType) => {
-        // Skip current contract if editing
-        if (initialData?._id === contract._id) return false;
+      // Validate complete contract using validation service
+      const validation = ContractValidationService.validateContract(
+        contractData,
+        otherContracts
+      );
 
-        const existingStart = contract.startDate;
-        const existingEnd = contract.endDate ? contract.endDate : null;
-        const newStart = contractData.startDate;
-        const newEnd = contractData.endDate || null;
-
-        // Check if periods overlap
-        return (
-          (newEnd === null || existingStart <= newEnd) &&
-          (existingEnd === null || newStart <= existingEnd)
-        );
-      });
-
-      if (hasOverlap) {
-        setError("Cannot have overlapping contract periods for the same energy type");
+      if (!validation.isValid) {
+        setError(validation.error || "Validation failed");
         return;
       }
 
@@ -63,12 +46,8 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
       onSubmit(contractData);
     } catch (error) {
       console.error(error);
-      setError("Failed to validate contract dates");
+      setError("Failed to validate contract");
     }
-  };
-
-  const getTypeIcon = (type: EnergyOptions) => {
-    return type === "power" ? <PowerIcon /> : <GasIcon />;
   };
 
   return (
@@ -83,7 +62,7 @@ const ContractForm = ({ onSubmit, initialData, existingContracts, onCancel }: Co
               Type
             </label>
             <div className="flex gap-2">
-              {(["power", "gas"] as const).map((type) => (
+              {ENERGY_TYPES.map((type) => (
                 <label
                   htmlFor={"contract-type-" + type}
                   key={type}

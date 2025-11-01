@@ -176,4 +176,54 @@ describe("AddEnergyForm", () => {
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
   });
+
+  it("handles missing latest values with fallback to 0", () => {
+    render(
+      <AddEnergyForm
+        onSubmit={mockOnSubmit}
+        latestValues={{ power: 0, gas: 0 }}
+      />
+    );
+
+    const amountInput = screen.getByLabelText("Amount") as HTMLInputElement;
+    // When value is 0, number inputs show empty string
+    expect(amountInput.value).toBe('');
+
+    const gasRadio = screen.getByLabelText("gas");
+    fireEvent.click(gasRadio);
+
+    expect(amountInput.value).toBe('');
+  });
+
+  it("uses fallback value when switching to type with no previous value", () => {
+    render(
+      <AddEnergyForm
+        onSubmit={mockOnSubmit}
+        latestValues={{ power: 1000, gas: 0 }}
+      />
+    );
+
+    const amountInput = screen.getByLabelText("Amount") as HTMLInputElement;
+    expect(amountInput.value).toBe('1000');
+
+    const gasRadio = screen.getByLabelText("gas");
+    fireEvent.click(gasRadio);
+
+    // Should fallback to 0 when gas value is 0, which displays as empty
+    expect(amountInput.value).toBe('');
+  });
+
+  it("updates date when date input changes", () => {
+    render(
+      <AddEnergyForm
+        onSubmit={mockOnSubmit}
+        latestValues={defaultLatestValues}
+      />
+    );
+
+    const dateInput = screen.getByLabelText("Date") as HTMLInputElement;
+    fireEvent.change(dateInput, { target: { value: "2024-12-15" } });
+
+    expect(dateInput.value).toBe("2024-12-15");
+  });
 });

@@ -1,10 +1,13 @@
 'use client';
 
-import { ContractType, EnergyOptions, ContractsSortField, SortOrder } from '../../types';
-import { PowerIcon, GasIcon, DeleteIcon, AddContractIcon, EditIcon } from '../icons';
+import { ContractType, EnergyOptions, ContractsSortField } from '../../types';
+import { DeleteIcon, AddContractIcon, EditIcon } from '../icons';
 import { formatDateToBrowserLocale } from '../../utils/dateUtils';
 import { useState } from 'react';
 import Pagination from '../Pagination';
+import { getTypeIcon } from '@/app/utils/iconUtils';
+import { useTableSort } from '@/app/hooks/useTableSort';
+import { ITEMS_PER_PAGE } from '@/app/constants/ui';
 
 interface ContractTableProps {
   contracts: ContractType[];
@@ -19,28 +22,9 @@ const ContractTable = ({
   onEdit,
   typeFilter,
 }: ContractTableProps) => {
-  const [sortField, setSortField] = useState<ContractsSortField>("startDate");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const { sortField, sortOrder, handleSort, getSortIcon } = useTableSort<ContractsSortField>("startDate", "desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  const getTypeIcon = (type: EnergyOptions) => {
-    return type === 'power' ? <PowerIcon /> : <GasIcon />;
-  };
-
-  const handleSort = (field: ContractsSortField) => {
-    if (field === sortField) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const getSortIcon = (field: ContractsSortField) => {
-    if (field !== sortField) return null;
-    return sortOrder === 'asc' ? '↑' : '↓';
-  };
+  const [itemsPerPage] = useState(ITEMS_PER_PAGE);
 
   const filteredData = contracts.filter(contract => 
     typeFilter === 'all' || contract.type === typeFilter

@@ -167,4 +167,31 @@ describe("CSVDropZone", () => {
       }
     ]);
   });
+
+  it("handles drag leave event correctly", () => {
+    render(<CSVDropZone onDataImported={mockOnDataImported} />);
+
+    const dropZone = screen.getByText("Drop your CSV file here").parentElement
+      ?.parentElement;
+
+    const dataTransfer = {
+      types: ["Files"],
+    };
+
+    // Start dragging
+    fireEvent.dragOver(dropZone!, { dataTransfer });
+
+    // Verify dragging class is applied
+    expect(dropZone).toHaveClass("bg-primary/10");
+
+    // Leave the drag zone - simulating leaving outside the component
+    // This triggers the handleDragLeave callback and tests lines 73-78
+    fireEvent.dragLeave(dropZone!, {
+      relatedTarget: null, // Null relatedTarget means leaving completely
+      currentTarget: dropZone
+    });
+
+    // The drag styling should be removed
+    expect(dropZone).not.toHaveClass("bg-primary/10");
+  });
 });

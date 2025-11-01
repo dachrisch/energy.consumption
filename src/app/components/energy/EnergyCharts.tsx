@@ -5,6 +5,7 @@ import { EnergyType, EnergyOptions, EnergyTimeSeries } from "@/app/types";
 import { differences } from "@/app/handlers/timeSeries";
 import { getFilteredAndSortedData } from "@/app/handlers/energyHandlers";
 import { getChartData } from "@/app/handlers/chartData";
+import { TOGGLE_BUTTON_STYLES } from "@/app/constants/ui";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -70,15 +71,36 @@ const EnergyCharts = ({
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: "top" as const,
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+          font: {
+            size: 12,
+            family: "'Inter', 'system-ui', sans-serif",
+          },
+        },
       },
       title: {
-        display: true,
-        text: "Energy Consumption Over Time",
+        display: false,
       },
       tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        cornerRadius: 8,
+        titleFont: {
+          size: 14,
+          weight: 'bold' as const,
+        },
+        bodyFont: {
+          size: 13,
+        },
         callbacks: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           label: (context: any) => {
@@ -92,48 +114,73 @@ const EnergyCharts = ({
     scales: {
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false,
+        },
+        ticks: {
+          padding: 8,
+          font: {
+            size: 11,
+          },
+        },
         title: {
           display: true,
           text: "Amount",
+          font: {
+            size: 12,
+            weight: 'bold' as const,
+          },
         },
       },
       x: {
+        grid: {
+          display: false,
+          drawBorder: false,
+        },
+        ticks: {
+          padding: 8,
+          maxRotation: 45,
+          minRotation: 0,
+          font: {
+            size: 11,
+          },
+        },
         title: {
           display: true,
           text: "Date",
+          font: {
+            size: 12,
+            weight: 'bold' as const,
+          },
         },
       },
     },
   };
 
   return (
-    <div className="w-full min-h-[300px] sm:aspect-[2/1] aspect-[1/1]">
-      <div className="flex justify-end mb-2">
+    <div className="w-full space-y-4">
+      {/* Chart Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h3 className="text-lg font-semibold text-foreground">
+          {showDifference
+            ? "Energy Consumption Differences"
+            : "Energy Consumption Over Time"}
+        </h3>
         <button
           onClick={toggleDifferenceMode}
-          className={`px-3 py-1 rounded-md text-sm ${showDifference
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700"
-            }`}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            showDifference ? TOGGLE_BUTTON_STYLES.active : TOGGLE_BUTTON_STYLES.inactive
+          }`}
         >
-          {showDifference ? "Show Actual" : "Show Difference"}
+          {showDifference ? "Show Actual Values" : "Show Differences"}
         </button>
       </div>
-      <Line
-        options={{
-          ...options,
-          plugins: {
-            ...options.plugins,
-            title: {
-              ...options.plugins?.title,
-              text: showDifference
-                ? "Energy Consumption Differences Over Time"
-                : "Energy Consumption Over Time"
-            }
-          }
-        }}
-        data={chartData}
-      />
+
+      {/* Chart Container */}
+      <div className="relative w-full" style={{ height: 'clamp(300px, 50vh, 500px)' }}>
+        <Line options={options} data={chartData} />
+      </div>
     </div>
   );
 };

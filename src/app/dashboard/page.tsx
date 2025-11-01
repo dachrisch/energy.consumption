@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Toast from "../components/Toast";
-import { EnergyType, ToastMessage } from "../types";
+import { EnergyType, ContractType, ToastMessage } from "../types";
 import { deleteEnergyAction } from "@/actions/energy";
 import DashboardTabs from "../components/DashboardTabs";
 import { AddEnergyDataIcon } from "../components/icons";
@@ -11,12 +11,14 @@ import { AddEnergyDataIcon } from "../components/icons";
 const Dashboard = () => {
   const router = useRouter();
   const [energyData, setEnergyData] = useState<EnergyType[]>([]);
+  const [contracts, setContracts] = useState<ContractType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   useEffect(() => {
     fetchEnergyData();
+    fetchContracts();
   }, []);
 
   const fetchEnergyData = async () => {
@@ -34,6 +36,22 @@ const Dashboard = () => {
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchContracts = async () => {
+    try {
+      const response = await fetch("/api/contracts");
+      if (!response.ok) throw new Error("Failed to fetch contracts");
+      const data = await response.json();
+      const parsed = data.map((item: { startDate: string | number | Date; endDate?: string | number | Date }) => ({
+        ...item,
+        startDate: new Date(item.startDate),
+        endDate: item.endDate ? new Date(item.endDate) : undefined,
+      }));
+      setContracts(parsed);
+    } catch (err) {
+      console.error("Failed to load contracts:", err);
     }
   };
 
@@ -73,7 +91,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        <DashboardTabs energyData={energyData} onDelete={onDelete} />
+        <DashboardTabs energyData={energyData} contracts={contracts} onDelete={onDelete} />
 
         <button
           onClick={() => router.push("/add")}

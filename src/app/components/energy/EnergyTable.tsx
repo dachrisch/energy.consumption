@@ -1,11 +1,14 @@
 'use client';
 
-import { EnergyType, EnergyOptions, EnergySortField, SortOrder } from '../../types';
-import { PowerIcon, GasIcon, DeleteIcon } from '../icons';
+import { EnergyType, EnergyOptions, EnergySortField } from '../../types';
+import { DeleteIcon } from '../icons';
 import { getFilteredAndSortedData } from '../../handlers/energyHandlers';
 import { formatDateToBrowserLocale } from '../../utils/dateUtils';
 import { useState } from 'react';
 import Pagination from '../Pagination';
+import { getTypeIcon } from '@/app/utils/iconUtils';
+import { useTableSort } from '@/app/hooks/useTableSort';
+import { ITEMS_PER_PAGE } from '@/app/constants/ui';
 
 interface EnergyTableProps {
   energyData: EnergyType[];
@@ -20,28 +23,9 @@ const EnergyTable = ({
   typeFilter,
   dateRange,
 }: EnergyTableProps) => {
-  const [sortField, setSortField] = useState<EnergySortField>("date");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const { sortField, sortOrder, handleSort, getSortIcon } = useTableSort<EnergySortField>("date", "desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  const getTypeIcon = (type: EnergyOptions) => {
-    return type === 'power' ? <PowerIcon /> : <GasIcon />;
-  };
-
-  const handleSort = (field: EnergySortField) => {
-    if (field === sortField) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const getSortIcon = (field: EnergySortField) => {
-    if (field !== sortField) return null;
-    return sortOrder === 'asc' ? '↑' : '↓';
-  };
+  const [itemsPerPage] = useState(ITEMS_PER_PAGE);
 
 
   const filteredAndSortedData = getFilteredAndSortedData(energyData, typeFilter, dateRange, sortField, sortOrder);
@@ -78,7 +62,7 @@ const EnergyTable = ({
                 className="p-2 cursor-pointer hover:bg-secondary/80 text-center align-middle"
                 onClick={() => handleSort('amount')}
               >
-                Amount {getSortIcon('amount')}
+                Meter Reading {getSortIcon('amount')}
               </th>
               <th className="p-2 text-center align-middle">Actions</th>
             </tr>
