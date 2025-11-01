@@ -5,6 +5,7 @@ import EnergyTableFilters from "./energy/EnergyTableFilters";
 import { EnergyType, EnergyOptions } from "../types";
 import EnergyCharts from "./energy/EnergyCharts";
 import EnergyTable from "./energy/EnergyTable";
+import { TableIcon, ChartIcon } from "./icons";
 
 interface TabsProps {
   energyData: EnergyType[];
@@ -29,6 +30,7 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
     {
       id: "table",
       label: "Table View",
+      icon: <TableIcon className="w-4 h-4" />,
       content: (
         <EnergyTable
           energyData={energyData}
@@ -41,6 +43,7 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
     {
       id: "charts",
       label: "Charts View",
+      icon: <ChartIcon className="w-4 h-4" />,
       content: (
         <EnergyCharts
           energyData={energyData}
@@ -49,7 +52,7 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
         />
       ),
     },
-   
+
   ];
 
   return (
@@ -73,7 +76,10 @@ const DashboardTabs = ({ energyData, onDelete }: TabsProps) => {
                   : "button-secondary"
                 }`}
             >
-              {tab.label}
+              <span className="flex items-center justify-center gap-2">
+                {tab.icon}
+                <span>{tab.label}</span>
+              </span>
             </div>
           ))}
         </div>

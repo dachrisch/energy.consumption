@@ -83,7 +83,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
     <>
       <form
         onSubmit={handleSubmit}
-        className="solid-container"
+        className="space-y-4"
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -160,7 +160,7 @@ const AddEnergyForm = ({ onSubmit, latestValues }: AddEnergyFormProps) => {
         </div>
         <button
           type="submit"
-          className="mt-4 px-4 py-2 "
+          className="w-full md:w-auto px-6 py-2 "
         >
           Add Energy Data
         </button>

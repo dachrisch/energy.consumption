@@ -1,4 +1,8 @@
 /* Profile Menu */
+.menu-container {
+  @apply relative;
+}
+
 .menu-button {
   @apply w-8 h-8 rounded-4xl flex items-center justify-center cursor-pointer bg-secondary;
   color: var(--foreground); /* Icon color using foreground variable */
