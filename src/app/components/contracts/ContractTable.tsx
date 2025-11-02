@@ -134,7 +134,7 @@ const ContractTable = ({
                 <td className="p-2 text-center align-middle flex justify-center gap-2">
                   <button
                     onClick={() => onEdit(contract)}
-                    className="text-primary hover:text-primary/80 p-1 rounded-full hover:bg-primary/10"
+                    className="button-icon-only text-primary hover:text-primary/80 p-1 rounded-full hover:bg-primary/10"
                     title="Edit contract"
                     data-testid="contract-edit-button"
                   >
@@ -142,7 +142,7 @@ const ContractTable = ({
                   </button>
                   <button
                     onClick={() => onDelete(contract._id)}
-                    className="text-destructive hover:text-destructive/80 p-1 rounded-full hover:bg-destructive/10"
+                    className="button-icon-only text-destructive hover:text-destructive/80 p-1 rounded-full hover:bg-destructive/10"
                     title="Delete contract"
                   >
                     <DeleteIcon aria-label="Delete contract"/>

@@ -15,16 +15,52 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1e1b4b;
-    --foreground: #fafafa;
-    --primary: #a78bfa;
-    --primary-foreground: #F5F4FA;
-    --secondary: #3b0764;
-    --secondary-foreground: #fafafa;
+    /* Background colors */
+    --background: #0f172a;
+    --background-elevated: #1e293b;
+    --background-card: #1e293b;
+    --background-hover: #334155;
+
+    /* Foreground colors */
+    --foreground: #f1f5f9;
+    --foreground-muted: #94a3b8;
+    --foreground-subtle: #64748b;
+
+    /* Primary colors - Modern purple/violet */
+    --primary: #8b5cf6;
+    --primary-hover: #7c3aed;
+    --primary-active: #6d28d9;
+    --primary-foreground: #ffffff;
+    --primary-light: #a78bfa;
+    --primary-subtle: rgba(139, 92, 246, 0.1);
+
+    /* Secondary colors */
+    --secondary: #475569;
+    --secondary-hover: #64748b;
+    --secondary-foreground: #f1f5f9;
+
+    /* Border colors */
+    --border: #334155;
+    --border-hover: #475569;
+
+    /* Destructive colors */
     --destructive: #ef4444;
+    --destructive-hover: #dc2626;
     --destructive-foreground: #ffffff;
-    --disabled: #3f3f46;
-    --disabled-foreground: #a1a1aa;
+
+    /* Disabled colors */
+    --disabled: #334155;
+    --disabled-foreground: #64748b;
+
+    /* Success colors */
+    --success: #10b981;
+    --success-foreground: #ffffff;
+
+    /* Shadow */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
   }
 }
 
@@ -47,21 +83,68 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  height: 100dvh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* App Container - Card-based layout */
+.app-container {
+  width: 100%;
+  max-width: 1400px;
+  height: calc(100dvh - 4rem);
+  min-height: 600px;
+  background: var(--background-card);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
 }
 
-  main {
-    flex: 1;
-    overflow-y: auto;
-  }
+.app-content-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
 
 .app-root {
-  @apply p-8 pb-16;
+  /* No padding - handled by page-content and dashboard-summary */
 }
 
 .app-heading {
-  @apply text-3xl font-bold
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  body {
+    padding: 0;
+  }
+
+  .app-container {
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .app-heading {
+    font-size: 1.5rem;
+  }
 }

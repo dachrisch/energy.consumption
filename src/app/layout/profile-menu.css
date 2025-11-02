@@ -1,63 +1,105 @@
 /* Profile Menu */
 .menu-container {
-  @apply relative;
+  position: relative;
 }
 
 .menu-button {
-  @apply w-8 h-8 rounded-4xl flex items-center justify-center cursor-pointer bg-secondary;
-  color: var(--foreground); /* Icon color using foreground variable */
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: var(--secondary);
+  color: var(--foreground);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
 }
+
 .menu-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.375rem;
+  height: 1.375rem;
   color: var(--foreground);
 }
 
 .menu-button:hover {
-  @apply bg-primary;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  transform: scale(1.05);
+}
+
+.menu-button:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 /* Menu Dropdown */
 .menu-dropdown {
-  @apply absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 z-10 border border-gray-100;
-  background-color: var(--background); /* Use background for menu background */
-  color: var(--foreground); /* Use foreground for text color */
+  position: absolute;
+  right: 0;
+  margin-top: 0.75rem;
+  width: 13rem;
+  border-radius: 0.875rem;
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  z-index: 50;
+  background-color: var(--background-elevated);
+  color: var(--foreground);
+  border: 1px solid var(--border);
 }
 
 .menu-dropdown-group {
-  @apply px-4 py-2 border-b border-gray-100;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
 }
 
 /* Menu Item for Edit Profile */
 .menu-dropdown-item-edit {
-  @apply text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer;
-  background-color: var(--background); /* Consistent background */
-  color: var(--foreground); /* Consistent text color */
+  text-align: left;
+  padding: 0.625rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  transition: all 0.15s;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .menu-dropdown-item-edit:hover {
-  background-color: var(--secondary); /* Use secondary background on hover */
-  color: var(--secondary-foreground); /* Text color when hovered */
+  background-color: var(--background-hover);
+  color: var(--foreground);
 }
 
 /* Menu Item for Logout */
 .menu-dropdown-item-logout {
-  @apply text-left px-4 py-2 text-sm text-foreground hover:bg-secondary/50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer;
-  background-color: var(--background); /* Background */
-  color: var(--foreground); /* Text color */
+  text-align: left;
+  padding: 0.625rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  transition: all 0.15s;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
 }
 
 .menu-dropdown-item-logout:hover {
-  background-color: var(--destructive); /* Use destructive color for hover */
-  color: var(--destructive-foreground); /* Text color when hovered */
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
 }
 
 .dropdown-user-name {
-  @apply text-sm font-medium text-foreground;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.25rem;
 }
 
 .dropdown-user-email {
-  @apply text-xs text-gray-500 truncate;
+  font-size: 0.8125rem;
+  color: var(--foreground-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

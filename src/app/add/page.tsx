@@ -102,12 +102,13 @@ const AddDataPage = () => {
   if (isLoading) {
     return (
       <div className="app-root">
-        <main className="dashboard-main">
-          <h1 className="app-heading">
-            Energy Consumption Monitor
-          </h1>
+        <div className="page-content">
+          <div className="page-header">
+            <h1 className="app-heading">Add Energy Data</h1>
+            <p className="page-description">Record new meter readings</p>
+          </div>
           <p>Loading...</p>
-        </main>
+        </div>
       </div>
     );
   }
@@ -120,33 +121,13 @@ const AddDataPage = () => {
 
   return (
     <div className="app-root">
-      <main className="dashboard-main">
-        {/* Header with back button */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="p-2 hover:bg-secondary rounded-lg transition-colors flex-shrink-0"
-            aria-label="Back to dashboard"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h1 className="app-heading mb-0">Add Energy Data</h1>
+      <div className="page-content">
+        <div className="page-header">
+          <h1 className="app-heading">Add Energy Data</h1>
+          <p className="page-description">Record new meter readings using manual entry or CSV import</p>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="solid-container p-0 overflow-hidden">
+        <div className="content-card">
           <TabNavigation
             tabs={tabs}
             activeTab={activeTab}
@@ -154,7 +135,7 @@ const AddDataPage = () => {
           />
 
           {/* Tab Content */}
-          <div className="p-4 md:p-6">
+          <div className="mt-6">
             {activeTab === "manual" && (
               <AddEnergyForm
                 onSubmit={onAddEnergy}
@@ -179,7 +160,7 @@ const AddDataPage = () => {
             onClose={() => setToast(null)}
           />
         )}
-      </main>
+      </div>
     </div>
   );
 };

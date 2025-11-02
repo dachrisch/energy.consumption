@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import Toast from "../components/Toast";
 import { EnergyType, ContractType, ToastMessage } from "../types";
-import DashboardSummary from "../components/DashboardSummary";
+import { deleteEnergyAction } from "@/actions/energy";
+import DashboardTabs from "../components/DashboardTabs";
 
-const Dashboard = () => {
+const EnergyHistory = () => {
   const [energyData, setEnergyData] = useState<EnergyType[]>([]);
   const [contracts, setContracts] = useState<ContractType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,36 +52,59 @@ const Dashboard = () => {
     }
   };
 
+  const onDelete = async (id: string): Promise<void> => {
+    try {
+      await deleteEnergyAction(id);
+      fetchEnergyData();
+      setToast({
+        message: "Energy data deleted",
+        type: "success",
+      });
+    } catch (err) {
+      setError("Failed to delete energy data");
+      console.error(err);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="app-root">
-        <div className="dashboard-summary">
-          <h1 className="dashboard-title">Energy Dashboard</h1>
+        <main className="dashboard-main">
+          <h1 className="app-heading">Energy History</h1>
           <p>Loading...</p>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="app-root" data-testid="dashboard">
-      {error && (
-        <div className="alert-error">
-          {error}
+    <div className="app-root" data-testid="energy-history">
+      <main className="dashboard-main">
+        <div className="page-header">
+          <h1 className="app-heading">Energy History</h1>
+          <p className="page-description">
+            View detailed energy consumption data, charts, and analytics
+          </p>
         </div>
-      )}
 
-      <DashboardSummary energyData={energyData} contracts={contracts} />
+        {error && (
+          <div className="alert-error">
+            {error}
+          </div>
+        )}
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+        <DashboardTabs energyData={energyData} contracts={contracts} onDelete={onDelete} />
+
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </main>
     </div>
   );
 };
 
-export default Dashboard;
+export default EnergyHistory;
