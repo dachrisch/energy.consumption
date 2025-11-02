@@ -82,15 +82,6 @@ export default function AppBar() {
                 Edit Profile
               </div>
               <div
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  router.push("/contracts");
-                }}
-                className="menu-dropdown-item-edit"
-              >
-                Contract Data
-              </div>
-              <div
                 onClick={handleLogout}
                 className="menu-dropdown-item-logout"
               >

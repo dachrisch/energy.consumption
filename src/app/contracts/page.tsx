@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import ContractTable from "@/app/components/contracts/ContractTable";
 import Toast from "@/app/components/Toast";
 import { ContractBase, ContractType, ToastMessage } from "@/app/types";
@@ -10,7 +9,6 @@ import { addOrUpdateContractAction, deleteContractAction } from "@/actions/contr
 import { fetchAndConvert } from "../handlers/contractsHandler";
 
 const ContractsPage = () => {
-  const router = useRouter();
   const [contracts, setContracts] = useState<ContractType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -77,56 +75,52 @@ const ContractsPage = () => {
   if (isLoading) {
     return (
       <div className="app-root">
-        <main className="dashboard-main">
-          <h1 className="app-heading">Loading contracts...</h1>
-        </main>
+        <div className="page-content">
+          <div className="page-header">
+            <h1 className="app-heading">Energy Contracts</h1>
+            <p className="page-description">Manage your energy supply contracts</p>
+          </div>
+          <p>Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="app-root">
-      <main className="dashboard-main">
-        {/* Header with back button */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="p-2 hover:bg-secondary rounded-lg transition-colors flex-shrink-0"
-            aria-label="Back to dashboard"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h1 className="app-heading mb-0">
-            {editingContractData ? "Edit Contract" : "Add New Contract"}
+      <div className="page-content">
+        <div className="page-header">
+          <h1 className="app-heading">
+            {editingContractData ? "Edit Contract" : "Energy Contracts"}
           </h1>
+          <p className="page-description">
+            {editingContractData
+              ? "Update your existing contract details"
+              : "Manage your energy supply contracts and pricing"}
+          </p>
         </div>
 
-        <ContractForm
-          onSubmit={onAddContract}
-          initialData={editingContractData}
-          existingContracts={contracts}
-          onCancel={() => setEditingContractData(null)}
-        />
+        <div className="content-card">
+          <h2 className="section-title">
+            {editingContractData ? "Edit Contract" : "Add New Contract"}
+          </h2>
+          <ContractForm
+            onSubmit={onAddContract}
+            initialData={editingContractData}
+            existingContracts={contracts}
+            onCancel={() => setEditingContractData(null)}
+          />
+        </div>
 
-        <h2 className="app-heading mt-12 mb-6">Existing Contracts</h2>
-        <ContractTable
-          contracts={contracts}
-          onDelete={onDeleteContract}
-          onEdit={onEditContract}
-          typeFilter="all"
-        />
+        <div className="content-card">
+          <h2 className="section-title">Existing Contracts</h2>
+          <ContractTable
+            contracts={contracts}
+            onDelete={onDeleteContract}
+            onEdit={onEditContract}
+            typeFilter="all"
+          />
+        </div>
 
         {toast && (
           <Toast
@@ -135,7 +129,7 @@ const ContractsPage = () => {
             onClose={() => setToast(null)}
           />
         )}
-      </main>
+      </div>
     </div>
   );
 };

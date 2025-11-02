@@ -38,6 +38,20 @@ npm run release:major        # Major version bump
 - Path alias `@/` maps to `src/`
 - Tests run in `Europe/Berlin` timezone (set via `TZ` env var)
 - Run specific test: `npm test -- path/to/test.test.tsx`
+- Run tests with coverage: `npm test -- --coverage`
+
+**Test Coverage** (as of latest update):
+- Statements: 83.9% (9,140/10,893)
+- Branches: 90.82% (683/752)
+- Functions: 39.9% (160/401)
+- Lines: 83.9% (9,140/10,893)
+
+**Coverage Notes**:
+- All critical user-facing components have comprehensive test coverage
+- CSV import components (CSVFileUpload, CSVClipboardPaste) are fully tested
+- Cost calculation handlers have extensive test coverage
+- Custom hooks maintain 100% coverage
+- Validation services maintain 100% coverage
 
 ## Architecture
 

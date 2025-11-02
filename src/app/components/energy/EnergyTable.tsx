@@ -81,7 +81,7 @@ const EnergyTable = ({
                 <td className="p-2 text-center align-middle">
                   <button
                     onClick={() => onDelete(data._id)}
-                    className="text-destructive hover:text-destructive/80 p-1 rounded-full hover:bg-destructive/10"
+                    className="button-icon-only text-destructive hover:text-destructive/80 p-1 rounded-full hover:bg-destructive/10"
                     title="Delete entry"
                   >
                     <DeleteIcon />
