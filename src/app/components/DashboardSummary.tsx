@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { EnergyType, ContractType, EnergyOptions } from "../types";
 import { formatDateToBrowserLocale } from "../utils/dateUtils";
-import { getEnergyTypeLabel } from "../constants/energyTypes";
 import { PowerIcon, GasIcon, TrendingUpIcon, TrendingDownIcon, CalendarIcon, CurrencyIcon } from "./icons";
 
 interface DashboardSummaryProps {
@@ -167,7 +166,7 @@ const DashboardSummary = ({ energyData, contracts }: DashboardSummaryProps) => {
       </div>
 
       <div className="consumption-section">
-        <h2 className="section-title">This Month's Consumption</h2>
+        <h2 className="section-title">This Month&apos;s Consumption</h2>
         <div className="consumption-grid">
           <MetricCard
             title="Power Consumption"

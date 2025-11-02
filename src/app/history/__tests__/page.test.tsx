@@ -4,9 +4,21 @@ import EnergyHistory from '../page';
 // Mock fetch
 global.fetch = jest.fn();
 
+interface MockDashboardTabsProps {
+  energyData: unknown[];
+  contracts: unknown[];
+  onDelete: (id: string) => void;
+}
+
+interface MockToastProps {
+  message: string;
+  type: string;
+  onClose: () => void;
+}
+
 // Mock DashboardTabs component
 jest.mock('../../components/DashboardTabs', () => {
-  return function MockDashboardTabs({ energyData, contracts, onDelete }: any) {
+  return function MockDashboardTabs({ energyData, contracts, onDelete }: MockDashboardTabsProps) {
     return (
       <div data-testid="dashboard-tabs">
         <div>Energy Data Count: {energyData.length}</div>
@@ -19,7 +31,7 @@ jest.mock('../../components/DashboardTabs', () => {
 
 // Mock Toast component
 jest.mock('../../components/Toast', () => {
-  return function MockToast({ message, type, onClose }: any) {
+  return function MockToast({ message, type, onClose }: MockToastProps) {
     return (
       <div data-testid="toast">
         <span>{message}</span>
@@ -34,6 +46,9 @@ jest.mock('../../components/Toast', () => {
 jest.mock('../../../actions/energy', () => ({
   deleteEnergyAction: jest.fn(),
 }));
+
+// Import the mocked function
+import { deleteEnergyAction } from '../../../actions/energy';
 
 describe('EnergyHistory Page', () => {
   beforeEach(() => {
@@ -194,8 +209,7 @@ describe('EnergyHistory Page', () => {
   });
 
   it('should display success toast after deleting energy data', async () => {
-    const { deleteEnergyAction } = require('../../../actions/energy');
-    deleteEnergyAction.mockResolvedValueOnce(undefined);
+    (deleteEnergyAction as jest.Mock).mockResolvedValueOnce(undefined);
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -220,8 +234,7 @@ describe('EnergyHistory Page', () => {
   });
 
   it('should refetch data after successful deletion', async () => {
-    const { deleteEnergyAction } = require('../../../actions/energy');
-    deleteEnergyAction.mockResolvedValueOnce(undefined);
+    (deleteEnergyAction as jest.Mock).mockResolvedValueOnce(undefined);
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -245,8 +258,7 @@ describe('EnergyHistory Page', () => {
   });
 
   it('should display error when deletion fails', async () => {
-    const { deleteEnergyAction } = require('../../../actions/energy');
-    deleteEnergyAction.mockRejectedValueOnce(new Error('Delete failed'));
+    (deleteEnergyAction as jest.Mock).mockRejectedValueOnce(new Error('Delete failed'));
 
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,

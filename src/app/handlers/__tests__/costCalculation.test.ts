@@ -1,4 +1,4 @@
-import { getAvailableYears, calculateCosts, CostPeriod } from "../costCalculation";
+import { getAvailableYears, calculateCosts } from "../costCalculation";
 import { EnergyType, ContractType } from "@/app/types";
 
 describe("costCalculation", () => {

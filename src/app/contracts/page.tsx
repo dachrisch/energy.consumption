@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import ContractTable from "@/app/components/contracts/ContractTable";
 import Toast from "@/app/components/Toast";
 import { ContractBase, ContractType, ToastMessage } from "@/app/types";
@@ -10,7 +9,6 @@ import { addOrUpdateContractAction, deleteContractAction } from "@/actions/contr
 import { fetchAndConvert } from "../handlers/contractsHandler";
 
 const ContractsPage = () => {
-  const router = useRouter();
   const [contracts, setContracts] = useState<ContractType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
