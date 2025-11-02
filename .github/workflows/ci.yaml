@@ -1,4 +1,4 @@
-name: 🏗️🧪🚀 Build, Test and Deploy everything
+onname: 🏗️🧪🚀 Build, Test and Deploy everything
 
 on:
   push:
@@ -9,6 +9,11 @@ permissions:
   contents: write
   checks: write
   security-events: write
+
+concurrency:
+  group: build-test-deploy
+  cancel-in-progress: true
+
 
 jobs:
   build-project:
