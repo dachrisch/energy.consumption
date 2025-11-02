@@ -21,8 +21,8 @@ export default function Breadcrumbs() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Don't show breadcrumbs on login/register pages
-  if (pathname === "/login" || pathname === "/register" || pathname === "/") {
+  // Don't show breadcrumbs on login/register pages or if pathname is null
+  if (!pathname || pathname === "/login" || pathname === "/register" || pathname === "/") {
     return null;
   }
 
