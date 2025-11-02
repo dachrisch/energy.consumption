@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import ContractTable from "@/app/components/contracts/ContractTable";
 import Toast from "@/app/components/Toast";
 import { ContractBase, ContractType, ToastMessage } from "@/app/types";
@@ -9,6 +10,7 @@ import { addOrUpdateContractAction, deleteContractAction } from "@/actions/contr
 import { fetchAndConvert } from "../handlers/contractsHandler";
 
 const ContractsPage = () => {
+  const router = useRouter();
   const [contracts, setContracts] = useState<ContractType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -85,9 +87,31 @@ const ContractsPage = () => {
   return (
     <div className="app-root">
       <main className="dashboard-main">
-        <h1 className="app-heading mb-6">
-          {editingContractData ? "Edit Contract" : "Add New Contract"}
-        </h1>
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="p-2 hover:bg-secondary rounded-lg transition-colors flex-shrink-0"
+            aria-label="Back to dashboard"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <h1 className="app-heading mb-0">
+            {editingContractData ? "Edit Contract" : "Add New Contract"}
+          </h1>
+        </div>
 
         <ContractForm
           onSubmit={onAddContract}

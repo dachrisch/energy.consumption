@@ -3,6 +3,7 @@ import { Separator, parseCSVData } from "@/app/utils/csvUtils";
 import { useState, useCallback, useEffect } from "react";
 import { UploadIcon, ClipboardIcon } from "../icons";
 import CSVImportModal from "../modals/CSVImportModal";
+import { ALERT_TIMEOUT_MS } from "@/app/constants/ui";
 
 interface CSVDropZoneProps {
   onDataImported: (data: EnergyBase[]) => void;
@@ -92,7 +93,7 @@ export const CSVDropZone = ({ onDataImported }: CSVDropZoneProps) => {
 
   useEffect(() => {
     if (alertMessage) {
-      const timer = setTimeout(() => setAlertMessage(null), 4000);
+      const timer = setTimeout(() => setAlertMessage(null), ALERT_TIMEOUT_MS);
       return () => clearTimeout(timer);
     }
   }, [alertMessage]);

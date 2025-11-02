@@ -24,7 +24,7 @@ const filteredByUserId = async function <T extends Document>(
 ): Promise<void> {
   const session = await getServerSession(authOptions);
   if (session?.user?.id) {
-    console.log(`Filtering query by userId [${session.user.id}]`);
+    console.debug(`Filtering query by userId [${session.user.id}]`);
     this.where({userId: session.user.id});
   } else {
     throw new Error("User not logged in or missing user ID");
