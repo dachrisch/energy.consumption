@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/dachrisch/energy.consumption/compare/v1.11.1...v1.12.0) (2025-11-02)
+
+
+### Features
+
+* back button for contracts ([1cb9989](https://github.com/dachrisch/energy.consumption/commit/1cb9989162afbff6e6917ee601bcac40b04f04d4))
+* chart with costs ([1de341b](https://github.com/dachrisch/energy.consumption/commit/1de341bcb543d065be7cfaaf7e999292b670fb20))
+* interpolating & ui stylings ([896caaf](https://github.com/dachrisch/energy.consumption/commit/896caaf8a9719269355ad001ba05a530484a8d27))
+
+
+### Bug Fixes
+
+* **chartData:** enforce consistent date formatting using en-GB locale ([0e4ecdb](https://github.com/dachrisch/energy.consumption/commit/0e4ecdb8b42e79e9ddc85e4a152f76e96b7761d6))
+* **deps:** update nextjs monorepo to v16.0.1 ([#185](https://github.com/dachrisch/energy.consumption/issues/185)) ([22f68fc](https://github.com/dachrisch/energy.consumption/commit/22f68fcf0d5480a90e265f93daac52dca7f72d02))
+* indents & format ([3d70fa2](https://github.com/dachrisch/energy.consumption/commit/3d70fa2f4799c142524e735480b288692dbed077))
+* layout ([4fbbf46](https://github.com/dachrisch/energy.consumption/commit/4fbbf462ae571efe72f50bf7ee07bc5e3ed370cf))
+* lint errors ([534ffe3](https://github.com/dachrisch/energy.consumption/commit/534ffe35b881d4390a5456bad67905a08d7fe73c))
+* remove testing check ([c534da8](https://github.com/dachrisch/energy.consumption/commit/c534da8a690905d870d61064f91d7d085bdcd931))
+* suppress hydration warning ([c956bb1](https://github.com/dachrisch/energy.consumption/commit/c956bb1d8fb5e1cf948f691675fc825f55eb7241))
+* test improvements ([2e9d27e](https://github.com/dachrisch/energy.consumption/commit/2e9d27ee9e20b4009647f7b313b2e8fdac7f8bb6))
+* tests fixed ([1259f81](https://github.com/dachrisch/energy.consumption/commit/1259f8135fdc73e011ebcbac67a36c6f39f50948))
+* update charts view ([0a239f1](https://github.com/dachrisch/energy.consumption/commit/0a239f149787f529ffbca6783f78abae8e1017aa))
+
 ### [1.11.1](https://github.com/dachrisch/energy.consumption/compare/v1.11.0...v1.11.1) (2025-10-26)
 
 
