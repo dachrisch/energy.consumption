@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { EnergyType, ContractType, EnergyOptions } from "@/app/types";
+import { EnergyType, ContractType, EnergyOptions, EnergyTimeSeries } from "@/app/types";
 import { calculateCosts, getAvailableYears } from "@/app/handlers/costCalculation";
 import { getFilteredAndSortedData } from "@/app/handlers/energyHandlers";
 import { createTimeSeriesByType, differences } from "@/app/handlers/timeSeries";
 import { getChartData } from "@/app/handlers/chartData";
-import { TOGGLE_BUTTON_STYLES, CHART_YEAR_RANGE, CHART_BORDER_DASH, CHART_POINT_RADIUS } from "@/app/constants/ui";
+import { CHART_YEAR_RANGE, CHART_BORDER_DASH, CHART_POINT_RADIUS } from "@/app/constants/ui";
 import { getEnergyTypeLabel, getEnergyTypeChartConfig } from "@/app/constants/energyTypes";
 import { ButtonGroupRadio, ButtonOption } from "../shared/ButtonGroup";
 import {
@@ -19,6 +19,7 @@ import {
   Tooltip,
   Legend,
   TooltipItem,
+  ScriptableLineSegmentContext,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
@@ -165,7 +166,7 @@ const UnifiedEnergyChart = ({
         )
       : timeSeriesData;
 
-    return getChartData(processedData as any, typeFilter);
+    return getChartData(processedData as  EnergyTimeSeries, typeFilter);
   }, [filteredData, dataMode, typeFilter, viewMode]);
 
   // Prepare consumption/cost chart data (for monthly/yearly views)
@@ -204,7 +205,7 @@ const UnifiedEnergyChart = ({
         spanGaps: true,
         fill: false,
         segment: {
-          borderDash: (ctx: any) => {
+          borderDash: (ctx: ScriptableLineSegmentContext) => {
             const point = costData[ctx.p0DataIndex];
             if (point?.isInterpolated) return CHART_BORDER_DASH.interpolated;
             if (point?.isExtrapolated) return CHART_BORDER_DASH.extrapolated;
@@ -234,7 +235,7 @@ const UnifiedEnergyChart = ({
         spanGaps: true,
         fill: false,
         segment: {
-          borderDash: (ctx: any) => {
+          borderDash: (ctx: ScriptableLineSegmentContext) => {
             const point = costData[ctx.p0DataIndex];
             if (point?.isInterpolated) return CHART_BORDER_DASH.interpolated;
             if (point?.isExtrapolated) return CHART_BORDER_DASH.extrapolated;
@@ -285,7 +286,7 @@ const UnifiedEnergyChart = ({
           size: 13,
         },
         callbacks: {
-          label: (context: any) => {
+          label: (context: TooltipItem<'line'>) => {
             const label = context.dataset.label || "";
             const value = context.raw;
             return value !== null ? `${label}: ${value}` : `${label}: No data`;
@@ -444,7 +445,7 @@ const UnifiedEnergyChart = ({
           font: {
             size: 11,
           },
-          callback: function(value: any) {
+          callback: function(value: number | string) {
             return value + ' kWh';
           },
         },

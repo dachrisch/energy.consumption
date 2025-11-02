@@ -321,8 +321,6 @@ const extrapolateFuture = (
     a.periodStart.getTime() - b.periodStart.getTime()
   );
 
-  const currentDate = new Date();
-
   // Find periods with actual data (totalCost > 0)
   const periodsWithData = sortedData.filter(d => d.totalCost > 0);
 
@@ -332,9 +330,9 @@ const extrapolateFuture = (
   // For monthly or insufficient data, use simple averaging
   const useTrendline = period === "yearly" && periodsWithData.length >= 2;
 
-  let averageCosts: Record<EnergyOptions, number> = {} as Record<EnergyOptions, number>;
+  const averageCosts: Record<EnergyOptions, number> = {} as Record<EnergyOptions, number>;
   let averageTotal = 0;
-  let averageBreakdown: Record<EnergyOptions, { consumption: number; basePrice: number; workingPrice: number; totalCost: number }> = {} as Record<EnergyOptions, { consumption: number; basePrice: number; workingPrice: number; totalCost: number }>;
+  const averageBreakdown: Record<EnergyOptions, { consumption: number; basePrice: number; workingPrice: number; totalCost: number }> = {} as Record<EnergyOptions, { consumption: number; basePrice: number; workingPrice: number; totalCost: number }>;
 
   // Trendline slopes and intercepts for each energy type
   const trendlines: Record<EnergyOptions, { consumption: { slope: number; intercept: number }; cost: { slope: number; intercept: number } }> = {} as Record<EnergyOptions, { consumption: { slope: number; intercept: number }; cost: { slope: number; intercept: number } }>;
