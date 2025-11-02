@@ -120,7 +120,7 @@ describe("AddDataPage", () => {
       expect(screen.getByRole("heading", { name: "Add Energy Data" })).toBeInTheDocument();
     });
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "1500" } });
 
     const submitButton = screen.getByRole("button", { name: "Add Energy Data" });
@@ -156,7 +156,7 @@ describe("AddDataPage", () => {
       expect(screen.getByRole("heading", { name: "Add Energy Data" })).toBeInTheDocument();
     });
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "1500" } });
 
     const submitButton = screen.getByRole("button", { name: "Add Energy Data" });
@@ -181,7 +181,7 @@ describe("AddDataPage", () => {
       expect(screen.getByRole("heading", { name: "Add Energy Data" })).toBeInTheDocument();
     });
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "1500" } });
 
     const submitButton = screen.getByRole("button", { name: "Add Energy Data" });

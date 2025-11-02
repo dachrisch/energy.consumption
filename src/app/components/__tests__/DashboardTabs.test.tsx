@@ -49,26 +49,14 @@ describe('DashboardTabs', () => {
     render(<DashboardTabs energyData={mockEnergyData} contracts={mockContracts} onDelete={mockOnDelete} />);
 
     expect(screen.getByText('Table View')).toBeInTheDocument();
-    expect(screen.getByText('Charts View')).toBeInTheDocument();
-    expect(screen.getByText('Cost View')).toBeInTheDocument();
-    expect(screen.getByText('Energy Table')).toBeInTheDocument();
-  });
-
-  it('should switch to charts view when charts tab is clicked', () => {
-    render(<DashboardTabs energyData={mockEnergyData} contracts={mockContracts} onDelete={mockOnDelete} />);
-
-    const chartsTab = screen.getByText('Charts View');
-    fireEvent.click(chartsTab);
-
-    expect(screen.getByText('Energy Charts')).toBeInTheDocument();
-    expect(screen.queryByText('Energy Table')).not.toBeInTheDocument();
+    expect(screen.getByText('Charts')).toBeInTheDocument();
   });
 
   it('should switch back to table view when table tab is clicked', () => {
     render(<DashboardTabs energyData={mockEnergyData} contracts={mockContracts} onDelete={mockOnDelete} />);
 
     // First switch to charts
-    const chartsTab = screen.getByText('Charts View');
+    const chartsTab = screen.getByText('Charts');
     fireEvent.click(chartsTab);
 
     // Then switch back to table
@@ -99,7 +87,7 @@ describe('DashboardTabs', () => {
   it('should apply inactive tab styling to non-selected tab', () => {
     render(<DashboardTabs energyData={mockEnergyData} contracts={mockContracts} onDelete={mockOnDelete} />);
 
-    const chartsTab = screen.getByText('Charts View').closest('.tab-base');
+    const chartsTab = screen.getByText('Charts').closest('.tab-base');
     expect(chartsTab).toHaveClass('button-secondary');
   });
 

@@ -25,7 +25,7 @@ describe("AddEnergyForm", () => {
     expect(screen.getByLabelText("Date")).toBeInTheDocument();
     expect(screen.getByTestId("add-energy-type-gas")).toBeInTheDocument();
     expect(screen.getByTestId("add-energy-type-power")).toBeInTheDocument();
-    expect(screen.getByLabelText("Amount")).toBeInTheDocument();
+    expect(screen.getByLabelText("Meter Reading")).toBeInTheDocument();
     expect(screen.getByText("Add Energy Data")).toBeInTheDocument();
   });
 
@@ -37,7 +37,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     expect(amountInput).toHaveValue(1000); // Default power value
 
     const gasRadio = screen.getByLabelText("gas");
@@ -54,7 +54,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "-1" } });
 
     const submitButton = screen.getByText("Add Energy Data");
@@ -74,7 +74,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "900" } });
 
     const submitButton = screen.getByText("Add Energy Data");
@@ -99,7 +99,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "1900" } });
 
     const submitButton = screen.getByText("Add Energy Data");
@@ -123,7 +123,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "900" } });
 
     const submitButton = screen.getByText("Add Energy Data");
@@ -159,7 +159,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount");
+    const amountInput = screen.getByLabelText("Meter Reading");
     fireEvent.change(amountInput, { target: { value: "900" } });
 
     const submitButton = screen.getByText("Add Energy Data");
@@ -185,7 +185,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount") as HTMLInputElement;
+    const amountInput = screen.getByLabelText("Meter Reading") as HTMLInputElement;
     // When value is 0, number inputs show empty string
     expect(amountInput.value).toBe('');
 
@@ -203,7 +203,7 @@ describe("AddEnergyForm", () => {
       />
     );
 
-    const amountInput = screen.getByLabelText("Amount") as HTMLInputElement;
+    const amountInput = screen.getByLabelText("Meter Reading") as HTMLInputElement;
     expect(amountInput.value).toBe('1000');
 
     const gasRadio = screen.getByLabelText("gas");
