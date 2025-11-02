@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/dachrisch/energy.consumption/compare/v1.12.1...v2.0.0) (2025-11-02)
+
+
+### Bug Fixes
+
+* lint issues ([4448eea](https://github.com/dachrisch/energy.consumption/commit/4448eea0e42dc34a871e659fe11f772a92c83608))
+* pathname issue during build ([d5273c5](https://github.com/dachrisch/energy.consumption/commit/d5273c5e0c0013f708fd9c2e7f3657ecd0b622c8))
+
 ### [1.12.1](https://github.com/dachrisch/energy.consumption/compare/v1.12.0...v1.12.1) (2025-11-02)
 
 ## [1.12.0](https://github.com/dachrisch/energy.consumption/compare/v1.11.1...v1.12.0) (2025-11-02)
