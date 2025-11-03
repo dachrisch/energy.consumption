@@ -28,10 +28,12 @@
   color: var(--foreground);
 }
 
-.menu-button:hover {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  transform: scale(1.05);
+@media (hover: hover) {
+  .menu-button:hover {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    transform: scale(1.05);
+  }
 }
 
 .menu-button:focus {
@@ -95,9 +97,11 @@
   font-weight: 500;
 }
 
-.menu-dropdown-item-edit:hover {
-  background-color: var(--background-hover);
-  color: var(--foreground);
+@media (hover: hover) {
+  .menu-dropdown-item-edit:hover {
+    background-color: var(--background-hover);
+    color: var(--foreground);
+  }
 }
 
 /* Menu Item for Logout */
@@ -112,9 +116,11 @@
   font-weight: 500;
 }
 
-.menu-dropdown-item-logout:hover {
-  background-color: var(--destructive);
-  color: var(--destructive-foreground);
+@media (hover: hover) {
+  .menu-dropdown-item-logout:hover {
+    background-color: var(--destructive);
+    color: var(--destructive-foreground);
+  }
 }
 
 .dropdown-user-name {
@@ -169,8 +175,10 @@
   text-align: left;
 }
 
-.theme-menu-option:hover {
-  background-color: var(--background-hover);
+@media (hover: hover) {
+  .theme-menu-option:hover {
+    background-color: var(--background-hover);
+  }
 }
 
 .theme-menu-option.active {

@@ -12,10 +12,12 @@ button {
   letter-spacing: -0.01em;
 }
 
-button:hover:not(:disabled) {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+@media (hover: hover) {
+  button:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 button:active:not(:disabled) {
@@ -40,8 +42,10 @@ button:disabled {
   color: var(--primary-foreground);
 }
 
-.button-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover);
+@media (hover: hover) {
+  .button-primary:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+  }
 }
 
 .button-primary:active:not(:disabled) {
@@ -53,8 +57,10 @@ button:disabled {
   color: var(--secondary-foreground);
 }
 
-.button-secondary:hover:not(:disabled) {
-  background-color: var(--secondary-hover);
+@media (hover: hover) {
+  .button-secondary:hover:not(:disabled) {
+    background-color: var(--secondary-hover);
+  }
 }
 
 .button-destructive {
@@ -62,8 +68,10 @@ button:disabled {
   color: var(--destructive-foreground);
 }
 
-.button-destructive:hover:not(:disabled) {
-  background-color: var(--destructive-hover);
+@media (hover: hover) {
+  .button-destructive:hover:not(:disabled) {
+    background-color: var(--destructive-hover);
+  }
 }
 
 .button-ghost {
@@ -71,9 +79,11 @@ button:disabled {
   color: var(--foreground-muted);
 }
 
-.button-ghost:hover:not(:disabled) {
-  background-color: var(--background-hover);
-  color: var(--foreground);
+@media (hover: hover) {
+  .button-ghost:hover:not(:disabled) {
+    background-color: var(--background-hover);
+    color: var(--foreground);
+  }
 }
 
 .button-outline {
@@ -82,9 +92,11 @@ button:disabled {
   color: var(--foreground);
 }
 
-.button-outline:hover:not(:disabled) {
-  background-color: var(--background-hover);
-  border-color: var(--border-hover);
+@media (hover: hover) {
+  .button-outline:hover:not(:disabled) {
+    background-color: var(--background-hover);
+    border-color: var(--border-hover);
+  }
 }
 
 /* Floating Action Button */
@@ -101,10 +113,12 @@ button:disabled {
   border: none;
 }
 
-.fab:hover:not(:disabled) {
-  background-color: var(--primary-hover);
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: var(--shadow-xl);
+@media (hover: hover) {
+  .fab:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: var(--shadow-xl);
+  }
 }
 
 @media (max-width: 768px) {
@@ -137,10 +151,12 @@ button:disabled {
   padding: 0.5rem;
 }
 
-.button-icon-only:hover:not(:disabled) {
-  background-color: transparent;
-  transform: scale(1.1);
-  box-shadow: none;
+@media (hover: hover) {
+  .button-icon-only:hover:not(:disabled) {
+    background-color: transparent;
+    transform: scale(1.1);
+    box-shadow: none;
+  }
 }
 
 .button-icon-only:focus {
