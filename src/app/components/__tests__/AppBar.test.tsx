@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import AppBar from "../AppBar";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useTheme } from "../../contexts/ThemeContext";
 
 // Mock dependencies
@@ -49,7 +50,7 @@ describe("AppBar", () => {
       prefetch: jest.fn(),
       back: jest.fn(),
       forward: jest.fn(),
-    } as any);
+    } as AppRouterInstance);
 
     mockUseTheme.mockReturnValue({
       theme: "system",
