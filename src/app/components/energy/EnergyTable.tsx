@@ -121,8 +121,7 @@ const EnergyTable = ({
           <div key={data._id} className="energy-card">
             <div className="energy-card-header">
               <div className="flex items-center gap-2">
-                {getTypeIcon(data.type, "w-5 h-5")}
-                <span className="energy-card-type">{data.type}</span>
+                <span className="text-2xl font-bold">{data.amount}</span>
               </div>
               <div className="energy-card-actions">
                 <button
@@ -143,8 +142,13 @@ const EnergyTable = ({
                 </span>
               </div>
               <div className="energy-card-row">
-                <span className="energy-card-label">Meter Reading</span>
-                <span className="energy-card-value">{data.amount}</span>
+                <span className="energy-card-label">Type</span>
+                <span className="energy-card-value">
+                  <div className="flex items-center gap-2">
+                    {getTypeIcon(data.type, "w-5 h-5")}
+                    <span className="capitalize">{data.type}</span>
+                  </div>
+                </span>
               </div>
             </div>
           </div>
