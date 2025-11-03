@@ -245,4 +245,63 @@ This codebase follows SOLID principles and clean code practices:
 2. Follow naming convention: `use[FeatureName].ts`
 3. Return object with state and handlers
 4. Document with JSDoc comments
-- add to memory: always ensure all tests are running when changing code
+
+## Development Workflow
+
+**IMPORTANT**: Follow this complete workflow when implementing features or making changes:
+
+### 1. Planning
+- Use `TodoWrite` tool for complex/multi-step tasks
+- Break down features into manageable steps
+- Track progress with in_progress/completed status
+
+### 2. Implementation
+- **Read existing files first** - Never edit without reading
+- Check CLAUDE.md for project patterns
+- Use proper tools (Read/Edit/Write, not bash for file operations)
+- Follow SOLID principles
+- Extract logic to services/handlers/hooks (not in components)
+- Use constants from `src/app/constants/` - no hardcoded values
+- Components focus on presentation only
+- **Always add/update TypeScript types in `src/app/types.ts`**
+- **Always consider mobile responsiveness (mobile-first approach)**
+
+### 3. Testing - CRITICAL
+- **Always ensure all tests are running when changing code**
+- Run `npm test` after making changes
+- Fix broken tests immediately
+- **Write tests for NEW features proactively** (not just fix broken ones)
+- Co-locate tests in `__tests__/` subdirectories
+- Follow existing patterns (Jest + React Testing Library)
+- Ensure all tests pass before committing
+
+### 4. Error Handling
+- Fix errors automatically as they appear
+- Fix test failures, linting errors, and runtime errors without asking
+- No permission needed to fix errors during development
+
+### 5. Documentation
+- **Update CLAUDE.md when adding:**
+  - New patterns or architectural decisions
+  - New features that change project structure
+  - New dependencies or tools
+  - New conventions or best practices
+
+### 6. Commit
+- Use conventional commit format (`feat:`, `fix:`, `refactor:`, `test:`)
+- Write detailed commit messages with context
+- Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+- Include Claude Code link: `🤖 Generated with [Claude Code](https://claude.com/claude-code)`
+
+### Complete Feature Checklist
+When adding a new feature:
+1. ✅ Plan - Create todo list if complex
+2. ✅ Read - Study existing code and patterns
+3. ✅ Types - Add/update TypeScript types
+4. ✅ Implement - Write code following SOLID + project patterns
+5. ✅ Mobile - Ensure responsive design (mobile-first)
+6. ✅ Test - Write tests for new functionality
+7. ✅ Run Tests - `npm test` and fix any failures
+8. ✅ Fix Errors - Resolve any errors automatically
+9. ✅ Document - Update CLAUDE.md if new patterns introduced
+10. ✅ Commit - Conventional commit with full context
