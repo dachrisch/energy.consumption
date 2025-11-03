@@ -42,7 +42,7 @@
 
 .sidebar-nav-item:focus {
   outline: none;
-  border-color: var(--primary);
+  box-shadow: none;
 }
 
 .sidebar-nav-item-active {
@@ -107,7 +107,7 @@
 
 .breadcrumbs-link:focus {
   outline: none;
-  box-shadow: 0 0 0 2px var(--primary);
+  box-shadow: none;
 }
 
 .breadcrumbs-separator {
@@ -182,6 +182,11 @@
 .mobile-menu-item:hover {
   background-color: var(--background-hover);
   color: var(--primary);
+}
+
+.mobile-menu-item:focus {
+  outline: none;
+  box-shadow: none;
 }
 
 .mobile-menu-item:active {

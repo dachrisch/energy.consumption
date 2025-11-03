@@ -30,6 +30,11 @@
   border-radius: 0.5rem;
 }
 
+.bottom-nav-item:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .bottom-nav-item:active {
   transform: scale(0.95);
   background: var(--background-hover);
