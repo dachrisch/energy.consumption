@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/dachrisch/energy.consumption/compare/v2.1.0...v2.2.0) (2025-11-03)
+
+
+### Features
+
+* add theme switcher to profile menu with mobile positioning fix ([2f6aed6](https://github.com/dachrisch/energy.consumption/commit/2f6aed61627469e7b5c2cda978e60cd3c67ffb00))
+
+
+### Bug Fixes
+
+* replace any type with AppRouterInstance in AppBar test ([1832eb4](https://github.com/dachrisch/energy.consumption/commit/1832eb4bb5e866e0e1869691652bdb3ea52267c9))
+
 ## [2.1.0](https://github.com/dachrisch/energy.consumption/compare/v2.0.0...v2.1.0) (2025-11-03)
 
 

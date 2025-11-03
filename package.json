@@ -1,6 +1,6 @@
 {
   "name": "energy.consumption",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "scripts": {
     "dev": "concurrently --names \"DB,NEXT\" --prefix-colors \"cyan,green\" \"npm run db:memory\" \"npm run dev:next\"",
