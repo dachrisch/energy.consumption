@@ -18,36 +18,36 @@ concurrency:
 
 
 jobs:
-  build-project:
+  node-project:
     uses: ./.github/workflows/part_node_build.yaml
     secrets: inherit
     with:
       project: .
 
-  build-docker-image:
+  docker-image:
     needs:
-      - build-project
+      - node-project
     uses: ./.github/workflows/part_docker_build.yaml
     with:
       dockerfile: Dockerfile
       image_name: energy.consumption
 
-  deploy-test:
+  image-test:
     needs:
-      - build-docker-image
+      - docker-image
     uses: ./.github/workflows/part_docker_test.yaml
     with:
-      artifact_name: ${{ needs.build-docker-image.outputs.artifact_name }}
+      artifact_name: ${{ needs.docker-image.outputs.artifact_name }}
       image_name: energy.consumption
 
-  deploy-push:
+  image-push:
     needs:
-      - build-docker-image
-      - deploy-test
+      - docker-image
+      - image-test
     secrets: inherit
     uses: ./.github/workflows/part_docker_push_artifact.yaml
     with:
-      artifact_name: ${{ needs.build-docker-image.outputs.artifact_name }}
+      artifact_name: ${{ needs.docker-image.outputs.artifact_name }}
       image_name: dachrisch/energy.consumption
       local_image_name: energy.consumption
       version: "${{ github.ref_name }}"
