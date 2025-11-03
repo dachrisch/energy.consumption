@@ -1,16 +1,52 @@
 @import "tailwindcss";
 
 :root {
+  /* Background colors */
   --background: #ffffff;
+  --background-elevated: #f9fafb;
+  --background-card: #ffffff;
+  --background-hover: #f3f4f6;
+
+  /* Foreground colors */
   --foreground: #171717;
+  --foreground-muted: #6b7280;
+  --foreground-subtle: #9ca3af;
+
+  /* Primary colors */
   --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --primary-active: #5b21b6;
   --primary-foreground: #ffffff;
+  --primary-light: #8b5cf6;
+  --primary-subtle: rgba(124, 58, 237, 0.1);
+
+  /* Secondary colors */
   --secondary: #f3f4f6;
+  --secondary-hover: #e5e7eb;
   --secondary-foreground: #171717;
+
+  /* Border colors */
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+
+  /* Destructive colors */
   --destructive: #ef4444;
+  --destructive-hover: #dc2626;
   --destructive-foreground: #ffffff;
+
+  /* Disabled colors */
   --disabled: #e5e7eb;
   --disabled-foreground: #9ca3af;
+
+  /* Success colors */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
 @media (prefers-color-scheme: dark) {

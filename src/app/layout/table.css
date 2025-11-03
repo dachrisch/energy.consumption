@@ -14,7 +14,8 @@ td {
 
 /* Table */
 .table-container {
-  @apply overflow-x-auto max-h-60 border border-gray-200 rounded;
+  @apply overflow-x-auto max-h-60 rounded;
+  border: 1px solid var(--border);
 }
 
 .table {
@@ -22,15 +23,17 @@ td {
 }
 
 .table-header {
-  @apply sticky top-0 bg-gray-50;
+  @apply sticky top-0;
+  background-color: var(--background-elevated);
 }
 
 .table-cell {
-  @apply p-2 border-b border-gray-200 text-left;
+  @apply p-2 text-left;
+  border-bottom: 1px solid var(--border);
 }
 
 .table-row:hover {
-  @apply bg-gray-50;
+  background-color: var(--background-hover);
 }
 
 /* Mobile Card Views */

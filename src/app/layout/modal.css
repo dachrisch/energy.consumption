@@ -4,9 +4,10 @@
 }
 
 .modal-container {
-  @apply max-w-md rounded-lg p-6 w-full border border-gray-100;
+  @apply max-w-md rounded-lg p-6 w-full;
   background-color: var(--background);
   color: var(--foreground);
+  border: 1px solid var(--border);
 }
 
 .modal-actions {
@@ -28,5 +29,6 @@
 }
 
 .modal-text {
-  @apply text-sm text-gray-500 mb-4;
+  @apply text-sm mb-4;
+  color: var(--foreground-muted);
 }
