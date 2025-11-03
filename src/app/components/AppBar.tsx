@@ -8,6 +8,7 @@ import EditProfileModal from "./modals/EditProfileModal";
 import Toast from "./Toast";
 import { ToastMessage } from "../types";
 import BurgerMenu from "./BurgerMenu";
+import { useTheme, Theme } from "../contexts/ThemeContext";
 
 interface AppBarProps {
   onMenuClick: () => void;
@@ -20,6 +21,7 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { data: session } = useSession();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -36,6 +38,10 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
+  };
+
+  const handleThemeChange = (newTheme: Theme) => {
+    setTheme(newTheme);
   };
 
   return (
@@ -68,31 +74,79 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
           </div>
 
           {isMenuOpen && (
-            <div className="menu-dropdown">
-              <div className="menu-dropdown-group">
-                <div className="dropdown-user-name">
-                  {session?.user?.name}
-                </div>
-                <div className="dropdown-user-email">
-                  {session?.user?.email}
-                </div>
-              </div>
+            <>
               <div
-                onClick={() => {
-                  setIsEditModalOpen(true);
-                  setIsMenuOpen(false);
-                }}
-                className="menu-dropdown-item-edit"
-              >
-                Edit Profile
+                className="menu-backdrop"
+                onClick={() => setIsMenuOpen(false)}
+                aria-hidden="true"
+              />
+              <div className="menu-dropdown">
+                <div className="menu-dropdown-group">
+                  <div className="dropdown-user-name">
+                    {session?.user?.name}
+                  </div>
+                  <div className="dropdown-user-email">
+                    {session?.user?.email}
+                  </div>
+                </div>
+
+                <div className="theme-menu-label">Theme</div>
+                <div className="theme-menu-options">
+                  <button
+                    onClick={() => handleThemeChange("light")}
+                    className={`theme-menu-option ${theme === "light" ? "active" : ""}`}
+                  >
+                    <span className="theme-menu-option-label">
+                      <i className="fa-solid fa-sun theme-menu-option-icon"></i>
+                      Light
+                    </span>
+                    {theme === "light" && (
+                      <i className="fa-solid fa-check theme-menu-option-check"></i>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleThemeChange("dark")}
+                    className={`theme-menu-option ${theme === "dark" ? "active" : ""}`}
+                  >
+                    <span className="theme-menu-option-label">
+                      <i className="fa-solid fa-moon theme-menu-option-icon"></i>
+                      Dark
+                    </span>
+                    {theme === "dark" && (
+                      <i className="fa-solid fa-check theme-menu-option-check"></i>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleThemeChange("system")}
+                    className={`theme-menu-option ${theme === "system" ? "active" : ""}`}
+                  >
+                    <span className="theme-menu-option-label">
+                      <i className="fa-solid fa-display theme-menu-option-icon"></i>
+                      System
+                    </span>
+                    {theme === "system" && (
+                      <i className="fa-solid fa-check theme-menu-option-check"></i>
+                    )}
+                  </button>
+                </div>
+
+                <div
+                  onClick={() => {
+                    setIsEditModalOpen(true);
+                    setIsMenuOpen(false);
+                  }}
+                  className="menu-dropdown-item-edit"
+                >
+                  Edit Profile
+                </div>
+                <div
+                  onClick={handleLogout}
+                  className="menu-dropdown-item-logout"
+                >
+                  Logout
+                </div>
               </div>
-              <div
-                onClick={handleLogout}
-                className="menu-dropdown-item-logout"
-              >
-                Logout
-              </div>
-            </div>
+            </>
           )}
         </div>
       </div>
