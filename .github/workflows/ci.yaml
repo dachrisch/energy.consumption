@@ -22,19 +22,30 @@ jobs:
     with:
       project: .
 
-  deploy-test:
+  build-docker-image:
     needs:
       - build-project
-    secrets: inherit
+    uses: ./.github/workflows/part_docker_build.yaml
+    with:
+      dockerfile: Dockerfile
+      image_name: energy.consumption
+
+  deploy-test:
+    needs:
+      - build-docker-image
     uses: ./.github/workflows/part_docker_test.yaml
     with:
-      image_name: dachrisch/energy.consumption
+      artifact_name: ${{ needs.build-docker-image.outputs.artifact_name }}
+      image_name: energy.consumption
 
-  deploy-next:
+  deploy-push:
     needs:
+      - build-docker-image
       - deploy-test
     secrets: inherit
-    uses: ./.github/workflows/part_docker_push.yaml
+    uses: ./.github/workflows/part_docker_push_artifact.yaml
     with:
+      artifact_name: ${{ needs.build-docker-image.outputs.artifact_name }}
       image_name: dachrisch/energy.consumption
+      local_image_name: energy.consumption
       version: "${{ github.ref_name }}"
