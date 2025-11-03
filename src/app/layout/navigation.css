@@ -9,21 +9,28 @@
 }
 
 .nav-inner {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   height: 100%;
   align-items: center;
   padding: 0 2rem;
+  gap: 1rem;
+}
+
+.nav-left {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex: 1;
+  justify-content: center;
+  grid-column: 2;
 }
 
-.logo-left {
+.logo-clickable {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -31,12 +38,19 @@
   transition: opacity 0.2s ease;
 }
 
-.logo-left:hover {
+.logo-clickable:hover {
   opacity: 0.8;
 }
 
+.logo-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
 .logo-text-large {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--foreground);
   display: none;
@@ -46,15 +60,24 @@
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--foreground);
-  display: inline;
+  display: block;
+}
+
+.logo-version {
+  font-size: 0.75rem;
+  color: var(--foreground-muted);
+  margin-top: 0.125rem;
 }
 
 @media (min-width: 640px) {
   .logo-text-large {
-    display: inline;
+    display: block;
   }
   .logo-text-small {
     display: none;
+  }
+  .logo-text-large {
+    font-size: 1.5rem;
   }
 }
 
@@ -62,4 +85,46 @@
   width: 2.5rem;
   height: 2.5rem;
   color: var(--primary);
+}
+
+/* Hamburger Menu Button */
+.hamburger-button {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.5rem;
+  background: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: 0.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.hamburger-button:hover {
+  background: var(--primary);
+  border-color: white;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px var(--primary), 0 0 0 4px white;
+}
+
+.hamburger-button:active {
+  background: var(--primary);
+  transform: scale(0.95);
+}
+
+.hamburger-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+@media (max-width: 768px) {
+  .hamburger-button {
+    display: flex;
+  }
 }

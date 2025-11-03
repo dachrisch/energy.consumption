@@ -12,6 +12,26 @@
 
 .tabs-container {
   @apply flex border-b gap-2;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabs-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tabs-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.tabs-container::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground-muted);
 }
 
 .tab-base {
@@ -24,8 +44,38 @@
     var(--default-transition-timing-function)
   );
   transition-duration: var(--tw-duration, var(--default-transition-duration));
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .tab-outlet {
   @apply mt-4;
+}
+
+/* Mobile Tab Optimizations */
+@media (max-width: 768px) {
+  .tabs-container {
+    gap: 0.5rem;
+    padding-bottom: 2px;
+    margin-bottom: 2px;
+  }
+
+  .tab-base {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Hide tab text on very small screens, show icon only */
+  @media (max-width: 480px) {
+    .tab-base span > span:last-child {
+      display: none;
+    }
+
+    .tab-base {
+      padding: 0.75rem;
+      min-width: 48px;
+      justify-content: center;
+    }
+  }
 }

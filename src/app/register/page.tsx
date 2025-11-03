@@ -30,48 +30,74 @@ export default function Register() {
     }
   };
   return (
-    <section className="w-full h-screen flex items-center justify-center">
+    <section className="w-full h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
       <form
         ref={ref}
         action={handleSubmit}
-        className="p-6 w-full max-w-[400px] flex flex-col justify-between items-center gap-2 
-        border border-solid border-black bg-white rounded"
+        className="content-card w-full max-w-[400px] flex flex-col gap-6"
       >
-        {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Register</h2>
-        <label className="w-full text-sm">Full Name</label>
-        <input
-          type="text"
-          placeholder="Full Name"
-          className="w-full h-8 border border-solid border-black py-1 px-2.5 rounded text-[13px]"
-          name="name"
-        />
-        <label className="w-full text-sm">Email</label>
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full h-8 border border-solid border-black py-1 px-2.5 rounded"
-          name="email"
-        />
-        <label className="w-full text-sm">Password</label>
-        <div className="flex w-full">
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full h-8 border border-solid border-black py-1 px-2.5 rounded"
-            name="password"
-          />
+        <div>
+          <h2 className="text-3xl font-bold" style={{ color: 'var(--foreground)' }}>
+            Create your account
+          </h2>
+          <p className="page-description mt-2">
+            Register to start tracking your energy consumption
+          </p>
         </div>
+
+        {error && (
+          <div className="alert-error">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="form-group">
+            <label htmlFor="name" className="form-label">Full Name</label>
+            <input
+              id="name"
+              type="text"
+              placeholder="Full Name"
+              className="form-input"
+              name="name"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">Email</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="Email"
+              className="form-input"
+              name="email"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="Password"
+              className="form-input"
+              name="password"
+              required
+            />
+          </div>
+        </div>
+
         <button
-          className="w-full border border-solid border-black py-1.5 mt-2.5 rounded
-        transition duration-150 ease hover:bg-black"
+          type="submit"
+          className="button-primary w-full"
         >
           Sign up
         </button>
 
         <Link
           href="/login"
-          className="text-sm text-[#888] transition duration-150 ease hover:text-black"
+          className="text-sm text-center transition duration-150 ease"
+          style={{ color: 'var(--foreground-muted)' }}
         >
           Already have an account?
         </Link>

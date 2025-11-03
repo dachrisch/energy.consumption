@@ -1,0 +1,77 @@
+/* Bottom Navigation for Mobile */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--background-elevated);
+  border-top: 1px solid var(--border);
+  padding: 0.5rem 0;
+  z-index: 100;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  min-height: 56px;
+  min-width: 56px;
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.95);
+  background: var(--background-hover);
+}
+
+.bottom-nav-item-active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.bottom-nav-icon {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  font-size: 2rem;
+}
+
+.bottom-nav-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* Show on mobile only */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+  }
+
+  /* Add padding to main content to prevent overlap with bottom nav */
+  main {
+    padding-bottom: 5rem;
+  }
+}
+
+/* Hide on very small screens to save space */
+@media (max-width: 360px) {
+  .bottom-nav-label {
+    display: none;
+  }
+
+  .bottom-nav-item {
+    min-height: 48px;
+  }
+}

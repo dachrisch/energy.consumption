@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an **Energy Consumption Monitor** - a Next.js 16 application for tracking and visualizing household energy consumption (power and gas). The app uses MongoDB for data persistence, NextAuth for authentication, and Chart.js for data visualization.
+This is an **Energy Consumption Monitor** - a Next.js 16 application for tracking and visualizing household energy consumption (power and gas). The app uses MongoDB for data persistence, NextAuth for authentication, Chart.js for data visualization, and Font Awesome for action icons (edit, delete, add operations).
 
 ## Development Commands
 
@@ -157,6 +157,10 @@ The app uses the **Pond library** (type definitions in `src/lib/pond/`) for time
 - Tailwind CSS 4 with PostCSS
 - Global styles in `src/app/layout/main.css`
 - Geist font family (sans & mono) loaded via `next/font`
+- **Font Awesome 6.5.1** for action icons (installed via `@fortawesome/fontawesome-free`)
+  - Used for action icons: edit, delete, add, menu
+  - NOT used for visual card icons (power, gas, etc.) - those remain custom SVGs
+  - Imported in `src/app/layout/main.css`
 
 ## Environment Variables
 

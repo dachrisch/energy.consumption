@@ -54,16 +54,17 @@ const ContractTable = ({
 
   if (totalItems === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
-        <AddContractIcon className="w-12 h-12" />
-        <p className="text-lg">No Contracts available</p>
+      <div className="flex flex-col items-center justify-center py-12 gap-4 text-muted-foreground">
+        <AddContractIcon className="w-20 h-20" />
+        <p className="text-xl font-semibold">No contracts available</p>
       </div>
     );
   }
 
   return (
     <>
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="bg-secondary text-secondary-foreground">
@@ -153,6 +154,65 @@ const ContractTable = ({
           </tbody>
         </table>
       </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {currentData.map((contract) => (
+          <div
+            key={contract._id}
+            className="contract-card"
+          >
+            <div className="contract-card-header">
+              <div className="flex items-center gap-2">
+                {getTypeIcon(contract.type, "w-5 h-5")}
+                <span className="contract-card-type">{contract.type}</span>
+              </div>
+              <div className="contract-card-actions">
+                <button
+                  onClick={() => onEdit(contract)}
+                  className="button-icon-only text-primary hover:text-primary/80 p-2 rounded-full hover:bg-primary/10"
+                  title="Edit contract"
+                  data-testid="contract-edit-button"
+                  aria-label="Edit contract"
+                >
+                  <EditIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => onDelete(contract._id)}
+                  className="button-icon-only text-destructive hover:text-destructive/80 p-2 rounded-full hover:bg-destructive/10"
+                  title="Delete contract"
+                  aria-label="Delete contract"
+                >
+                  <DeleteIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="contract-card-body">
+              <div className="contract-card-row">
+                <span className="contract-card-label">Start Date</span>
+                <span className="contract-card-value">
+                  {formatDateToBrowserLocale(contract.startDate)}
+                </span>
+              </div>
+              <div className="contract-card-row">
+                <span className="contract-card-label">End Date</span>
+                <span className="contract-card-value">
+                  {contract.endDate ? formatDateToBrowserLocale(contract.endDate) : '-'}
+                </span>
+              </div>
+              <div className="contract-card-row">
+                <span className="contract-card-label">Base Price</span>
+                <span className="contract-card-value">{contract.basePrice.toFixed(2)}</span>
+              </div>
+              <div className="contract-card-row">
+                <span className="contract-card-label">Working Price</span>
+                <span className="contract-card-value">{contract.workingPrice.toFixed(4)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
     </>
   );

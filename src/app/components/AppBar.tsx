@@ -7,8 +7,13 @@ import { UserIcon, EnergyLogo } from "./icons";
 import EditProfileModal from "./modals/EditProfileModal";
 import Toast from "./Toast";
 import { ToastMessage } from "../types";
+import BurgerMenu from "./BurgerMenu";
 
-export default function AppBar() {
+interface AppBarProps {
+  onMenuClick: () => void;
+}
+
+export default function AppBar({ onMenuClick }: AppBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -36,24 +41,24 @@ export default function AppBar() {
   return (
     <nav className="nav-container">
       <div className="nav-inner">
+        <div className="nav-left">
+          <BurgerMenu onClick={onMenuClick} />
+        </div>
+
         <div className="logo-container">
           <div
-            className="logo-left"
+            className="logo-clickable"
             onClick={() => router.push("/dashboard")}
           >
             <EnergyLogo className="app-logo" />
+            <div className="logo-text-container">
+              <h1 className="logo-text-large">Energy Consumption Monitor</h1>
+              <h1 className="logo-text-small" title="Energy Consumption Monitor">ECM</h1>
+              <span className="logo-version">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <h1 className="logo-text-large">Energy Consumption Monitor</h1>
-            <h1 className="logo-text-small" title="Energy Consumption Monitor">
-            ECM
-          </h1>
-            <span className="text-xs text-gray-400">
-              v{process.env.NEXT_PUBLIC_APP_VERSION}
-            </span>
-          </div>
-
         </div>
+
         <div className="menu-container" ref={menuRef}>
           <div
             onClick={() => setIsMenuOpen(!isMenuOpen)}

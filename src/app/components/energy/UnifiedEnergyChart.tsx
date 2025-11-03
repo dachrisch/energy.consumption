@@ -103,7 +103,20 @@ const UnifiedEnergyChart = ({
   const [viewMode, setViewMode] = useState<ViewMode>("measurements");
   const [dataMode, setDataMode] = useState<DataMode>("actual");
   const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const yearDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Get available years from data
   const availableYears = useMemo(() => getAvailableYears(energyData), [energyData]);
@@ -252,7 +265,7 @@ const UnifiedEnergyChart = ({
   }, [costData, viewMode, typeFilter]);
 
   // Chart options for measurements
-  const measurementsOptions = {
+  const measurementsOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
@@ -261,14 +274,16 @@ const UnifiedEnergyChart = ({
     },
     plugins: {
       legend: {
-        position: "top" as const,
+        position: isMobile ? "bottom" as const : "top" as const,
         labels: {
           usePointStyle: true,
-          padding: 15,
+          padding: isMobile ? 8 : 15,
           font: {
-            size: 12,
+            size: isMobile ? 10 : 12,
             family: "'Inter', 'system-ui', sans-serif",
           },
+          boxWidth: isMobile ? 8 : 12,
+          boxHeight: isMobile ? 8 : 12,
         },
       },
       title: {
@@ -276,14 +291,14 @@ const UnifiedEnergyChart = ({
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
+        padding: isMobile ? 8 : 12,
         cornerRadius: 8,
         titleFont: {
-          size: 14,
+          size: isMobile ? 12 : 14,
           weight: 'bold' as const,
         },
         bodyFont: {
-          size: 13,
+          size: isMobile ? 11 : 13,
         },
         callbacks: {
           label: (context: TooltipItem<'line'>) => {
@@ -302,16 +317,16 @@ const UnifiedEnergyChart = ({
           drawBorder: false,
         },
         ticks: {
-          padding: 8,
+          padding: isMobile ? 4 : 8,
           font: {
-            size: 11,
+            size: isMobile ? 9 : 11,
           },
         },
         title: {
-          display: true,
+          display: !isMobile,
           text: dataMode === "actual" ? "Meter Reading" : "Consumption (kWh)",
           font: {
-            size: 12,
+            size: isMobile ? 10 : 12,
             weight: 'bold' as const,
           },
         },
@@ -322,27 +337,27 @@ const UnifiedEnergyChart = ({
           drawBorder: false,
         },
         ticks: {
-          padding: 8,
-          maxRotation: 45,
-          minRotation: 0,
+          padding: isMobile ? 4 : 8,
+          maxRotation: isMobile ? 90 : 45,
+          minRotation: isMobile ? 45 : 0,
           font: {
-            size: 11,
+            size: isMobile ? 9 : 11,
           },
         },
         title: {
-          display: true,
+          display: !isMobile,
           text: "Date",
           font: {
-            size: 12,
+            size: isMobile ? 10 : 12,
             weight: 'bold' as const,
           },
         },
       },
     },
-  };
+  }), [isMobile, dataMode]);
 
   // Chart options for costs (line charts)
-  const costOptions = {
+  const costOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
@@ -351,14 +366,16 @@ const UnifiedEnergyChart = ({
     },
     plugins: {
       legend: {
-        position: "top" as const,
+        position: isMobile ? "bottom" as const : "top" as const,
         labels: {
           usePointStyle: true,
-          padding: 15,
+          padding: isMobile ? 8 : 15,
           font: {
-            size: 12,
+            size: isMobile ? 10 : 12,
             family: "'Inter', 'system-ui', sans-serif",
           },
+          boxWidth: isMobile ? 8 : 12,
+          boxHeight: isMobile ? 8 : 12,
         },
       },
       title: {
@@ -366,14 +383,14 @@ const UnifiedEnergyChart = ({
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
+        padding: isMobile ? 8 : 12,
         cornerRadius: 8,
         titleFont: {
-          size: 14,
+          size: isMobile ? 12 : 14,
           weight: 'bold' as const,
         },
         bodyFont: {
-          size: 13,
+          size: isMobile ? 11 : 13,
         },
         callbacks: {
           label: (context: TooltipItem<'line'>) => {
@@ -426,11 +443,11 @@ const UnifiedEnergyChart = ({
           drawBorder: false,
         },
         ticks: {
-          padding: 8,
-          maxRotation: 45,
-          minRotation: 0,
+          padding: isMobile ? 4 : 8,
+          maxRotation: isMobile ? 90 : 45,
+          minRotation: isMobile ? 45 : 0,
           font: {
-            size: 11,
+            size: isMobile ? 9 : 11,
           },
         },
       },
@@ -441,25 +458,25 @@ const UnifiedEnergyChart = ({
           drawBorder: false,
         },
         ticks: {
-          padding: 8,
+          padding: isMobile ? 4 : 8,
           font: {
-            size: 11,
+            size: isMobile ? 9 : 11,
           },
           callback: function(value: number | string) {
             return value + ' kWh';
           },
         },
         title: {
-          display: true,
+          display: !isMobile,
           text: "Consumption (kWh)",
           font: {
-            size: 12,
+            size: isMobile ? 10 : 12,
             weight: 'bold' as const,
           },
         },
       },
     },
-  };
+  }), [isMobile, costData]);
 
   const getTitle = () => {
     if (viewMode === "measurements") {

@@ -1,6 +1,11 @@
 /* Profile Menu */
 .menu-container {
   position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .menu-button {

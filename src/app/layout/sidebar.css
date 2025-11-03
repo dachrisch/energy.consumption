@@ -1,10 +1,16 @@
-/* Sidebar */
+/* Desktop Sidebar */
 .sidebar {
   width: 16rem;
   background: var(--background-elevated);
   border-right: 1px solid var(--border);
   flex-shrink: 0;
   overflow-y: auto;
+  position: relative;
+  z-index: 100;
+}
+
+.sidebar-desktop {
+  display: block;
 }
 
 .sidebar-nav {
@@ -119,15 +125,81 @@
   position: relative;
 }
 
+/* Mobile Dropdown Menu */
+.mobile-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 999;
+}
+
+.mobile-menu-dropdown {
+  position: fixed;
+  top: 4.5rem; /* Below the AppBar */
+  left: 1rem;
+  background: var(--background-elevated);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-xl);
+  padding: 0.5rem;
+  min-width: 200px;
+  z-index: 1000;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--foreground);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  min-height: 48px; /* Touch target */
+}
+
+.mobile-menu-item:hover {
+  background-color: var(--background-hover);
+  color: var(--primary);
+}
+
+.mobile-menu-item:active {
+  background-color: var(--primary-subtle);
+  /* Haptic feedback simulation */
+  transform: scale(0.98);
+}
+
+.mobile-menu-item-active {
+  background-color: var(--primary-subtle);
+  color: var(--primary);
+  font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
+  .sidebar-desktop {
+    display: none;
   }
 
   .main-with-sidebar {

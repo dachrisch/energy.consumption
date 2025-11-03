@@ -57,3 +57,33 @@ form input:disabled {
   transition-duration: var(--tw-duration, var(--default-transition-duration));
 }
 
+/* Mobile Form Optimizations */
+@media (max-width: 768px) {
+  /* Ensure form inputs have adequate height for touch */
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* Type selector buttons - ensure touch targets */
+  label[class*="flex-1"][class*="items-center"] {
+    min-height: 48px;
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Form buttons */
+  button[type="submit"],
+  button[type="button"] {
+    min-height: 48px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  /* Spacing between form elements */
+  .grid > div {
+    margin-bottom: 0.5rem;
+  }
+}
+

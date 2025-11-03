@@ -223,7 +223,8 @@
 
   .metrics-grid,
   .consumption-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 
   .metric-card-value {
@@ -231,6 +232,19 @@
   }
 
   .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Hide quick actions on mobile when bottom nav is present */
+  .quick-actions {
+    display: none;
+  }
+}
+
+/* Very small screens - single column layout */
+@media (max-width: 480px) {
+  .metrics-grid,
+  .consumption-grid {
     grid-template-columns: 1fr;
   }
 }

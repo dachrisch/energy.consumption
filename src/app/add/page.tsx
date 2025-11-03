@@ -45,10 +45,6 @@ const AddDataPage = () => {
     }
   };
 
-  const redirectToDashboard = () => {
-    setTimeout(() => router.push("/dashboard"), 1000);
-  };
-
   const onAddEnergy = async (newData: EnergyBase) => {
     try {
       await addEnergyAction(newData);
@@ -56,7 +52,8 @@ const AddDataPage = () => {
         message: "Energy data added successfully",
         type: "success",
       });
-      redirectToDashboard();
+      // Refresh the data to show the new entry
+      fetchEnergyDataType();
     } catch (err) {
       setToast({
         message: "Failed to add energy data",
@@ -85,11 +82,8 @@ const AddDataPage = () => {
         type: result.error > 0 ? "error" : "success",
       });
 
-      // Refresh the data and redirect if successful
+      // Refresh the data to show the new entries
       fetchEnergyDataType();
-      if (result.error === 0) {
-        redirectToDashboard();
-      }
     } catch (error) {
       console.error("Error importing CSV data:", error);
       setToast({

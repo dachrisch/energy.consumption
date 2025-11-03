@@ -88,6 +88,7 @@ const ReadingsPage = () => {
         )}
 
         <div className="content-card">
+          <h2 className="section-title">Filter Readings</h2>
           <EnergyTableFilters
             typeFilter={typeFilter}
             setTypeFilter={setTypeFilter}
@@ -95,7 +96,10 @@ const ReadingsPage = () => {
             setDateRange={setDateRange}
             onReset={handleResetFilters}
           />
+        </div>
 
+        <div className="content-card">
+          <h2 className="section-title">Your Readings</h2>
           <EnergyTable
             energyData={energyData}
             onDelete={onDelete}
