@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/dachrisch/energy.consumption/compare/v2.0.0...v2.1.0) (2025-11-03)
+
+
+### Features
+
+* **mobile:** implement comprehensive mobile optimization and UI enhancements ([dab8abb](https://github.com/dachrisch/energy.consumption/commit/dab8abb0a4a999aae54a6c188589d482ddf98ab6))
+
+
+### Bug Fixes
+
+* **ci:** add JSON schema references to all workflow files ([812529f](https://github.com/dachrisch/energy.consumption/commit/812529f9c45e097f3e6e886874e98530dea353ac))
+
 ## [2.0.0](https://github.com/dachrisch/energy.consumption/compare/v1.12.1...v2.0.0) (2025-11-02)
 
 
