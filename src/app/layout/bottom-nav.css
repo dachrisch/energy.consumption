@@ -30,9 +30,11 @@
   border-radius: 0.5rem;
 }
 
-.bottom-nav-item:focus {
+.bottom-nav-item:focus,
+.bottom-nav-item:focus-visible {
   outline: none;
   box-shadow: none;
+  border-color: transparent;
 }
 
 .bottom-nav-item:active {

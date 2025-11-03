@@ -40,9 +40,11 @@
   background-color: var(--background-hover);
 }
 
-.sidebar-nav-item:focus {
+.sidebar-nav-item:focus,
+.sidebar-nav-item:focus-visible {
   outline: none;
   box-shadow: none;
+  border-color: transparent;
 }
 
 .sidebar-nav-item-active {
@@ -184,9 +186,11 @@
   color: var(--primary);
 }
 
-.mobile-menu-item:focus {
+.mobile-menu-item:focus,
+.mobile-menu-item:focus-visible {
   outline: none;
   box-shadow: none;
+  border-color: transparent;
 }
 
 .mobile-menu-item:active {
