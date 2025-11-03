@@ -140,10 +140,10 @@ describe("AddDataPage", () => {
       expect(screen.getByText("Energy data added successfully")).toBeInTheDocument();
     });
 
-    // Should redirect after 1 second
+    // Should NOT redirect - stays on the page
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
-    }, { timeout: 1500 });
+      expect(mockPush).not.toHaveBeenCalled();
+    });
   });
 
   it("should handle energy data submission error", async () => {

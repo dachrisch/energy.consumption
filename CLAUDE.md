@@ -245,3 +245,4 @@ This codebase follows SOLID principles and clean code practices:
 2. Follow naming convention: `use[FeatureName].ts`
 3. Return object with state and handlers
 4. Document with JSDoc comments
+- add to memory: always ensure all tests are running when changing code

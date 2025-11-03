@@ -53,7 +53,7 @@ describe("ContractTable", () => {
 
   it("displays contract data correctly", () => {
     render(
-      <ContractTable 
+      <ContractTable
         contracts={mockContracts}
         onDelete={mockOnDelete}
         onEdit={mockOnEdit}
@@ -61,17 +61,18 @@ describe("ContractTable", () => {
       />
     );
 
-    expect(screen.getByText("power")).toBeInTheDocument();
-    expect(screen.getByText("gas")).toBeInTheDocument();
-    expect(screen.getByText("100.00")).toBeInTheDocument();
-    expect(screen.getByText("0.2500")).toBeInTheDocument();
-    expect(screen.getByText("80.00")).toBeInTheDocument();
-    expect(screen.getByText("0.1800")).toBeInTheDocument();
+    // Text appears in both desktop and mobile views
+    expect(screen.getAllByText("power").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("gas").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("100.00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("0.2500").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("80.00").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("0.1800").length).toBeGreaterThan(0);
   });
 
   it("handles sorting when column headers are clicked", () => {
     render(
-      <ContractTable 
+      <ContractTable
         contracts={mockContracts}
         onDelete={mockOnDelete}
         onEdit={mockOnEdit}
@@ -79,8 +80,9 @@ describe("ContractTable", () => {
       />
     );
 
-    // Click base price header to sort ascending
-    fireEvent.click(screen.getByText("Base Price"));
+    // Click base price header to sort ascending (only in desktop table)
+    const basePriceHeaders = screen.getAllByText("Base Price");
+    fireEvent.click(basePriceHeaders[0]);
     expect(screen.getByText("Base Price ↑")).toBeInTheDocument();
 
     // Click again to sort descending
@@ -90,7 +92,7 @@ describe("ContractTable", () => {
 
   it("filters contracts by type", () => {
     const { rerender } = render(
-      <ContractTable 
+      <ContractTable
         contracts={mockContracts}
         onDelete={mockOnDelete}
         onEdit={mockOnEdit}
@@ -100,7 +102,7 @@ describe("ContractTable", () => {
     expect(screen.getAllByRole("row")).toHaveLength(3); // Header + 2 contracts
 
     rerender(
-      <ContractTable 
+      <ContractTable
         contracts={mockContracts}
         onDelete={mockOnDelete}
         onEdit={mockOnEdit}
@@ -108,7 +110,7 @@ describe("ContractTable", () => {
       />
     );
     expect(screen.getAllByRole("row")).toHaveLength(2); // Header + 1 contract
-    expect(screen.getByText("power")).toBeInTheDocument();
+    expect(screen.getAllByText("power").length).toBeGreaterThan(0);
     expect(screen.queryByText("gas")).not.toBeInTheDocument();
   });
 
@@ -150,6 +152,6 @@ describe("ContractTable", () => {
       />
     );
 
-    expect(screen.getByText("No Contracts available")).toBeInTheDocument();
+    expect(screen.getByText("No contracts available")).toBeInTheDocument();
   });
 });
