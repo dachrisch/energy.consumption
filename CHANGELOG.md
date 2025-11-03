@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.2](https://github.com/dachrisch/energy.consumption/compare/v2.2.1...v2.2.2) (2025-11-03)
+
+
+### Bug Fixes
+
+* **ui:** make login and register form inputs full width ([8073384](https://github.com/dachrisch/energy.consumption/commit/807338429ec7f747b74d4e9b22c20fd0d58809fe))
+* **ui:** properly remove all focus highlighting from navigation ([4270968](https://github.com/dachrisch/energy.consumption/commit/4270968e7992e92f4623ca02d26ed42a48ccf6f9))
+* **ui:** remove unwanted focus borders from navigation elements ([653e4d7](https://github.com/dachrisch/energy.consumption/commit/653e4d72c62bccc3d2cd96506ab7c55e849ebca0))
+* wrap all hover effects in [@media](https://github.com/media) (hover: hover) to prevent stuck hover states on touch devices ([d164083](https://github.com/dachrisch/energy.consumption/commit/d164083d34d18e47c0886efb8da755007ca219b2))
+
 ### [2.2.1](https://github.com/dachrisch/energy.consumption/compare/v2.2.0...v2.2.1) (2025-11-03)
 
 ## [2.2.0](https://github.com/dachrisch/energy.consumption/compare/v2.1.0...v2.2.0) (2025-11-03)
