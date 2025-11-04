@@ -103,6 +103,55 @@ All models use Mongoose with MongoDB connection via `src/lib/mongodb.ts`.
 - Tests co-located in `__tests__/` subdirectories
 - Components should focus on presentation and delegate logic to hooks/services
 
+### Timeline Slider Components (V3)
+
+**Location**: `src/app/components/energy/RangeSlider/`
+
+The timeline slider provides an interactive way to select date ranges with visual feedback showing measurement distribution over time.
+
+**Main Components**:
+- `RangeSlider.tsx` - Main orchestrator component, coordinates all sub-components
+- `SliderVisualization.tsx` - SVG-based histogram showing measurement distribution
+- `SliderTrack.tsx` - Slider track with selected range highlighting
+- `SliderHandle.tsx` - Draggable handles with mouse, touch, and keyboard support
+- `DateRangeDisplay.tsx` - Responsive date labels (full format on desktop, short on mobile)
+
+**Custom Hooks**:
+- `useHistogramData.ts` - Memoized data aggregation into buckets
+- `useSliderDrag.ts` - Mouse/touch drag interactions with 60fps performance
+- `useSliderKeyboard.ts` - Keyboard navigation (arrows, page up/down, home/end)
+- `useSliderAnimation.ts` - Smooth preset button animations (300ms transitions)
+
+**Services** (in `src/app/services/`):
+- `DataAggregationService.ts` - Pure functions for bucketing measurements into time intervals
+- `SliderCalculationService.ts` - Date ↔ Position calculations, clamping, and validation
+
+**Design Decisions**:
+- **Single color histogram**: User requirement "measurements in general is enough" (no separate Power/Gas colors)
+- **Mobile-first**: Touch-optimized with 44x44px touch targets, responsive breakpoints
+- **Performance**: Memoization, throttling (60fps drag), debouncing (200ms filter update)
+- **Accessibility**: Full WCAG 2.1 AA compliance with keyboard navigation and ARIA labels
+- **Custom implementation**: Built from scratch (no library) for tight integration and performance control
+
+**Usage Example**:
+```typescript
+import RangeSlider from '@/app/components/energy/RangeSlider';
+
+<RangeSlider
+  data={energyData}
+  dateRange={{ start, end }}
+  onDateRangeChange={(range) => setDateRange(range)}
+  minDate={minDate}
+  maxDate={maxDate}
+/>
+```
+
+**Integration**:
+- Used in `EnergyTableFilters` component
+- Replaces react-datepicker for date range selection
+- Synchronized with preset buttons (Last 7/30/90 days, This month/year, All time)
+- Preset buttons animate slider handles to preset positions
+
 **Custom Hooks** (`src/app/hooks/`):
 
 - `useEnergyData` - Energy data fetching with loading/error states
@@ -111,10 +160,18 @@ All models use Mongoose with MongoDB connection via `src/lib/mongodb.ts`.
 - `useAuthRedirect` - Authentication check and redirect
 - `useConfirmationModal` - Confirmation dialog state management
 
+**Timeline Slider Hooks** (`src/app/components/energy/RangeSlider/hooks/`):
+- `useHistogramData` - Memoized data aggregation for histogram visualization
+- `useSliderDrag` - Mouse and touch drag interaction management
+- `useSliderKeyboard` - Keyboard navigation and shortcuts
+- `useSliderAnimation` - Smooth transitions for preset selections
+
 **Services** (`src/app/services/`):
 
 - `ContractValidationService` - Contract validation logic (prices, dates, overlaps)
 - `EnergyValidationService` - Energy reading validation
+- `DataAggregationService` - Time series data bucketing for histogram visualization
+- `SliderCalculationService` - Date-position calculations for range slider
 - Services follow SRP and are easily testable in isolation
 
 **Constants** (`src/app/constants/`):
@@ -173,7 +230,7 @@ Required:
 Multi-stage Dockerfile provided:
 - Builder stage: installs deps and builds Next.js app
 - Production stage: runs optimized build with health check on `/api/health`
-- Exposes port 3000
+- Exposes port 3100
 
 ## CI/CD
 
@@ -305,3 +362,4 @@ When adding a new feature:
 8. ✅ Fix Errors - Resolve any errors automatically
 9. ✅ Document - Update CLAUDE.md if new patterns introduced
 10. ✅ Commit - Conventional commit with full context
+- Always check if you have an agent fit for the users request

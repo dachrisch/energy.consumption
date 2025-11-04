@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import EnergyTableFilters from "./energy/EnergyTableFilters";
 import { EnergyType, ContractType, EnergyOptions } from "../types";
 import UnifiedEnergyChart from "./energy/UnifiedEnergyChart";
 import EnergyTable from "./energy/EnergyTable";
 import { TableIcon, ChartIcon } from "./icons";
+import { DateRange } from "./energy/RangeSlider/types";
+import { ENERGY_TYPES } from "../constants/energyTypes";
 
 interface TabsProps {
   energyData: EnergyType[];
@@ -15,17 +17,41 @@ interface TabsProps {
 
 const DashboardTabs = ({ energyData, contracts, onDelete }: TabsProps) => {
   const [activeTab, setActiveTab] = useState("table");
-  // Shared filter state
-  const [typeFilter, setTypeFilter] = useState<EnergyOptions | "all">("all");
-  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
-    start: null,
-    end: null,
+
+  // V3 API: Multi-select types
+  const [selectedTypes, setSelectedTypes] = useState<EnergyOptions[]>([]);
+
+  // V3 API: DateRange with non-null dates
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const now = new Date();
+    const past = new Date(now);
+    past.setFullYear(past.getFullYear() - 1);
+    return { start: past, end: now };
   });
 
   const handleResetFilters = () => {
-    setTypeFilter("all");
-    setDateRange({ start: null, end: null });
+    setSelectedTypes([]);
+    if (energyData.length > 0) {
+      const dates = energyData.map((item) => new Date(item.date));
+      setDateRange({
+        start: new Date(Math.min(...dates.map((d) => d.getTime()))),
+        end: new Date(Math.max(...dates.map((d) => d.getTime()))),
+      });
+    }
   };
+
+  // Convert new API to old API for child components
+  const typeFilterLegacy: EnergyOptions | "all" = useMemo(() => {
+    if (selectedTypes.length === 0 || selectedTypes.length === ENERGY_TYPES.length) {
+      return "all";
+    }
+    return selectedTypes[0];
+  }, [selectedTypes]);
+
+  const dateRangeLegacy = useMemo(() => ({
+    start: dateRange.start,
+    end: dateRange.end,
+  }), [dateRange]);
 
   const tabs = [
     {
@@ -36,8 +62,8 @@ const DashboardTabs = ({ energyData, contracts, onDelete }: TabsProps) => {
         <EnergyTable
           energyData={energyData}
           onDelete={onDelete}
-          typeFilter={typeFilter}
-          dateRange={dateRange}
+          typeFilter={typeFilterLegacy}
+          dateRange={dateRangeLegacy}
         />
       ),
     },
@@ -49,8 +75,8 @@ const DashboardTabs = ({ energyData, contracts, onDelete }: TabsProps) => {
         <UnifiedEnergyChart
           energyData={energyData}
           contracts={contracts}
-          typeFilter={typeFilter}
-          dateRange={dateRange}
+          typeFilter={typeFilterLegacy}
+          dateRange={dateRangeLegacy}
         />
       ),
     },
@@ -60,10 +86,11 @@ const DashboardTabs = ({ energyData, contracts, onDelete }: TabsProps) => {
     <div className="solid-container">
       <div className="container-inner">
         <EnergyTableFilters
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
+          energyData={energyData}
+          selectedTypes={selectedTypes}
+          onTypesChange={setSelectedTypes}
           dateRange={dateRange}
-          setDateRange={setDateRange}
+          onDateRangeChange={setDateRange}
           onReset={handleResetFilters}
         />
 
