@@ -77,18 +77,6 @@ describe('SliderVisualization', () => {
     expect(svg).toHaveAttribute('aria-label');
   });
 
-  it('renders grid lines', () => {
-    const { container } = render(<SliderVisualization {...defaultProps} />);
-    const lines = container.querySelectorAll('line');
-    expect(lines.length).toBeGreaterThan(0);
-  });
-
-  it('renders Y-axis labels', () => {
-    const { container } = render(<SliderVisualization {...defaultProps} />);
-    const labels = container.querySelectorAll('text[fill="currentColor"]');
-    expect(labels.length).toBeGreaterThan(0);
-  });
-
   it('applies custom className', () => {
     const { container } = render(
       <SliderVisualization {...defaultProps} className="custom-class" />

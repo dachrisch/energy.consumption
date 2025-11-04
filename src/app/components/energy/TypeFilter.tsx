@@ -70,67 +70,8 @@ const TypeFilter: React.FC<TypeFilterProps> = memo(
                 disabled={disabled}
                 aria-pressed={isChecked}
                 aria-label={`Filter ${label} readings`}
-                className={`
-                  flex
-                  items-center
-                  justify-center
-                  gap-2
-                  px-4
-                  py-3
-                  rounded-xl
-                  border-2
-                  text-sm
-                  font-medium
-                  transition-all
-                  duration-150
-                  ease-in-out
-                  min-h-[44px]
-                  sm:flex-1
-                  ${
-                    isChecked
-                      ? 'bg-primary-subtle border-primary text-primary font-semibold shadow-sm ring-3 ring-primary-subtle'
-                      : 'bg-transparent border-muted text-foreground-muted hover:bg-background-hover hover:border-border hover:text-foreground'
-                  }
-                  ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  focus-visible:outline-none
-                  focus-visible:ring-3
-                  focus-visible:ring-primary-subtle
-                  focus-visible:ring-offset-2
-                `}
+                className={`type-filter-button ${isChecked ? `type-filter-button--selected type-filter-button--${type}` : ''}`}
               >
-                {/* Checkbox indicator (visual only) */}
-                <span
-                  className={`
-                    w-5
-                    h-5
-                    rounded-md
-                    border-2
-                    flex
-                    items-center
-                    justify-center
-                    transition-all
-                    ${
-                      isChecked
-                        ? 'bg-primary border-primary'
-                        : 'bg-transparent border-border'
-                    }
-                  `}
-                >
-                  {isChecked && (
-                    <svg
-                      className="w-3 h-3 text-primary-foreground"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </span>
-
                 {/* Energy type icon */}
                 {icon}
 
