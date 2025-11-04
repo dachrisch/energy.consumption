@@ -22,7 +22,6 @@ const SliderTrack: React.FC<SliderTrackProps> = memo(
     // Track dimensions
     const trackHeight = 4; // Unselected track height
     const selectedTrackHeight = 6; // Selected range height
-    const trackY = 110; // Y position (overlaying histogram)
 
     // Calculate range widths
     const beforeStartWidth = startPosition;

@@ -189,9 +189,9 @@ describe('SliderCalculationService', () => {
     });
 
     it('should handle null dates', () => {
-      expect(isValidDateRange(null as any, endDate)).toBe(false);
-      expect(isValidDateRange(startDate, null as any)).toBe(false);
-      expect(isValidDateRange(null as any, null as any)).toBe(false);
+      expect(isValidDateRange(null as unknown as Date, endDate)).toBe(false);
+      expect(isValidDateRange(startDate, null as unknown as Date)).toBe(false);
+      expect(isValidDateRange(null as unknown as Date, null as unknown as Date)).toBe(false);
     });
 
     it('should handle invalid dates', () => {

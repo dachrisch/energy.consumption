@@ -89,7 +89,7 @@ const TypeFilter: React.FC<TypeFilterProps> = memo(
                   ${
                     isChecked
                       ? 'bg-primary-subtle border-primary text-primary font-semibold shadow-sm ring-3 ring-primary-subtle'
-                      : 'bg-transparent border-border text-foreground hover:bg-background-hover hover:border-border-hover'
+                      : 'bg-transparent border-muted text-foreground-muted hover:bg-background-hover hover:border-border hover:text-foreground'
                   }
                   ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                   focus-visible:outline-none

@@ -24,14 +24,14 @@ const SliderHandle: React.FC<SliderHandleProps> = memo(
     isDragging,
     isFocused,
     onDragStart,
-    onDrag,
-    onDragEnd,
+    onDrag: _onDrag,
+    onDragEnd: _onDragEnd,
     onKeyDown,
     onFocus,
     onBlur,
     minPosition,
     maxPosition,
-    containerWidth,
+    containerWidth: _containerWidth,
     className = '',
   }) => {
     // Handle sizes (responsive)

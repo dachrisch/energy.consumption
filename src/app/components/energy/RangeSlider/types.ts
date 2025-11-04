@@ -170,6 +170,9 @@ export interface DateRangeDisplayProps {
   /** Display format (full for desktop, short for mobile) */
   format: DateFormat;
 
+  /** Container width for edge detection */
+  containerWidth: number;
+
   /** Optional class name */
   className?: string;
 }

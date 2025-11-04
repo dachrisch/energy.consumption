@@ -16,6 +16,7 @@ describe('DateRangeDisplay', () => {
     startPosition: 100,
     endPosition: 400,
     format: 'full' as const,
+    containerWidth: 500,
   };
 
   it('renders without crashing', () => {
@@ -84,5 +85,45 @@ describe('DateRangeDisplay', () => {
     const { container } = render(<DateRangeDisplay {...defaultProps} format="short" />);
     const label = container.querySelector('.text-foreground-muted') as HTMLElement;
     expect(label).toHaveStyle({ fontSize: '0.75rem' });
+  });
+
+  it('aligns start label left when near left edge', () => {
+    const props = {
+      ...defaultProps,
+      startPosition: 5, // Near left edge
+      endPosition: 400,
+      containerWidth: 500,
+    };
+    const { container } = render(<DateRangeDisplay {...props} />);
+    const labels = container.querySelectorAll('.absolute.text-foreground-muted');
+    // First label should be left-aligned (no center transform)
+    expect(labels[0]).toHaveStyle({ left: '10px', transform: 'none' });
+  });
+
+  it('aligns end label right when near right edge', () => {
+    const props = {
+      ...defaultProps,
+      startPosition: 100,
+      endPosition: 490, // Near right edge
+      containerWidth: 500,
+    };
+    const { container } = render(<DateRangeDisplay {...props} />);
+    const labels = container.querySelectorAll('.absolute.text-foreground-muted');
+    // Second label should be right-aligned
+    expect(labels[1]).toHaveStyle({ right: '10px', left: 'auto', transform: 'none' });
+  });
+
+  it('center-aligns labels when not near edges', () => {
+    const props = {
+      ...defaultProps,
+      startPosition: 150,
+      endPosition: 350,
+      containerWidth: 500,
+    };
+    const { container } = render(<DateRangeDisplay {...props} />);
+    const labels = container.querySelectorAll('.absolute.text-foreground-muted');
+    // Both labels should be center-aligned
+    expect(labels[0]).toHaveStyle({ left: '150px', transform: 'translateX(-50%)' });
+    expect(labels[1]).toHaveStyle({ left: '350px', transform: 'translateX(-50%)' });
   });
 });

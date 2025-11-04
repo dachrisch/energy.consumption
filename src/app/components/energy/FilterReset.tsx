@@ -40,7 +40,7 @@ const FilterReset: React.FC<FilterResetProps> = memo(
     const isDisabled = disabled || activeFilterCount === 0;
 
     return (
-      <div className={`filter-reset flex items-center gap-3 ${className}`}>
+      <div className={`filter-reset ${className}`}>
         {/* Reset button */}
         <button
           type="button"
@@ -55,18 +55,18 @@ const FilterReset: React.FC<FilterResetProps> = memo(
             py-2
             rounded-xl
             border-2
-            border-transparent
             text-sm
-            font-semibold
+            font-medium
             transition-all
             duration-150
             ease-in-out
-            bg-secondary
-            text-secondary-foreground
+            bg-transparent
+            border-muted
+            text-foreground-muted
             ${
               isDisabled
                 ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-secondary-hover hover:transform hover:-translate-y-0.5 hover:shadow-sm cursor-pointer'
+                : 'hover:bg-background-hover hover:border-border hover:text-foreground cursor-pointer'
             }
             focus-visible:outline-none
             focus-visible:ring-3
@@ -90,34 +90,6 @@ const FilterReset: React.FC<FilterResetProps> = memo(
           {/* Label */}
           <span>Reset Filters</span>
         </button>
-
-        {/* Active filter count badge */}
-        {activeFilterCount > 0 && (
-          <div
-            className="
-              inline-flex
-              items-center
-              justify-center
-              min-w-[24px]
-              h-6
-              px-2
-              rounded-full
-              bg-primary
-              text-primary-foreground
-              text-xs
-              font-bold
-              animate-in
-              fade-in
-              zoom-in
-              duration-150
-            "
-            aria-label={`${activeFilterCount} active ${
-              activeFilterCount === 1 ? 'filter' : 'filters'
-            }`}
-          >
-            {activeFilterCount}
-          </div>
-        )}
       </div>
     );
   }

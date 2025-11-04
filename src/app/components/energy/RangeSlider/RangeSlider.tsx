@@ -185,6 +185,46 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
     }, 200);
   }, []);
 
+  // Global drag event listeners (CRITICAL FIX: FR-V3.1-001)
+  useEffect(() => {
+    if (!sliderState.isDragging) return;
+
+    // Global mouse/touch move handler
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const position = e.clientX - rect.left;
+      handleDrag(position);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!containerRef.current) return;
+      e.preventDefault(); // Prevent page scroll
+      const rect = containerRef.current.getBoundingClientRect();
+      const touch = e.touches[0];
+      const position = touch.clientX - rect.left;
+      handleDrag(position);
+    };
+
+    // Global mouse/touch up handler
+    const handleMouseUp = () => {
+      handleDragEnd();
+    };
+
+    // Attach global listeners
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [sliderState.isDragging, handleDrag, handleDragEnd]);
+
   // Cleanup debounce timer
   useEffect(() => {
     return () => {
@@ -297,6 +337,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
           startPosition={startPosition}
           endPosition={endPosition}
           format={dateFormat}
+          containerWidth={containerWidth}
         />
       </div>
 

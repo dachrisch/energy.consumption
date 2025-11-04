@@ -142,15 +142,28 @@ const EnergyTableFilters: React.FC<EnergyTableFiltersProps> = ({
   return (
     <div className={`energy-table-filters solid-container ${className}`}>
       <div className="flex flex-col gap-6">
-        {/* Timeline Filter Section */}
+        {/* Timeline Section */}
         <div className="flex flex-col gap-4">
-          <label className="text-sm font-semibold text-foreground">Timeline Filter</label>
+          {/* Preset Buttons + Reset Button Row */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Presets */}
+            <div className="flex flex-wrap gap-3 flex-1">
+              <TimelinePresets
+                activePresetId={activePresetId}
+                onPresetClick={handlePresetClick}
+              />
+            </div>
 
-          {/* Preset Buttons */}
-          <TimelinePresets
-            activePresetId={activePresetId}
-            onPresetClick={handlePresetClick}
-          />
+            {/* Visual separator (desktop only) */}
+            <div className="hidden sm:block w-px h-8 bg-border" />
+
+            {/* Reset button (visually distinct) */}
+            <FilterReset
+              activeFilterCount={activeFilterCount}
+              onReset={handleReset}
+              className="w-full sm:w-auto mt-2 sm:mt-0"
+            />
+          </div>
 
           {/* Range Slider with Histogram */}
           <RangeSlider
@@ -166,11 +179,6 @@ const EnergyTableFilters: React.FC<EnergyTableFiltersProps> = ({
         <div className="flex flex-col gap-3">
           <label className="text-sm font-semibold text-foreground">Energy Type</label>
           <TypeFilter selectedTypes={selectedTypes} onSelectionChange={onTypesChange} />
-        </div>
-
-        {/* Reset Section */}
-        <div className="flex justify-end">
-          <FilterReset activeFilterCount={activeFilterCount} onReset={handleReset} />
         </div>
       </div>
     </div>

@@ -34,9 +34,7 @@ const DEFAULT_CONFIG: AnimationConfig = {
 const cubicBezierEasing = (t: number): number => {
   // Approximation of cubic-bezier(0.4, 0, 0.2, 1)
   const c1 = 0.4;
-  const c2 = 0.0;
   const c3 = 0.2;
-  const c4 = 1.0;
 
   const t2 = t * t;
   const t3 = t2 * t;
@@ -72,6 +70,7 @@ export function useSliderAnimation({
   const startRangeRef = useRef<DateRange | null>(null);
   const targetRangeRef = useRef<DateRange | null>(null);
   const configRef = useRef<AnimationConfig>(DEFAULT_CONFIG);
+  const animateRef = useRef<((time: number) => void) | null>(null);
 
   /**
    * Cancel ongoing animation
@@ -122,8 +121,8 @@ export function useSliderAnimation({
       setAnimatedRange(currentRange);
 
       // Continue or complete animation
-      if (linearProgress < 1) {
-        animationFrameRef.current = requestAnimationFrame(animate);
+      if (linearProgress < 1 && animateRef.current) {
+        animationFrameRef.current = requestAnimationFrame(animateRef.current);
       } else {
         // Animation complete
         setIsAnimating(false);
@@ -133,6 +132,11 @@ export function useSliderAnimation({
     },
     [cancelAnimation, onAnimationComplete]
   );
+
+  // Update animateRef when animate changes
+  useEffect(() => {
+    animateRef.current = animate;
+  }, [animate]);
 
   /**
    * Start animation to target range

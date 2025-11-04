@@ -36,7 +36,7 @@ const THROTTLE_MS = 16.67; // 60fps
  * Custom hook for slider handle drag interactions
  */
 export function useSliderDrag({
-  containerWidth,
+  containerWidth: _containerWidth,
   minPosition,
   maxPosition,
   onDragStart,
