@@ -70,9 +70,9 @@ const DateRangeDisplay: React.FC<DateRangeDisplayProps> = memo(
       return endPosition > containerWidth - labelEstimatedWidth / 2 - LABEL_PADDING;
     }, [endPosition, containerWidth, labelEstimatedWidth]);
 
-    // Font size based on format
-    const fontSize = format === 'full' ? '0.875rem' : '0.75rem'; // 14px : 12px
-    const marginTop = format === 'full' ? '8px' : '6px';
+    // Font size based on format (SMALLER - V3.3)
+    const fontSize = format === 'full' ? '0.75rem' : '0.625rem'; // 12px : 10px
+    const marginTop = format === 'full' ? '2px' : '1px'; // CLOSER to handle
 
     // Calculate label styles with edge detection
     const startLabelStyle = useMemo(() => {

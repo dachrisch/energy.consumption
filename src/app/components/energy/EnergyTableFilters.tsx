@@ -18,7 +18,7 @@ import RangeSlider from './RangeSlider';
 import TimelinePresets from './TimelinePresets';
 import TypeFilter from './TypeFilter';
 import FilterReset from './FilterReset';
-import { TimelinePreset, isAllTimePreset } from '@/app/constants/timelinePresets';
+import { TimelinePreset } from '@/app/constants/timelinePresets';
 import { DateRange } from './RangeSlider/types';
 
 interface EnergyTableFiltersProps {
@@ -81,24 +81,16 @@ const EnergyTableFilters: React.FC<EnergyTableFiltersProps> = ({
       // Calculate preset range
       const range = preset.calculateRange();
 
-      // For "All time", use actual min/max from data
-      if (isAllTimePreset(preset.id)) {
-        onDateRangeChange({
-          start: minDate,
-          end: maxDate,
-        });
-      } else {
-        // Clamp preset range to actual data range
-        const clampedStart =
-          range.start < minDate ? minDate : range.start > maxDate ? maxDate : range.start;
-        const clampedEnd =
-          range.end > maxDate ? maxDate : range.end < minDate ? minDate : range.end;
+      // Clamp preset range to actual data range
+      const clampedStart =
+        range.start < minDate ? minDate : range.start > maxDate ? maxDate : range.start;
+      const clampedEnd =
+        range.end > maxDate ? maxDate : range.end < minDate ? minDate : range.end;
 
-        onDateRangeChange({
-          start: clampedStart,
-          end: clampedEnd,
-        });
-      }
+      onDateRangeChange({
+        start: clampedStart,
+        end: clampedEnd,
+      });
     },
     [minDate, maxDate, onDateRangeChange]
   );
@@ -177,7 +169,6 @@ const EnergyTableFilters: React.FC<EnergyTableFiltersProps> = ({
 
         {/* Type Filter Section */}
         <div className="flex flex-col gap-3">
-          <label className="text-sm font-semibold text-foreground">Energy Type</label>
           <TypeFilter selectedTypes={selectedTypes} onSelectionChange={onTypesChange} />
         </div>
       </div>

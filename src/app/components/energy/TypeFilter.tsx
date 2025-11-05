@@ -70,7 +70,7 @@ const TypeFilter: React.FC<TypeFilterProps> = memo(
                 disabled={disabled}
                 aria-pressed={isChecked}
                 aria-label={`Filter ${label} readings`}
-                className={`type-filter-button ${isChecked ? `type-filter-button--selected type-filter-button--${type}` : ''}`}
+                className={`type-filter-button ${isChecked ? 'type-filter-button--selected' : ''}`}
               >
                 {/* Energy type icon */}
                 {icon}

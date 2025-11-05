@@ -62,32 +62,7 @@ const TimelinePresets: React.FC<TimelinePresetsProps> = memo(
                 disabled={disabled}
                 aria-pressed={isActive}
                 aria-label={`Select ${preset.label}`}
-                className={`
-                  preset-button
-                  flex-shrink-0
-                  px-4 py-2
-                  rounded-xl
-                  border-2
-                  text-sm
-                  font-medium
-                  transition-all
-                  duration-150
-                  ease-in-out
-                  ${
-                    isActive
-                      ? 'bg-primary border-primary text-primary-foreground shadow-md transform -translate-y-0.5'
-                      : 'bg-transparent border-border text-foreground hover:bg-background-hover hover:border-border-hover hover:transform hover:-translate-y-0.5'
-                  }
-                  ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  focus-visible:outline-none
-                  focus-visible:ring-3
-                  focus-visible:ring-primary-subtle
-                  focus-visible:ring-offset-2
-                `}
-                style={{
-                  scrollSnapAlign: 'start',
-                  minWidth: 'max-content',
-                }}
+                className={`preset-button ${isActive ? 'preset-button--active' : ''}`}
               >
                 {preset.label}
               </button>

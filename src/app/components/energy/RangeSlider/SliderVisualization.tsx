@@ -37,8 +37,8 @@ const SliderVisualization: React.FC<SliderVisualizationProps> = memo(
     const barGap = Math.max(1, barWidth * 0.1); // 10% gap between bars
     const actualBarWidth = barWidth - barGap;
 
-    // Padding for chart (leave space for Y-axis labels and bottom margin)
-    const paddingLeft = 30;
+    // Padding for chart (minimal - no y-axis labels)
+    const paddingLeft = 5;
     const paddingRight = 5;
     const paddingTop = 10;
     const paddingBottom = 10;
@@ -49,16 +49,6 @@ const SliderVisualization: React.FC<SliderVisualizationProps> = memo(
     // Y-axis scale
     const yScale = maxCount > 0 ? chartHeight / maxCount : 0;
 
-    // Calculate Y-axis labels (4-5 labels)
-    const yLabels: number[] = [];
-    if (maxCount > 0) {
-      const labelCount = 4;
-      const step = Math.ceil(maxCount / labelCount);
-      for (let i = 0; i <= labelCount; i++) {
-        yLabels.push(i * step);
-      }
-    }
-
     return (
       <svg
         width={width}
@@ -67,35 +57,6 @@ const SliderVisualization: React.FC<SliderVisualizationProps> = memo(
         role="img"
         aria-label={`Histogram showing ${buckets.reduce((sum, b) => sum + b.count, 0)} total measurements`}
       >
-        {/* Y-axis grid lines (subtle) */}
-        {yLabels.map((value, index) => {
-          const y = paddingTop + chartHeight - value * yScale;
-          return (
-            <g key={`grid-${index}`}>
-              <line
-                x1={paddingLeft}
-                y1={y}
-                x2={width - paddingRight}
-                y2={y}
-                stroke="currentColor"
-                strokeWidth={index === 0 ? 1 : 0.5}
-                opacity={index === 0 ? 0.3 : 0.15}
-                className="text-border"
-              />
-              <text
-                x={paddingLeft - 5}
-                y={y + 3}
-                textAnchor="end"
-                fontSize="10"
-                fill="currentColor"
-                className="text-foreground-muted"
-              >
-                {value}
-              </text>
-            </g>
-          );
-        })}
-
         {/* Histogram bars */}
         {buckets.map((bucket, index) => {
           const barHeight = bucket.count * yScale;

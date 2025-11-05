@@ -78,13 +78,13 @@ describe('DateRangeDisplay', () => {
   it('applies correct font size for full format', () => {
     const { container } = render(<DateRangeDisplay {...defaultProps} format="full" />);
     const label = container.querySelector('.text-foreground-muted') as HTMLElement;
-    expect(label).toHaveStyle({ fontSize: '0.875rem' });
+    expect(label).toHaveStyle({ fontSize: '0.75rem' }); // V3.3: Reduced from 0.875rem
   });
 
   it('applies correct font size for short format', () => {
     const { container } = render(<DateRangeDisplay {...defaultProps} format="short" />);
     const label = container.querySelector('.text-foreground-muted') as HTMLElement;
-    expect(label).toHaveStyle({ fontSize: '0.75rem' });
+    expect(label).toHaveStyle({ fontSize: '0.625rem' }); // V3.3: Reduced from 0.75rem
   });
 
   it('aligns start label left when near left edge', () => {

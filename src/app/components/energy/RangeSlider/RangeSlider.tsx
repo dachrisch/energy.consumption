@@ -330,16 +330,14 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
       </div>
 
       {/* Date labels */}
-      <div className="mt-2">
-        <DateRangeDisplay
-          startDate={dateRange.start}
-          endDate={dateRange.end}
-          startPosition={startPosition}
-          endPosition={endPosition}
-          format={dateFormat}
-          containerWidth={containerWidth}
-        />
-      </div>
+      <DateRangeDisplay
+        startDate={dateRange.start}
+        endDate={dateRange.end}
+        startPosition={startPosition}
+        endPosition={endPosition}
+        format={dateFormat}
+        containerWidth={containerWidth}
+      />
 
       {/* Live region for screen readers */}
       <div

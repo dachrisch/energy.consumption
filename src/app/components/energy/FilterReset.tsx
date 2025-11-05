@@ -47,32 +47,7 @@ const FilterReset: React.FC<FilterResetProps> = memo(
           onClick={handleReset}
           disabled={isDisabled}
           aria-label="Reset all filters"
-          className={`
-            flex
-            items-center
-            gap-2
-            px-4
-            py-2
-            rounded-xl
-            border-2
-            text-sm
-            font-medium
-            transition-all
-            duration-150
-            ease-in-out
-            bg-transparent
-            border-muted
-            text-foreground-muted
-            ${
-              isDisabled
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-background-hover hover:border-border hover:text-foreground cursor-pointer'
-            }
-            focus-visible:outline-none
-            focus-visible:ring-3
-            focus-visible:ring-primary-subtle
-            focus-visible:ring-offset-2
-          `}
+          className="filter-reset-button"
         >
           {/* Reset icon */}
           <svg

@@ -81,18 +81,6 @@ export const TIMELINE_PRESETS: readonly TimelinePreset[] = [
       return { start: getStartOfDay(start), end };
     },
   },
-  {
-    id: 'all-time',
-    label: 'All time',
-    calculateRange: () => {
-      // All time means no date filtering - return very wide range
-      // Will be handled specially in component logic
-      return {
-        start: new Date(0), // Unix epoch
-        end: new Date(8640000000000000), // Max JS date
-      };
-    },
-  },
 ] as const;
 
 /**
@@ -100,11 +88,4 @@ export const TIMELINE_PRESETS: readonly TimelinePreset[] = [
  */
 export const getPresetById = (id: string): TimelinePreset | undefined => {
   return TIMELINE_PRESETS.find((preset) => preset.id === id);
-};
-
-/**
- * Check if a preset is the "All time" preset
- */
-export const isAllTimePreset = (presetId: string | null): boolean => {
-  return presetId === 'all-time';
 };

@@ -44,12 +44,36 @@
 /* Preset Button Styles
    ============================================ */
 .preset-button {
-  /* Inherits from base */
-  @apply filter-button-base;
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 
-  /* Inactive State - NO COLOR */
+  /* Spacing */
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  gap: 0.5rem; /* gap-2 */
+
+  /* Typography */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+
+  /* Borders & Corners */
+  border-radius: 0.75rem; /* rounded-xl */
+  border-width: 2px;
+  border-style: solid;
+
+  /* Transitions */
+  transition-property: all;
+  transition-timing-function: ease-in-out;
+  transition-duration: 150ms;
+
+  /* Focus Styles */
+  outline: none;
+
+  /* Inactive State - WITH BOX */
   background-color: transparent;
-  border-color: transparent;
+  border-color: var(--border-muted);
   color: var(--foreground-muted);
   cursor: pointer;
 
@@ -58,10 +82,18 @@
   min-width: max-content;
 }
 
-.preset-button:hover:not(:disabled) {
-  background-color: var(--background-hover);
-  color: var(--foreground);
-  transform: translateY(-1px);
+.preset-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-subtle);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .preset-button:hover:not(:disabled) {
+    background-color: var(--background-hover);
+    color: var(--foreground);
+    transform: translateY(-1px);
+  }
 }
 
 .preset-button--active {
@@ -80,20 +112,47 @@
 /* Type Filter Button Styles
    ============================================ */
 .type-filter-button {
-  /* Inherits from base */
-  @apply filter-button-base;
-
-  /* Deselected State - NO COLOR */
-  background-color: transparent;
-  border-color: transparent;
-  color: var(--foreground-muted);
-  cursor: pointer;
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 
   /* Spacing - adjusted for icon + label layout */
   padding: 0.75rem 1rem; /* py-3 px-4 */
+  gap: 0.5rem; /* gap-2 */
+
+  /* Typography */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+
+  /* Borders & Corners */
+  border-radius: 0.75rem; /* rounded-xl */
+  border-width: 2px;
+  border-style: solid;
+
+  /* Transitions */
+  transition-property: all;
+  transition-timing-function: ease-in-out;
+  transition-duration: 150ms;
+
+  /* Focus Styles */
+  outline: none;
+
+  /* Deselected State - WITH BOX */
+  background-color: transparent;
+  border-color: var(--border-muted);
+  color: var(--foreground-muted);
+  cursor: pointer;
 
   /* Mobile: Full width, Desktop: Flex-1 */
   min-height: 44px;
+}
+
+.type-filter-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-subtle);
+  outline-offset: 2px;
 }
 
 @media (min-width: 640px) {
@@ -102,29 +161,26 @@
   }
 }
 
-.type-filter-button:hover:not(:disabled) {
-  background-color: var(--background-hover);
-  border-color: var(--border);
-  color: var(--foreground);
+@media (hover: hover) {
+  .type-filter-button:hover:not(:disabled) {
+    background-color: var(--background-hover);
+    border-color: var(--border);
+    color: var(--foreground);
+  }
 }
 
 .type-filter-button--selected {
+  background-color: var(--primary-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* Energy Type Specific Colors (from energyTypes.ts) */
-.type-filter-button--selected.type-filter-button--power {
-  background-color: rgba(75, 192, 192, 0.1);
-  border-color: rgb(75, 192, 192);
-  color: rgb(75, 192, 192);
-}
-
-.type-filter-button--selected.type-filter-button--gas {
-  background-color: rgba(255, 99, 132, 0.1);
-  border-color: rgb(255, 99, 132);
-  color: rgb(255, 99, 132);
-}
+/* Energy Type Specific Colors - REMOVED (V3.3)
+ * All active filter buttons now use primary color for consistency
+ * Energy type identification via icon + label (no color coding needed)
+ */
 
 .type-filter-button:disabled {
   opacity: 0.5;
@@ -134,8 +190,32 @@
 /* Reset Button Styles
    ============================================ */
 .filter-reset-button {
-  /* Inherits from base */
-  @apply filter-button-base;
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  /* Spacing */
+  padding: 0.5rem 1rem; /* py-2 px-4 */
+  gap: 0.5rem; /* gap-2 */
+
+  /* Typography */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500; /* font-medium */
+
+  /* Borders & Corners */
+  border-radius: 0.75rem; /* rounded-xl */
+  border-width: 2px;
+  border-style: solid;
+
+  /* Transitions */
+  transition-property: all;
+  transition-timing-function: ease-in-out;
+  transition-duration: 150ms;
+
+  /* Focus Styles */
+  outline: none;
 
   /* Inactive State - NO COLOR */
   background-color: transparent;
@@ -144,10 +224,18 @@
   cursor: pointer;
 }
 
-.filter-reset-button:hover:not(:disabled) {
-  background-color: var(--background-hover);
-  border-color: var(--border);
-  color: var(--foreground);
+.filter-reset-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-subtle);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .filter-reset-button:hover:not(:disabled) {
+    background-color: var(--background-hover);
+    border-color: var(--border);
+    color: var(--foreground);
+  }
 }
 
 .filter-reset-button:disabled {
