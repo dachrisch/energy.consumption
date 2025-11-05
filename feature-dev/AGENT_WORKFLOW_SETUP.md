@@ -1,6 +1,6 @@
 # Claude Code Agent Workflow Setup - Enhanced Edition
 
-This repository contains **five specialized agents** that work together to implement a complete software development workflow following best practices for requirements analysis, architecture design, test-driven development, quality assurance, and documentation.
+This repository contains **six specialized agents** that work together to implement a complete software development workflow following best practices for requirements analysis, architecture design, test-driven development, quality assurance, documentation, and workspace hygiene.
 
 ## Agent Overview
 
@@ -29,6 +29,11 @@ This repository contains **five specialized agents** that work together to imple
 - **Color**: Cyan
 - **When to Use**: After implementation to create user-facing documentation
 
+### 6. Cleanup Coordinator (`cleanup-coordinator`) 🆕
+- **Purpose**: Ensures working directory contains only PR-relevant files, removes dead code, redirects misplaced changes
+- **Color**: Yellow
+- **When to Use**: After QA approval and documentation, before git operations
+
 ## Installation
 
 ### Option 1: Project-Level Agents (Recommended)
@@ -44,6 +49,8 @@ cp architecture-designer.md .claude/agents/
 cp implementation-engineer.md .claude/agents/
 cp qa-engineer.md .claude/agents/
 cp documentation-specialist.md .claude/agents/
+cp cleanup-coordinator.md .claude/agents/
+cp git-coordinator.md .claude/agents/
 ```
 
 These agents will be available to anyone working on the project and versioned with your code.
@@ -62,6 +69,8 @@ cp architecture-designer.md ~/.config/claude/agents/
 cp implementation-engineer.md ~/.config/claude/agents/
 cp qa-engineer.md ~/.config/claude/agents/
 cp documentation-specialist.md ~/.config/claude/agents/
+cp cleanup-coordinator.md ~/.config/claude/agents/
+cp git-coordinator.md ~/.config/claude/agents/
 ```
 
 ## Enhanced Workflow Process (Option 1)
@@ -123,7 +132,25 @@ User Input
                │            │
                │            ↓
                │  ┌─────────────────────────────────┐
-               │  │  6. Human Review (OPTIONAL)     │
+               │  │  6. Cleanup Coordinator 🆕      │
+               │  │     - Verifies PR scope         │
+               │  │     - Removes dead code         │
+               │  │     - Redirects out-of-scope    │
+               │  │     - Cleans artifacts          │
+               │  │     - Creates cleanup-report.md │
+               │  └─────────┬───────────────────────┘
+               │            │
+               │            ↓
+               │  ┌─────────────────────────────────┐
+               │  │  7. Git Coordinator 🆕          │
+               │  │     - Commits changes           │
+               │  │     - Creates PR                │
+               │  │     - Handles redirected PRs    │
+               │  └─────────┬───────────────────────┘
+               │            │
+               │            ↓
+               │  ┌─────────────────────────────────┐
+               │  │  8. Human Review (OPTIONAL)     │
                │  │     - Verify design decisions   │
                │  │     - Check business logic      │
                │  │     - Approve for deployment    │
@@ -192,6 +219,30 @@ Claude: Now let me create comprehensive documentation.
 → Creates api-documentation.md with WebSocket API
 → Updates README with notification feature
 → Adds examples and troubleshooting
+
+Result: Documentation complete
+
+Claude: Let me clean up the workspace before creating the PR.
+
+[Invokes cleanup-coordinator agent]
+→ Analyzes PR scope (notifications feature)
+→ Detects 3 unrelated CSS changes from styling branch
+→ Finds 2 obsolete helper files no longer used
+→ Identifies 15 unused imports across files
+→ Removes build artifacts (.next/, dist/)
+→ Creates cleanup-report.md with full details
+→ Redirects CSS changes to feature/style-updates branch
+→ Removes dead code and unused imports
+
+Result: ✅ Workspace clean, ready for git operations
+
+Claude: Now I'll create the PR.
+
+[Invokes git-coordinator agent]
+→ Commits notification feature changes
+→ Creates PR for notifications
+→ Notes: CSS changes will be separate PR (feature/style-updates)
+→ Returns PR URL
 
 Result: Feature complete and ready for human review/merge
 ```
@@ -439,6 +490,36 @@ module.exports = {
   - Ensures documentation accuracy
   - **When to Use**: After implementation for user-facing docs
 
+### Cleanup Coordinator 🆕
+- **Tools**: Read, Write, Bash, Grep, Glob, TodoWrite
+- **Outputs**:
+  - Cleanup report (cleanup-report.md)
+  - Clean git status
+  - Redirected PR branches
+- **Key Features**:
+  - PR scope verification
+  - Dead code detection and removal
+  - Out-of-scope change redirection
+  - Build artifact cleanup
+  - Sensitive data detection
+  - Working directory hygiene
+  - Coordinates with git-coordinator
+  - **When to Use**: After QA + documentation, before git operations
+
+### Git Coordinator 🆕
+- **Tools**: Bash, Read, Grep, Glob, Write, TodoWrite
+- **Outputs**:
+  - Git commits with conventional format
+  - Pull requests
+  - Branch management
+- **Key Features**:
+  - Collects all changes
+  - Creates conventional commits
+  - Opens pull requests
+  - Handles multiple PR branches (from cleanup coordinator)
+  - Ensures clean git history
+  - **When to Use**: After cleanup coordinator approval
+
 ## Best Practices
 
 ### 1. Always Start with Requirements Analysis
@@ -554,7 +635,7 @@ When contributing to projects using these agents:
 
 ## Summary
 
-This enhanced five-agent workflow provides:
+This enhanced workflow with **seven specialized agents** provides:
 - ✅ Clear requirements before coding
 - ✅ **Architecture design for complex features** 🆕
 - ✅ Test-driven development by default
@@ -563,16 +644,23 @@ This enhanced five-agent workflow provides:
 - ✅ Automated security checking
 - ✅ High test coverage
 - ✅ **Complete user and API documentation** 🆕
+- ✅ **Workspace cleanup and PR hygiene** 🆕
+- ✅ **Dead code removal** 🆕
+- ✅ **Out-of-scope change management** 🆕
+- ✅ **Professional git workflow** 🆕
 - ✅ Production-ready code
 - ✅ **Human review gate option** 🆕
 
-### Enhanced Workflow (Option 1) - What's New:
+### Enhanced Workflow - What's New:
 
 1. **Architecture Designer Agent**: Prevents poor architectural decisions by designing system structure upfront for complex features
 2. **Documentation Specialist Agent**: Creates comprehensive user guides and API documentation
-3. **Human Review Gate**: Optional step before deployment for critical features
-4. **Feature-dev/ Directory**: Structured documentation for every feature
-5. **Flexible Workflow**: Architecture step is optional for simple features
+3. **Cleanup Coordinator Agent**: Ensures workspace hygiene, removes dead code, redirects out-of-scope changes
+4. **Git Coordinator Agent**: Professional git workflow with conventional commits and PR management
+5. **Human Review Gate**: Optional step before deployment for critical features
+6. **Feature-dev/ Directory**: Structured documentation for every feature
+7. **Flexible Workflow**: Architecture step is optional for simple features
+8. **Automated Cleanup**: Never commit dead code or out-of-scope changes
 
 ### When to Use Full Workflow:
 - ✅ Complex features with multiple components
@@ -589,4 +677,10 @@ This enhanced five-agent workflow provides:
 - ❌ Features following established patterns
 - ❌ Configuration changes
 
-The agents work together seamlessly, with each specializing in their domain while communicating effectively to deliver high-quality, well-documented software.
+### When to Skip Cleanup Step:
+- ❌ Trivial one-file changes
+- ❌ Documentation-only updates
+- ❌ Quick bug fixes (single file)
+- ❌ When workspace is already clean
+
+The seven agents work together seamlessly, with each specializing in their domain while communicating effectively to deliver high-quality, well-documented, and clean software with professional git workflow.

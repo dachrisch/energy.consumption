@@ -352,14 +352,4 @@ This codebase follows SOLID principles and clean code practices:
 
 ### Complete Feature Checklist
 When adding a new feature:
-1. ✅ Plan - Create todo list if complex
-2. ✅ Read - Study existing code and patterns
-3. ✅ Types - Add/update TypeScript types
-4. ✅ Implement - Write code following SOLID + project patterns
-5. ✅ Mobile - Ensure responsive design (mobile-first)
-6. ✅ Test - Write tests for new functionality
-7. ✅ Run Tests - `npm test` and fix any failures
-8. ✅ Fix Errors - Resolve any errors automatically
-9. ✅ Document - Update CLAUDE.md if new patterns introduced
-10. ✅ Commit - Conventional commit with full context
 - Always check if you have an agent fit for the users request

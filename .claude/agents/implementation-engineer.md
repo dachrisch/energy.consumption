@@ -74,6 +74,13 @@ Write minimal code to make tests pass:
 3. Apply clean code practices
 4. Keep implementation simple and focused
 5. Run tests frequently to verify progress
+   ```bash
+   # Run tests
+   npm test
+
+   # Or use watch mode during TDD
+   npm run test:watch
+   ```
 
 ### Phase 4: Refactoring (REFACTOR Phase)
 Improve code without changing behavior:
@@ -82,6 +89,14 @@ Improve code without changing behavior:
 3. Optimize performance if needed
 4. Ensure SOLID principles are maintained
 5. Re-run tests to ensure nothing broke
+   ```bash
+   # Re-run tests after refactoring
+   npm test
+
+   # Check code quality
+   npm run lint
+   npm run type-check
+   ```
 
 ### Phase 5: QA Verification
 1. Invoke the qa-engineer agent to review your code
@@ -473,7 +488,10 @@ If QA finds bugs:
 Before submitting to QA, verify:
 - ✓ All tests written BEFORE implementation
 - ✓ Tests cover happy paths, edge cases, and error scenarios
-- ✓ 100% of written tests pass
+- ✓ 100% of written tests pass (`npm test`)
+- ✓ Code coverage meets requirements (`npm run test:coverage`)
+- ✓ No linting errors (`npm run lint`)
+- ✓ No TypeScript errors (`npm run type-check`)
 - ✓ SOLID principles applied throughout
 - ✓ Clean code practices followed
 - ✓ Functions are small and focused
