@@ -1,21 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Toast from "../components/Toast";
 import { EnergyType, ToastMessage, EnergyOptions } from "../types";
 import { deleteEnergyAction } from "@/actions/energy";
 import EnergyTableFilters from "../components/energy/EnergyTableFilters";
 import EnergyTable from "../components/energy/EnergyTable";
+import { DateRange } from "../components/energy/RangeSlider/types";
+import { ENERGY_TYPES } from "../constants/energyTypes";
 
 const ReadingsPage = () => {
   const [energyData, setEnergyData] = useState<EnergyType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [typeFilter, setTypeFilter] = useState<EnergyOptions | "all">("all");
-  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
-    start: null,
-    end: null,
+
+  // V3 API: Multi-select types (empty array = all types)
+  const [selectedTypes, setSelectedTypes] = useState<EnergyOptions[]>([]);
+
+  // V3 API: DateRange with non-null dates (initialize with wide range)
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const now = new Date();
+    const past = new Date(now);
+    past.setFullYear(past.getFullYear() - 1);
+    return { start: past, end: now };
   });
 
   useEffect(() => {
@@ -55,9 +63,29 @@ const ReadingsPage = () => {
   };
 
   const handleResetFilters = () => {
-    setTypeFilter("all");
-    setDateRange({ start: null, end: null });
+    setSelectedTypes([]); // Empty = all types
+    // Reset to full data range
+    if (energyData.length > 0) {
+      const dates = energyData.map((item) => new Date(item.date));
+      setDateRange({
+        start: new Date(Math.min(...dates.map((d) => d.getTime()))),
+        end: new Date(Math.max(...dates.map((d) => d.getTime()))),
+      });
+    }
   };
+
+  // Convert new API to old API for EnergyTable (backward compatibility)
+  const typeFilterLegacy: EnergyOptions | "all" = useMemo(() => {
+    if (selectedTypes.length === 0 || selectedTypes.length === ENERGY_TYPES.length) {
+      return "all";
+    }
+    return selectedTypes[0]; // Use first selected type
+  }, [selectedTypes]);
+
+  const dateRangeLegacy = useMemo(() => ({
+    start: dateRange.start,
+    end: dateRange.end,
+  }), [dateRange]);
 
   if (isLoading) {
     return (
@@ -90,10 +118,11 @@ const ReadingsPage = () => {
         <div className="content-card">
           <h2 className="section-title">Filter Readings</h2>
           <EnergyTableFilters
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
+            energyData={energyData}
+            selectedTypes={selectedTypes}
+            onTypesChange={setSelectedTypes}
             dateRange={dateRange}
-            setDateRange={setDateRange}
+            onDateRangeChange={setDateRange}
             onReset={handleResetFilters}
           />
         </div>
@@ -103,8 +132,8 @@ const ReadingsPage = () => {
           <EnergyTable
             energyData={energyData}
             onDelete={onDelete}
-            typeFilter={typeFilter}
-            dateRange={dateRange}
+            typeFilter={typeFilterLegacy}
+            dateRange={dateRangeLegacy}
           />
         </div>
 

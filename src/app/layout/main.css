@@ -12,3 +12,4 @@
 @import "./navigation.css";
 @import "./profile-menu.css";
 @import "./table.css";
+@import "../components/energy/filter-components.css";

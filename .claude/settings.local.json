@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "mcp__chrome-devtools__list_pages",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__fill_form",
+      "mcp__chrome-devtools__wait_for",
+      "mcp__chrome-devtools__list_console_messages",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__fill",
+      "Bash(npm run test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run lint)",
+      "Bash(git revert:*)",
+      "mcp__chrome-devtools__resize_page",
+      "Bash(npm install:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(git merge:*)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(git push)",
+      "Bash(kill:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create --title \"feat(filters): Interactive Timeline Slider with Data Visualization (V3)\" --body \"$(cat <<''EOF''\n## Summary\n\nImplements the **Interactive Timeline Slider (V3)** - a major UX enhancement replacing the simple date picker with an interactive, visual timeline slider.\n\n### 🎯 Features\n\n#### 1. Interactive Range Slider\n- Dual-handle slider for precise date range selection\n- Mouse drag support (desktop)\n- Touch drag support (mobile with 44x44px touch targets)\n- Keyboard navigation (arrows, page up/down, home/end)\n- Smooth 60fps dragging with throttling\n\n#### 2. Data Visualization\n- SVG histogram showing measurement distribution over time\n- Single color bars (rgba(124, 58, 237, 0.3))\n- Responsive bucket counts (20-30 mobile, 60-100 desktop)\n- Y-axis labels and grid lines\n\n#### 3. Preset Buttons\n- 6 quick-select presets: Last 7/30/90 days, This month/year, All time\n- Animated slider handle movements (300ms transitions)\n- Horizontal scroll on mobile with scroll-snap\n- Active preset highlighting\n\n#### 4. Multi-Select Type Filter\n- Checkbox-styled buttons for Power + Gas\n- Removed \"All\" option (empty selection = show all)\n- Responsive layout (row on desktop, column on mobile)\n\n#### 5. Enhanced Reset Button\n- Changed from button-outline to button-secondary\n- Active filter count badge (0-2)\n- Icon + text label\n\n### 📊 Technical Details\n\n**New Components** (22 files):\n- RangeSlider (7 components + 4 hooks)\n- DataAggregationService (with 19 tests)\n- SliderCalculationService (with 30 tests)\n- Timeline presets configuration\n\n**Modified Components** (6 files):\n- EnergyTableFilters.tsx (complete refactor)\n- Parent pages: readings, charts, dashboard tabs\n\n**Custom Hooks**:\n- useHistogramData - Memoized data aggregation\n- useSliderDrag - Mouse/touch interactions\n- useSliderKeyboard - Keyboard navigation\n- useSliderAnimation - Preset animations\n\n**Performance**:\n- Data aggregation: <100ms for 1000+ measurements\n- Dragging: 60fps with throttling\n- Filter updates: 200ms debounce\n- Memoization prevents unnecessary re-renders\n\n**Accessibility**:\n- WCAG 2.1 AA compliant\n- Full keyboard navigation\n- ARIA attributes on all controls\n- Screen reader support\n- 44px minimum touch targets (mobile)\n\n### ✅ Testing\n\n- **Tests**: 412/412 passing (100% pass rate)\n- **New Tests**: 49 (service + component tests)\n- **Coverage**: Sub-components 100%, overall 83.9%\n- **Build**: Success ✓\n- **Lint**: 13 minor warnings (unused variables)\n\n### 🚨 Breaking Changes\n\n**Parent Component API**:\n- Before: `typeFilter: \"all\" | EnergyOptions`\n- After: `selectedTypes: EnergyOptions[]`\n\n**New Required Prop**:\n- `energyData` must be passed to `EnergyTableFilters`\n\n**Backward Compatibility**:\n- ✅ Maintained for EnergyTable and child components\n- ✅ Conversion layer added in parent pages\n\n### 📖 Documentation\n\n- ✅ Requirements: `feature-dev/filter-redesign/requirements-v3.md`\n- ✅ Architecture: `feature-dev/filter-redesign/architecture-v3.md`\n- ✅ Visual Design: `feature-dev/filter-redesign/visual-design-v3.md`\n- ✅ Implementation Summary: `feature-dev/filter-redesign/IMPLEMENTATION_SUMMARY_V3.md`\n- ✅ Updated: CLAUDE.md, README.md, CHANGELOG.md\n\n### 🔍 QA Verification\n\n**Status**: ✅ **APPROVED FOR PRODUCTION WITH RECOMMENDATIONS**\n\n- ✅ All tests passing\n- ✅ Build succeeds\n- ✅ No TypeScript errors\n- ⚠️ 13 lint warnings (non-blocking)\n- ✅ Sub-components 100% coverage\n- ⚠️ Main orchestrator needs unit tests (recommended)\n\n**Recommendations Before Merge**:\n1. Fix 13 lint warnings (unused variables) - 30 minutes\n2. Manual testing on mobile devices - 2 hours\n3. Optional: Add unit tests for RangeSlider.tsx - 4-6 hours\n\n### 📸 Screenshots\n\n(Manual testing recommended to capture screenshots of:)\n- Desktop view with histogram\n- Mobile view with horizontal scroll\n- Preset button animations\n- Multi-select filter\n- Reset button with badge\n\n### 🚀 Deployment Checklist\n\n- [x] All tests passing\n- [x] Build succeeds\n- [x] Documentation complete\n- [x] QA approved\n- [ ] Lint warnings fixed (optional before merge)\n- [ ] Manual testing on mobile (recommended)\n- [ ] Screenshots captured (recommended)\n\n### 👥 Reviewers\n\n**Suggested Reviewers**: @frontend-team, @ux-team\n\n**Review Focus**:\n- Timeline slider interaction (drag smoothness)\n- Mobile responsiveness and touch targets\n- Histogram visualization clarity\n- Preset button animations\n- Code organization and SOLID principles\n\n---\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(gh pr view:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

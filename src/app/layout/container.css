@@ -1,5 +1,6 @@
 .solid-container {
-  @apply border rounded-lg p-4;
+  @apply rounded-lg p-4;
+  border: none;
 }
 
 .dotted-container {
