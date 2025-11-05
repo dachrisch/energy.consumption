@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/dachrisch/energy.consumption/compare/v2.2.2...v2.3.0) (2025-11-05)
+
+
+### Features
+
+* **filters:** add interactive timeline slider with data visualization ([3772f6d](https://github.com/dachrisch/energy.consumption/commit/3772f6d2d4b4f81733fd10c2daadbabb1f1904c9))
+
+
+### Bug Fixes
+
+* add settings ([0e0aace](https://github.com/dachrisch/energy.consumption/commit/0e0aace1004afe20f8e215de8cc68633fc047593))
+* add settings ([d6a5e71](https://github.com/dachrisch/energy.consumption/commit/d6a5e71ef06d7f1f12251f19e3f422e39aaf2c25))
+* **filters:** V3.1 refinements - address user feedback and fix critical drag bug ([31496a1](https://github.com/dachrisch/energy.consumption/commit/31496a16ab2eed6019a8574fe608e3eaa5a3db0b))
+
 ### [2.2.2](https://github.com/dachrisch/energy.consumption/compare/v2.2.1...v2.2.2) (2025-11-03)
 
 
