@@ -7,6 +7,13 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Features
 
+* **charts:** redesign with monthly meter readings view ([c9f07e7](https://github.com/dachrisch/energy.consumption/commit/c9f07e70716ab2ffdcd166895bc1a18dad938e66))
+
+## [2.4.0](https://github.com/dachrisch/energy.consumption/compare/v2.3.1...v2.4.0) (2025-11-06)
+
+
+### Features
+
 * **charts:** complete redesign of monthly charts with end-of-month meter readings visualization
   - New dedicated MonthlyMeterReadingsChart component with separate Power and Gas charts
   - MonthlyDataAggregationService for calculating end-of-month readings
