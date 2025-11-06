@@ -320,27 +320,71 @@ The initial implementation only calculated consumption within each year, resulti
 - January always showing null consumption
 - December showing null for the last year in dataset
 
-### Solution Implemented
+### Solution Implemented (v1 - REPLACED)
 Enhanced `calculateMonthlyConsumption()` to use adjacent year boundary data:
 - Added `nextJanuary` parameter alongside existing `previousDecember`
 - December consumption now uses January of the next year
 - January consumption uses December of the previous year
 
-### New Behavior
+### New Behavior (v1 - REPLACED)
 - **January (non-first)**: Uses December from previous year
 - **December (non-last)**: Uses January from next year
 - **First month in dataset**: Still null (no previous data)
 - **Last December in dataset**: null if no next year available
 
+## Update: December Calculation Simplified (2025-11-07)
+
+### Issue with v1 Approach
+The cross-year boundary for December was problematic:
+- December consumption represented energy consumed IN January (next year)
+- This was semantically incorrect - December consumption should be energy consumed IN December
+- December showed null when it was the last month in dataset (no next January)
+- More complex logic requiring next year data
+
+### Solution Implemented (v2 - CURRENT)
+Simplified December calculation to use same logic as all other months:
+- **Removed** `nextJanuary` parameter from `calculateMonthlyConsumption()`
+- December now uses: `December - November` (same as February uses `Feb - Jan`)
+- This represents energy consumed IN December (from Nov 30 to Dec 31)
+- Simpler logic, no special cases for December
+
+### New Behavior (v2 - CURRENT)
+- **January**: Uses December from previous year (if provided via `previousDecember` parameter)
+- **February-December**: All use previous month from same year (Month - PreviousMonth)
+- **December**: Uses November from same year (December - November)
+- **First month in dataset**: null (no previous data available)
+- **Last month in dataset**: Shows consumption as long as it has previous month data
+
 ### Code Changes
-- Service: Added `nextJanuary` parameter to `calculateMonthlyConsumption()`
-- Component: Calculates and passes next year January readings
-- Tests: Added 8 comprehensive tests for December boundary logic
+**Service** (`src/app/services/MonthlyDataAggregationService.ts`):
+- Removed `nextJanuary` parameter from `calculateMonthlyConsumption()`
+- Removed special case logic for December
+- All months now use identical logic: `current - previous`
+- Updated JSDoc to reflect new behavior
+
+**Component** (`src/app/components/energy/MonthlyMeterReadingsChart.tsx`):
+- Removed `nextYearPowerData` and `nextYearGasData` calculations
+- Removed `nextJanuary` from `calculateMonthlyConsumption()` calls
+- Simpler useMemo dependencies (only `powerData` and `previousYearPowerData`)
+
+**Tests** (`src/app/services/__tests__/MonthlyDataAggregationService.test.ts`):
+- Removed 8 tests related to December + nextJanuary boundary
+- Added 7 new tests for December using previous month:
+  - December calculation using November
+  - Quality tracking (derived when November/December interpolated/extrapolated)
+  - Null handling (null November or null December)
+  - Last month in dataset scenario (key test)
+  - previousDecember doesn't affect December calculation
 
 ### Test Results
-- 489/489 tests passing (added 8 new tests)
-- Browser verified: January and December both show consumption bars
-- Quality tracking: December marked as derived when appropriate
+- **488/488 tests passing** (net -1 test, simplified test suite)
+- All existing tests pass without modification
+- December consumption now works for all years including last year
+- Quality tracking correctly marks derived consumption
 
 ### Impact
-Users now see consumption data for all 12 months (except first month overall), providing complete monthly consumption visibility.
+- **Simpler implementation**: No cross-year boundary for December
+- **More intuitive semantics**: December consumption = energy used IN December
+- **Better data availability**: December shows consumption even when last month in dataset
+- **Consistent behavior**: All months (Feb-Dec) use identical calculation pattern
+- **Less complexity**: Removed ~40 lines of special-case code
