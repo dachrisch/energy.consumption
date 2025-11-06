@@ -10,7 +10,6 @@ import {
   TableIcon,
   ChartIcon
 } from "./icons";
-import { hapticSelection } from "../utils/hapticUtils";
 
 interface NavItem {
   name: string;
@@ -75,7 +74,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   }
 
   const handleNavigation = (path: string) => {
-    hapticSelection(); // Trigger haptic feedback
     router.push(path);
     onClose(); // Close dropdown after navigation
   };

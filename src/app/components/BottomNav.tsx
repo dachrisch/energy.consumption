@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { HomeIcon, PlusCircleIcon, ChartIcon, TableIcon } from "./icons";
-import { hapticSelection } from "../utils/hapticUtils";
 
 interface NavItem {
   name: string;
@@ -45,7 +44,6 @@ export default function BottomNav() {
   }
 
   const handleNavigation = (path: string) => {
-    hapticSelection();
     router.push(path);
   };
 

@@ -1,7 +1,5 @@
 "use client";
 
-import { triggerHaptic } from "../utils/hapticUtils";
-
 interface BurgerMenuProps {
   onClick: () => void;
 }
@@ -9,7 +7,6 @@ interface BurgerMenuProps {
 export default function BurgerMenu({ onClick }: BurgerMenuProps) {
   const handleClick = () => {
     console.log('[BurgerMenu] Clicked');
-    triggerHaptic('light');
     onClick();
   };
 
