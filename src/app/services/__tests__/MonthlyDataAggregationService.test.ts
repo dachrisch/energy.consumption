@@ -5,12 +5,13 @@
 
 import {
   calculateMonthlyReadings,
+  calculateMonthlyConsumption,
   findNearestReading,
   interpolateValue,
   getMonthEndDate,
   extrapolateValue,
 } from '../MonthlyDataAggregationService';
-import { EnergyType } from '@/app/types';
+import { EnergyType, MonthlyDataPoint } from '@/app/types';
 
 describe('MonthlyDataAggregationService', () => {
   // Helper to create test readings
@@ -447,6 +448,323 @@ describe('MonthlyDataAggregationService', () => {
 
       // November-December: extrapolate forward
       expect(result[10].isExtrapolated).toBe(true);
+    });
+  });
+
+  describe('calculateMonthlyConsumption', () => {
+    // Helper to create monthly data point
+    const createMonthlyPoint = (
+      month: number,
+      meterReading: number | null,
+      isActual: boolean = true,
+      isInterpolated: boolean = false,
+      isExtrapolated: boolean = false
+    ): MonthlyDataPoint => ({
+      month,
+      monthLabel: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1],
+      meterReading,
+      isActual,
+      isInterpolated,
+      isExtrapolated,
+      calculationDetails: {
+        method: isActual ? 'actual' : isInterpolated ? 'interpolated' : isExtrapolated ? 'extrapolated' : 'none',
+      },
+    });
+
+    describe('Basic Consumption Calculation', () => {
+      it('should calculate correct differences for complete year with actual readings', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + (i + 1) * 100, true, false, false)
+        );
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result).toHaveLength(12);
+
+        // First month should have null consumption (no previous data)
+        expect(result[0].month).toBe(1);
+        expect(result[0].consumption).toBeNull();
+        expect(result[0].isActual).toBe(false);
+        expect(result[0].isDerived).toBe(false);
+
+        // Subsequent months should have 100 kWh consumption each
+        for (let i = 1; i < 12; i++) {
+          expect(result[i].month).toBe(i + 1);
+          expect(result[i].consumption).toBe(100);
+          expect(result[i].isActual).toBe(true);
+          expect(result[i].isDerived).toBe(false);
+          expect(result[i].sourceReadings.current).toBe(monthlyData[i]);
+          expect(result[i].sourceReadings.previous).toBe(monthlyData[i - 1]);
+        }
+      });
+
+      it('should use previous December when provided for January calculation', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1050, true),
+          ...Array.from({ length: 11 }, (_, i) => createMonthlyPoint(i + 2, 1100 + i * 50, true)),
+        ];
+        const previousDecember = createMonthlyPoint(12, 950, true);
+
+        const result = calculateMonthlyConsumption(monthlyData, previousDecember);
+
+        // January should now have consumption calculated
+        expect(result[0].month).toBe(1);
+        expect(result[0].consumption).toBe(100); // 1050 - 950
+        expect(result[0].isActual).toBe(true);
+        expect(result[0].isDerived).toBe(false);
+        expect(result[0].sourceReadings.current.month).toBe(1);
+        expect(result[0].sourceReadings.previous?.month).toBe(12);
+      });
+
+      it('should handle null meter readings correctly', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, true),
+          createMonthlyPoint(2, null, false), // Gap in data
+          createMonthlyPoint(3, 1200, true),
+          ...Array.from({ length: 9 }, (_, i) => createMonthlyPoint(i + 4, 1300 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        // January: no previous data
+        expect(result[0].consumption).toBeNull();
+
+        // February: current is null
+        expect(result[1].consumption).toBeNull();
+
+        // March: previous (Feb) is null
+        expect(result[2].consumption).toBeNull();
+
+        // April: both Mar and Apr are not null
+        expect(result[3].consumption).toBe(100); // 1300 - 1200
+        expect(result[3].isActual).toBe(true);
+      });
+
+      it('should handle zero consumption (same readings)', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, true),
+          createMonthlyPoint(2, 1000, true), // Same reading
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 3, 1000 + i * 50, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[1].month).toBe(2);
+        expect(result[1].consumption).toBe(0); // 1000 - 1000
+        expect(result[1].isActual).toBe(true);
+      });
+    });
+
+    describe('Data Quality Propagation', () => {
+      it('should mark consumption as derived when current reading is interpolated', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, true, false, false),
+          createMonthlyPoint(2, 1100, false, true, false), // Interpolated
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 3, 1200 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[1].month).toBe(2);
+        expect(result[1].consumption).toBe(100);
+        expect(result[1].isActual).toBe(false);
+        expect(result[1].isDerived).toBe(true);
+      });
+
+      it('should mark consumption as derived when previous reading is extrapolated', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, false, false, true), // Extrapolated
+          createMonthlyPoint(2, 1100, true, false, false),
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 3, 1200 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[1].month).toBe(2);
+        expect(result[1].consumption).toBe(100);
+        expect(result[1].isActual).toBe(false);
+        expect(result[1].isDerived).toBe(true);
+      });
+
+      it('should mark consumption as derived when both readings are interpolated', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, false, true, false),
+          createMonthlyPoint(2, 1100, false, true, false),
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 3, 1200 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[1].month).toBe(2);
+        expect(result[1].consumption).toBe(100);
+        expect(result[1].isActual).toBe(false);
+        expect(result[1].isDerived).toBe(true);
+      });
+
+      it('should mark consumption as actual only when both readings are actual', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, true, false, false),
+          createMonthlyPoint(2, 1100, true, false, false),
+          createMonthlyPoint(3, 1200, false, true, false), // Interpolated
+          createMonthlyPoint(4, 1300, true, false, false),
+          ...Array.from({ length: 8 }, (_, i) => createMonthlyPoint(i + 5, 1400 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        // Feb: both actual
+        expect(result[1].isActual).toBe(true);
+        expect(result[1].isDerived).toBe(false);
+
+        // Mar: current interpolated, previous actual
+        expect(result[2].isActual).toBe(false);
+        expect(result[2].isDerived).toBe(true);
+
+        // Apr: current actual, previous interpolated
+        expect(result[3].isActual).toBe(false);
+        expect(result[3].isDerived).toBe(true);
+      });
+    });
+
+    describe('Edge Cases', () => {
+      it('should handle negative consumption (meter reset)', () => {
+        const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1500, true),
+          createMonthlyPoint(2, 50, true), // Meter reset
+          createMonthlyPoint(3, 150, true),
+          ...Array.from({ length: 9 }, (_, i) => createMonthlyPoint(i + 4, 250 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[1].month).toBe(2);
+        expect(result[1].consumption).toBe(-1450); // 50 - 1500
+        expect(result[1].isActual).toBe(true);
+
+        // Should log warning
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Negative consumption detected')
+        );
+
+        // March should calculate normally
+        expect(result[2].consumption).toBe(100); // 150 - 50
+
+        consoleWarnSpy.mockRestore();
+      });
+
+      it('should throw error for invalid input (not 12 months)', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 6 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true)
+        );
+
+        expect(() => calculateMonthlyConsumption(monthlyData)).toThrow(
+          'monthlyData must contain exactly 12 months'
+        );
+      });
+
+      it('should throw error for empty array', () => {
+        const monthlyData: MonthlyDataPoint[] = [];
+
+        expect(() => calculateMonthlyConsumption(monthlyData)).toThrow(
+          'monthlyData must contain exactly 12 months'
+        );
+      });
+
+      it('should handle all null meter readings', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, null, false)
+        );
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        // All consumption should be null
+        result.forEach((month) => {
+          expect(month.consumption).toBeNull();
+          expect(month.isActual).toBe(false);
+          expect(month.isDerived).toBe(false);
+        });
+      });
+
+      it('should include correct month labels', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true)
+        );
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        const expectedLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        result.forEach((month, index) => {
+          expect(month.monthLabel).toBe(expectedLabels[index]);
+        });
+      });
+
+      it('should handle large consumption values', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 10000, true),
+          createMonthlyPoint(2, 15000, true),
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 3, 15000 + (i + 1) * 5000, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[1].consumption).toBe(5000);
+        expect(result[1].isActual).toBe(true);
+      });
+
+      it('should preserve sourceReadings reference', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true)
+        );
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        // Check that sourceReadings references original data
+        for (let i = 1; i < 12; i++) {
+          expect(result[i].sourceReadings.current).toBe(monthlyData[i]);
+          expect(result[i].sourceReadings.previous).toBe(monthlyData[i - 1]);
+        }
+
+        // First month should have null previous
+        expect(result[0].sourceReadings.previous).toBeNull();
+      });
+    });
+
+    describe('Consumption Quality Determination', () => {
+      it('should return isActual=true when both endpoints are actual', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, true, false, false),
+          createMonthlyPoint(2, 1100, true, false, false),
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 3, 1200 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[1].isActual).toBe(true);
+        expect(result[1].isDerived).toBe(false);
+      });
+
+      it('should handle mixed actual/interpolated/extrapolated combinations', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          createMonthlyPoint(1, 1000, true, false, false), // Actual
+          createMonthlyPoint(2, 1100, false, true, false), // Interpolated
+          createMonthlyPoint(3, 1200, false, false, true), // Extrapolated
+          createMonthlyPoint(4, 1300, true, false, false), // Actual
+          ...Array.from({ length: 8 }, (_, i) => createMonthlyPoint(i + 5, 1400 + i * 100, true)),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        // Feb: actual + interpolated = derived
+        expect(result[1].isDerived).toBe(true);
+
+        // Mar: interpolated + extrapolated = derived
+        expect(result[2].isDerived).toBe(true);
+
+        // Apr: extrapolated + actual = derived
+        expect(result[3].isDerived).toBe(true);
+      });
     });
   });
 });

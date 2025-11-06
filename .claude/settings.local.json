@@ -41,7 +41,9 @@
       "Bash(npm audit:*)",
       "Bash(journalctl:*)",
       "Bash(tee:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint:strict:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

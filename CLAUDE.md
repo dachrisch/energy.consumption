@@ -156,34 +156,70 @@ import RangeSlider from '@/app/components/energy/RangeSlider';
 
 **Location**: `/src/app/charts/page.tsx` and `/src/app/components/energy/MonthlyMeterReadingsChart.tsx`
 
-The monthly charts feature provides visualization of end-of-month meter readings with clear distinction between actual measurements, interpolated values, and extrapolated estimates.
+The monthly charts feature provides visualization of end-of-month meter readings with clear distinction between actual measurements, interpolated values, and extrapolated estimates. **Enhanced with dual y-axis visualization** to show both cumulative meter readings and monthly consumption in a unified chart.
 
 **Service** (`src/app/services/`):
-- `MonthlyDataAggregationService.ts` - Pure functions for calculating end-of-month readings
+- `MonthlyDataAggregationService.ts` - Pure functions for calculating end-of-month readings and consumption
   - `calculateMonthlyReadings()` - Main aggregation function (returns 12 monthly data points)
+  - `calculateMonthlyConsumption()` - **[NEW]** Calculates monthly consumption from meter readings
   - `findNearestReading()` - Finds actual reading within 3-day tolerance
   - `interpolateValue()` - Linear interpolation between two readings
   - `extrapolateValue()` - Extrapolation using trend from two readings
   - `getMonthEndDate()` - Month-end date calculation (handles leap years)
 
 **Component**:
-- `MonthlyMeterReadingsChart.tsx` - Renders two separate line charts (Power and Gas)
+- `MonthlyMeterReadingsChart.tsx` - Renders two separate **dual-axis charts** (Power and Gas)
+  - **Dual Y-Axes**: Left axis (meter readings), Right axis (monthly consumption)
+  - **Mixed Chart Types**: Line chart (meter readings) + Bar chart (consumption)
   - Year navigation UI (prev/next buttons, dropdown)
-  - Data quality indicators (actual, interpolated, extrapolated)
+  - Data quality indicators (actual, interpolated, extrapolated, derived)
   - Mobile-responsive with clamp(300px, 50vh, 500px) chart height
   - Custom legend showing line patterns and point styles
+  - Enhanced tooltips showing both meter reading and consumption values
 
 **Data Quality Indicators**:
-- **Actual**: Solid line, filled circle point
-- **Interpolated**: Dashed line (5-5 pattern), hollow circle point
-- **Extrapolated**: Longer dashed line (10-5 pattern), hollow circle point
-- Tooltips show data quality: "(Actual)", "(Interpolated)", "(Extrapolated)"
+- **Meter Readings** (Line Chart):
+  - **Actual**: Solid line, filled circle point
+  - **Interpolated**: Dashed line (5-5 pattern), hollow circle point
+  - **Extrapolated**: Longer dashed line (10-5 pattern), hollow circle point
+- **Consumption** (Bar Chart):
+  - **Actual**: Solid border (both meter readings actual)
+  - **Derived**: Dashed border (one or both readings interpolated/extrapolated)
+  - Semi-transparent bars (70% opacity) to avoid obscuring line chart
+  - Colors: Power (teal `rgba(124, 245, 220, 0.7)`), Gas (pink `rgba(255, 159, 128, 0.7)`)
+
+**Dual-Axis Configuration**:
+- **Left Y-Axis (`y-left`)**: Meter readings in kWh/m³, beginAtZero: false, grid visible
+- **Right Y-Axis (`y-right`)**: Monthly consumption in kWh/m³, beginAtZero: true, grid hidden
+- Both axes auto-scale independently
+- Axis titles hidden on mobile (≤768px) to save space
+- Bar chart renders behind line chart (order property controls layering)
+
+**Consumption Calculation**:
+- **Formula**: `Consumption = Current Month Reading - Previous Month Reading`
+- **First month (January)**: Consumption = null (no previous reading)
+- **Null readings**: Consumption = null for affected months
+- **Negative values**: Allowed (indicates meter reset), logged as warning
+- **Data quality**: Consumption marked as "derived" if either endpoint is not actual
+
+**Enhanced Tooltips**:
+```
+February 2024
+Meter Reading: 1,234 kWh (Actual)
+Consumption: 156 kWh
+```
+- Shows both meter reading and consumption values
+- Displays data quality indicators for both datasets
+- Graceful handling of null values (first month or gaps)
+- Custom title shows month label and year
 
 **Algorithm**:
 1. For each month, check for actual reading within 3-day tolerance of month end
 2. If no actual reading, try interpolation (requires readings before and after)
 3. If interpolation not possible, try extrapolation (requires 2 readings on one side)
 4. If no calculation possible, return null (gap in chart)
+5. **[NEW]** Calculate consumption as difference between current and previous month
+6. **[NEW]** Determine consumption quality based on source reading quality
 
 **Usage Example**:
 ```typescript
@@ -198,18 +234,26 @@ import MonthlyMeterReadingsChart from '@/app/components/energy/MonthlyMeterReadi
 ```
 
 **Design Decisions**:
+- **Dual-axis charts**: Shows both meter state (line) and consumption (bars) in unified view
 - **Separate charts**: Power and Gas in separate charts with independent Y-axis scales
-- **Month-end focus**: Shows meter state at end of each month (not consumption)
+- **Month-end focus**: Shows meter state at end of each month
 - **3-day tolerance**: Readings within 3 days of month end considered "actual"
 - **Linear interpolation**: Simple, predictable, and sufficient for meter readings
+- **Chart.js mixed type**: Leverages Chart.js v4 dual-axis and mixed chart support
 - **Chart.js segment API**: Dynamic line styling based on data quality
-- **Mobile-first**: Responsive font sizes, touch-friendly year navigation
+- **Mobile-first**: Responsive font sizes, touch-friendly year navigation, axis titles hidden on mobile
 
 **Integration**:
 - `/charts` page - Dedicated route for monthly visualization
 - Replaces old monthly view in UnifiedEnergyChart
 - Uses existing ENERGY_TYPE_CONFIG for colors and labels
 - No new dependencies (Chart.js, date-fns already in project)
+
+**Performance**:
+- Consumption calculation: O(12) = O(1) constant time
+- All calculations memoized with useMemo
+- Expected execution time: <5ms per chart
+- No performance impact on existing functionality
 
 **Custom Hooks** (`src/app/hooks/`):
 
@@ -307,6 +351,8 @@ Central types in `src/app/types.ts`:
 - `UserSpecific` - Base type for user-scoped data (includes `userId`)
 - `EnergyOptions` - "power" | "gas"
 - `EnergyTimeSeries` - Record mapping energy types to TimeSeries
+- `MonthlyDataPoint` - End-of-month meter reading with quality indicators
+- `MonthlyConsumptionPoint` - Monthly consumption calculated from meter readings (month, consumption, isActual, isDerived, sourceReadings)
 
 ## Key Patterns
 

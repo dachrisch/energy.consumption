@@ -42,6 +42,10 @@ describe('MonthlyMeterReadingsChart', () => {
     typeof MonthlyDataAggregationService.calculateMonthlyReadings
   >;
 
+  const mockCalculateMonthlyConsumption = MonthlyDataAggregationService.calculateMonthlyConsumption as jest.MockedFunction<
+    typeof MonthlyDataAggregationService.calculateMonthlyConsumption
+  >;
+
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
@@ -55,6 +59,21 @@ describe('MonthlyMeterReadingsChart', () => {
         isActual: i < 2,
         isInterpolated: false,
         isExtrapolated: false,
+      }));
+    });
+
+    // Default mock for consumption calculation
+    mockCalculateMonthlyConsumption.mockImplementation((monthlyData) => {
+      return Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        monthLabel: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
+        consumption: i === 0 ? null : (i < 2 ? 100 : null),
+        isActual: i === 1,
+        isDerived: false,
+        sourceReadings: {
+          current: monthlyData[i],
+          previous: i === 0 ? null : monthlyData[i - 1],
+        },
       }));
     });
   });

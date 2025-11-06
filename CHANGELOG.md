@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.1] - 2025-11-06
+
+### Added
+- **Dual Y-Axis Monthly Charts**: Charts now display both meter readings (left axis) and monthly consumption (right axis)
+  - Bar chart overlay showing monthly consumption differences
+  - Consumption = Current month meter reading - Previous month meter reading
+  - Semi-transparent bars (70% opacity) to avoid obscuring line chart
+  - Enhanced tooltips showing both meter reading and consumption values
+  - First month (January) shows null for consumption (no previous month)
+  - Derived consumption flagged with dashed borders
+  - Colors: Power consumption (teal `rgba(124, 245, 220, 0.7)`), Gas consumption (pink `rgba(255, 159, 128, 0.7)`)
+
+### Technical Details
+- New service function: `calculateMonthlyConsumption()` in `MonthlyDataAggregationService`
+- New type: `MonthlyConsumptionPoint` with quality tracking (isActual, isDerived)
+- Chart.js dual y-axis configuration with independent scales
+  - Left axis (`y-left`): Meter readings, beginAtZero: false
+  - Right axis (`y-right`): Consumption, beginAtZero: true
+- Mixed chart type support: Line chart (meter readings) + Bar chart (consumption)
+- 18 new comprehensive tests for consumption calculation (service layer)
+- 481 total tests passing (100%)
+- No breaking changes - backward compatible enhancement
+
+### Documentation
+- Comprehensive feature documentation in `feature-dev/dual-axis-monthly-charts/`
+- Updated CLAUDE.md with dual-axis configuration details
+- Implementation notes with design decisions and performance optimizations
+
 ## [2.4.0](https://github.com/dachrisch/energy.consumption/compare/v2.3.1...v2.4.0) (2025-11-06)
 
 

@@ -76,3 +76,18 @@ export type MonthlyDataPoint = {
     interpolationRatio?: number; // For debugging interpolation
   };
 };
+
+/**
+ * Data point representing monthly consumption (difference between meter readings)
+ */
+export type MonthlyConsumptionPoint = {
+  month: number; // 1-12 (January = 1)
+  monthLabel: string; // "Jan", "Feb", ..., "Dec"
+  consumption: number | null; // kWh or m³ consumed in this month
+  isActual: boolean; // true if both current and previous readings are actual
+  isDerived: boolean; // true if one or both readings are interpolated/extrapolated
+  sourceReadings: {
+    current: MonthlyDataPoint; // Current month's meter reading
+    previous: MonthlyDataPoint | null; // Previous month's meter reading (null for January)
+  };
+};

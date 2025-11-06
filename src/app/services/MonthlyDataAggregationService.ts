@@ -12,7 +12,7 @@
  * - DIP: No external dependencies
  */
 
-import { EnergyType, EnergyOptions, MonthlyDataPoint } from '@/app/types';
+import { EnergyType, EnergyOptions, MonthlyDataPoint, MonthlyConsumptionPoint } from '@/app/types';
 import { endOfMonth, differenceInDays } from 'date-fns';
 
 /**
@@ -291,6 +291,88 @@ export const calculateMonthlyReadings = (
       isExtrapolated: false,
       calculationDetails: {
         method: 'none',
+      },
+    });
+  }
+
+  return results;
+};
+
+/**
+ * Determine if consumption value is from actual or derived data
+ *
+ * @param current - Current month's data point
+ * @param previous - Previous month's data point
+ * @returns Object with isActual and isDerived flags
+ */
+const determineConsumptionQuality = (
+  current: MonthlyDataPoint,
+  previous: MonthlyDataPoint
+): { isActual: boolean; isDerived: boolean } => {
+  const isActual = current.isActual && previous.isActual;
+  const isDerived = !isActual;
+
+  return { isActual, isDerived };
+};
+
+/**
+ * Calculate monthly consumption from month-end meter readings
+ *
+ * Consumption for a month = Current month reading - Previous month reading
+ * First month (January) will have null consumption unless previous December is provided
+ *
+ * @param monthlyData - Array of 12 MonthlyDataPoint objects (from calculateMonthlyReadings)
+ * @param previousDecember - Optional: December reading from previous year for January calculation
+ * @returns Array of 12 MonthlyConsumptionPoint objects
+ *
+ * @example
+ * const readings = calculateMonthlyReadings(energyData, 2024, 'power');
+ * const consumption = calculateMonthlyConsumption(readings);
+ * // consumption[0].consumption === null (January, no previous data)
+ * // consumption[1].consumption === readings[1].meterReading - readings[0].meterReading
+ */
+export const calculateMonthlyConsumption = (
+  monthlyData: MonthlyDataPoint[],
+  previousDecember?: MonthlyDataPoint
+): MonthlyConsumptionPoint[] => {
+  // Validation
+  if (monthlyData.length !== 12) {
+    throw new Error('monthlyData must contain exactly 12 months');
+  }
+
+  const results: MonthlyConsumptionPoint[] = [];
+
+  for (let i = 0; i < 12; i++) {
+    const current = monthlyData[i];
+    const previous = i === 0 ? previousDecember || null : monthlyData[i - 1];
+
+    // Calculate consumption
+    let consumption: number | null = null;
+    if (current.meterReading !== null && previous && previous.meterReading !== null) {
+      consumption = current.meterReading - previous.meterReading;
+
+      // Warn on negative consumption
+      if (consumption < 0) {
+        console.warn(
+          `Negative consumption detected for ${current.monthLabel} (${current.month}): ${consumption}`
+        );
+      }
+    }
+
+    // Determine quality
+    const quality = previous && consumption !== null
+      ? determineConsumptionQuality(current, previous)
+      : { isActual: false, isDerived: false };
+
+    results.push({
+      month: current.month,
+      monthLabel: current.monthLabel,
+      consumption,
+      isActual: quality.isActual,
+      isDerived: quality.isDerived,
+      sourceReadings: {
+        current,
+        previous,
       },
     });
   }

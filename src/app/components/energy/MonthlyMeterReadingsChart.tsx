@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useRef, useEffect } from "react";
 import { EnergyType } from "@/app/types";
-import { calculateMonthlyReadings } from "@/app/services/MonthlyDataAggregationService";
+import { calculateMonthlyReadings, calculateMonthlyConsumption } from "@/app/services/MonthlyDataAggregationService";
 import { getEnergyTypeLabel, getEnergyTypeChartConfig } from "@/app/constants/energyTypes";
 import { CHART_BORDER_DASH, CHART_POINT_RADIUS } from "@/app/constants/ui";
 import {
@@ -11,18 +11,22 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
+  BarController,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import type { ChartOptions, ScriptableLineSegmentContext } from "chart.js";
+import type { ScriptableLineSegmentContext, TooltipItem } from "chart.js";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
+  BarController,
   Title,
   Tooltip,
   Legend
@@ -82,6 +86,17 @@ const MonthlyMeterReadingsChart = ({
     [energyData, selectedYear]
   );
 
+  // Calculate monthly consumption for Power and Gas
+  const powerConsumption = useMemo(
+    () => calculateMonthlyConsumption(powerData),
+    [powerData]
+  );
+
+  const gasConsumption = useMemo(
+    () => calculateMonthlyConsumption(gasData),
+    [gasData]
+  );
+
   // Transform Power data to Chart.js format
   const powerChartData = useMemo(() => {
     const labels = powerData.map(d => d.monthLabel);
@@ -90,50 +105,69 @@ const MonthlyMeterReadingsChart = ({
 
     return {
       labels,
-      datasets: [{
-        label: getEnergyTypeLabel('power'),
-        data: values,
-        borderColor: config.borderColor,
-        backgroundColor: config.backgroundColor,
-        borderWidth: 2.5,
-        tension: 0.4,
-        pointRadius: powerData.map(d => d.meterReading !== null ? CHART_POINT_RADIUS.normal : 0),
-        pointHoverRadius: 6,
-        pointStyle: 'circle',
-        pointBackgroundColor: powerData.map(d => {
-          if (d.meterReading === null) return 'transparent';
-          return d.isActual ? config.borderColor : 'transparent';
-        }),
-        pointBorderColor: powerData.map(d => {
-          if (d.meterReading === null) return 'transparent';
-          return config.borderColor;
-        }),
-        pointBorderWidth: powerData.map(d => {
-          if (d.meterReading === null) return 0;
-          return d.isActual ? 0 : 2;
-        }),
-        pointHoverBackgroundColor: config.borderColor,
-        pointHoverBorderColor: '#fff',
-        pointHoverBorderWidth: 2,
-        spanGaps: true,
-        fill: false,
-        segment: {
-          borderDash: (ctx: ScriptableLineSegmentContext) => {
-            const point = powerData[ctx.p0DataIndex];
-            const nextPoint = powerData[ctx.p1DataIndex];
-            // Use dashed if either point is interpolated or extrapolated
-            if (point?.isInterpolated || nextPoint?.isInterpolated) {
-              return CHART_BORDER_DASH.interpolated;
-            }
-            if (point?.isExtrapolated || nextPoint?.isExtrapolated) {
-              return CHART_BORDER_DASH.extrapolated;
-            }
-            return undefined; // Solid for actual
+      datasets: [
+        // Dataset 1: Meter Readings (Line) → Left Y-Axis
+        {
+          type: 'line' as const,
+          label: getEnergyTypeLabel('power'),
+          data: values,
+          yAxisID: 'y-left',
+          borderColor: config.borderColor,
+          backgroundColor: config.backgroundColor,
+          borderWidth: 2.5,
+          tension: 0.4,
+          pointRadius: powerData.map(d => d.meterReading !== null ? CHART_POINT_RADIUS.normal : 0),
+          pointHoverRadius: 6,
+          pointStyle: 'circle',
+          pointBackgroundColor: powerData.map(d => {
+            if (d.meterReading === null) return 'transparent';
+            return d.isActual ? config.borderColor : 'transparent';
+          }),
+          pointBorderColor: powerData.map(d => {
+            if (d.meterReading === null) return 'transparent';
+            return config.borderColor;
+          }),
+          pointBorderWidth: powerData.map(d => {
+            if (d.meterReading === null) return 0;
+            return d.isActual ? 0 : 2;
+          }),
+          pointHoverBackgroundColor: config.borderColor,
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+          spanGaps: true,
+          fill: false,
+          order: 2, // Render on top of bars
+          segment: {
+            borderDash: (ctx: ScriptableLineSegmentContext) => {
+              const point = powerData[ctx.p0DataIndex];
+              const nextPoint = powerData[ctx.p1DataIndex];
+              // Use dashed if either point is interpolated or extrapolated
+              if (point?.isInterpolated || nextPoint?.isInterpolated) {
+                return CHART_BORDER_DASH.interpolated;
+              }
+              if (point?.isExtrapolated || nextPoint?.isExtrapolated) {
+                return CHART_BORDER_DASH.extrapolated;
+              }
+              return undefined; // Solid for actual
+            },
           },
         },
-      }],
+        // Dataset 2: Monthly Consumption (Bar) → Right Y-Axis
+        {
+          type: 'bar' as const,
+          label: 'Monthly Consumption',
+          data: powerConsumption.map(d => d.consumption),
+          yAxisID: 'y-right',
+          backgroundColor: 'rgba(124, 245, 220, 0.7)', // Light teal for power bars
+          borderColor: config.borderColor,
+          borderWidth: 1,
+          barPercentage: 0.6,
+          order: 1, // Render behind line
+          borderDash: powerConsumption.map(d => d.isDerived ? [5, 3] : []),
+        },
+      ],
     };
-  }, [powerData]);
+  }, [powerData, powerConsumption]);
 
   // Transform Gas data to Chart.js format
   const gasChartData = useMemo(() => {
@@ -143,53 +177,72 @@ const MonthlyMeterReadingsChart = ({
 
     return {
       labels,
-      datasets: [{
-        label: getEnergyTypeLabel('gas'),
-        data: values,
-        borderColor: config.borderColor,
-        backgroundColor: config.backgroundColor,
-        borderWidth: 2.5,
-        tension: 0.4,
-        pointRadius: gasData.map(d => d.meterReading !== null ? CHART_POINT_RADIUS.normal : 0),
-        pointHoverRadius: 6,
-        pointStyle: 'circle',
-        pointBackgroundColor: gasData.map(d => {
-          if (d.meterReading === null) return 'transparent';
-          return d.isActual ? config.borderColor : 'transparent';
-        }),
-        pointBorderColor: gasData.map(d => {
-          if (d.meterReading === null) return 'transparent';
-          return config.borderColor;
-        }),
-        pointBorderWidth: gasData.map(d => {
-          if (d.meterReading === null) return 0;
-          return d.isActual ? 0 : 2;
-        }),
-        pointHoverBackgroundColor: config.borderColor,
-        pointHoverBorderColor: '#fff',
-        pointHoverBorderWidth: 2,
-        spanGaps: true,
-        fill: false,
-        segment: {
-          borderDash: (ctx: ScriptableLineSegmentContext) => {
-            const point = gasData[ctx.p0DataIndex];
-            const nextPoint = gasData[ctx.p1DataIndex];
-            // Use dashed if either point is interpolated or extrapolated
-            if (point?.isInterpolated || nextPoint?.isInterpolated) {
-              return CHART_BORDER_DASH.interpolated;
-            }
-            if (point?.isExtrapolated || nextPoint?.isExtrapolated) {
-              return CHART_BORDER_DASH.extrapolated;
-            }
-            return undefined; // Solid for actual
+      datasets: [
+        // Dataset 1: Meter Readings (Line) → Left Y-Axis
+        {
+          type: 'line' as const,
+          label: getEnergyTypeLabel('gas'),
+          data: values,
+          yAxisID: 'y-left',
+          borderColor: config.borderColor,
+          backgroundColor: config.backgroundColor,
+          borderWidth: 2.5,
+          tension: 0.4,
+          pointRadius: gasData.map(d => d.meterReading !== null ? CHART_POINT_RADIUS.normal : 0),
+          pointHoverRadius: 6,
+          pointStyle: 'circle',
+          pointBackgroundColor: gasData.map(d => {
+            if (d.meterReading === null) return 'transparent';
+            return d.isActual ? config.borderColor : 'transparent';
+          }),
+          pointBorderColor: gasData.map(d => {
+            if (d.meterReading === null) return 'transparent';
+            return config.borderColor;
+          }),
+          pointBorderWidth: gasData.map(d => {
+            if (d.meterReading === null) return 0;
+            return d.isActual ? 0 : 2;
+          }),
+          pointHoverBackgroundColor: config.borderColor,
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+          spanGaps: true,
+          fill: false,
+          order: 2, // Render on top of bars
+          segment: {
+            borderDash: (ctx: ScriptableLineSegmentContext) => {
+              const point = gasData[ctx.p0DataIndex];
+              const nextPoint = gasData[ctx.p1DataIndex];
+              // Use dashed if either point is interpolated or extrapolated
+              if (point?.isInterpolated || nextPoint?.isInterpolated) {
+                return CHART_BORDER_DASH.interpolated;
+              }
+              if (point?.isExtrapolated || nextPoint?.isExtrapolated) {
+                return CHART_BORDER_DASH.extrapolated;
+              }
+              return undefined; // Solid for actual
+            },
           },
         },
-      }],
+        // Dataset 2: Monthly Consumption (Bar) → Right Y-Axis
+        {
+          type: 'bar' as const,
+          label: 'Monthly Consumption',
+          data: gasConsumption.map(d => d.consumption),
+          yAxisID: 'y-right',
+          backgroundColor: 'rgba(255, 159, 128, 0.7)', // Light pink/red for gas bars
+          borderColor: config.borderColor,
+          borderWidth: 1,
+          barPercentage: 0.6,
+          order: 1, // Render behind line
+          borderDash: gasConsumption.map(d => d.isDerived ? [5, 3] : []),
+        },
+      ],
     };
-  }, [gasData]);
+  }, [gasData, gasConsumption]);
 
-  // Chart options
-  const chartOptions: ChartOptions<'line'> = useMemo(() => ({
+  // Chart options (using 'line' as base type with mixed datasets)
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
@@ -215,25 +268,49 @@ const MonthlyMeterReadingsChart = ({
           size: isMobile ? 11 : 13,
         },
         callbacks: {
-          label: (context) => {
+          label: (context: TooltipItem<'line'>) => {
             const dataIndex = context.dataIndex;
-            const dataPoint = context.chart.data.datasets[0].label?.includes('Power')
-              ? powerData[dataIndex]
-              : gasData[dataIndex];
+            const isPowerChart = context.chart.data.datasets[0].label?.includes('Power');
+            const monthlyData = isPowerChart ? powerData : gasData;
+            const consumptionData = isPowerChart ? powerConsumption : gasConsumption;
 
-            const value = context.parsed.y;
-            if (value === null) return 'No data';
+            const datasetIndex = context.datasetIndex;
 
-            let typeIndicator = '';
-            if (dataPoint.isActual) {
-              typeIndicator = ' (Actual)';
-            } else if (dataPoint.isInterpolated) {
-              typeIndicator = ' (Interpolated)';
-            } else if (dataPoint.isExtrapolated) {
-              typeIndicator = ' (Extrapolated)';
+            if (datasetIndex === 0) {
+              // Line dataset (meter reading)
+              const dataPoint = monthlyData[dataIndex];
+              const value = context.parsed.y;
+
+              if (value === null) return 'No data';
+
+              let typeIndicator = '';
+              if (dataPoint.isActual) {
+                typeIndicator = ' (Actual)';
+              } else if (dataPoint.isInterpolated) {
+                typeIndicator = ' (Interpolated)';
+              } else if (dataPoint.isExtrapolated) {
+                typeIndicator = ' (Extrapolated)';
+              }
+
+              return `Meter Reading: ${value.toFixed(2)} kWh${typeIndicator}`;
+            } else {
+              // Bar dataset (consumption)
+              const consumptionPoint = consumptionData[dataIndex];
+              const value = consumptionPoint.consumption;
+
+              if (value === null) {
+                return dataIndex === 0
+                  ? 'Consumption: N/A (first month)'
+                  : 'Consumption: N/A';
+              }
+
+              const derivedIndicator = consumptionPoint.isDerived ? ' (derived)' : '';
+              return `Consumption: ${value.toFixed(2)} kWh${derivedIndicator}`;
             }
-
-            return `${context.dataset.label}: ${value.toFixed(2)} kWh${typeIndicator}`;
+          },
+          title: (tooltipItems: TooltipItem<'line'>[]) => {
+            const monthLabel = tooltipItems[0]?.label;
+            return `${monthLabel} ${selectedYear}`;
           },
         },
       },
@@ -259,7 +336,10 @@ const MonthlyMeterReadingsChart = ({
           },
         },
       },
-      y: {
+      // Left Y-Axis: Meter Readings
+      'y-left': {
+        type: 'linear' as const,
+        position: 'left' as const,
         beginAtZero: false, // Start from data minimum for better readability
         grid: {
           color: 'rgba(0, 0, 0, 0.05)',
@@ -280,8 +360,31 @@ const MonthlyMeterReadingsChart = ({
           },
         },
       },
+      // Right Y-Axis: Consumption
+      'y-right': {
+        type: 'linear' as const,
+        position: 'right' as const,
+        beginAtZero: true, // Consumption typically starts at 0
+        grid: {
+          drawOnChartArea: false, // Don't draw grid for right axis (avoid clutter)
+        },
+        ticks: {
+          padding: isMobile ? 4 : 8,
+          font: {
+            size: isMobile ? 9 : 11,
+          },
+        },
+        title: {
+          display: !isMobile,
+          text: "Monthly Consumption (kWh)",
+          font: {
+            size: isMobile ? 10 : 12,
+            weight: 'bold' as const,
+          },
+        },
+      },
     },
-  }), [isMobile, powerData, gasData]);
+  }), [isMobile, powerData, gasData, powerConsumption, gasConsumption, selectedYear]);
 
   // Handle year navigation
   const handlePrevYear = () => {
@@ -372,7 +475,8 @@ const MonthlyMeterReadingsChart = ({
       <div>
         <h4 className="text-md font-semibold mb-2 text-foreground">Power Meter Readings</h4>
         <div className="relative w-full" style={{ height: 'clamp(300px, 50vh, 500px)' }}>
-          <Line data={powerChartData} options={chartOptions} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Line data={powerChartData as any} options={chartOptions as any} />
         </div>
       </div>
 
@@ -380,7 +484,8 @@ const MonthlyMeterReadingsChart = ({
       <div>
         <h4 className="text-md font-semibold mb-2 text-foreground">Gas Meter Readings</h4>
         <div className="relative w-full" style={{ height: 'clamp(300px, 50vh, 500px)' }}>
-          <Line data={gasChartData} options={chartOptions} />
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Line data={gasChartData as any} options={chartOptions as any} />
         </div>
       </div>
 
