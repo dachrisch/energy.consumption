@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/dachrisch/energy.consumption/compare/v2.3.1...v2.4.0) (2025-11-06)
+
+
+### Features
+
+* **charts:** complete redesign of monthly charts with end-of-month meter readings visualization
+  - New dedicated MonthlyMeterReadingsChart component with separate Power and Gas charts
+  - MonthlyDataAggregationService for calculating end-of-month readings
+  - Data quality indicators: actual readings (solid lines), interpolated values (dashed), and extrapolated estimates (longer dashed)
+  - Year navigation with prev/next buttons and dropdown selector
+  - Mobile-first responsive design with optimized chart heights and touch-friendly controls
+  - Linear interpolation between readings and extrapolation for edge cases
+  - Custom Chart.js segment styling for dynamic line patterns based on data quality
+  - 3-day tolerance window for identifying actual month-end readings
+  - Independent Y-axis scales for Power and Gas charts for better readability
+  - Empty state handling with helpful messaging
+  - Comprehensive test coverage for service and component
+
+### Breaking Changes
+
+* **charts:** The old monthly view in UnifiedEnergyChart has been replaced with a new dedicated implementation
+  - Users will see a completely new visualization focused on meter readings instead of consumption
+  - Chart now shows end-of-month meter states rather than monthly consumption differences
+  - Data quality is clearly indicated with visual patterns (actual, interpolated, extrapolated)
+  - No migration needed - the new view is automatically available at `/charts`
+
 ### [2.3.1](https://github.com/dachrisch/energy.consumption/compare/v2.3.0...v2.3.1) (2025-11-06)
 
 

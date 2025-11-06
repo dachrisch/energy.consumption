@@ -152,6 +152,65 @@ import RangeSlider from '@/app/components/energy/RangeSlider';
 - Synchronized with preset buttons (Last 7/30/90 days, This month/year, All time)
 - Preset buttons animate slider handles to preset positions
 
+### Monthly Charts Components
+
+**Location**: `/src/app/charts/page.tsx` and `/src/app/components/energy/MonthlyMeterReadingsChart.tsx`
+
+The monthly charts feature provides visualization of end-of-month meter readings with clear distinction between actual measurements, interpolated values, and extrapolated estimates.
+
+**Service** (`src/app/services/`):
+- `MonthlyDataAggregationService.ts` - Pure functions for calculating end-of-month readings
+  - `calculateMonthlyReadings()` - Main aggregation function (returns 12 monthly data points)
+  - `findNearestReading()` - Finds actual reading within 3-day tolerance
+  - `interpolateValue()` - Linear interpolation between two readings
+  - `extrapolateValue()` - Extrapolation using trend from two readings
+  - `getMonthEndDate()` - Month-end date calculation (handles leap years)
+
+**Component**:
+- `MonthlyMeterReadingsChart.tsx` - Renders two separate line charts (Power and Gas)
+  - Year navigation UI (prev/next buttons, dropdown)
+  - Data quality indicators (actual, interpolated, extrapolated)
+  - Mobile-responsive with clamp(300px, 50vh, 500px) chart height
+  - Custom legend showing line patterns and point styles
+
+**Data Quality Indicators**:
+- **Actual**: Solid line, filled circle point
+- **Interpolated**: Dashed line (5-5 pattern), hollow circle point
+- **Extrapolated**: Longer dashed line (10-5 pattern), hollow circle point
+- Tooltips show data quality: "(Actual)", "(Interpolated)", "(Extrapolated)"
+
+**Algorithm**:
+1. For each month, check for actual reading within 3-day tolerance of month end
+2. If no actual reading, try interpolation (requires readings before and after)
+3. If interpolation not possible, try extrapolation (requires 2 readings on one side)
+4. If no calculation possible, return null (gap in chart)
+
+**Usage Example**:
+```typescript
+import MonthlyMeterReadingsChart from '@/app/components/energy/MonthlyMeterReadingsChart';
+
+<MonthlyMeterReadingsChart
+  energyData={allEnergyReadings}
+  selectedYear={2024}
+  onYearChange={setYear}
+  availableYears={[2024, 2023, 2022]}
+/>
+```
+
+**Design Decisions**:
+- **Separate charts**: Power and Gas in separate charts with independent Y-axis scales
+- **Month-end focus**: Shows meter state at end of each month (not consumption)
+- **3-day tolerance**: Readings within 3 days of month end considered "actual"
+- **Linear interpolation**: Simple, predictable, and sufficient for meter readings
+- **Chart.js segment API**: Dynamic line styling based on data quality
+- **Mobile-first**: Responsive font sizes, touch-friendly year navigation
+
+**Integration**:
+- `/charts` page - Dedicated route for monthly visualization
+- Replaces old monthly view in UnifiedEnergyChart
+- Uses existing ENERGY_TYPE_CONFIG for colors and labels
+- No new dependencies (Chart.js, date-fns already in project)
+
 **Custom Hooks** (`src/app/hooks/`):
 
 - `useEnergyData` - Energy data fetching with loading/error states
@@ -172,6 +231,7 @@ import RangeSlider from '@/app/components/energy/RangeSlider';
 - `EnergyValidationService` - Energy reading validation
 - `DataAggregationService` - Time series data bucketing for histogram visualization
 - `SliderCalculationService` - Date-position calculations for range slider
+- `MonthlyDataAggregationService` - Monthly meter reading calculations with interpolation/extrapolation
 - Services follow SRP and are easily testable in isolation
 
 **Constants** (`src/app/constants/`):

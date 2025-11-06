@@ -56,3 +56,23 @@ export type ToastMessage = {
 
 export type EnergyData = EnergyType[];
 export type EnergyTimeSeries = Record<EnergyOptions, TimeSeries<Time>>;
+
+/**
+ * Data point representing meter reading for a specific month
+ */
+export type MonthlyDataPoint = {
+  month: number; // 1-12 (January = 1)
+  monthLabel: string; // "Jan", "Feb", ..., "Dec"
+  meterReading: number | null; // Meter reading in kWh, null if no data
+  isActual: boolean; // true if value comes from actual measurement
+  isInterpolated: boolean; // true if value was calculated via interpolation
+  isExtrapolated: boolean; // true if value was calculated via extrapolation
+  calculationDetails?: {
+    method: 'actual' | 'interpolated' | 'extrapolated' | 'none';
+    sourceReadings?: Array<{
+      date: Date;
+      amount: number;
+    }>;
+    interpolationRatio?: number; // For debugging interpolation
+  };
+};
