@@ -412,3 +412,10 @@ All notable changes to this project will be documented in this file. See [standa
 ### Features
 
 * **energy:** copy from clipboard ([daca7e5](https://github.com/dachrisch/energy.consumption/commit/daca7e5847fbd2d9bed6407841d08a08ad8ff166))
+
+### Fixed
+- **December Consumption Calculation**: December now uses January of the next year for consumption calculation, ensuring all months (except the first month in the entire dataset) show consumption values
+  - January consumption = January - December(previous year)
+  - December consumption = January(next year) - December(current year)
+  - Added 8 comprehensive tests for boundary month logic
+  - Component now passes `nextJanuary` parameter alongside `previousDecember`

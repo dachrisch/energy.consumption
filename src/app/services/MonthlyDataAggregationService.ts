@@ -320,9 +320,11 @@ const determineConsumptionQuality = (
  *
  * Consumption for a month = Current month reading - Previous month reading
  * First month (January) will have null consumption unless previous December is provided
+ * Last month (December) will have null consumption unless next January is provided
  *
  * @param monthlyData - Array of 12 MonthlyDataPoint objects (from calculateMonthlyReadings)
  * @param previousDecember - Optional: December reading from previous year for January calculation
+ * @param nextJanuary - Optional: January reading from next year for December calculation
  * @returns Array of 12 MonthlyConsumptionPoint objects
  *
  * @example
@@ -330,10 +332,20 @@ const determineConsumptionQuality = (
  * const consumption = calculateMonthlyConsumption(readings);
  * // consumption[0].consumption === null (January, no previous data)
  * // consumption[1].consumption === readings[1].meterReading - readings[0].meterReading
+ * // consumption[11].consumption === null (December, no next data)
+ *
+ * @example With boundary data
+ * const readings2024 = calculateMonthlyReadings(energyData, 2024, 'power');
+ * const dec2023 = calculateMonthlyReadings(energyData, 2023, 'power')[11];
+ * const jan2025 = calculateMonthlyReadings(energyData, 2025, 'power')[0];
+ * const consumption = calculateMonthlyConsumption(readings2024, dec2023, jan2025);
+ * // consumption[0].consumption === readings2024[0] - dec2023 (January uses previous December)
+ * // consumption[11].consumption === jan2025 - readings2024[11] (December uses next January)
  */
 export const calculateMonthlyConsumption = (
   monthlyData: MonthlyDataPoint[],
-  previousDecember?: MonthlyDataPoint
+  previousDecember?: MonthlyDataPoint,
+  nextJanuary?: MonthlyDataPoint
 ): MonthlyConsumptionPoint[] => {
   // Validation
   if (monthlyData.length !== 12) {
@@ -344,11 +356,35 @@ export const calculateMonthlyConsumption = (
 
   for (let i = 0; i < 12; i++) {
     const current = monthlyData[i];
+    const month = current.month;
+
+    // Determine the previous reading
+    // - January (month 1): use previousDecember if provided
+    // - Other months: use previous month in array (but NOT for December when calculating consumption)
     const previous = i === 0 ? previousDecember || null : monthlyData[i - 1];
 
     // Calculate consumption
     let consumption: number | null = null;
-    if (current.meterReading !== null && previous && previous.meterReading !== null) {
+    let next: MonthlyDataPoint | null = null;
+
+    // Special case: December (month 12) uses next January for consumption calculation
+    if (month === 12) {
+      // For December, prioritize next January
+      if (nextJanuary && nextJanuary.meterReading !== null && current.meterReading !== null) {
+        // December consumption = January(next year) - December(current year)
+        consumption = nextJanuary.meterReading - current.meterReading;
+        next = nextJanuary;
+
+        // Warn on negative consumption
+        if (consumption < 0) {
+          console.warn(
+            `Negative consumption detected for ${current.monthLabel} (${current.month}): ${consumption}`
+          );
+        }
+      }
+      // If nextJanuary is not available or null, December consumption remains null
+    } else if (current.meterReading !== null && previous && previous.meterReading !== null) {
+      // Normal case for all other months: Current - Previous
       consumption = current.meterReading - previous.meterReading;
 
       // Warn on negative consumption
@@ -360,9 +396,18 @@ export const calculateMonthlyConsumption = (
     }
 
     // Determine quality
-    const quality = previous && consumption !== null
-      ? determineConsumptionQuality(current, previous)
-      : { isActual: false, isDerived: false };
+    let quality: { isActual: boolean; isDerived: boolean };
+
+    if (month === 12 && next && consumption !== null) {
+      // December uses next January: quality based on December and January
+      quality = determineConsumptionQuality(next, current);
+    } else if (previous && consumption !== null) {
+      // Normal case: quality based on current and previous
+      quality = determineConsumptionQuality(current, previous);
+    } else {
+      // No consumption calculated
+      quality = { isActual: false, isDerived: false };
+    }
 
     results.push({
       month: current.month,

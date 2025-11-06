@@ -487,8 +487,8 @@ describe('MonthlyDataAggregationService', () => {
         expect(result[0].isActual).toBe(false);
         expect(result[0].isDerived).toBe(false);
 
-        // Subsequent months should have 100 kWh consumption each
-        for (let i = 1; i < 12; i++) {
+        // Months 2-11 (February-November) should have 100 kWh consumption each
+        for (let i = 1; i < 11; i++) {
           expect(result[i].month).toBe(i + 1);
           expect(result[i].consumption).toBe(100);
           expect(result[i].isActual).toBe(true);
@@ -496,6 +496,12 @@ describe('MonthlyDataAggregationService', () => {
           expect(result[i].sourceReadings.current).toBe(monthlyData[i]);
           expect(result[i].sourceReadings.previous).toBe(monthlyData[i - 1]);
         }
+
+        // December (month 12) should have null consumption (no next January data)
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBeNull();
+        expect(result[11].isActual).toBe(false);
+        expect(result[11].isDerived).toBe(false);
       });
 
       it('should use previous December when provided for January calculation', () => {
@@ -764,6 +770,143 @@ describe('MonthlyDataAggregationService', () => {
 
         // Apr: extrapolated + actual = derived
         expect(result[3].isDerived).toBe(true);
+      });
+    });
+
+    describe('December Consumption with Next January', () => {
+      it('should calculate December consumption using next January when provided', () => {
+        // Year 2024 with all actual readings
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
+        );
+        // Next January (2025) with actual reading
+        const nextJanuary = createMonthlyPoint(1, 2300, true, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        // December (last month) should now have consumption
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBe(200); // 2300 (Jan 2025) - 2100 (Dec 2024)
+        expect(result[11].isActual).toBe(true);
+        expect(result[11].isDerived).toBe(false);
+      });
+
+      it('should mark December consumption as derived when next January is interpolated', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
+        );
+        const nextJanuary = createMonthlyPoint(1, 2300, false, true, false); // Interpolated
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBe(200);
+        expect(result[11].isActual).toBe(false);
+        expect(result[11].isDerived).toBe(true);
+      });
+
+      it('should mark December consumption as derived when December is extrapolated', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          ...Array.from({ length: 11 }, (_, i) => createMonthlyPoint(i + 1, 1000 + i * 100, true)),
+          createMonthlyPoint(12, 2100, false, false, true), // December extrapolated
+        ];
+        const nextJanuary = createMonthlyPoint(1, 2300, true, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBe(200);
+        expect(result[11].isActual).toBe(false);
+        expect(result[11].isDerived).toBe(true);
+      });
+
+      it('should handle December with null next January gracefully', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
+        );
+        const nextJanuary = createMonthlyPoint(1, null, false, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        // December should have null consumption (can't calculate with null January)
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBeNull();
+      });
+
+      it('should not affect non-December months when nextJanuary is provided', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
+        );
+        const nextJanuary = createMonthlyPoint(1, 2300, true, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        // All other months should remain unchanged
+        for (let i = 1; i < 11; i++) {
+          expect(result[i].consumption).toBe(100); // Normal consumption
+        }
+      });
+
+      it('should handle both previousDecember and nextJanuary together', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
+        );
+        const previousDecember = createMonthlyPoint(12, 900, true, false, false);
+        const nextJanuary = createMonthlyPoint(1, 2300, true, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, previousDecember, nextJanuary);
+
+        // January should use previous December
+        expect(result[0].month).toBe(1);
+        expect(result[0].consumption).toBe(100); // 1000 - 900
+
+        // December should use next January
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBe(200); // 2300 - 2100
+
+        // Both should be actual
+        expect(result[0].isActual).toBe(true);
+        expect(result[11].isActual).toBe(true);
+      });
+
+      it('should handle December without nextJanuary (last year in dataset)', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
+        );
+
+        // No nextJanuary provided - backward compatible
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        // December should have null consumption (last month in dataset)
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBeNull();
+      });
+
+      it('should handle multi-year flow with December-January boundary', () => {
+        // Simulate processing 3 consecutive years
+        const year2023 = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true)
+        );
+        const year2024 = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 2300 + i * 100, true)
+        );
+        const year2025Jan = createMonthlyPoint(1, 3600, true);
+
+        // Process year 2023 with 2024 January
+        const result2023 = calculateMonthlyConsumption(year2023, undefined, year2024[0]);
+
+        // 2023 December should have consumption
+        expect(result2023[11].consumption).toBe(200); // 2300 - 2100
+        expect(result2023[11].isActual).toBe(true);
+
+        // Process year 2024 with 2023 December and 2025 January
+        const result2024 = calculateMonthlyConsumption(year2024, year2023[11], year2025Jan);
+
+        // 2024 January should use 2023 December
+        expect(result2024[0].consumption).toBe(200); // 2300 - 2100
+
+        // 2024 December should use 2025 January
+        expect(result2024[11].consumption).toBe(200); // 3600 - 3400
       });
     });
   });

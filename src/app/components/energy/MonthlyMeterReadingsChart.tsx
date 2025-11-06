@@ -86,15 +86,69 @@ const MonthlyMeterReadingsChart = ({
     [energyData, selectedYear]
   );
 
+  // Get previous December for January calculation (if available)
+  const previousYearPowerData = useMemo(
+    () => {
+      const previousYear = selectedYear - 1;
+      if (availableYears.includes(previousYear)) {
+        return calculateMonthlyReadings(energyData, previousYear, 'power');
+      }
+      return null;
+    },
+    [energyData, selectedYear, availableYears]
+  );
+
+  const previousYearGasData = useMemo(
+    () => {
+      const previousYear = selectedYear - 1;
+      if (availableYears.includes(previousYear)) {
+        return calculateMonthlyReadings(energyData, previousYear, 'gas');
+      }
+      return null;
+    },
+    [energyData, selectedYear, availableYears]
+  );
+
+  // Get next January for December calculation (if available)
+  const nextYearPowerData = useMemo(
+    () => {
+      const nextYear = selectedYear + 1;
+      if (availableYears.includes(nextYear)) {
+        return calculateMonthlyReadings(energyData, nextYear, 'power');
+      }
+      return null;
+    },
+    [energyData, selectedYear, availableYears]
+  );
+
+  const nextYearGasData = useMemo(
+    () => {
+      const nextYear = selectedYear + 1;
+      if (availableYears.includes(nextYear)) {
+        return calculateMonthlyReadings(energyData, nextYear, 'gas');
+      }
+      return null;
+    },
+    [energyData, selectedYear, availableYears]
+  );
+
   // Calculate monthly consumption for Power and Gas
   const powerConsumption = useMemo(
-    () => calculateMonthlyConsumption(powerData),
-    [powerData]
+    () => {
+      const previousDecember = previousYearPowerData?.[11] || undefined;
+      const nextJanuary = nextYearPowerData?.[0] || undefined;
+      return calculateMonthlyConsumption(powerData, previousDecember, nextJanuary);
+    },
+    [powerData, previousYearPowerData, nextYearPowerData]
   );
 
   const gasConsumption = useMemo(
-    () => calculateMonthlyConsumption(gasData),
-    [gasData]
+    () => {
+      const previousDecember = previousYearGasData?.[11] || undefined;
+      const nextJanuary = nextYearGasData?.[0] || undefined;
+      return calculateMonthlyConsumption(gasData, previousDecember, nextJanuary);
+    },
+    [gasData, previousYearGasData, nextYearGasData]
   );
 
   // Transform Power data to Chart.js format

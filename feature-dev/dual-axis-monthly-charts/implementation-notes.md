@@ -312,3 +312,35 @@ The feature is production-ready and can be deployed with confidence.
 **Last Updated**: 2025-11-06
 **Implementation Engineer**: Claude (Implementation Engineer Agent)
 **Status**: Complete
+
+## Update: December Consumption Fix (2025-11-06)
+
+### Issue
+The initial implementation only calculated consumption within each year, resulting in:
+- January always showing null consumption
+- December showing null for the last year in dataset
+
+### Solution Implemented
+Enhanced `calculateMonthlyConsumption()` to use adjacent year boundary data:
+- Added `nextJanuary` parameter alongside existing `previousDecember`
+- December consumption now uses January of the next year
+- January consumption uses December of the previous year
+
+### New Behavior
+- **January (non-first)**: Uses December from previous year
+- **December (non-last)**: Uses January from next year
+- **First month in dataset**: Still null (no previous data)
+- **Last December in dataset**: null if no next year available
+
+### Code Changes
+- Service: Added `nextJanuary` parameter to `calculateMonthlyConsumption()`
+- Component: Calculates and passes next year January readings
+- Tests: Added 8 comprehensive tests for December boundary logic
+
+### Test Results
+- 489/489 tests passing (added 8 new tests)
+- Browser verified: January and December both show consumption bars
+- Quality tracking: December marked as derived when appropriate
+
+### Impact
+Users now see consumption data for all 12 months (except first month overall), providing complete monthly consumption visibility.
