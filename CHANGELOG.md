@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.1](https://github.com/dachrisch/energy.consumption/compare/v2.3.0...v2.3.1) (2025-11-06)
+
+
+### Bug Fixes
+
+* remove haptic feedback ([08662be](https://github.com/dachrisch/energy.consumption/commit/08662be0c7308d62a3a5ebbbb49cb579461a6411))
+
 ## [2.3.0](https://github.com/dachrisch/energy.consumption/compare/v2.2.2...v2.3.0) (2025-11-05)
 
 
