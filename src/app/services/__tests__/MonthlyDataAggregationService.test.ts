@@ -773,8 +773,8 @@ describe('MonthlyDataAggregationService', () => {
       });
     });
 
-    describe('December Consumption Using Previous Month', () => {
-      it('should calculate December consumption using November (same as other months)', () => {
+    describe('December Consumption Hybrid Approach (November Priority + nextJanuary Fallback)', () => {
+      it('should calculate December consumption using November when available (Priority 1)', () => {
         // Year 2024 with all actual readings
         const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
           createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
@@ -789,6 +789,111 @@ describe('MonthlyDataAggregationService', () => {
         expect(result[11].isDerived).toBe(false);
         expect(result[11].sourceReadings.current.month).toBe(12);
         expect(result[11].sourceReadings.previous?.month).toBe(11);
+      });
+
+      it('should use nextJanuary fallback when November is null (Priority 2)', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 1, 1000 + i * 100, true)),
+          createMonthlyPoint(11, null, false, false, false), // November null
+          createMonthlyPoint(12, 2100, true, false, false), // December actual
+        ];
+        const nextJanuary = createMonthlyPoint(1, 2250, true, false, false); // Next year's January
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        // December should use nextJanuary as fallback
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBe(150); // 2250 (next Jan) - 2100 (Dec)
+        expect(result[11].isActual).toBe(true);
+        expect(result[11].isDerived).toBe(false);
+        expect(result[11].sourceReadings.current.month).toBe(12);
+        expect(result[11].sourceReadings.next?.month).toBe(1);
+      });
+
+      it('should prefer November over nextJanuary when both are available', () => {
+        const monthlyData: MonthlyDataPoint[] = Array.from({ length: 12 }, (_, i) =>
+          createMonthlyPoint(i + 1, 1000 + i * 100, true, false, false)
+        );
+        const nextJanuary = createMonthlyPoint(1, 2300, true, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        // December should use November (Priority 1), not nextJanuary
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBe(100); // 2100 (Dec) - 2000 (Nov)
+        expect(result[11].sourceReadings.previous?.month).toBe(11);
+        expect(result[11].sourceReadings.next).toBeUndefined();
+      });
+
+      it('should return null when both November and nextJanuary are unavailable', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 1, 1000 + i * 100, true)),
+          createMonthlyPoint(11, null, false, false, false), // November null
+          createMonthlyPoint(12, 2100, true, false, false),
+        ];
+        // No nextJanuary provided
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        // December should have null consumption
+        expect(result[11].month).toBe(12);
+        expect(result[11].consumption).toBeNull();
+        expect(result[11].isActual).toBe(false);
+        expect(result[11].isDerived).toBe(false);
+      });
+
+      it('should mark December consumption as derived when using interpolated November', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 1, 1000 + i * 100, true)),
+          createMonthlyPoint(11, 2000, false, true, false), // November interpolated
+          createMonthlyPoint(12, 2100, true, false, false),
+        ];
+
+        const result = calculateMonthlyConsumption(monthlyData);
+
+        expect(result[11].consumption).toBe(100);
+        expect(result[11].isActual).toBe(false);
+        expect(result[11].isDerived).toBe(true);
+      });
+
+      it('should mark December consumption as derived when using interpolated nextJanuary', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 1, 1000 + i * 100, true)),
+          createMonthlyPoint(11, null, false, false, false), // November null
+          createMonthlyPoint(12, 2100, true, false, false),
+        ];
+        const nextJanuary = createMonthlyPoint(1, 2250, false, true, false); // Interpolated
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        expect(result[11].consumption).toBe(150);
+        expect(result[11].isActual).toBe(false);
+        expect(result[11].isDerived).toBe(true);
+      });
+
+      it('should return null when December reading is null (even with nextJanuary)', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          ...Array.from({ length: 11 }, (_, i) => createMonthlyPoint(i + 1, 1000 + i * 100, true)),
+          createMonthlyPoint(12, null, false, false, false), // December null
+        ];
+        const nextJanuary = createMonthlyPoint(1, 2250, true, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        expect(result[11].consumption).toBeNull();
+      });
+
+      it('should return null when nextJanuary reading is null (and November is null)', () => {
+        const monthlyData: MonthlyDataPoint[] = [
+          ...Array.from({ length: 10 }, (_, i) => createMonthlyPoint(i + 1, 1000 + i * 100, true)),
+          createMonthlyPoint(11, null, false, false, false),
+          createMonthlyPoint(12, 2100, true, false, false),
+        ];
+        const nextJanuary = createMonthlyPoint(1, null, false, false, false);
+
+        const result = calculateMonthlyConsumption(monthlyData, undefined, nextJanuary);
+
+        expect(result[11].consumption).toBeNull();
       });
 
       it('should mark December consumption as derived when November is interpolated', () => {

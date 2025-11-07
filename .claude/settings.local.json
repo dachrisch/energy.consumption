@@ -43,7 +43,9 @@
       "Bash(tee:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run lint:strict:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(command -v:*)",
+      "Bash(pgrep:*)"
     ],
     "deny": [],
     "ask": []

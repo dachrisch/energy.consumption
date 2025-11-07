@@ -89,5 +89,6 @@ export type MonthlyConsumptionPoint = {
   sourceReadings: {
     current: MonthlyDataPoint; // Current month's meter reading
     previous: MonthlyDataPoint | null; // Previous month's meter reading (null for January)
+    next?: MonthlyDataPoint; // Next month's meter reading (used for December fallback)
   };
 };

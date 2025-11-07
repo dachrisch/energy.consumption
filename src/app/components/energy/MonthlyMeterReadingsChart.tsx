@@ -109,21 +109,46 @@ const MonthlyMeterReadingsChart = ({
     [energyData, selectedYear, availableYears]
   );
 
+  // Get next January for December fallback calculation (if available)
+  const nextYearPowerData = useMemo(
+    () => {
+      const nextYear = selectedYear + 1;
+      if (availableYears.includes(nextYear)) {
+        return calculateMonthlyReadings(energyData, nextYear, 'power');
+      }
+      return null;
+    },
+    [energyData, selectedYear, availableYears]
+  );
+
+  const nextYearGasData = useMemo(
+    () => {
+      const nextYear = selectedYear + 1;
+      if (availableYears.includes(nextYear)) {
+        return calculateMonthlyReadings(energyData, nextYear, 'gas');
+      }
+      return null;
+    },
+    [energyData, selectedYear, availableYears]
+  );
+
   // Calculate monthly consumption for Power and Gas
   const powerConsumption = useMemo(
     () => {
       const previousDecember = previousYearPowerData?.[11] || undefined;
-      return calculateMonthlyConsumption(powerData, previousDecember);
+      const nextJanuary = nextYearPowerData?.[0] || undefined;
+      return calculateMonthlyConsumption(powerData, previousDecember, nextJanuary);
     },
-    [powerData, previousYearPowerData]
+    [powerData, previousYearPowerData, nextYearPowerData]
   );
 
   const gasConsumption = useMemo(
     () => {
       const previousDecember = previousYearGasData?.[11] || undefined;
-      return calculateMonthlyConsumption(gasData, previousDecember);
+      const nextJanuary = nextYearGasData?.[0] || undefined;
+      return calculateMonthlyConsumption(gasData, previousDecember, nextJanuary);
     },
-    [gasData, previousYearGasData]
+    [gasData, previousYearGasData, nextYearGasData]
   );
 
   // Transform Power data to Chart.js format

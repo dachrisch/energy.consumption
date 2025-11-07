@@ -320,10 +320,13 @@ const determineConsumptionQuality = (
  *
  * Consumption for a month = Current month reading - Previous month reading
  * First month (January) will have null consumption unless previous December is provided
- * December consumption uses November reading (same as other months)
+ * December consumption uses hybrid approach:
+ *   - Priority 1: Use November (energy consumed IN December)
+ *   - Priority 2: Use nextJanuary as fallback (when November unavailable)
  *
  * @param monthlyData - Array of 12 MonthlyDataPoint objects (from calculateMonthlyReadings)
  * @param previousDecember - Optional: December reading from previous year for January calculation
+ * @param nextJanuary - Optional: January reading from next year for December fallback calculation
  * @returns Array of 12 MonthlyConsumptionPoint objects
  *
  * @example
@@ -333,16 +336,19 @@ const determineConsumptionQuality = (
  * // consumption[1].consumption === readings[1].meterReading - readings[0].meterReading
  * // consumption[11].consumption === readings[11].meterReading - readings[10].meterReading (Dec - Nov)
  *
- * @example With previous December
+ * @example With previous December and next January
  * const readings2024 = calculateMonthlyReadings(energyData, 2024, 'power');
  * const dec2023 = calculateMonthlyReadings(energyData, 2023, 'power')[11];
- * const consumption = calculateMonthlyConsumption(readings2024, dec2023);
+ * const jan2025 = calculateMonthlyReadings(energyData, 2025, 'power')[0];
+ * const consumption = calculateMonthlyConsumption(readings2024, dec2023, jan2025);
  * // consumption[0].consumption === readings2024[0] - dec2023 (January uses previous December)
- * // consumption[11].consumption === readings2024[11] - readings2024[10] (December uses November)
+ * // consumption[11].consumption === readings2024[11] - readings2024[10] (December tries November first)
+ * // If November is null, consumption[11].consumption === jan2025 - readings2024[11] (fallback to nextJanuary)
  */
 export const calculateMonthlyConsumption = (
   monthlyData: MonthlyDataPoint[],
-  previousDecember?: MonthlyDataPoint
+  previousDecember?: MonthlyDataPoint,
+  nextJanuary?: MonthlyDataPoint
 ): MonthlyConsumptionPoint[] => {
   // Validation
   if (monthlyData.length !== 12) {
@@ -353,34 +359,78 @@ export const calculateMonthlyConsumption = (
 
   for (let i = 0; i < 12; i++) {
     const current = monthlyData[i];
-    const month = current.month;
 
     // Determine the previous reading
-    // - January (month 1): use previousDecember if provided
-    // - All other months (including December): use previous month in array
-    const previous = i === 0 ? previousDecember || null : monthlyData[i - 1];
+    // - January (month 1, i === 0): use previousDecember if provided
+    // - December (month 12, i === 11): hybrid approach (try November first, fallback to nextJanuary)
+    // - All other months: use previous month in array
+    let previous: MonthlyDataPoint | null = null;
+    let next: MonthlyDataPoint | null = null;
+    let useNextForCalculation = false;
+
+    if (i === 0) {
+      // January: use previousDecember
+      previous = previousDecember || null;
+    } else if (i === 11) {
+      // December: hybrid approach
+      // Priority 1: Try November (i === 11, so previous is monthlyData[10])
+      const november = monthlyData[10];
+
+      if (november && november.meterReading !== null) {
+        // November available, use it (energy consumed IN December)
+        previous = november;
+      } else if (nextJanuary && nextJanuary.meterReading !== null) {
+        // November unavailable, fallback to nextJanuary
+        next = nextJanuary;
+        useNextForCalculation = true;
+      }
+      // If both November and nextJanuary are unavailable, previous and next remain null
+    } else {
+      // All other months: use previous month in array
+      previous = monthlyData[i - 1];
+    }
 
     // Calculate consumption
     let consumption: number | null = null;
 
-    // All months use the same logic: Current - Previous
-    if (current.meterReading !== null && previous && previous.meterReading !== null) {
-      consumption = current.meterReading - previous.meterReading;
+    if (current.meterReading !== null) {
+      if (useNextForCalculation && next && next.meterReading !== null) {
+        // December using nextJanuary: nextJanuary - December
+        consumption = next.meterReading - current.meterReading;
 
-      // Warn on negative consumption
-      if (consumption < 0) {
-        console.warn(
-          `Negative consumption detected for ${current.monthLabel} (${current.month}): ${consumption}`
-        );
+        // Warn on negative consumption
+        if (consumption < 0) {
+          console.warn(
+            `Negative consumption detected for ${current.monthLabel} (${current.month}) using next month: ${consumption}`
+          );
+        }
+      } else if (previous && previous.meterReading !== null) {
+        // Standard calculation: Current - Previous
+        consumption = current.meterReading - previous.meterReading;
+
+        // Warn on negative consumption
+        if (consumption < 0) {
+          console.warn(
+            `Negative consumption detected for ${current.monthLabel} (${current.month}): ${consumption}`
+          );
+        }
       }
     }
 
     // Determine quality
     let quality: { isActual: boolean; isDerived: boolean };
 
-    if (previous && consumption !== null) {
-      // Quality based on current and previous
-      quality = determineConsumptionQuality(current, previous);
+    if (consumption !== null) {
+      if (useNextForCalculation && next) {
+        // Quality based on current and next
+        quality = determineConsumptionQuality(current, next);
+      } else if (previous) {
+        // Quality based on current and previous
+        quality = determineConsumptionQuality(current, previous);
+      } else {
+        // Shouldn't reach here, but safety fallback
+        quality = { isActual: false, isDerived: false };
+      }
     } else {
       // No consumption calculated
       quality = { isActual: false, isDerived: false };
@@ -394,7 +444,8 @@ export const calculateMonthlyConsumption = (
       isDerived: quality.isDerived,
       sourceReadings: {
         current,
-        previous,
+        previous: useNextForCalculation ? null : previous,
+        ...(useNextForCalculation && next ? { next } : {}),
       },
     });
   }
