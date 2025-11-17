@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/dachrisch/energy.consumption/compare/v2.4.0...v2.5.0) (2025-11-17)
+
+
+### Features
+
+* **backend:** implement event-based repository architecture with gradual migration infrastructure ([4c58114](https://github.com/dachrisch/energy.consumption/commit/4c58114fca836c5ad1c7ba6eb98e2e7ddddd3348))
+* **charts:** add dual y-axis with monthly consumption bars ([4e20714](https://github.com/dachrisch/energy.consumption/commit/4e207147098067e9f3019be632c3757a821ad375))
+
+
+### Bug Fixes
+
+* **charts:** add nextJanuary fallback for December consumption ([db68fbb](https://github.com/dachrisch/energy.consumption/commit/db68fbb31f7d9a0cad56e3207f1cfa76b87e80d2))
+* **charts:** calculate December consumption using next January ([0335a6c](https://github.com/dachrisch/energy.consumption/commit/0335a6cfb373f13f758c8595eca971e0667b358f))
+* **deps:** update nextjs monorepo to v16.0.2 ([#207](https://github.com/dachrisch/energy.consumption/issues/207)) ([210f300](https://github.com/dachrisch/energy.consumption/commit/210f300eed1f50a93077c0808b299e9c722539d7))
+* **deps:** update nextjs monorepo to v16.0.3 ([b9f9666](https://github.com/dachrisch/energy.consumption/commit/b9f9666aeb9f2ef0cc5786f9b2dd99ff191c2a60))
+
 ## [2.4.1] - 2025-11-06
 
 ### Added
