@@ -45,9 +45,6 @@ export function useDisplayData(options: UseDisplayDataOptions): UseDisplayDataRe
   const [error, setError] = useState<string | null>(null);
   const [cacheHit, setCacheHit] = useState<boolean | undefined>(undefined);
 
-  // Serialize filters for stable dependency
-  const filtersJson = JSON.stringify(filters);
-
   const fetchData = useCallback(async () => {
     if (!session?.user?.id || !enabled) return;
 
@@ -76,7 +73,8 @@ export function useDisplayData(options: UseDisplayDataOptions): UseDisplayDataRe
     } finally {
       setIsLoading(false);
     }
-  }, [session?.user?.id, displayType, filtersJson, enabled, filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, displayType, enabled, JSON.stringify(filters)]);
 
   useEffect(() => {
     if (enabled) {

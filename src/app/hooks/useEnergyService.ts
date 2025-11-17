@@ -119,9 +119,6 @@ export function useEnergyService(
     checkFlags();
   }, [component, forceOld, forceNew, session?.user?.id]);
 
-  // Serialize filters for stable dependency
-  const filtersJson = filters ? JSON.stringify(filters) : '';
-
   // Fetch from new backend
   const fetchNewBackend = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -155,7 +152,8 @@ export function useEnergyService(
     } finally {
       setNewLoading(false);
     }
-  }, [session?.user?.id, filtersJson, filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, JSON.stringify(filters)]);
 
   // Fetch from new backend when enabled and flag checked
   useEffect(() => {
