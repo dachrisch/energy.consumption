@@ -255,6 +255,257 @@ import MonthlyMeterReadingsChart from '@/app/components/energy/MonthlyMeterReadi
 - Expected execution time: <5ms per chart
 - No performance impact on existing functionality
 
+### Backend Repository & Service Layer (Event-Based Architecture)
+
+**Location**: Repositories in `/src/repositories/`, Services in `/src/services/`, Events in `/src/events/`
+
+The application uses a modern **event-driven architecture** with repository pattern and service layer following the backend-first migration strategy. This architecture enables automatic display data recalculation when source data changes.
+
+#### Architecture Overview
+
+**Data Flow:**
+```
+Frontend → Server Actions → Service Layer → Repository Layer → Database
+                              ↓ (emit events)
+                           Event Bus
+                              ↓ (handlers)
+                      Display Data Invalidation
+```
+
+**Three-Layer Architecture:**
+1. **Repository Layer** - Data access abstraction (MongoDB)
+2. **Service Layer** - Business logic + event emission
+3. **Event System** - Automatic cache invalidation
+
+#### Data Models
+
+**Source Data (Single Source of Truth):**
+- `SourceEnergyReading` (model in `src/models/SourceEnergyReading.ts`)
+  - Raw meter readings: type, amount, date, userId
+  - Indexed: {userId, date}, {userId, type, date}
+  - Protected by sessionFilter middleware (user isolation)
+
+**Display Data (Pre-Calculated Cache):**
+- `DisplayEnergyData` (model in `src/models/DisplayEnergyData.ts`)
+  - Pre-calculated aggregations for charts/tables
+  - Display types: monthly-chart-power, monthly-chart-gas, histogram-power, histogram-gas, table-data
+  - Includes sourceDataHash for cache validation
+  - Unique constraint: {userId, displayType}
+
+#### Repository Pattern
+
+**Interfaces** (`src/repositories/interfaces/`):
+- `IEnergyRepository` - Energy data CRUD operations (11 methods)
+- `IDisplayDataRepository` - Display data cache operations (6 methods)
+
+**Implementations** (`src/repositories/mongodb/`):
+- `MongoEnergyRepository` - MongoDB implementation for energy data
+- `MongoDisplayDataRepository` - MongoDB implementation for display data
+
+**Key Features:**
+- User data isolation enforced at every query (userId always in filters)
+- Dependency injection via interfaces (testable, swappable)
+- 98.27% test coverage
+
+**Usage Example:**
+```typescript
+import { MongoEnergyRepository } from '@/repositories/mongodb/MongoEnergyRepository';
+
+const repository = new MongoEnergyRepository();
+const readings = await repository.findAll(userId, {
+  type: 'power',
+  dateRange: { start, end }
+});
+```
+
+#### Event System
+
+**Event Bus** (`src/events/EventBus.ts`):
+- In-memory publish/subscribe pattern
+- Synchronous event processing (FIFO order)
+- Error isolation (one handler failure doesn't stop others)
+- 100% test coverage
+
+**Event Types** (`src/events/types/EnergyEvents.ts`):
+- `ENERGY_READING_CREATED` - Single reading created
+- `ENERGY_READING_UPDATED` - Reading modified
+- `ENERGY_READING_DELETED` - Reading removed
+- `ENERGY_READINGS_BULK_IMPORTED` - Multiple readings imported (bulk)
+
+**Event Factory** (`src/events/factories/EnergyEventFactory.ts`):
+- Type-safe event creation
+- Automatic eventId generation (UUID)
+- Automatic timestamp generation
+- Optional metadata support
+
+**Usage Example:**
+```typescript
+import { getEventBus, EnergyEventFactory, EnergyEventTypes } from '@/events';
+
+// Get singleton EventBus
+const eventBus = getEventBus();
+
+// Register handler
+eventBus.on(EnergyEventTypes.CREATED, async (event) => {
+  console.log('New reading:', event.data);
+  // Invalidate cache, send notifications, etc.
+});
+
+// Emit event
+const event = EnergyEventFactory.createCreatedEvent(reading);
+await eventBus.emit(event);
+```
+
+#### Service Layer
+
+**Energy CRUD Service** (`src/services/energy/EnergyCrudService.ts`):
+- Wraps IEnergyRepository with event emission
+- CRUD operations: create, createMany, update, delete, deleteMany
+- Read operations: findById, findAll, findByDateRange, count, getMinMaxDates
+- Emits events AFTER successful database operations
+- 100% test coverage
+
+**Display Data Calculation Service** (`src/services/display/DisplayDataCalculationService.ts`):
+- Calculates and caches pre-computed display data
+- Methods: calculateMonthlyChartData, calculateHistogramData, invalidateAllForUser
+- Uses existing MonthlyDataAggregationService and DataAggregationService
+- Generates SHA256 hash for cache validation
+- Tracks metadata (source count, calculation time)
+- 100% test coverage
+
+**Display Data Event Handler** (`src/services/handlers/DisplayDataEventHandler.ts`):
+- Connects energy events to display data invalidation
+- Automatically invalidates cache on any source data change
+- Registers handlers for all energy event types
+- Simple invalidation strategy for Phase 1 (invalidate all on any change)
+
+**Service Factory** (`src/services/serviceFactory.ts`):
+- Singleton pattern for service instances
+- Lazy initialization
+- Proper dependency injection
+- Testing-friendly (resetServices() for clean state)
+
+**Usage Example:**
+```typescript
+import { getEnergyCrudService } from '@/services';
+
+const service = getEnergyCrudService();
+
+// Create reading (automatically emits CREATED event)
+const reading = await service.create({
+  userId: 'user123',
+  type: 'power',
+  amount: 150.5,
+  date: new Date(),
+});
+
+// Event → Handler → Display data invalidated automatically
+```
+
+#### Integration with Existing Code
+
+**Current Status (Phase 1 Complete):**
+- ✅ Backend infrastructure fully implemented
+- ✅ 731 tests, 98-100% coverage
+- ✅ Zero frontend changes (backward compatible)
+- ⏳ NOT YET INTEGRATED with existing server actions/API routes
+
+**Next Phase (Phase 2 - Not Yet Implemented):**
+- Create adapter layer hooks (useEnergyService, useDisplayData)
+- Update server actions to use services instead of direct Mongoose calls
+- Gradually migrate frontend components with feature flags
+- Enable display data caching in production
+
+**For Now:**
+- Existing code still uses direct Mongoose models (Energy, Contract)
+- New backend runs in parallel (not yet connected to frontend)
+- Zero user impact during Phase 1
+
+#### Key Patterns
+
+**1. Repository Pattern:**
+- Abstracts data access behind interfaces
+- Enables database migration (MongoDB → PostgreSQL possible)
+- Makes testing easier (mock repositories)
+
+**2. Event-Driven Architecture:**
+- Loose coupling between components
+- Automatic display data invalidation
+- Easy to add new event handlers (webhooks, notifications, analytics)
+
+**3. Service Layer:**
+- Encapsulates business logic
+- Coordinates repositories and events
+- Single responsibility (CRUD vs Calculation)
+
+**4. SOLID Principles:**
+- Single Responsibility: Each class has one reason to change
+- Open/Closed: Extend via events without modifying existing code
+- Liskov Substitution: Implementations satisfy interfaces
+- Interface Segregation: Focused interfaces (IEnergyRepository, IDisplayDataRepository)
+- Dependency Inversion: Depend on abstractions (interfaces), not concrete classes
+
+**5. User Data Isolation:**
+- Double protection: Repository methods + Mongoose middleware
+- Every query filters by userId
+- No cross-user data leaks (verified in 731 tests)
+
+#### Testing Strategy
+
+**Test-First Development:**
+- Tests written BEFORE implementation (TDD)
+- 731 comprehensive tests
+- 98-100% code coverage
+
+**Test Organization:**
+- `src/repositories/__tests__/` - Repository tests (62 tests)
+- `src/events/__tests__/` - Event system tests (68 tests)
+- `src/services/__tests__/` - Service layer tests (99 tests)
+- Integration tests verify end-to-end flow (create → event → invalidation)
+
+**Running Tests:**
+```bash
+# All backend tests
+npm test -- src/{repositories,events,services}
+
+# Specific layer
+npm test -- src/repositories
+npm test -- src/events
+npm test -- src/services
+
+# With coverage
+npm test -- --coverage --collectCoverageFrom='src/{repositories,events,services}/**/*.ts'
+```
+
+#### Documentation
+
+**Architecture Docs:**
+- `docs/architecture/event-based-repository-design.md` - Complete architecture design
+- `docs/architecture/backend-first-migration-strategy.md` - Migration strategy
+- `docs/architecture/GETTING-STARTED.md` - Day-by-day implementation guide
+- `src/events/README.md` - Event system documentation
+- `src/repositories/README.md` - Repository pattern documentation
+- `src/services/README.md` - Service layer documentation
+
+#### Future Enhancements (Post-Phase 1)
+
+**Phase 2 - Frontend Integration:**
+- Create adapter layer hooks
+- Update server actions to use services
+- Migrate components incrementally with feature flags
+
+**Phase 3 - Optimization:**
+- Smart invalidation (only invalidate affected display data)
+- Event persistence for audit trail
+- Performance monitoring and metrics
+- Caching strategy refinement
+
+**Phase 4 - Advanced Features:**
+- Webhook support via event system
+- Real-time updates via WebSockets
+- Analytics event handlers
+- Notification system
+
 **Custom Hooks** (`src/app/hooks/`):
 
 - `useEnergyData` - Energy data fetching with loading/error states

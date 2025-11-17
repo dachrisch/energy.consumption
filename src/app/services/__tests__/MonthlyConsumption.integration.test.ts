@@ -15,7 +15,7 @@ import {
   calculateMonthlyReadings,
   calculateMonthlyConsumption,
 } from '../MonthlyDataAggregationService';
-import { EnergyType, MonthlyDataPoint } from '@/app/types';
+import { EnergyType } from '@/app/types';
 
 describe('Monthly Consumption Integration Tests', () => {
   // Helper to create test readings

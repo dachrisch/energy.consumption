@@ -92,3 +92,59 @@ export type MonthlyConsumptionPoint = {
     next?: MonthlyDataPoint; // Next month's meter reading (used for December fallback)
   };
 };
+
+// ============================================================================
+// Repository Pattern Types (Phase 1: Backend Foundation)
+// ============================================================================
+
+/**
+ * Source energy reading - single source of truth for energy data
+ * Raw meter readings stored directly from user input or CSV import
+ */
+export type SourceEnergyReading = UserSpecific & {
+  type: EnergyOptions;
+  amount: number;
+  date: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+/**
+ * Display data types - pre-calculated data for different UI views
+ * Allows for efficient caching and invalidation of computed data
+ */
+export type DisplayDataType =
+  | "monthly-chart-power"
+  | "monthly-chart-gas"
+  | "histogram-power"
+  | "histogram-gas"
+  | "table-data";
+
+/**
+ * Display energy data - pre-calculated, cached data for UI consumption
+ * Calculated on-demand and cached to avoid repeated expensive calculations
+ */
+export type DisplayEnergyData = UserSpecific & {
+  displayType: DisplayDataType;
+  data: unknown; // Specific structure depends on displayType (monthly data, histogram, etc.)
+  calculatedAt: Date;
+  sourceDataHash: string; // Hash of source data used for calculation
+  metadata?: {
+    sourceReadingCount: number;
+    calculationTimeMs: number;
+    filters?: Record<string, unknown>;
+  };
+};
+
+/**
+ * Energy filters for querying source readings
+ * Used by repository layer to filter and paginate data
+ */
+export type EnergyFilters = {
+  type?: EnergyOptions | EnergyOptions[];
+  dateRange?: { start: Date; end: Date };
+  limit?: number;
+  offset?: number;
+  sortBy?: "date" | "amount" | "type";
+  sortOrder?: "asc" | "desc";
+};
