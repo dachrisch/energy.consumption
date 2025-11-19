@@ -32,19 +32,22 @@ If you see `❌ OFF`, that's why no data in new collections!
 
 ## Commands
 
+### Feature Flags
 ```bash
-# Enable everything
-npm run flags:enable-all
-
-# Enable specific components
+npm run flags:enable-all        # Enable all flags
 npm run flags:enable-forms      # Forms only
 npm run flags:enable-csv        # CSV import only
+npm run flags:status            # Check current status
+npm run flags:disable-all       # Rollback to old backend
+```
 
-# Check status
-npm run flags:status
-
-# Rollback to old backend
-npm run flags:disable-all
+### Database Inspection
+```bash
+npm run db:dump                 # Summary + flag status
+npm run db:dump:source          # SourceEnergyReading collection
+npm run db:dump:display         # DisplayEnergyData collection
+npm run db:dump:old             # Energy collection (old)
+npm run db:dump:all             # All collections (detailed)
 ```
 
 ---
@@ -82,10 +85,24 @@ npm run dev
 
 ### 4. Check MongoDB Collections
 
+**Quick Summary** (recommended):
+```bash
+npm run db:dump
+```
+
+Shows collection counts and feature flag status.
+
+**Dump Specific Collections**:
+```bash
+npm run db:dump:source    # SourceEnergyReading (new backend)
+npm run db:dump:display   # DisplayEnergyData (cache)
+npm run db:dump:old       # Energy (old backend)
+npm run db:dump:all       # All collections
+```
+
 **With MongoDB Shell**:
 ```bash
-mongosh
-use energy_consumption
+mongosh mongodb://localhost:27017/energy_consumption
 
 # Should have data (new backend)
 db.sourceenergyreadings.find().pretty()
