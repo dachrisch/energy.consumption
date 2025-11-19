@@ -190,18 +190,24 @@ async function enableFlags() {
       console.log('Flag Name                          Status    Rollout');
       console.log('─'.repeat(60));
 
+      // Fetch all flags first
+      const flagResults = [];
       for (const name of flags) {
         const flag = await getFeatureFlag(name);
+        flagResults.push({ name, flag });
+      }
+
+      // Display results
+      for (const { name, flag } of flagResults) {
         const status = flag?.enabled ? '✅ ON ' : '❌ OFF';
         const rollout = flag?.rolloutPercent || 0;
         console.log(`${name.padEnd(33)} ${status}    ${rollout}%`);
       }
 
       console.log('\n📊 Collection Usage:');
-      const anyEnabled = flags.some(async name => {
-        const flag = await getFeatureFlag(name);
-        return flag?.enabled;
-      });
+
+      // Check if any flags are enabled
+      const anyEnabled = flagResults.some(({ flag }) => flag?.enabled);
 
       if (anyEnabled) {
         console.log('   ✅ NEW: SourceEnergyReading (source data)');
@@ -217,10 +223,13 @@ async function enableFlags() {
 
     default:
       showHelp();
-      break;
+      return; // Exit early without closing connection
   }
 
-  await mongoose.connection.close();
+  // Only close connection if we actually connected
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+  }
   process.exit(0);
 }
 
