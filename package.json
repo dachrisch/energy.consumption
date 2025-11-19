@@ -18,7 +18,12 @@
     "release:patch": "standard-version --release-as patch && git push --follow-tags origin main",
     "release:minor": "standard-version --release-as minor && git push --follow-tags origin main",
     "release:major": "standard-version --release-as major && git push --follow-tags origin main",
-    "db:memory": "node scripts/startMemoryMongo.js"
+    "db:memory": "node scripts/startMemoryMongo.js",
+    "flags:enable-all": "node scripts/enable-new-backend.js --all",
+    "flags:enable-forms": "node scripts/enable-new-backend.js --forms",
+    "flags:enable-csv": "node scripts/enable-new-backend.js --csv",
+    "flags:disable-all": "node scripts/enable-new-backend.js --disable-all",
+    "flags:status": "node scripts/enable-new-backend.js --status"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
