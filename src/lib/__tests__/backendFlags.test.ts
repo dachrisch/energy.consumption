@@ -50,6 +50,7 @@ describe('Backend Flags', () => {
 
     it('should check component-specific flag when component specified', async () => {
       mockGetServerSession.mockResolvedValue({ user: { id: 'user123' } } as any);
+      mockGetFeatureFlag.mockResolvedValue({ enabled: true } as any); // Component flag exists and is enabled
       mockIsFeatureEnabledForUser
         .mockResolvedValueOnce(false) // Global flag OFF
         .mockResolvedValueOnce(true); // Component flag ON
@@ -62,6 +63,7 @@ describe('Backend Flags', () => {
     });
 
     it('should use provided userId instead of session', async () => {
+      mockGetFeatureFlag.mockResolvedValue({ enabled: true } as any); // Component flag exists and is enabled
       mockIsFeatureEnabledForUser.mockResolvedValue(true);
 
       const result = await checkBackendFlag('charts', 'custom-user-id');
@@ -74,6 +76,7 @@ describe('Backend Flags', () => {
 
     it('should convert component name to uppercase', async () => {
       mockGetServerSession.mockResolvedValue({ user: { id: 'user123' } } as any);
+      mockGetFeatureFlag.mockResolvedValue({ enabled: true } as any); // Component flag exists and is enabled
       mockIsFeatureEnabledForUser.mockResolvedValue(true);
 
       await checkBackendFlag('timeline', 'user123');
@@ -83,6 +86,7 @@ describe('Backend Flags', () => {
 
     it('should handle component flag overriding global flag (component ON, global OFF)', async () => {
       mockGetServerSession.mockResolvedValue({ user: { id: 'user123' } } as any);
+      mockGetFeatureFlag.mockResolvedValue({ enabled: true } as any); // Component flag exists and is enabled
       mockIsFeatureEnabledForUser
         .mockResolvedValueOnce(false) // Global OFF
         .mockResolvedValueOnce(true); // Component ON
@@ -94,6 +98,7 @@ describe('Backend Flags', () => {
 
     it('should handle component flag overriding global flag (component OFF, global ON)', async () => {
       mockGetServerSession.mockResolvedValue({ user: { id: 'user123' } } as any);
+      mockGetFeatureFlag.mockResolvedValue({ enabled: true } as any); // Component flag exists and is enabled
       mockIsFeatureEnabledForUser
         .mockResolvedValueOnce(true) // Global ON
         .mockResolvedValueOnce(false); // Component OFF
@@ -214,6 +219,7 @@ describe('Backend Flags', () => {
   describe('Integration scenarios', () => {
     it('should support gradual rollout (50% of users)', async () => {
       mockGetServerSession.mockResolvedValue({ user: { id: 'user123' } } as any);
+      mockGetFeatureFlag.mockResolvedValue({ enabled: true } as any); // Component flag exists and is enabled
 
       // Simulate 50% rollout - some users get new backend, some don't
       mockIsFeatureEnabledForUser.mockImplementation(async (flagName, userId) => {
@@ -222,8 +228,8 @@ describe('Backend Flags', () => {
         return hash < 50; // 50% rollout
       });
 
-      const resultUser1 = await checkBackendFlag('dashboard', 'user-A'); // Hash < 50
-      const resultUser2 = await checkBackendFlag('dashboard', 'user-z'); // Hash >= 50
+      const resultUser1 = await checkBackendFlag('dashboard', '0-user'); // '0' = 48, 48 % 100 = 48 < 50
+      const resultUser2 = await checkBackendFlag('dashboard', 'Z-user'); // 'Z' = 90, 90 % 100 = 90 >= 50
 
       // One should be true, one false (deterministic)
       expect(resultUser1).not.toBe(resultUser2);
@@ -231,6 +237,13 @@ describe('Backend Flags', () => {
 
     it('should support whitelisting specific components for testing', async () => {
       mockGetServerSession.mockResolvedValue({ user: { id: 'tester' } } as any);
+
+      // Mock getFeatureFlag to return component flags with appropriate enabled status
+      mockGetFeatureFlag.mockImplementation(async (flagName) => {
+        if (flagName === 'DASHBOARD_NEW_BACKEND') return { enabled: true } as any; // Enabled for override
+        if (flagName === 'CHARTS_NEW_BACKEND') return { enabled: false } as any; // Not enabled, falls back to global
+        return null;
+      });
 
       mockIsFeatureEnabledForUser.mockImplementation(async (flagName) => {
         // Global: OFF
@@ -252,6 +265,13 @@ describe('Backend Flags', () => {
 
     it('should allow emergency disable via component flag', async () => {
       mockGetServerSession.mockResolvedValue({ user: { id: 'user123' } } as any);
+
+      // Mock getFeatureFlag to return component flags with appropriate enabled status
+      mockGetFeatureFlag.mockImplementation(async (flagName) => {
+        if (flagName === 'DASHBOARD_NEW_BACKEND') return { enabled: true } as any; // Enabled for override
+        if (flagName === 'CHARTS_NEW_BACKEND') return { enabled: false } as any; // Not enabled, falls back to global
+        return null;
+      });
 
       mockIsFeatureEnabledForUser.mockImplementation(async (flagName) => {
         // Global: ON (rolled out)
