@@ -33,6 +33,7 @@ const config: Config = {
       testMatch: ["**/*.integration.test.ts", "**/integration/**/*.test.ts"],
       testEnvironment: "node",
       preset: "ts-jest",
+      setupFilesAfterEnv: ["<rootDir>/jest.integration.setup.ts"],
       transform: {
         "^.+\\.tsx?$": ["ts-jest", {
           tsconfig: {
@@ -43,6 +44,8 @@ const config: Config = {
       },
       moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/$1",
+        "^next-auth$": "<rootDir>/__mocks__/next-auth.ts",
+        "^next-auth/react$": "<rootDir>/__mocks__/next-auth__react.ts",
       },
       transformIgnorePatterns: [
         "node_modules/(?!(bson|mongodb|jose|@panva|openid-client)/)",

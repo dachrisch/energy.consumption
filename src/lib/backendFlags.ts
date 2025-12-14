@@ -11,7 +11,13 @@ import { isFeatureEnabledForUser, isFeatureEnabled } from './featureFlags';
  * Evaluation order:
  * 1. Check global NEW_BACKEND_ENABLED flag
  * 2. If component specified, check component-specific flag
- * 3. Component flag overrides global flag
+ * 3. Component flag enabled=true → overrides global (uses component rollout/whitelist logic)
+ * 4. Component flag enabled=false or doesn't exist → falls back to global flag
+ *
+ * Whitelist/Blacklist priority:
+ * - Whitelist always enabled (even if flag disabled)
+ * - Blacklist always disabled (even if flag enabled)
+ * - Whitelist/Blacklist checked before enabled status
  */
 
 /**
@@ -60,13 +66,21 @@ export async function checkBackendFlag(
 
   // Check component-specific flag
   const componentFlagName = `${component.toUpperCase()}_NEW_BACKEND`;
+  const { getFeatureFlag } = await import('./featureFlags');
+  const componentFlag = await getFeatureFlag(componentFlagName);
+
+  // If component flag doesn't exist or is not enabled, fall back to global
+  if (!componentFlag || !componentFlag.enabled) {
+    return globalEnabled;
+  }
+
+  // Component flag is enabled, so check its specific rollout/whitelist logic
   const componentEnabled = await isFeatureEnabledForUser(
     componentFlagName,
     effectiveUserId
   );
 
-  // Component flag overrides global flag
-  // This allows enabling globally but disabling for specific components (or vice versa)
+  // Component flag overrides global flag when enabled=true
   return componentEnabled;
 }
 

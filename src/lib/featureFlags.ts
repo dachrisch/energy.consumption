@@ -35,13 +35,15 @@ export async function isFeatureEnabledForUser(
 ): Promise<boolean> {
   const flag = await getFeatureFlag(featureName);
   if (!flag) return false;
-  if (!flag.enabled) return false;
 
-  // Check whitelist (always enabled)
+  // Check whitelist FIRST (always enabled, even if flag is disabled)
   if (flag.userWhitelist?.includes(userId)) return true;
 
-  // Check blacklist (always disabled)
+  // Check blacklist SECOND (always disabled, even if flag is enabled)
   if (flag.userBlacklist?.includes(userId)) return false;
+
+  // Now check if flag is enabled
+  if (!flag.enabled) return false;
 
   // Percentage rollout (deterministic based on userId)
   if (flag.rolloutPercent === 100) return true;

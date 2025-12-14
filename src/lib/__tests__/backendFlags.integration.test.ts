@@ -7,7 +7,6 @@
 
 import { checkBackendFlag, initializeBackendFlags, getAllBackendFlags } from '../backendFlags';
 import { setFeatureFlag, getFeatureFlag } from '../featureFlags';
-import { connectDB } from '../mongodb';
 import FeatureFlag from '@/models/FeatureFlag';
 
 // Set longer timeout for database operations
@@ -15,7 +14,7 @@ jest.setTimeout(30000);
 
 describe('Backend Flags Integration Tests', () => {
   beforeAll(async () => {
-    await connectDB();
+    // MongoDB connection is handled by jest.integration.setup.ts
     // Clean up any existing test flags
     await FeatureFlag.deleteMany({ name: /TEST_/ });
     await FeatureFlag.deleteMany({ name: /_NEW_BACKEND/ });

@@ -20,7 +20,6 @@ jest.mock('next-auth', () => ({
   ),
 }));
 
-import { connectDB } from '@/lib/mongodb';
 import { setFeatureFlag } from '@/lib/featureFlags';
 import { addEnergyAction, deleteEnergyAction, importCSVAction } from '@/actions/energy';
 import { getEnergyCrudService, getDisplayDataService, resetServices, initializeEventHandlers } from '@/services';
@@ -36,7 +35,8 @@ describe('Collection Routing Tests - New Data to New Collections', () => {
   const testUserId = 'test-collection-routing';
 
   beforeAll(async () => {
-    await connectDB();
+    // MongoDB connection is handled by jest.integration.setup.ts
+    // Just initialize event handlers
     initializeEventHandlers();
   });
 
