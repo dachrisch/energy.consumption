@@ -68,10 +68,10 @@ export async function POST(request: NextRequest) {
     switch (displayType) {
       case 'monthly-chart': {
         const type = (filters.type as EnergyOptions) || 'power';
-        const year = filters.year || new Date().getFullYear();
+        const year: number = Number(filters.year) || new Date().getFullYear();
 
         // Calculate (uses cache if available)
-        data = await service.calculateMonthlyChartData(session.user.id, type, year);
+        data = await service.calculateMonthlyChartData(session.user.id, year, type);
 
         // Cache hit if calculated less than 5 seconds ago
         if (data.calculatedAt) {
@@ -83,10 +83,12 @@ export async function POST(request: NextRequest) {
 
       case 'histogram': {
         const type = (filters.type as EnergyOptions) || 'power';
-        const bucketCount = filters.bucketCount || 100;
+        const bucketCount = Number(filters.bucketCount) || 100;
+        const startDate = filters.startDate ? new Date(filters.startDate as string) : new Date(0);
+        const endDate = filters.endDate ? new Date(filters.endDate as string) : new Date();
 
         // Calculate (uses cache if available)
-        data = await service.calculateHistogramData(session.user.id, type, bucketCount);
+        data = await service.calculateHistogramData(session.user.id, type, startDate, endDate, bucketCount);
 
         // Cache hit if calculated less than 5 seconds ago
         if (data.calculatedAt) {
@@ -103,8 +105,8 @@ export async function POST(request: NextRequest) {
 
         const readings = await crudService.findAll(session.user.id, {
           type: filters.type as EnergyOptions | undefined,
-          limit: filters.limit || 1000,
-          offset: filters.offset || 0,
+          limit: Number(filters.limit) || 1000,
+          offset: Number(filters.offset) || 0,
         });
 
         data = readings;
@@ -126,7 +128,7 @@ export async function POST(request: NextRequest) {
       meta: {
         displayType,
         backend: 'new',
-        calculatedAt: data.calculatedAt || new Date(),
+        calculatedAt: ('calculatedAt' in data && data.calculatedAt) ? data.calculatedAt : new Date(),
       },
     });
   } catch (error) {
