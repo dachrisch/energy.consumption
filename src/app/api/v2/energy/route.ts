@@ -10,34 +10,34 @@
  * Authentication: Required (NextAuth session)
  */
 
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { getEnergyCrudService } from '@/services';
 import { EnergyFilters } from '@/app/types';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(req: NextRequest) {
   // Verify authentication
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { filters } = req.body as { filters?: EnergyFilters };
+    const body = await req.json();
+    const { filters } = body as { filters?: EnergyFilters };
     const service = getEnergyCrudService();
     const data = await service.findAll(session.user.id, filters);
 
-    return res.status(200).json({ data });
+    return NextResponse.json({ data });
   } catch (error) {
     console.error('Error fetching energy data:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

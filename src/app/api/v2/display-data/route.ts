@@ -10,31 +10,31 @@
  * Authentication: Required (NextAuth session)
  */
 
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import { getDisplayDataService } from '@/services';
 import { DisplayDataType } from '@/app/types';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(req: NextRequest) {
   // Verify authentication
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const { displayType, filters } = req.body as {
+    const body = await req.json();
+    const { displayType, filters } = body as {
       displayType: DisplayDataType;
       filters?: Record<string, unknown>;
     };
 
     if (!displayType) {
-      return res.status(400).json({ error: 'displayType is required' });
+      return NextResponse.json(
+        { error: 'displayType is required' },
+        { status: 400 }
+      );
     }
 
     const service = getDisplayDataService();
@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (cachedData) {
       // Cache hit
-      return res.status(200).json({
+      return NextResponse.json({
         data: cachedData.data,
         cacheHit: true,
         calculatedAt: cachedData.calculatedAt,
@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         filters
       );
 
-      return res.status(200).json({
+      return NextResponse.json({
         data: calculatedData.data,
         cacheHit: false,
         calculatedAt: calculatedData.calculatedAt,
@@ -67,9 +67,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     console.error('Error fetching display data:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
