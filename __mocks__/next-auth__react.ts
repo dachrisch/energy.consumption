@@ -22,5 +22,5 @@ export const useSession = jest.fn(() => ({
 export const signIn = jest.fn();
 export const signOut = jest.fn();
 export const SessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <>{children}</>;
+  return React.createElement(React.Fragment, null, children);
 };

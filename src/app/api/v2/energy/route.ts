@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getEnergyCrudService } from '@/services';
-import { EnergyOptions } from '@/app/types';
+import { EnergyOptions, EnergyFilters } from '@/app/types';
 
 // Initialize server infrastructure
 import '@/lib/serverInit';
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     const service = getEnergyCrudService();
 
     // Build filters
-    const filters: any = {};
+    const filters: Partial<EnergyFilters> = {};
     if (type) filters.type = type;
     if (limit) filters.limit = limit;
     if (offset) filters.offset = offset;
@@ -201,7 +201,7 @@ export async function PUT(request: NextRequest) {
     const service = getEnergyCrudService();
 
     // Build update object
-    const updates: any = {};
+    const updates: Record<string, number | Date | EnergyOptions> = {};
     if (amount !== undefined) updates.amount = amount;
     if (date) updates.date = new Date(date);
     if (type) updates.type = type;

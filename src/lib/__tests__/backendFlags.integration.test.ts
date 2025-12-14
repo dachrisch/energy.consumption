@@ -6,7 +6,7 @@
  */
 
 import { checkBackendFlag, initializeBackendFlags, getAllBackendFlags } from '../backendFlags';
-import { setFeatureFlag, getFeatureFlag } from '../featureFlags';
+import { setFeatureFlag } from '../featureFlags';
 import FeatureFlag from '@/models/FeatureFlag';
 
 // Set longer timeout for database operations

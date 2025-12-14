@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
  * Query params:
  * - all: 'true' to invalidate all cached data for user
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     // Authentication
     const session = await getServerSession();

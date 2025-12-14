@@ -12,7 +12,6 @@ import { NextRequest } from 'next/server';
 import { POST, DELETE } from '../display-data/route';
 import { connectDB } from '@/lib/mongodb';
 import { getEnergyCrudService, getDisplayDataService, resetServices, initializeEventHandlers } from '@/services';
-import { resetEventBus } from '@/events';
 import SourceEnergyReading from '@/models/SourceEnergyReading';
 import DisplayEnergyData from '@/models/DisplayEnergyData';
 

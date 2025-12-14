@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { checkBackendFlag, isNewBackendEnabled, initializeBackendFlags, getAllBackendFlags } from '../backendFlags';
 import { setFeatureFlag, getFeatureFlag } from '../featureFlags';
 import { getServerSession } from 'next-auth';
@@ -16,7 +17,9 @@ jest.mock('../featureFlags', () => ({
 }));
 
 const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockIsFeatureEnabledForUser = require('../featureFlags').isFeatureEnabledForUser as jest.Mock;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockIsFeatureEnabled = require('../featureFlags').isFeatureEnabled as jest.Mock;
 const mockGetFeatureFlag = getFeatureFlag as jest.MockedFunction<typeof getFeatureFlag>;
 const mockSetFeatureFlag = setFeatureFlag as jest.MockedFunction<typeof setFeatureFlag>;

@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 /**
  * /api/v2/energy Integration Tests
  *
- * Tests the new v2 energy API routes with:
+ * Tests the new v2/energy API routes with:
  * - Real service layer integration
  * - Real database operations
  * - Event emission verification
@@ -450,7 +451,7 @@ describe('/api/v2/energy Integration Tests', () => {
     });
 
     it('should automatically invalidate cache on data changes', async () => {
-      const displayService = getDisplayDataService();
+      const _displayService = getDisplayDataService();
       const eventBus = getEventBus();
       let cacheInvalidated = false;
 

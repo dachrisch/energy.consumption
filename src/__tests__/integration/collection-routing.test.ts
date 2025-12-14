@@ -21,7 +21,7 @@ jest.mock('next-auth', () => ({
 }));
 
 import { setFeatureFlag } from '@/lib/featureFlags';
-import { addEnergyAction, deleteEnergyAction, importCSVAction } from '@/actions/energy';
+import { addEnergyAction, importCSVAction } from '@/actions/energy';
 import { getEnergyCrudService, getDisplayDataService, resetServices, initializeEventHandlers } from '@/services';
 import Energy from '@/models/Energy';
 import SourceEnergyReading from '@/models/SourceEnergyReading';
