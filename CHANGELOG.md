@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.1](https://github.com/dachrisch/energy.consumption/compare/v2.5.0...v2.5.1) (2025-12-14)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v9 ([24434c6](https://github.com/dachrisch/energy.consumption/commit/24434c6f06f372810a0a1336bbb2f548ff8866d3))
+* **deps:** update dependency next to v16.0.10 [security] ([#244](https://github.com/dachrisch/energy.consumption/issues/244)) ([991fc68](https://github.com/dachrisch/energy.consumption/commit/991fc680c29fe3575f7e58248155fc762dde04a8))
+* **deps:** update dependency next to v16.0.7 [security] ([#230](https://github.com/dachrisch/energy.consumption/issues/230)) ([785b0e1](https://github.com/dachrisch/energy.consumption/commit/785b0e1c01c044c3f0d1b5a90d3488c30131e600))
+* **deps:** update dependency next to v16.0.9 [security] ([#242](https://github.com/dachrisch/energy.consumption/issues/242)) ([cd041f6](https://github.com/dachrisch/energy.consumption/commit/cd041f6af5c3dea9b19d0c1719c4b9b4ddd7b683))
+* **deps:** update dependency react-datepicker to v9 ([ba5037a](https://github.com/dachrisch/energy.consumption/commit/ba5037aeca56c3fc70f612a09cc550e92e995236))
+* **deps:** update nextjs monorepo to v16.0.4 ([#220](https://github.com/dachrisch/energy.consumption/issues/220)) ([6893a03](https://github.com/dachrisch/energy.consumption/commit/6893a03c20bdb196856d59f0f0eb251d19379895))
+* **deps:** update nextjs monorepo to v16.0.5 ([#222](https://github.com/dachrisch/energy.consumption/issues/222)) ([9b0ad92](https://github.com/dachrisch/energy.consumption/commit/9b0ad92a9ca39b715cc87eccf8253508dfdc98e7))
+* **deps:** update nextjs monorepo to v16.0.6 ([#223](https://github.com/dachrisch/energy.consumption/issues/223)) ([cc7a12e](https://github.com/dachrisch/energy.consumption/commit/cc7a12e07d8ab3f6339242329e04c6a4a40539d7))
+* **deps:** update nextjs monorepo to v16.0.8 ([#235](https://github.com/dachrisch/energy.consumption/issues/235)) ([0e0a76c](https://github.com/dachrisch/energy.consumption/commit/0e0a76c57d34e695db9e079a1c8872e42cf0d9a2))
+* **hooks:** remove unnecessary filtersJson dependency warnings ([bb90ea7](https://github.com/dachrisch/energy.consumption/commit/bb90ea78e028519b2821163abb591e45e7457ef1))
+* migrate v2 API routes from Pages Router to App Router ([a8f36a1](https://github.com/dachrisch/energy.consumption/commit/a8f36a150490795bca48b4ec1a565503ca34d085))
+* update sessionFilter to Mongoose v9 compatibility ([7ebe02b](https://github.com/dachrisch/energy.consumption/commit/7ebe02b5d8bfabea503efc26ff283bceed71d9fd)), closes [#217](https://github.com/dachrisch/energy.consumption/issues/217)
+
 ## [2.5.0](https://github.com/dachrisch/energy.consumption/compare/v2.4.0...v2.5.0) (2025-11-17)
 
 
