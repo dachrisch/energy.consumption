@@ -6,7 +6,6 @@ import {
   Document,
   Schema,
   MongooseDocumentMiddleware,
-  CallbackWithoutResultAndOptionalError,
 } from "mongoose";
 import { getServerSession } from "next-auth";
 
@@ -32,8 +31,7 @@ const filteredByUserId = async function <T extends Document>(
 };
 
 const addUserId = async function (
-  this: UserSpecific,
-  next: CallbackWithoutResultAndOptionalError
+  this: UserSpecific
 ) {
   const session = await getServerSession(authOptions);
   if (session?.user?.id) {
@@ -42,7 +40,6 @@ const addUserId = async function (
   } else {
     throw new Error("User not logged in or missing user ID");
   }
-  next();
 };
 
 export const applyPreFilter = async <T extends UserSpecific>(
