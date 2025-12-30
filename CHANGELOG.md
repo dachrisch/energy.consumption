@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.6.0](https://github.com/dachrisch/energy.consumption/compare/v2.5.1...v2.6.0) (2025-12-30)
+
+
+### Features
+
+* **architecture:** Phase 2 - Frontend Adapter Layer Implementation ([4295eaa](https://github.com/dachrisch/energy.consumption/commit/4295eaa7bee9180639c2dace25d59e3e33a3a510))
+* **tooling:** add feature flag management script and testing guide ([d88d7a2](https://github.com/dachrisch/energy.consumption/commit/d88d7a2177a71812c4f5a662e82ca3a45a41d71f))
+* **tooling:** add MongoDB collection dump script for easy inspection ([c50df50](https://github.com/dachrisch/energy.consumption/commit/c50df505288744adfc02f9486543ef0cfb295a73))
+
+
+### Bug Fixes
+
+* correct health endpoint to return 200 with status in body ([fb45120](https://github.com/dachrisch/energy.consumption/commit/fb45120f631cea6761cc1092a0bbb4603005ada6))
+* correct TypeScript type errors in display-data route ([405f0ec](https://github.com/dachrisch/energy.consumption/commit/405f0ec28f4433c6e23b95c81a38e20283190db6))
+* resolve all ESLint errors to pass CI checks ([9bc7a33](https://github.com/dachrisch/energy.consumption/commit/9bc7a33a7aeea1b08ee7bdc2f2609001d588ff34))
+* resolve all unit test failures (108 → 0) ([7e08dc9](https://github.com/dachrisch/energy.consumption/commit/7e08dc94f508c2c3d8b528590ef6a79b3b789ec0))
+* **testing:** resolve integration test infrastructure issues ([1ff8182](https://github.com/dachrisch/energy.consumption/commit/1ff81820a1fe0aee8864edbfd4590a08b78fa0da))
+* **tooling:** prevent MongoDB connection error in flag manager script ([4e8829f](https://github.com/dachrisch/energy.consumption/commit/4e8829fa76c486e7a8c9a9b55972f36db22cdae3))
+
 ### [2.5.1](https://github.com/dachrisch/energy.consumption/compare/v2.5.0...v2.5.1) (2025-12-14)
 
 
