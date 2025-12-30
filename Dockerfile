@@ -30,6 +30,6 @@ RUN apt -y update
 RUN apt -y install curl
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -s http://localhost:3000/api/health
+  CMD ["curl", "-sf", "-o", "/dev/null", "http://localhost:3000/api/health"]
 
 CMD ["npm", "start"]
