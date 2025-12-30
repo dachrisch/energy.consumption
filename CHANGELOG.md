@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.7.1](https://github.com/dachrisch/energy.consumption/compare/v2.7.0...v2.7.1) (2025-12-30)
+
+
+### Bug Fixes
+
+* **healthcheck:** use CMD exec array format to prevent zombie processes ([8297e9c](https://github.com/dachrisch/energy.consumption/commit/8297e9c658911bafbac071014ca7a6d181a72402))
+
+## [2.7.0](https://github.com/dachrisch/energy.consumption/compare/v2.5.1...v2.7.0) (2025-12-30)
+
+
+### Features
+
+* allow releases from any branch, not just main ([40e2785](https://github.com/dachrisch/energy.consumption/commit/40e27859ff58bf7f650035fa26381a118fb762a6))
+
+
+### Bug Fixes
+
+* correct health endpoint to return 200 with status in body ([5e8c350](https://github.com/dachrisch/energy.consumption/commit/5e8c350917ac40eeafb98ec93c8ced2b7148403b))
+
+## [2.6.0](https://github.com/dachrisch/energy.consumption/compare/v2.5.1...v2.6.0) (2025-12-30)
+
+
+### Features
+
+* allow releases from any branch, not just main ([40e2785](https://github.com/dachrisch/energy.consumption/commit/40e27859ff58bf7f650035fa26381a118fb762a6))
+
+
+### Bug Fixes
+
+* correct health endpoint to return 200 with status in body ([5e8c350](https://github.com/dachrisch/energy.consumption/commit/5e8c350917ac40eeafb98ec93c8ced2b7148403b))
+
 ### [2.5.1](https://github.com/dachrisch/energy.consumption/compare/v2.5.0...v2.5.1) (2025-12-14)
 
 
