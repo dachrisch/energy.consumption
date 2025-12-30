@@ -2,25 +2,22 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 
 export const GET = async () => {
+  let status = "healthy";
+  let databaseStatus: { status: string; error?: string } = { status: "connected" };
+
   try {
-    // Check database connection
-    const dbConnected = await connectDB();
-    
-    return NextResponse.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      database: {
-        status: dbConnected ? "connected" : "disconnected"
-      }
-    });
+    await connectDB();
   } catch (error) {
-    return NextResponse.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      database: {
-        status: "error",
-        error: error instanceof Error ? error.message : "Unknown error"
-      }
-    }, { status: 500 });
+    status = "unhealthy";
+    databaseStatus = {
+      status: "error",
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
   }
+
+  return NextResponse.json({
+    status,
+    timestamp: new Date().toISOString(),
+    database: databaseStatus
+  });
 }; 
