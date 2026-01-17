@@ -13,19 +13,19 @@
  */
 
 import { IDisplayDataRepository } from '../interfaces/IDisplayDataRepository';
-import { DisplayDataType, DisplayEnergyData } from '@/app/types';
+import { DisplayDataType, DisplayEnergyData as DisplayEnergyDataType } from '@/app/types';
 import { connectDB } from '@/lib/mongodb';
-import { DisplayEnergyDataModel } from '@/models/DisplayEnergyData';
+import DisplayEnergyData from '@/models/DisplayEnergyData';
 
 export class MongoDisplayDataRepository implements IDisplayDataRepository {
   /**
    * Upsert (insert or update) display data
    * Uses composite key (userId + displayType) for upsert
    */
-  async upsert(data: Omit<DisplayEnergyData, '_id'>): Promise<DisplayEnergyData> {
+  async upsert(data: Omit<DisplayEnergyDataType, '_id'>): Promise<DisplayEnergyDataType> {
     await connectDB();
 
-    return await DisplayEnergyDataModel.findOneAndUpdate(
+    return await DisplayEnergyData.findOneAndUpdate(
       { userId: data.userId, displayType: data.displayType },
       data,
       { upsert: true, new: true }
@@ -37,10 +37,10 @@ export class MongoDisplayDataRepository implements IDisplayDataRepository {
   /**
    * Find display data by type with user isolation
    */
-  async findByType(userId: string, displayType: DisplayDataType): Promise<DisplayEnergyData | null> {
+  async findByType(userId: string, displayType: DisplayDataType): Promise<DisplayEnergyDataType | null> {
     await connectDB();
 
-    return await DisplayEnergyDataModel.findOne({
+    return await DisplayEnergyData.findOne({
       userId,
       displayType,
     }).exec();
@@ -53,10 +53,10 @@ export class MongoDisplayDataRepository implements IDisplayDataRepository {
     userId: string,
     displayType: DisplayDataType,
     filters: Record<string, unknown>
-  ): Promise<DisplayEnergyData | null> {
+  ): Promise<DisplayEnergyDataType | null> {
     await connectDB();
 
-    return await DisplayEnergyDataModel.findOne({
+    return await DisplayEnergyData.findOne({
       userId,
       displayType,
       'metadata.filters': filters,
@@ -69,7 +69,7 @@ export class MongoDisplayDataRepository implements IDisplayDataRepository {
   async deleteByType(userId: string, displayType: DisplayDataType): Promise<boolean> {
     await connectDB();
 
-    const result = await DisplayEnergyDataModel.deleteOne({
+    const result = await DisplayEnergyData.deleteOne({
       userId,
       displayType,
     })
@@ -85,7 +85,7 @@ export class MongoDisplayDataRepository implements IDisplayDataRepository {
   async deleteAllForUser(userId: string): Promise<number> {
     await connectDB();
 
-    const result = await DisplayEnergyDataModel.deleteMany({
+    const result = await DisplayEnergyData.deleteMany({
       userId,
     })
       .where({ userId })
@@ -102,7 +102,7 @@ export class MongoDisplayDataRepository implements IDisplayDataRepository {
   async invalidateForUser(userId: string): Promise<void> {
     await connectDB();
 
-    await DisplayEnergyDataModel.deleteMany({
+    await DisplayEnergyData.deleteMany({
       userId,
     })
       .where({ userId })

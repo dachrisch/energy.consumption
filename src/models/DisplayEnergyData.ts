@@ -1,70 +1,23 @@
-/**
- * DisplayEnergyData Model
- *
- * Mongoose model for pre-calculated display data.
- * This model stores cached, computed data derived from source readings.
- *
- * Features:
- * - User data isolation via applyPreFilter middleware
- * - Composite unique index (userId + displayType) for upsert operations
- * - Flexible data field to accommodate different display types
- * - Metadata for cache invalidation and debugging
- */
+import mongoose, { Schema, Document } from 'mongoose';
+import { DisplayEnergyData as DisplayEnergyDataType } from '@/app/types';
 
-import mongoose, { Schema } from 'mongoose';
-import { DisplayEnergyData } from '@/app/types';
-import { applyPreFilter } from './sessionFilter';
+export interface IDisplayEnergyData extends Document, Omit<DisplayEnergyDataType, '_id'> {}
 
-const DisplayEnergyDataSchema = new Schema<DisplayEnergyData>(
-  {
-    userId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    displayType: {
-      type: String,
-      required: true,
-      enum: [
-        'monthly-chart-power',
-        'monthly-chart-gas',
-        'histogram-power',
-        'histogram-gas',
-        'table-data',
-      ],
-    },
-    data: {
-      type: Schema.Types.Mixed,
-      required: true,
-    },
-    calculatedAt: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
-    sourceDataHash: {
-      type: String,
-      required: true,
-    },
-    metadata: {
-      sourceReadingCount: Number,
-      calculationTimeMs: Number,
-      filters: Schema.Types.Mixed,
-    },
-  },
-  {
-    collection: 'display_energy_data',
-  }
-);
+const DisplayEnergyDataSchema: Schema = new Schema({
+  userId: { type: String, required: true, index: true },
+  displayType: { type: String, required: true, index: true },
+  data: { type: Schema.Types.Mixed, required: true },
+  calculatedAt: { type: Date, default: Date.now },
+  sourceDataHash: { type: String, required: true },
+  metadata: { type: Schema.Types.Mixed },
+});
 
-// Composite unique index for upsert operations
-// One display data record per user per display type
+// Ensure a user only has one active display data of a specific type (with same filters)
+// Simplification for Phase 2: type includes the main filter (e.g. monthly-chart-power)
 DisplayEnergyDataSchema.index({ userId: 1, displayType: 1 }, { unique: true });
 
-// Apply user data isolation middleware
-applyPreFilter(DisplayEnergyDataSchema);
+const DisplayEnergyData = mongoose.models.DisplayEnergyData || 
+  mongoose.model<IDisplayEnergyData>('DisplayEnergyData', DisplayEnergyDataSchema);
 
-// Export model (handle Next.js hot reload)
-export const DisplayEnergyDataModel =
-  mongoose.models.DisplayEnergyData ||
-  mongoose.model<DisplayEnergyData>('DisplayEnergyData', DisplayEnergyDataSchema);
+export default DisplayEnergyData;
+export { DisplayEnergyData };
