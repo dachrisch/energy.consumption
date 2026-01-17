@@ -1,15 +1,15 @@
 # Implementation Plan - Monthly Consumption Projections
 
 ## Phase 1: Projection Logic (Backend)
-- [ ] Task: Implement core projection utility
-    - [ ] Write unit tests for daily average calculation
-    - [ ] Implement daily average calculation logic
-    - [ ] Write unit tests for seasonal weighting
-    - [ ] Implement seasonal weighting logic
-- [ ] Task: Integrate contract pricing into projections
-    - [ ] Write tests for cost estimation based on projected units
-    - [ ] Implement cost estimation logic
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Projection Logic (Backend)' (Protocol in workflow.md)
+- [x] Task: Implement core projection utility
+    - [x] Write unit tests for daily average calculation
+    - [x] Implement daily average calculation logic
+    - [x] Write unit tests for seasonal weighting
+    - [x] Implement seasonal weighting logic
+- [x] Task: Integrate contract pricing into projections
+    - [x] Write tests for cost estimation based on projected units
+    - [x] Implement cost estimation logic
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Projection Logic (Backend)' (Protocol in workflow.md)
 
 ## Phase 2: API & Service Layer
 - [ ] Task: Create Projection Service

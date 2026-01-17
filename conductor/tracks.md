@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Implement Monthly Consumption Projections and Cost Estimation**
+- [~] **Track: Implement Monthly Consumption Projections and Cost Estimation**
   *Link: [./tracks/projections_20260117/](./tracks/projections_20260117/)*

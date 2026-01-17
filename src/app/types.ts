@@ -104,6 +104,7 @@ export type MonthlyConsumptionPoint = {
 export type SourceEnergyReading = UserSpecific & {
   type: EnergyOptions;
   amount: number;
+  unit: string;
   date: Date;
   createdAt: Date;
   updatedAt: Date;
