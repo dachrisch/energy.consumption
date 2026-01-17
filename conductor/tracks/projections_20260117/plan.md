@@ -30,10 +30,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Dashboard Visualization' (Protocol in workflow.md)
 
 ## Phase 4: Final Verification
-- [ ] Task: End-to-End Testing
-    - [ ] Write E2E tests for the full projection workflow
-    - [ ] Verify projections update correctly after adding a new reading
-- [ ] Task: Visual Polish and Accessibility
-    - [ ] Verify responsive behavior using Chrome MCP
-    - [ ] Ensure WCAG 2.1 compliance for new UI elements
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Final Verification' (Protocol in workflow.md)
+- [x] Task: End-to-End Testing
+    - [x] Write E2E tests for the full projection workflow
+    - [x] Verify projections update correctly after adding a new reading
+- [x] Task: Visual Polish and Accessibility
+    - [x] Verify responsive behavior using Chrome MCP
+    - [x] Ensure WCAG 2.1 compliance for new UI elements
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Final Verification' (Protocol in workflow.md)

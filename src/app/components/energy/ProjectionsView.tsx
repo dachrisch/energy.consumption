@@ -52,7 +52,7 @@ const ProjectionsView = () => {
       </div>
 
       {isLoading ? (
-        <div className="py-12 text-center text-outline">Loading projections...</div>
+        <div className="py-12 text-center text-foreground-muted">Loading projections...</div>
       ) : error ? (
         <div className="py-12 text-center text-destructive">{error}</div>
       ) : (
@@ -62,7 +62,7 @@ const ProjectionsView = () => {
         </>
       )}
       
-      <div className="bg-surface-variant/10 p-4 rounded-lg border border-outline-variant/20 text-sm text-outline">
+      <div className="bg-surface-variant/10 p-4 rounded-lg border border-outline-variant/20 text-sm text-foreground-muted">
         <p className="font-semibold mb-1">How projections work:</p>
         <p>
           Estimates are based on your total average daily consumption across all historical readings. 

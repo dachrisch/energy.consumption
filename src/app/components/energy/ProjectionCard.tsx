@@ -18,7 +18,7 @@ const ProjectionCard = ({ projection, type }: ProjectionCardProps) => {
       <div className="metric-card bg-surface-variant/20 border-dashed border-2 border-outline-variant/30">
         <div className="metric-card-content flex flex-col items-center justify-center py-6 text-center">
           <div className="mb-2 opacity-50">{icon}</div>
-          <h3 className="metric-card-title text-outline">Insufficient data for projection</h3>
+          <h3 className="metric-card-title text-foreground-muted">Insufficient data for projection</h3>
           <p className="metric-card-subtitle">Add more readings to see your projected costs</p>
         </div>
       </div>
@@ -43,10 +43,10 @@ const ProjectionCard = ({ projection, type }: ProjectionCardProps) => {
             </p>
             <div className="mt-2 space-y-1">
               <p className="text-sm flex justify-between">
-                <span className="text-outline">Projected Usage:</span>
+                <span className="text-foreground-muted">Projected Usage:</span>
                 <span className="font-medium">{projection.currentMonth.estimatedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {unit}</span>
               </p>
-              <p className="text-xs text-outline flex justify-between">
+              <p className="text-xs text-foreground-subtle flex justify-between">
                 <span>{projection.currentMonth.daysRemaining.toFixed(0)} days remaining</span>
                 <span>(Avg. { (projection.currentMonth.estimatedTotal / 30).toFixed(2) } {unit}/day)</span>
               </p>
@@ -69,10 +69,10 @@ const ProjectionCard = ({ projection, type }: ProjectionCardProps) => {
             </p>
             <div className="mt-2 space-y-1">
               <p className="text-sm flex justify-between">
-                <span className="text-outline">Projected Usage:</span>
+                <span className="text-foreground-muted">Projected Usage:</span>
                 <span className="font-medium">{projection.year.estimatedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {unit}</span>
               </p>
-              <p className="text-xs text-outline italic">
+              <p className="text-xs text-foreground-subtle italic">
                 * Based on current average consumption
               </p>
             </div>

@@ -35,10 +35,15 @@ export class ProjectionService {
    * 
    * @param userId - User ID
    * @param type - Energy type
+   * @param referenceDate - Optional reference date (defaults to now)
    * @returns Projection results
    */
-  async getProjections(userId: string, type: EnergyOptions): Promise<ProjectionResult | null> {
-    const now = new Date();
+  async getProjections(
+    userId: string, 
+    type: EnergyOptions, 
+    referenceDate: Date = new Date()
+  ): Promise<ProjectionResult | null> {
+    const now = referenceDate;
     const currentYear = now.getUTCFullYear();
     const currentMonth = now.getUTCMonth();
     
