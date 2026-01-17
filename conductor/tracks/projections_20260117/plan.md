@@ -12,9 +12,9 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Projection Logic (Backend)' (Protocol in workflow.md)
 
 ## Phase 2: API & Service Layer
-- [ ] Task: Create Projection Service
-    - [ ] Write integration tests for ProjectionService
-    - [ ] Implement ProjectionService to aggregate data for a user
+- [x] Task: Create Projection Service
+    - [x] Write integration tests for ProjectionService
+    - [x] Implement ProjectionService to aggregate data for a user
 - [ ] Task: Expose Projections via API
     - [ ] Write tests for the projection API endpoint/action
     - [ ] Implement API route/action to return projection data
