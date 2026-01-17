@@ -5,7 +5,8 @@ import EnergyTableFilters from "./energy/EnergyTableFilters";
 import { EnergyType, ContractType, EnergyOptions } from "../types";
 import UnifiedEnergyChart from "./energy/UnifiedEnergyChart";
 import EnergyTable from "./energy/EnergyTable";
-import { TableIcon, ChartIcon } from "./icons";
+import ProjectionsView from "./energy/ProjectionsView";
+import { TableIcon, ChartIcon, TrendingUpIcon } from "./icons";
 import { DateRange } from "./energy/RangeSlider/types";
 import { ENERGY_TYPES } from "../constants/energyTypes";
 
@@ -79,6 +80,12 @@ const DashboardTabs = ({ energyData, contracts, onDelete }: TabsProps) => {
           dateRange={dateRangeLegacy}
         />
       ),
+    },
+    {
+      id: "projections",
+      label: "Projections",
+      icon: <TrendingUpIcon className="w-4 h-4" />,
+      content: <ProjectionsView />,
     },
   ];
 

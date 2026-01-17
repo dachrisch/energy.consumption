@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { EnergyType, ContractType, EnergyOptions } from "../types";
 import { formatDateToBrowserLocale } from "../utils/dateUtils";
 import { PowerIcon, GasIcon, TrendingUpIcon, TrendingDownIcon, CalendarIcon, CurrencyIcon } from "./icons";
+import { getProjectionsAction } from "@/actions/projections";
+import { ProjectionResult } from "@/services/projections/ProjectionService";
+import { useState, useEffect } from "react";
 
 interface DashboardSummaryProps {
   energyData: EnergyType[];
@@ -47,6 +50,24 @@ const MetricCard = ({ title, value, subtitle, icon, trend, onClick }: MetricCard
 
 const DashboardSummary = ({ energyData, contracts }: DashboardSummaryProps) => {
   const router = useRouter();
+  const [powerProjection, setPowerProjection] = useState<ProjectionResult | null>(null);
+  const [gasProjection, setGasProjection] = useState<ProjectionResult | null>(null);
+
+  useEffect(() => {
+    const fetchProjections = async () => {
+      try {
+        const [p, g] = await Promise.all([
+          getProjectionsAction("power"),
+          getProjectionsAction("gas"),
+        ]);
+        setPowerProjection(p);
+        setGasProjection(g);
+      } catch (err) {
+        console.error("Failed to fetch projections:", err);
+      }
+    };
+    fetchProjections();
+  }, []);
 
   const metrics = useMemo(() => {
     // Total readings
@@ -198,6 +219,43 @@ const DashboardSummary = ({ energyData, contracts }: DashboardSummaryProps) => {
               icon={<CurrencyIcon className="w-6 h-6" />}
             />
           )}
+        </div>
+      </div>
+
+      <div className="consumption-section">
+        <h2 className="section-title">Consumption Projections</h2>
+        <div className="consumption-grid">
+          <MetricCard
+            title="Power Projection"
+            value={
+              powerProjection 
+                ? `€${powerProjection.currentMonth.estimatedCost.toFixed(2)}`
+                : "Calculating..."
+            }
+            subtitle={
+              powerProjection 
+                ? `Est. total for this month`
+                : undefined
+            }
+            icon={<TrendingUpIcon className="w-6 h-6 text-primary" />}
+            onClick={() => router.push("/history")}
+          />
+
+          <MetricCard
+            title="Gas Projection"
+            value={
+              gasProjection 
+                ? `€${gasProjection.currentMonth.estimatedCost.toFixed(2)}`
+                : "Calculating..."
+            }
+            subtitle={
+              gasProjection 
+                ? `Est. total for this month`
+                : undefined
+            }
+            icon={<TrendingUpIcon className="w-6 h-6 text-secondary" />}
+            onClick={() => router.push("/history")}
+          />
         </div>
       </div>
 

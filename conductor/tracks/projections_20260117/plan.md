@@ -21,13 +21,13 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 2: API & Service Layer' (Protocol in workflow.md)
 
 ## Phase 3: Dashboard Visualization
-- [ ] Task: Create ProjectionCard component
-    - [ ] Write component tests for ProjectionCard (UI states)
-    - [ ] Implement ProjectionCard with basic metrics (Est. Bill, Projected Usage)
-- [ ] Task: Integrate Projection Chart
-    - [ ] Write tests for chart data mapping
-    - [ ] Implement visual comparison of actual vs. projected usage using Chart.js
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Dashboard Visualization' (Protocol in workflow.md)
+- [x] Task: Create ProjectionCard component
+    - [x] Write component tests for ProjectionCard (UI states)
+    - [x] Implement ProjectionCard with basic metrics (Est. Bill, Projected Usage)
+- [x] Task: Integrate Projection Chart
+    - [x] Write tests for chart data mapping
+    - [x] Implement visual comparison of actual vs. projected usage using Chart.js
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Dashboard Visualization' (Protocol in workflow.md)
 
 ## Phase 4: Final Verification
 - [ ] Task: End-to-End Testing

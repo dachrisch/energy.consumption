@@ -17,6 +17,11 @@ export interface ProjectionResult {
     estimatedTotal: number;
     estimatedCost: number;
   };
+  monthlyData: {
+    month: number;
+    actual: number | null;
+    projected: number;
+  }[];
 }
 
 export class ProjectionService {
@@ -114,6 +119,46 @@ export class ProjectionService {
     const estimatedTotalYear = projectedElapsedYear + projectedRemainderYear;
     const estimatedCostYear = ProjectionCalculationService.calculateProjectedCost(estimatedTotalYear, daysInYear, contract);
 
+    // 5. Monthly data for chart
+    // Calculate actual monthly consumption for the current year
+    const actualMonthlyAverages = ProjectionCalculationService.calculateMonthlyAverages(readingsThisYear.length > 0 ? readingsThisYear : (allReadings.length > 0 ? [allReadings[allReadings.length-1]] : []));
+    // Wait, if no readings this year, we need to bridge from last year
+    let actualReadingsForYear = [...readingsThisYear];
+    if (readingsThisYear.length > 0) {
+      const firstThisYear = readingsThisYear[0];
+      const prev = allReadings.filter(r => r.date < startOfYear).pop();
+      if (prev) {
+        actualReadingsForYear.unshift(prev);
+      }
+    }
+    const actualMonthlyData = ProjectionCalculationService.calculateMonthlyAverages(actualReadingsForYear);
+    const projectionMonthlyAverages = ProjectionCalculationService.calculateMonthlyAverages(allReadings);
+    
+    const monthlyData = [];
+    for (let m = 0; m < 12; m++) {
+      const monthStart = new Date(Date.UTC(currentYear, m, 1));
+      const monthEnd = new Date(Date.UTC(currentYear, m + 1, 1, 0, 0, 0, -1));
+      const daysInM = (monthEnd.getTime() - monthStart.getTime() + 1) / (1000 * 60 * 60 * 24);
+      
+      let actual = actualMonthlyData[m] * daysInM;
+      
+      // If we are in or past current month AND have no actual readings yet for this month, set to null
+      const hasReadingsInOrAfterMonth = readingsThisYear.some(r => r.date >= monthStart);
+      if (!hasReadingsInOrAfterMonth && m >= currentMonth) {
+        actual = null;
+      }
+      // If the month is in the future, actual is null
+      if (m > currentMonth) {
+        actual = null;
+      }
+
+      monthlyData.push({
+        month: m,
+        actual,
+        projected: projectionMonthlyAverages[m] * daysInM
+      });
+    }
+
     return {
       currentMonth: {
         actual: actualThisMonth,
@@ -127,7 +172,8 @@ export class ProjectionService {
         projectedRemainder: projectedRemainderYear,
         estimatedTotal: estimatedTotalYear,
         estimatedCost: estimatedCostYear
-      }
+      },
+      monthlyData
     };
   }
 }

@@ -88,8 +88,15 @@ describe('ProjectionService', () => {
       // Let's check my implementation of actualThisMonth
       expect(result.currentMonth.daysRemaining).toBe(16);
       
-      const expectedProjected = 10 * 16;
+      const expectedProjected = 161.1; // 1520 / 151 * 16
       expect(result.currentMonth.projected).toBeCloseTo(expectedProjected, 1);
+      
+      // Monthly Data
+      expect(result.monthlyData).toHaveLength(12);
+      // Jan (index 0) should have actual around 310 based on our mock data (Jan 1: 1000, May 31: 2520, Avg 10)
+      // Actually, my mock data is: Jan 1 (1000), May 31 (2520).
+      // Feb 1 to Mar 1 is 29 days * 10.066 = 291.9...
+      expect(result.monthlyData[1].actual).toBeCloseTo(291.9, 0);
     }
   });
 });
