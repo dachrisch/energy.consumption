@@ -15,10 +15,10 @@
 - [x] Task: Create Projection Service
     - [x] Write integration tests for ProjectionService
     - [x] Implement ProjectionService to aggregate data for a user
-- [ ] Task: Expose Projections via API
-    - [ ] Write tests for the projection API endpoint/action
-    - [ ] Implement API route/action to return projection data
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: API & Service Layer' (Protocol in workflow.md)
+- [x] Task: Expose Projections via API
+    - [x] Write tests for the projection API endpoint/action
+    - [x] Implement API route/action to return projection data
+- [x] Task: Conductor - User Manual Verification 'Phase 2: API & Service Layer' (Protocol in workflow.md)
 
 ## Phase 3: Dashboard Visualization
 - [ ] Task: Create ProjectionCard component

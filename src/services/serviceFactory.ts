@@ -27,15 +27,18 @@
 
 import { MongoEnergyRepository } from '@/repositories/mongodb/MongoEnergyRepository';
 import { MongoDisplayDataRepository } from '@/repositories/mongodb/MongoDisplayDataRepository';
+import { MongoContractRepository } from '@/repositories/mongodb/MongoContractRepository';
 import { getEventBus } from '@/events';
 import { EnergyCrudService } from './energy/EnergyCrudService';
 import { DisplayDataCalculationService } from './display/DisplayDataCalculationService';
 import { DisplayDataEventHandler } from './handlers/DisplayDataEventHandler';
+import { ProjectionService } from './projections/ProjectionService';
 
 // Singleton instances
 let energyCrudService: EnergyCrudService | null = null;
 let displayDataService: DisplayDataCalculationService | null = null;
 let eventHandler: DisplayDataEventHandler | null = null;
+let projectionService: ProjectionService | null = null;
 
 /**
  * Get singleton instance of EnergyCrudService
@@ -96,6 +99,26 @@ export function initializeEventHandlers(): DisplayDataEventHandler {
 }
 
 /**
+ * Get singleton instance of ProjectionService
+ *
+ * Lazy initialization: Creates service on first call
+ * Dependencies: MongoEnergyRepository, MongoContractRepository
+ *
+ * @returns ProjectionService instance
+ */
+export function getProjectionService(): ProjectionService {
+  if (!projectionService) {
+    const energyRepository = new MongoEnergyRepository();
+    const contractRepository = new MongoContractRepository();
+    projectionService = new ProjectionService(
+      energyRepository,
+      contractRepository
+    );
+  }
+  return projectionService;
+}
+
+/**
  * Reset all service singletons
  *
  * FOR TESTING ONLY: Clears all singleton instances and unregisters event handlers.
@@ -113,4 +136,5 @@ export function resetServices(): void {
   energyCrudService = null;
   displayDataService = null;
   eventHandler = null;
+  projectionService = null;
 }

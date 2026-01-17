@@ -80,8 +80,12 @@ export class ProjectionService {
     const daysElapsed = (now.getTime() - startOfMonth.getTime()) / (1000 * 60 * 60 * 24);
     const daysRemaining = Math.max(0, daysInMonth - daysElapsed);
     
+    // We project for the whole month if no actual data yet
+    // If we have actual data, we add it to the projection for the remaining days
     const projectedRemainingMonth = dailyAverage * daysRemaining;
-    const estimatedTotalMonth = actualThisMonth + projectedRemainingMonth;
+    const projectedElapsedMonth = readingsThisMonth.length > 0 ? actualThisMonth : (dailyAverage * daysElapsed);
+    
+    const estimatedTotalMonth = projectedElapsedMonth + projectedRemainingMonth;
     const estimatedCostMonth = ProjectionCalculationService.calculateProjectedCost(estimatedTotalMonth, daysInMonth, contract);
 
     // 4. Year Projection
@@ -105,7 +109,9 @@ export class ProjectionService {
     const daysRemainingYear = Math.max(0, daysInYear - daysElapsedYear);
     
     const projectedRemainderYear = dailyAverage * daysRemainingYear;
-    const estimatedTotalYear = actualToDateYear + projectedRemainderYear;
+    const projectedElapsedYear = readingsThisYear.length > 0 ? actualToDateYear : (dailyAverage * daysElapsedYear);
+    
+    const estimatedTotalYear = projectedElapsedYear + projectedRemainderYear;
     const estimatedCostYear = ProjectionCalculationService.calculateProjectedCost(estimatedTotalYear, daysInYear, contract);
 
     return {
