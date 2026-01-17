@@ -23,13 +23,13 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 3: Component Implementation' (Protocol in workflow.md)
 
 ## Phase 4: State Integration & UX
-- [ ] Task: Integrate with Dashboard and History state
-    - [ ] Implement debounced update logic for handle drags
-    - [ ] Write integration tests for range selection updates
-- [ ] Task: Mobile Polish
-    - [ ] Verify touch targets (min 44px)
-    - [ ] Test drag behavior on mobile viewport using Chrome MCP
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: State Integration & UX' (Protocol in workflow.md)
+- [x] Task: Integrate with Dashboard and History state
+    - [x] Implement debounced update logic for handle drags
+    - [x] Write integration tests for range selection updates
+- [x] Task: Mobile Polish
+    - [x] Verify touch targets (min 44px)
+    - [x] Test drag behavior on mobile viewport using Chrome MCP
+- [x] Task: Conductor - User Manual Verification 'Phase 4: State Integration & UX' (Protocol in workflow.md)
 
 ## Phase 5: Final Verification & Cleanup
 - [ ] Task: Regression Testing

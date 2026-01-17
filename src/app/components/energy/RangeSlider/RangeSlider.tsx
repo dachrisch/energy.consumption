@@ -43,6 +43,9 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
   const [containerWidth, setContainerWidth] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Debounce timer for filter application
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Histogram data
   const histogramData = useHistogramData({
     data,
@@ -82,13 +85,35 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
     ];
   }, [dateRange, minDate, maxDate]);
 
+  // Internal state for smooth dragging before parent update
+  const [internalValue, setInternalValue] = useState<[number, number]>(sliderValue);
+
+  // Update internal value when prop changes (e.g., from presets)
+  useEffect(() => {
+    setInternalValue(sliderValue);
+  }, [sliderValue]);
+
+  // Debounced update to parent state
+  const debouncedOnChange = useCallback(
+    (values: [number, number]) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      debounceTimerRef.current = setTimeout(() => {
+        const newStart = percentageToDate(values[0], minDate, maxDate);
+        const newEnd = percentageToDate(values[1], minDate, maxDate);
+        onDateRangeChange({ start: newStart, end: newEnd });
+      }, 50); // Small delay for performance, still feels real-time
+    },
+    [minDate, maxDate, onDateRangeChange]
+  );
+
   // Handle slider value change
   const handleSliderChange = useCallback((values: [number, number]) => {
-    const newStart = percentageToDate(values[0], minDate, maxDate);
-    const newEnd = percentageToDate(values[1], minDate, maxDate);
-    
-    onDateRangeChange({ start: newStart, end: newEnd });
-  }, [minDate, maxDate, onDateRangeChange]);
+    setInternalValue(values);
+    debouncedOnChange(values);
+  }, [debouncedOnChange]);
 
   // Date format based on screen size
   const dateFormat: DateFormat = isMobile ? 'short' : 'full';
@@ -137,7 +162,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
           min={0}
           max={100}
           step={0.1} // Fine-grained control
-          value={sliderValue}
+          value={internalValue}
           onChange={handleSliderChange}
         />
       </div>
@@ -147,8 +172,8 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         <DateRangeDisplay
           startDate={dateRange.start}
           endDate={dateRange.end}
-          startPosition={startPosition}
-          endPosition={endPosition}
+          startPosition={(internalValue[0] / 100) * containerWidth}
+          endPosition={(internalValue[1] / 100) * containerWidth}
           format={dateFormat}
           containerWidth={containerWidth}
         />

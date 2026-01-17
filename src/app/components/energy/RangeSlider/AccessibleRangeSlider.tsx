@@ -21,7 +21,7 @@ const AccessibleRangeSlider = ({
 }: AccessibleRangeSliderProps) => {
   return (
     <Slider.Root
-      className={`relative flex items-center select-none touch-none w-full h-10 ${className}`}
+      className={`relative flex items-center select-none touch-none w-full h-12 ${className}`}
       value={value}
       min={min}
       max={max}
