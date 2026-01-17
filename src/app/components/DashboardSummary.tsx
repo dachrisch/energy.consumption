@@ -52,9 +52,11 @@ const DashboardSummary = ({ energyData, contracts }: DashboardSummaryProps) => {
   const router = useRouter();
   const [powerProjection, setPowerProjection] = useState<ProjectionResult | null>(null);
   const [gasProjection, setGasProjection] = useState<ProjectionResult | null>(null);
+  const [isProjecting, setIsProjecting] = useState(true);
 
   useEffect(() => {
     const fetchProjections = async () => {
+      setIsProjecting(true);
       try {
         const [p, g] = await Promise.all([
           getProjectionsAction("power"),
@@ -64,6 +66,8 @@ const DashboardSummary = ({ energyData, contracts }: DashboardSummaryProps) => {
         setGasProjection(g);
       } catch (err) {
         console.error("Failed to fetch projections:", err);
+      } finally {
+        setIsProjecting(false);
       }
     };
     fetchProjections();
@@ -228,14 +232,16 @@ const DashboardSummary = ({ energyData, contracts }: DashboardSummaryProps) => {
           <MetricCard
             title="Power Projection"
             value={
-              powerProjection 
-                ? `€${powerProjection.currentMonth.estimatedCost.toFixed(2)}`
-                : "Calculating..."
+              isProjecting 
+                ? "Calculating..." 
+                : powerProjection 
+                  ? `€${powerProjection.currentMonth.estimatedCost.toFixed(2)}`
+                  : "No data"
             }
             subtitle={
               powerProjection 
                 ? `Est. total for this month`
-                : undefined
+                : isProjecting ? undefined : "Insufficient readings"
             }
             icon={<TrendingUpIcon className="w-6 h-6 text-primary" />}
             onClick={() => router.push("/history")}
@@ -244,14 +250,16 @@ const DashboardSummary = ({ energyData, contracts }: DashboardSummaryProps) => {
           <MetricCard
             title="Gas Projection"
             value={
-              gasProjection 
-                ? `€${gasProjection.currentMonth.estimatedCost.toFixed(2)}`
-                : "Calculating..."
+              isProjecting 
+                ? "Calculating..." 
+                : gasProjection 
+                  ? `€${gasProjection.currentMonth.estimatedCost.toFixed(2)}`
+                  : "No data"
             }
             subtitle={
               gasProjection 
                 ? `Est. total for this month`
-                : undefined
+                : isProjecting ? undefined : "Insufficient readings"
             }
             icon={<TrendingUpIcon className="w-6 h-6 text-secondary" />}
             onClick={() => router.push("/history")}

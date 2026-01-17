@@ -6,21 +6,26 @@ import { getProjectionService } from "@/services/serviceFactory";
 import { EnergyOptions } from "@/app/types";
 import { ProjectionResult } from "@/services/projections/ProjectionService";
 
+// Initialize server infrastructure
+import "@/lib/serverInit";
+
 /**
  * Get projections for the current user
- * 
- * @param type - Energy type (power/gas)
- * @returns Projection result or null if not available
  */
 export const getProjectionsAction = async (
   type: EnergyOptions
 ): Promise<ProjectionResult | null> => {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user?.id) {
-    throw new Error("User not authenticated");
-  }
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return null;
+    }
 
-  const projectionService = getProjectionService();
-  return await projectionService.getProjections(session.user.id, type);
+    const projectionService = getProjectionService();
+    return await projectionService.getProjections(session.user.id, type);
+  } catch (error) {
+    console.error(`[getProjectionsAction] Error:`, error);
+    return null;
+  }
 };

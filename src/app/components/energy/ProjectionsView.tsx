@@ -29,7 +29,7 @@ const ProjectionsView = () => {
         setProjection(result);
       } catch (err) {
         console.error("Error fetching projections:", err);
-        setError("Could not load projection data.");
+        setError(err instanceof Error ? err.message : "Could not load projection data.");
       } finally {
         setIsLoading(false);
       }
