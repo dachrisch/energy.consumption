@@ -4,13 +4,13 @@
 - [x] Task: Project setup
     - [x] Create feature branch `feat/radix-slider-integration`
     - [x] Install Radix UI Slider dependency (`@radix-ui/react-slider`)
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Preparation & Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Preparation & Infrastructure' (Protocol in workflow.md)
 
 ## Phase 2: Core Logic & Mapping
-- [ ] Task: Implement Date-to-Slider mapping utility
-    - [ ] Write unit tests for date-to-percentage conversion
-    - [ ] Implement utility functions to map slider values (0-100) to timestamps
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Core Logic & Mapping' (Protocol in workflow.md)
+- [x] Task: Implement Date-to-Slider mapping utility
+    - [x] Write unit tests for date-to-percentage conversion
+    - [x] Implement utility functions to map slider values (0-100) to timestamps
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Core Logic & Mapping' (Protocol in workflow.md)
 
 ## Phase 3: Component Implementation
 - [ ] Task: Create AccessibleRangeSlider component

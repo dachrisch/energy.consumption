@@ -197,6 +197,26 @@ export function dateToPercentage(date: Date, startDate: Date, endDate: Date): nu
 }
 
 /**
+ * Convert a percentage (0-100) to a date in a range
+ *
+ * @param percentage - Percentage value (0-100)
+ * @param startDate - Start of range
+ * @param endDate - End of range
+ * @returns Date corresponding to the percentage
+ */
+export function percentageToDate(
+  percentage: number,
+  startDate: Date,
+  endDate: Date
+): Date {
+  const totalMs = endDate.getTime() - startDate.getTime();
+  const clampedPercentage = Math.max(0, Math.min(100, percentage));
+  const offsetMs = (clampedPercentage / 100) * totalMs;
+
+  return new Date(startDate.getTime() + offsetMs);
+}
+
+/**
  * Add days to a date
  *
  * @param date - Starting date
