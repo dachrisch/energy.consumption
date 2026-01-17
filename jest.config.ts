@@ -44,7 +44,6 @@ const config: Config = {
       },
       moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/src/$1",
-        "^next-auth$": "<rootDir>/__mocks__/next-auth.ts",
         "^next-auth/react$": "<rootDir>/__mocks__/next-auth__react.ts",
       },
       transformIgnorePatterns: [

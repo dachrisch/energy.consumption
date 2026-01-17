@@ -12,19 +12,19 @@
  */
 
 import { IEnergyRepository } from '../interfaces/IEnergyRepository';
-import { EnergyFilters, EnergyOptions, SourceEnergyReading } from '@/app/types';
+import { EnergyFilters, EnergyOptions, SourceEnergyReading as SourceEnergyReadingType } from '@/app/types';
 import { connectDB } from '@/lib/mongodb';
-import { SourceEnergyReadingModel } from '@/models/SourceEnergyReading';
+import SourceEnergyReading from '@/models/SourceEnergyReading';
 
 export class MongoEnergyRepository implements IEnergyRepository {
   /**
    * Create a new energy reading
    */
   async create(
-    reading: Omit<SourceEnergyReading, '_id' | 'createdAt' | 'updatedAt'>
-  ): Promise<SourceEnergyReading> {
+    reading: Omit<SourceEnergyReadingType, '_id' | 'createdAt' | 'updatedAt'>
+  ): Promise<SourceEnergyReadingType> {
     await connectDB();
-    const newReading = new SourceEnergyReadingModel(reading);
+    const newReading = new SourceEnergyReading(reading);
     return await newReading.save();
   }
 
@@ -32,18 +32,18 @@ export class MongoEnergyRepository implements IEnergyRepository {
    * Create multiple energy readings in bulk
    */
   async createMany(
-    readings: Omit<SourceEnergyReading, '_id' | 'createdAt' | 'updatedAt'>[]
-  ): Promise<SourceEnergyReading[]> {
+    readings: Omit<SourceEnergyReadingType, '_id' | 'createdAt' | 'updatedAt'>[]
+  ): Promise<SourceEnergyReadingType[]> {
     await connectDB();
-    return await SourceEnergyReadingModel.insertMany(readings);
+    return await SourceEnergyReading.insertMany(readings);
   }
 
   /**
    * Find a single reading by ID with user isolation
    */
-  async findById(id: string, userId: string): Promise<SourceEnergyReading | null> {
+  async findById(id: string, userId: string): Promise<SourceEnergyReadingType | null> {
     await connectDB();
-    return await SourceEnergyReadingModel.findById(id)
+    return await SourceEnergyReading.findById(id)
       .where({ userId })
       .exec();
   }
@@ -51,7 +51,7 @@ export class MongoEnergyRepository implements IEnergyRepository {
   /**
    * Find all readings for a user with optional filters
    */
-  async findAll(userId: string, filters?: EnergyFilters): Promise<SourceEnergyReading[]> {
+  async findAll(userId: string, filters?: EnergyFilters): Promise<SourceEnergyReadingType[]> {
     await connectDB();
 
     // Build query conditions
@@ -75,7 +75,7 @@ export class MongoEnergyRepository implements IEnergyRepository {
     }
 
     // Build query
-    let query = SourceEnergyReadingModel.find().where(conditions);
+    let query = SourceEnergyReading.find().where(conditions);
 
     // Apply pagination
     if (filters?.offset !== undefined) {
@@ -102,7 +102,7 @@ export class MongoEnergyRepository implements IEnergyRepository {
     startDate: Date,
     endDate: Date,
     type?: EnergyOptions
-  ): Promise<SourceEnergyReading[]> {
+  ): Promise<SourceEnergyReadingType[]> {
     await connectDB();
 
     const conditions: Record<string, unknown> = {
@@ -114,7 +114,7 @@ export class MongoEnergyRepository implements IEnergyRepository {
       conditions.type = type;
     }
 
-    return await SourceEnergyReadingModel.find()
+    return await SourceEnergyReading.find()
       .where(conditions)
       .sort({ date: 1 })
       .exec();
@@ -126,11 +126,11 @@ export class MongoEnergyRepository implements IEnergyRepository {
   async update(
     id: string,
     userId: string,
-    data: Partial<Omit<SourceEnergyReading, '_id' | 'userId' | 'createdAt' | 'updatedAt'>>
-  ): Promise<SourceEnergyReading | null> {
+    data: Partial<Omit<SourceEnergyReadingType, '_id' | 'userId' | 'createdAt' | 'updatedAt'>>
+  ): Promise<SourceEnergyReadingType | null> {
     await connectDB();
 
-    return await SourceEnergyReadingModel.findOneAndUpdate(
+    return await SourceEnergyReading.findOneAndUpdate(
       { _id: id },
       data,
       { new: true }
@@ -145,7 +145,7 @@ export class MongoEnergyRepository implements IEnergyRepository {
   async delete(id: string, userId: string): Promise<boolean> {
     await connectDB();
 
-    const result = await SourceEnergyReadingModel.deleteOne({ _id: id })
+    const result = await SourceEnergyReading.deleteOne({ _id: id })
       .where({ userId })
       .exec();
 
@@ -158,7 +158,7 @@ export class MongoEnergyRepository implements IEnergyRepository {
   async deleteMany(ids: string[], userId: string): Promise<number> {
     await connectDB();
 
-    const result = await SourceEnergyReadingModel.deleteMany({
+    const result = await SourceEnergyReading.deleteMany({
       _id: { $in: ids },
     })
       .where({ userId })
@@ -193,7 +193,7 @@ export class MongoEnergyRepository implements IEnergyRepository {
       };
     }
 
-    return await SourceEnergyReadingModel.countDocuments()
+    return await SourceEnergyReading.countDocuments()
       .where(conditions)
       .exec();
   }
@@ -213,13 +213,13 @@ export class MongoEnergyRepository implements IEnergyRepository {
     }
 
     // Find earliest reading
-    const minReading = await SourceEnergyReadingModel.findOne()
+    const minReading = await SourceEnergyReading.findOne()
       .where(conditions)
       .sort({ date: 1 })
       .exec();
 
     // Find latest reading
-    const maxReading = await SourceEnergyReadingModel.findOne()
+    const maxReading = await SourceEnergyReading.findOne()
       .where(conditions)
       .sort({ date: -1 })
       .exec();

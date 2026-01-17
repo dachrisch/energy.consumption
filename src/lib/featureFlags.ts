@@ -54,6 +54,16 @@ export async function isFeatureEnabledForUser(
   return hash < flag.rolloutPercent;
 }
 
+export async function isFeatureFlagEnabled(
+  name: string,
+  userId?: string
+): Promise<boolean> {
+  if (!userId) {
+    return await isFeatureEnabled(name);
+  }
+  return await isFeatureEnabledForUser(name, userId);
+}
+
 /**
  * Get feature flag from database
  * @param name - Feature flag name

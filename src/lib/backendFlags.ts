@@ -20,68 +20,44 @@ import { isFeatureEnabledForUser, isFeatureEnabled } from './featureFlags';
  * - Whitelist/Blacklist checked before enabled status
  */
 
+import { isFeatureFlagEnabled } from './featureFlags';
+
 /**
- * Check if new backend should be used for a component
+ * Check if a specific component should use the new backend
  *
- * @param component - Component name (e.g., 'dashboard', 'charts', 'timeline')
- * @param userId - Optional user ID (if not provided, gets from session)
- * @returns true if new backend should be used
+ * Priority:
+ * 1. Environment variables (NEXT_PUBLIC_ENABLE_{COMPONENT}_NEW_BACKEND)
+ * 2. Global switch (NEXT_PUBLIC_ENABLE_NEW_BACKEND)
+ * 3. Feature flags in DB (supports rollout, whitelist, etc.)
  *
- * @example
- * // In server action/component
- * const useNew = await checkBackendFlag('dashboard');
- *
- * // With specific user
- * const useNew = await checkBackendFlag('dashboard', 'user123');
- *
- * // Global check (no component)
- * const useNew = await checkBackendFlag();
+ * @param component - Component name (e.g., 'charts', 'dashboard', 'form')
+ * @param userId - Optional user ID for targeted rollout
+ * @returns boolean - true if new backend should be used
  */
 export async function checkBackendFlag(
-  component?: string,
+  component: string,
   userId?: string
 ): Promise<boolean> {
-  // Get userId from session if not provided
-  let effectiveUserId = userId;
-  if (!effectiveUserId) {
-    const session = await getServerSession();
-    effectiveUserId = session?.user?.id;
-  }
+  // Priority 1: Environment Variables (Immediate override)
+  const envFlag = `NEXT_PUBLIC_ENABLE_${component.toUpperCase()}_NEW_BACKEND`;
+  if (process.env[envFlag] === 'true') return true;
+  if (process.env[envFlag] === 'false') return false;
 
-  // If no user, default to disabled (safer)
-  if (!effectiveUserId) {
+  // Priority 2: Global Switch Env Var
+  if (process.env.NEXT_PUBLIC_ENABLE_NEW_BACKEND === 'true') return true;
+  if (process.env.NEXT_PUBLIC_ENABLE_NEW_BACKEND === 'false') return false;
+
+  // Priority 3: Database (Feature Flags)
+  const flagName = component.toUpperCase() === 'NEW_BACKEND' 
+    ? 'NEW_BACKEND_ENABLED' 
+    : `${component.toUpperCase()}_NEW_BACKEND`;
+    
+  try {
+    return await isFeatureFlagEnabled(flagName, userId);
+  } catch (error) {
+    console.error(`[BackendFlags] Error checking flag ${flagName}:`, error);
     return false;
   }
-
-  // Check global flag first
-  const globalEnabled = await isFeatureEnabledForUser(
-    'NEW_BACKEND_ENABLED',
-    effectiveUserId
-  );
-
-  // If no component specified, return global flag result
-  if (!component) {
-    return globalEnabled;
-  }
-
-  // Check component-specific flag
-  const componentFlagName = `${component.toUpperCase()}_NEW_BACKEND`;
-  const { getFeatureFlag } = await import('./featureFlags');
-  const componentFlag = await getFeatureFlag(componentFlagName);
-
-  // If component flag doesn't exist or is not enabled, fall back to global
-  if (!componentFlag || !componentFlag.enabled) {
-    return globalEnabled;
-  }
-
-  // Component flag is enabled, so check its specific rollout/whitelist logic
-  const componentEnabled = await isFeatureEnabledForUser(
-    componentFlagName,
-    effectiveUserId
-  );
-
-  // Component flag overrides global flag when enabled=true
-  return componentEnabled;
 }
 
 /**

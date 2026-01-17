@@ -1,54 +1,24 @@
-/**
- * SourceEnergyReading Model
- *
- * Mongoose model for source energy readings - the single source of truth for energy data.
- * This model represents raw meter readings stored directly from user input or CSV import.
- *
- * Features:
- * - User data isolation via applyPreFilter middleware
- * - Automatic timestamps (createdAt, updatedAt)
- * - Optimized indexes for common queries
- */
+import mongoose, { Schema, Document } from 'mongoose';
+import { SourceEnergyReading as SourceEnergyReadingType } from '@/app/types';
 
-import mongoose, { Schema } from 'mongoose';
-import { SourceEnergyReading } from '@/app/types';
-import { applyPreFilter } from './sessionFilter';
+export interface ISourceEnergyReading extends Document, Omit<SourceEnergyReadingType, '_id'> {}
 
-const SourceEnergyReadingSchema = new Schema<SourceEnergyReading>(
-  {
-    userId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    type: {
-      type: String,
-      enum: ['power', 'gas'],
-      required: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    date: {
-      type: Date,
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-    collection: 'source_energy_readings',
-  }
-);
+const SourceEnergyReadingSchema: Schema = new Schema({
+  userId: { type: String, required: true, index: true },
+  date: { type: Date, required: true },
+  type: { type: String, enum: ['power', 'gas'], required: true },
+  amount: { type: Number, required: true },
+  unit: { type: String, required: true },
+  provider: { type: String },
+  comment: { type: String },
+  createdAt: { type: Date, default: Date.now },
+});
 
-// Compound indexes for query optimization
-SourceEnergyReadingSchema.index({ userId: 1, date: 1 });
-SourceEnergyReadingSchema.index({ userId: 1, type: 1, date: 1 });
+// Compound unique index to prevent duplicate readings
+SourceEnergyReadingSchema.index({ userId: 1, date: 1, type: 1 }, { unique: true });
 
-// Apply user data isolation middleware
-applyPreFilter(SourceEnergyReadingSchema);
+const SourceEnergyReading = mongoose.models.SourceEnergyReading || 
+  mongoose.model<ISourceEnergyReading>('SourceEnergyReading', SourceEnergyReadingSchema);
 
-// Export model (handle Next.js hot reload)
-export const SourceEnergyReadingModel =
-  mongoose.models.SourceEnergyReading ||
-  mongoose.model<SourceEnergyReading>('SourceEnergyReading', SourceEnergyReadingSchema);
+export default SourceEnergyReading;
+export { SourceEnergyReading };

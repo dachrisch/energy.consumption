@@ -11,11 +11,37 @@ import mongoose from 'mongoose';
 
 // Mock NextAuth to avoid import errors in integration tests
 jest.mock('next-auth', () => {
-  const actualNextAuth = jest.requireActual('next-auth');
+  const mockFunc = jest.fn(() => ({
+    GET: jest.fn(),
+    POST: jest.fn(),
+  }));
+
+  // Define named exports
+  const getServerSession = jest.fn(() =>
+    Promise.resolve({
+      user: {
+        id: '000000000000000000000001',
+        email: 'test@example.com',
+        name: 'Test User',
+      },
+    })
+  );
+  const getSession = jest.fn();
+  const auth = jest.fn();
+
+  // Attach named exports to the default export function
+  Object.assign(mockFunc, {
+    getServerSession,
+    getSession,
+    auth,
+  });
+
   return {
     __esModule: true,
-    default: jest.fn(() => jest.fn()),
-    ...actualNextAuth,
+    default: mockFunc,
+    getServerSession,
+    getSession,
+    auth,
   };
 });
 

@@ -1,23 +1,22 @@
 import mongoose from "mongoose";
 
-export const connectDB = async (): Promise<boolean> => {
-  if (!process.env.MONGODB_URI) {
-    throw new Error('Missing environment variable: "MONGODB_URI"');
+export const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return;
   }
 
-  const uri = process.env.MONGODB_URI;
-
-  if (!uri) {
-    throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
+  let uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/energy_consumption';
+  
+  // Basic validation to prevent "Invalid scheme" error
+  if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+    console.warn(`[MongoDB] Invalid URI scheme detected: "${uri}". Falling back to localhost.`);
+    uri = 'mongodb://localhost:27017/energy_consumption';
   }
 
   return mongoose
-    .connect(uri, { dbName: "energy_consumption" })
-    .then(({ connection }) => {
-      if (connection.readyState !== 1) {
-        throw new Error("Failed to connect to the database");
-      }
-      return true;
+    .connect(uri)
+    .then((mongoose) => {
+      return mongoose;
     })
     .catch((error) => {
       throw new Error(`Database connection error: ${error.message}`);

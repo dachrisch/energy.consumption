@@ -30,6 +30,7 @@ export const addEnergyAction = async (
         type: energyData.type,
         date: energyData.date,
         amount: energyData.amount,
+        unit: energyData.unit || (energyData.type === 'power' ? 'kWh' : 'm³'),
       });
       // Event automatically emitted by service
       return { success: true };
@@ -121,6 +122,7 @@ export const importCSVAction = async (
             type: entry.type,
             date: entry.date,
             amount: entry.amount,
+            unit: (entry as any).unit || (entry.type === 'power' ? 'kWh' : 'm³'),
           }));
 
           // Bulk create (emits single BULK_IMPORTED event)

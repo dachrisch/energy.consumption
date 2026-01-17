@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         const year: number = Number(filters.year) || new Date().getFullYear();
 
         // Calculate (uses cache if available)
-        data = await service.calculateMonthlyChartData(session.user.id, year, type);
+        data = await service.calculateMonthlyChartData(session.user.id, type, year);
 
         // Cache hit if calculated less than 5 seconds ago
         if (data.calculatedAt) {
