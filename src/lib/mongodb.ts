@@ -14,7 +14,9 @@ export const connectDB = async () => {
   }
 
   return mongoose
-    .connect(uri)
+    .connect(uri, {
+      dbName: 'energy_consumption',
+    })
     .then((mongoose) => {
       return mongoose;
     })

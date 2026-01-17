@@ -16,18 +16,27 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         await connectDB();
+        console.debug(`[NextAuth] Authorizing user: ${credentials?.email}`);
         const user = await User.findOne({
           email: credentials?.email,
         }).select("+password");
 
-        if (!user) throw new Error("Invalid User credentials");
+        if (!user) {
+          console.warn(`[NextAuth] User not found: ${credentials?.email}`);
+          throw new Error("Invalid User credentials");
+        }
 
         const passwordMatch = await bcrypt.compare(
           credentials!.password,
           user.password
         );
 
-        if (!passwordMatch) throw new Error("Invalid User credentials");
+        if (!passwordMatch) {
+          console.warn(`[NextAuth] Password mismatch for: ${credentials?.email}`);
+          throw new Error("Invalid User credentials");
+        }
+        
+        console.log(`[NextAuth] Login successful: ${user.email} (${user.id})`);
         return user;
       },
     }),

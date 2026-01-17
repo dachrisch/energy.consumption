@@ -20,7 +20,7 @@ async function startMemoryMongo() {
     }
   });
 
-  const uri = mongod.getUri();
+  const uri = mongod.getUri() + 'energy_consumption';
   console.log(`[MongoDB] ✅ Started at: ${uri}`);
 
   // Update .env.local with the connection string
