@@ -9,5 +9,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Replace Timeline Slider with Radix UI**
+- [x] **Track: Replace Timeline Slider with Radix UI**
   *Link: [./tracks/radix_slider_20260117/](./tracks/radix_slider_20260117/)*
