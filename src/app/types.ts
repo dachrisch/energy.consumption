@@ -42,6 +42,7 @@ export type ContractBase = {
   endDate?: Date;
   basePrice: number;
   workingPrice: number;
+  meterId?: string;
 };
 
 export type ContractType = UserSpecific & ContractBase;
@@ -233,5 +234,15 @@ export type EnergyFilters = {
       actual: number | null;
       projected: number;
     }[];
+  }
+
+  export interface SimplifiedProjectionResult {
+    meterId: string;
+    totalConsumption: number;
+    estimatedYearlyConsumption: number;
+    estimatedYearlyCost: number;
+    dailyAverage: number;
+    daysTracked: number;
+    hasContract: boolean;
   }
   

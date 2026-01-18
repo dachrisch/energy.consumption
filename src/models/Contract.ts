@@ -24,6 +24,11 @@ const ContractSchema = new Schema<ContractType>({
     type: Number,
     required: true
   },
+  meterId: {
+    type: String,
+    ref: 'Meter',
+    index: true
+  },
   userId: {
     type: String,
     ref: 'User',

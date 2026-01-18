@@ -1,31 +1,32 @@
 "use server";
-import { ContractBase, ApiResult } from "@/app/types";
-import connectDB from "@/lib/mongodb";
+import { connectDB } from "@/lib/mongodb";
 import Contract from "@/models/Contract";
-import { DeleteResult, InsertOneResult, ObjectId } from "mongodb";
+import { ContractBase, ContractType } from "@/app/types";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-export const addOrUpdateContractAction = async (
-  contractData: ContractBase & { _id?: string }
-): Promise<ApiResult> =>
-  connectDB().then(async () => {
-    if (contractData._id) {
-      // Update existing contract
-      Contract.findByIdAndUpdate(new ObjectId(contractData._id), contractData, {
-        new: true,
-      }).then((result) => ({ success: !!result }));
-    } else {
-      // Create new contract
-      const contract = new Contract(contractData);
-      return contract.save().then((createResult: InsertOneResult) => ({
-        success: "_id" in createResult,
-      }));
-    }
-  });
+export async function addContractAction(data: ContractBase): Promise<{ success: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
 
-export const deleteContractAction = async (id: string): Promise<ApiResult> =>
-  connectDB().then(() =>
-    Contract.deleteOne({ _id: id })
-      .then((deleteResult: DeleteResult) => ({
-        success: deleteResult != undefined,
-      }))
-  );
+  try {
+    await connectDB();
+    const contract = new Contract({
+      ...data,
+      userId: session.user.id
+    });
+    await contract.save();
+    return { success: true };
+  } catch (err: any) {
+    console.error("[addContractAction] Error:", err);
+    return { success: false, error: err.message || "Failed to save contract" };
+  }
+}
+
+export async function getContractForMeter(meterId: string): Promise<ContractType | null> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return null;
+
+  await connectDB();
+  return Contract.findOne({ meterId, userId: session.user.id }).sort({ startDate: -1 }).lean();
+}

@@ -1,86 +1,135 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Toast from "../components/Toast";
-import { EnergyType, ContractType, ToastMessage } from "../types";
-import DashboardSummary from "../components/DashboardSummary";
+import { Loader2, Plus, Zap, Flame } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/app/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { getMeters } from "@/actions/meter";
+import { Meter } from "@/app/types";
+import SimplifiedProjectionCard from "../components/energy/SimplifiedProjectionCard";
 
-const Dashboard = () => {
-  const [energyData, setEnergyData] = useState<EnergyType[]>([]);
-  const [contracts, setContracts] = useState<ContractType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
+export default function DashboardPage() {
+  const [meters, setMeters] = useState<Meter[]>([]);
+  const [selectedMeterId, setSelectedMeterId] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchEnergyData();
-    fetchContracts();
+    loadMeters();
   }, []);
 
-  const fetchEnergyData = async () => {
+  async function loadMeters() {
+    setLoading(true);
     try {
-      const response = await fetch("/api/energy");
-      if (!response.ok) throw new Error("Failed to fetch data");
-      const data = await response.json();
-      const parsed = data.map((item: { date: string | number | Date }) => ({
-        ...item,
-        date: new Date(item.date),
-      }));
-      setEnergyData(parsed);
+      const data = await getMeters();
+      setMeters(data);
+      if (data.length > 0) {
+        setSelectedMeterId(data[0]._id);
+      }
     } catch (err) {
-      setError("Failed to load energy data");
-      console.error(err);
+      console.error("Failed to load meters", err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }
 
-  const fetchContracts = async () => {
-    try {
-      const response = await fetch("/api/contracts");
-      if (!response.ok) throw new Error("Failed to fetch contracts");
-      const data = await response.json();
-      const parsed = data.map((item: { startDate: string | number | Date; endDate?: string | number | Date }) => ({
-        ...item,
-        startDate: new Date(item.startDate),
-        endDate: item.endDate ? new Date(item.endDate) : undefined,
-      }));
-      setContracts(parsed);
-    } catch (err) {
-      console.error("Failed to load contracts:", err);
-    }
-  };
+  const selectedMeter = meters.find(m => m._id === selectedMeterId);
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="app-root">
-        <div className="dashboard-summary">
-          <h1 className="dashboard-title">Energy Dashboard</h1>
-          <p>Loading...</p>
-        </div>
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="app-root" data-testid="dashboard">
-      {error && (
-        <div className="alert-error">
-          {error}
+    <div className="flex flex-col gap-8 p-4 md:p-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Overview of your energy consumption and projections.
+          </p>
         </div>
-      )}
 
-      <DashboardSummary energyData={energyData} contracts={contracts} />
+        <div className="flex items-center gap-2">
+          <Link href="/add">
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Reading
+            </Button>
+          </Link>
+        </div>
+      </div>
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+      {meters.length > 0 ? (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-muted/50 p-4 rounded-lg border">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Active Meter:</span>
+              <Select
+                value={selectedMeterId}
+                onValueChange={setSelectedMeterId}
+              >
+                <SelectTrigger className="w-[200px] bg-background">
+                  <SelectValue placeholder="Select a meter" />
+                </SelectTrigger>
+                <SelectContent>
+                  {meters.map((m) => (
+                    <SelectItem key={m._id} value={m._id}>
+                      <div className="flex items-center gap-2">
+                        {m.type === "power" ? <Zap className="h-3 w-3" /> : <Flame className="h-3 w-3" />}
+                        {m.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedMeter && (
+              <div className="text-xs text-muted-foreground">
+                Number: <span className="font-mono">{selectedMeter.meterNumber}</span> • Type: <span className="capitalize">{selectedMeter.type}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {selectedMeter && <SimplifiedProjectionCard meter={selectedMeter} />}
+            
+            {/* Future placeholders for other cards */}
+            <div className="border border-dashed rounded-xl flex flex-col items-center justify-center p-8 text-center bg-muted/20 min-h-[200px]">
+              <div className="bg-background p-3 rounded-full mb-3 shadow-sm border">
+                <Plus className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium">Trends Coming Soon</p>
+              <p className="text-xs text-muted-foreground mt-1">Daily and monthly usage charts.</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-2xl bg-muted/10 text-center">
+          <div className="bg-background p-4 rounded-full mb-4 shadow-md border">
+            <Zap className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-bold">No meters found</h2>
+          <p className="text-muted-foreground max-w-sm mt-2 mb-6">
+            Get started by adding your first meter reading. We&apos;ll set up the meter automatically.
+          </p>
+          <Link href="/add">
+            <Button size="lg">
+              <Plus className="mr-2 h-4 w-4" />
+              Start Tracking
+            </Button>
+          </Link>
+        </div>
       )}
     </div>
   );
-};
-
-export default Dashboard;
+}
