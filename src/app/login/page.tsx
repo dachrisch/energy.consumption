@@ -4,9 +4,12 @@ import { useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-
-// Assume this is a client-compatible feature flag function
-import { isFeatureEnabled } from "@/lib/featureFlags"; // Adjust path accordingly
+import { isFeatureEnabled } from "@/lib/featureFlags";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { AlertCircle } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -47,79 +50,62 @@ const LoginPage = () => {
   };
 
   return (
-    <section className="w-full h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
-      <div className="content-card w-full max-w-[400px] flex flex-col gap-6">
-        <div>
-          <h2 className="text-3xl font-bold" style={{ color: 'var(--foreground)' }}>
-            Sign in to your account
-          </h2>
-          <p className="page-description mt-2">
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-full max-w-[400px]">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+          <CardDescription>
             Enter your credentials to access the Energy Consumption Monitor
-          </p>
-        </div>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div className="form-group">
-              <label htmlFor="email-address" className="form-label">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
                 type="email"
-                autoComplete="email"
+                placeholder="m@example.com"
                 required
-                className="form-input"
-                placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <input
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+              </div>
+              <Input
                 id="password"
-                name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="form-input"
-                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-          </div>
-
-          {error && (
-            <div className="alert-error">
-              {error}
+            {error && (
+              <div className="flex items-center gap-2 p-3 text-sm text-destructive border border-destructive/20 bg-destructive/10 rounded-md">
+                <AlertCircle className="h-4 w-4" />
+                <p>{error}</p>
+              </div>
+            )}
+            <Button type="submit" className="w-full">
+              Sign in
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+          {isClient && registrationEnabled && (
+            <div className="text-sm text-center text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="text-primary hover:underline underline-offset-4">
+                Sign up
+              </Link>
             </div>
           )}
-
-          <div>
-            <button
-              type="submit"
-              className="button-primary w-full"
-            >
-              Sign in
-            </button>
-          </div>
-        </form>
-
-        {isClient && registrationEnabled && (
-          <Link
-            href="/register"
-            className="text-sm text-center transition duration-150 ease"
-            style={{ color: 'var(--foreground-muted)' }}
-          >
-            Need an account?
-          </Link>
-        )}
-      </div>
-    </section>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 
