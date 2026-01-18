@@ -1,0 +1,8 @@
+{
+  "track_id": "unified_simplified_restart_20260118",
+  "type": "feature",
+  "status": "completed",
+  "created_at": "2026-01-18T13:45:00Z",
+  "updated_at": "2026-01-18T15:30:00Z",
+  "description": "this is getting way too complicated. lets try a fresh start in a new branch. this time we will use a frontend library for compenets. start from scratch with login for user separation, data input with logic for having meters where we got the readings from and data display and contracts. only take what really is necessary from what we have, be free to do other choices. aim is to have it much simpler"
+}

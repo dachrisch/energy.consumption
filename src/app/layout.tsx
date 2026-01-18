@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./layout/main.css";
-import "./layout/sidebar.css";
+import "./layout/globals.css";
+// import "./layout/main.css";
+// import "./layout/sidebar.css";
 import { Provider } from "./provider";
 import LayoutClient from './components/LayoutClient';
 

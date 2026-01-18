@@ -12,17 +12,26 @@ import {
   SelectValue,
 } from "@/app/components/ui/select";
 import { getMeters } from "@/actions/meter";
-import { Meter } from "@/app/types";
+import { getReadings } from "@/actions/reading";
+import { Meter, Reading } from "@/app/types";
 import SimplifiedProjectionCard from "../components/energy/SimplifiedProjectionCard";
+import SimplifiedConsumptionChart from "../components/energy/SimplifiedConsumptionChart";
 
 export default function DashboardPage() {
   const [meters, setMeters] = useState<Meter[]>([]);
   const [selectedMeterId, setSelectedMeterId] = useState<string>("");
+  const [readings, setReadings] = useState<Reading[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadMeters();
   }, []);
+
+  useEffect(() => {
+    if (selectedMeterId) {
+      loadReadings(selectedMeterId);
+    }
+  }, [selectedMeterId]);
 
   async function loadMeters() {
     setLoading(true);
@@ -36,6 +45,15 @@ export default function DashboardPage() {
       console.error("Failed to load meters", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadReadings(meterId: string) {
+    try {
+      const data = await getReadings(meterId);
+      setReadings(data);
+    } catch (err) {
+      console.error("Failed to load readings", err);
     }
   }
 
@@ -102,15 +120,7 @@ export default function DashboardPage() {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {selectedMeter && <SimplifiedProjectionCard meter={selectedMeter} />}
-            
-            {/* Future placeholders for other cards */}
-            <div className="border border-dashed rounded-xl flex flex-col items-center justify-center p-8 text-center bg-muted/20 min-h-[200px]">
-              <div className="bg-background p-3 rounded-full mb-3 shadow-sm border">
-                <Plus className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium">Trends Coming Soon</p>
-              <p className="text-xs text-muted-foreground mt-1">Daily and monthly usage charts.</p>
-            </div>
+            {selectedMeter && <SimplifiedConsumptionChart readings={readings} meter={selectedMeter} />}
           </div>
         </div>
       ) : (
