@@ -6,6 +6,7 @@
 - **Styling:** Tailwind CSS 4
 - **Visualization:** Chart.js, React Chartjs 2
 - **Icons:** Font Awesome 6.5.1
+- **Accessible Primitives:** Radix UI
 - **State Management:** React Context & Hooks
 
 ## Backend
