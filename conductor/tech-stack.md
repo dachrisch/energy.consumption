@@ -4,8 +4,9 @@
 - **Framework:** Next.js 16 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS 4
+- **Component Library:** Shadcn/UI (Radix UI + Tailwind)
 - **Visualization:** Chart.js, React Chartjs 2
-- **Icons:** Font Awesome 6.5.1
+- **Icons:** Font Awesome 6.5.1, Lucide React
 - **Accessible Primitives:** Radix UI
 - **State Management:** React Context & Hooks
 
