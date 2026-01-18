@@ -5,7 +5,6 @@ import { useEnergyInsights } from "@/app/hooks/useEnergyInsights";
 import { useEnergyData } from "@/app/hooks/useEnergyData";
 import { EnergyOptions } from "@/app/types";
 import UnifiedEnergyChart from "@/app/components/energy/UnifiedEnergyChart";
-import InsightsDataCard from "@/app/components/energy/InsightsDataCard";
 import EnergyTableFilters from "@/app/components/energy/EnergyTableFilters";
 import { getAvailableYears } from "@/app/handlers/costCalculation";
 
@@ -157,20 +156,6 @@ export default function InsightsPage() {
               <div className="bg-card border border-border rounded-xl p-5 bg-primary/5 border-primary/20 hover:border-primary/50 transition-colors">
                 <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Total Est. Cost</p>
                 <p className="text-2xl font-bold text-primary">€{data.summary.periodCost.toFixed(2)}</p>
-              </div>
-            </section>
-
-            {/* Monthly Details Section */}
-            <section>
-              <h2 className="text-xl font-bold text-foreground mb-6">Monthly Breakdown</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {data.points.map((point) => (
-                  <InsightsDataCard 
-                    key={`${point.year}-${point.month}`} 
-                    point={point} 
-                    energyType={energyType} 
-                  />
-                ))}
               </div>
             </section>
           </div>
