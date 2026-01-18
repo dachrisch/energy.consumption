@@ -11,6 +11,7 @@
 
 ## Backend
 - **Environment:** Node.js
+- **Architecture:** Service Layer & Event-Driven (EventBus)
 - **Framework:** Next.js Server Actions & Route Handlers
 - **Authentication:** NextAuth.js (JWT Strategy)
 - **Database:** MongoDB

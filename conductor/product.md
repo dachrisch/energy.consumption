@@ -19,6 +19,7 @@ The Energy Consumption Monitor aims to empower homeowners and shared-flat reside
 ## Key Features
 - **Streamlined Entry:** Highly optimized mobile-first interface for rapid data logging.
 - **Advanced Visualization:** Interactive charts for historical comparisons and trend analysis.
+- **Intelligent Insights:** Unified view combining historical consumption and future projections on a contiguous timeline.
 - **Contract Management:** Integration of pricing models (base price, working price) for precise cost calculation.
 - **Production-Ready Analytics:** Robust data processing to support real-world budgeting and projections.
 
