@@ -111,6 +111,25 @@ export type SourceEnergyReading = UserSpecific & {
 };
 
 /**
+ * Simplified Meter entity (Phase 2)
+ */
+export type Meter = UserSpecific & {
+  name: string;
+  meterNumber: string;
+  type: EnergyOptions;
+  unit: string;
+};
+
+/**
+ * Simplified Reading entity (Phase 2)
+ */
+export type Reading = UserSpecific & {
+  meterId: string;
+  value: number;
+  date: Date;
+};
+
+/**
  * Display data types - pre-calculated data for different UI views
  * Allows for efficient caching and invalidation of computed data
  */
