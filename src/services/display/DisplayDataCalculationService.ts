@@ -173,9 +173,10 @@ export class DisplayDataCalculationService {
    * Can be optimized in later phases to invalidate only affected data.
    *
    * @param userId - User ID (for data isolation)
+   * @returns Number of items invalidated
    */
-  async invalidateAllForUser(userId: string): Promise<void> {
-    await this.displayRepository.invalidateForUser(userId);
+  async invalidateAllForUser(userId: string): Promise<number> {
+    return await this.displayRepository.invalidateForUser(userId);
   }
 
   /**

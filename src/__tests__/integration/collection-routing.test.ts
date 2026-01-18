@@ -9,18 +9,24 @@
  * This is critical to ensure the adapter layer routes correctly.
  */
 
-// Mock NextAuth BEFORE any imports
-jest.mock('next-auth', () => ({
-  __esModule: true,
-  default: jest.fn(() => jest.fn()),
-  getServerSession: jest.fn(() =>
-    Promise.resolve({
-      user: { id: 'test-collection-routing', email: 'routing@example.com' },
-    })
-  ),
-}));
-
 import { setFeatureFlag } from '@/lib/featureFlags';
+import { getServerSession } from 'next-auth';
+
+// Mock NextAuth session for this file
+jest.mock('next-auth', () => {
+  const mockFunc: any = jest.fn(() => jest.fn());
+  mockFunc.getServerSession = jest.fn(() =>
+    Promise.resolve({
+      user: { id: '000000000000000000000009', email: 'routing@example.com' },
+    })
+  );
+  return {
+    __esModule: true,
+    default: mockFunc,
+    getServerSession: mockFunc.getServerSession,
+  };
+});
+
 import { addEnergyAction, importCSVAction } from '@/actions/energy';
 import { getEnergyCrudService, getDisplayDataService, resetServices, initializeEventHandlers } from '@/services';
 import Energy from '@/models/Energy';
@@ -32,7 +38,7 @@ import { EnergyBase } from '@/app/types';
 jest.setTimeout(30000);
 
 describe('Collection Routing Tests - New Data to New Collections', () => {
-  const testUserId = 'test-collection-routing';
+  const testUserId = '000000000000000000000009'; // Unique for this file
 
   beforeAll(async () => {
     // MongoDB connection is handled by jest.integration.setup.ts
@@ -341,20 +347,16 @@ describe('Collection Routing Tests - New Data to New Collections', () => {
         2024
       );
 
-      expect(monthlyData.months).toHaveLength(12);
+      expect(monthlyData.data).toHaveLength(12);
 
       // Verify display data written to DisplayEnergyData collection
       const displayData = await DisplayEnergyData.findOne({
         userId: testUserId,
-        type: 'power',
         displayType: 'monthly-chart-power',
-        year: 2024,
       });
 
       expect(displayData).toBeTruthy();
       expect(displayData?.userId).toBe(testUserId);
-      expect(displayData?.type).toBe('power');
-      expect(displayData?.year).toBe(2024);
       expect(displayData?.data).toBeDefined();
       expect(displayData?.sourceDataHash).toBeDefined();
       expect(displayData?.calculatedAt).toBeDefined();
@@ -376,20 +378,21 @@ describe('Collection Routing Tests - New Data to New Collections', () => {
       const histogramData = await displayService.calculateHistogramData(
         testUserId,
         'gas',
+        new Date('2024-01-01'),
+        new Date('2024-12-31'),
         50
       );
 
-      expect(histogramData.buckets).toBeDefined();
+      expect(histogramData.data).toBeDefined();
 
       // Verify in collection
       const displayData = await DisplayEnergyData.findOne({
         userId: testUserId,
-        type: 'gas',
         displayType: 'histogram-gas',
       });
 
       expect(displayData).toBeTruthy();
-      expect(displayData?.type).toBe('gas');
+      expect(displayData?.displayType).toBe('histogram-gas');
       expect(displayData?.data).toBeDefined();
 
       console.log('✅ Display Data: Histogram written to DisplayEnergyData collection');

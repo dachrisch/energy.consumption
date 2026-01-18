@@ -120,7 +120,10 @@ describe('Service Layer Integration Tests', () => {
       const result = await energyCrudService.create(newReading);
 
       // Verify repository was called
-      expect(mockEnergyRepo.create).toHaveBeenCalledWith(newReading);
+      expect(mockEnergyRepo.create).toHaveBeenCalledWith({
+        ...newReading,
+        unit: 'kWh',
+      });
       expect(result).toEqual(createdReading);
 
       // Wait for async event handling
@@ -351,7 +354,11 @@ describe('Service Layer Integration Tests', () => {
       const result = await energyCrudService.createMany(newReadings);
 
       // Verify repository was called
-      expect(mockEnergyRepo.createMany).toHaveBeenCalledWith(newReadings);
+      expect(mockEnergyRepo.createMany).toHaveBeenCalledWith([
+        { ...newReadings[0], unit: 'kWh' },
+        { ...newReadings[1], unit: 'm³' },
+        { ...newReadings[2], unit: 'kWh' },
+      ]);
       expect(result).toEqual(createdReadings);
 
       // Wait for async event handling

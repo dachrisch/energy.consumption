@@ -1,7 +1,12 @@
 'use server';
 
 import { getServerSession } from 'next-auth';
-import { isFeatureEnabledForUser, isFeatureEnabled } from './featureFlags';
+import { 
+  isFeatureEnabledForUser, 
+  isFeatureEnabled, 
+  getFeatureFlag,
+  setFeatureFlag 
+} from './featureFlags';
 
 /**
  * Backend flag naming convention:
@@ -13,14 +18,7 @@ import { isFeatureEnabledForUser, isFeatureEnabled } from './featureFlags';
  * 2. If component specified, check component-specific flag
  * 3. Component flag enabled=true → overrides global (uses component rollout/whitelist logic)
  * 4. Component flag enabled=false or doesn't exist → falls back to global flag
- *
- * Whitelist/Blacklist priority:
- * - Whitelist always enabled (even if flag disabled)
- * - Blacklist always disabled (even if flag enabled)
- * - Whitelist/Blacklist checked before enabled status
  */
-
-import { isFeatureFlagEnabled } from './featureFlags';
 
 /**
  * Check if a specific component should use the new backend
@@ -35,11 +33,13 @@ import { isFeatureFlagEnabled } from './featureFlags';
  * @returns boolean - true if new backend should be used
  */
 export async function checkBackendFlag(
-  component: string,
+  component: string = 'NEW_BACKEND',
   userId?: string
 ): Promise<boolean> {
+  const comp = component || 'NEW_BACKEND';
+  
   // Priority 1: Environment Variables (Immediate override)
-  const envFlag = `NEXT_PUBLIC_ENABLE_${component.toUpperCase()}_NEW_BACKEND`;
+  const envFlag = `NEXT_PUBLIC_ENABLE_${comp.toUpperCase()}_NEW_BACKEND`;
   if (process.env[envFlag] === 'true') return true;
   if (process.env[envFlag] === 'false') return false;
 
@@ -48,22 +48,56 @@ export async function checkBackendFlag(
   if (process.env.NEXT_PUBLIC_ENABLE_NEW_BACKEND === 'false') return false;
 
   // Priority 3: Database (Feature Flags)
-  const flagName = component.toUpperCase() === 'NEW_BACKEND' 
-    ? 'NEW_BACKEND_ENABLED' 
-    : `${component.toUpperCase()}_NEW_BACKEND`;
-    
+  let resolvedUserId = userId;
+  if (!resolvedUserId) {
+    const session = await getServerSession();
+    resolvedUserId = session?.user?.id;
+  }
+
+  // 1. Check Global Flag
+  let globalEnabled = false;
   try {
-    return await isFeatureFlagEnabled(flagName, userId);
+    if (resolvedUserId) {
+      globalEnabled = await isFeatureEnabledForUser('NEW_BACKEND_ENABLED', resolvedUserId);
+    } else {
+      globalEnabled = await isFeatureEnabled('NEW_BACKEND_ENABLED');
+    }
   } catch (error) {
-    console.error(`[BackendFlags] Error checking flag ${flagName}:`, error);
-    return false;
+    console.error(`[BackendFlags] Error checking global flag:`, error);
+  }
+
+  // If no specific component, return global
+  if (comp.toUpperCase() === 'NEW_BACKEND') {
+    return globalEnabled;
+  }
+
+  // 2. Check Component Flag
+  const componentFlagName = `${comp.toUpperCase()}_NEW_BACKEND`;
+  
+  try {
+    const flag = await getFeatureFlag(componentFlagName);
+    
+    // If flag doesn't exist, fallback to global
+    if (!flag) return globalEnabled;
+
+    // Component flag exists, check its value for this user
+    let componentEnabled = false;
+    if (resolvedUserId) {
+      componentEnabled = await isFeatureEnabledForUser(componentFlagName, resolvedUserId);
+    } else {
+      componentEnabled = await isFeatureEnabled(componentFlagName);
+    }
+
+    // Explicit override if flag exists
+    return componentEnabled;
+  } catch (error) {
+    console.error(`[BackendFlags] Error checking flag ${componentFlagName}:`, error);
+    return globalEnabled;
   }
 }
 
 /**
  * Check if new backend is enabled globally (without user context)
- * Use this for administrative checks or initialization
- *
  * @returns true if global flag is enabled
  */
 export async function isNewBackendEnabled(): Promise<boolean> {
@@ -72,19 +106,8 @@ export async function isNewBackendEnabled(): Promise<boolean> {
 
 /**
  * Initialize default backend feature flags
- * Call this during app startup or migrations
- *
- * Creates flags if they don't exist:
- * - NEW_BACKEND_ENABLED: Global flag (default: disabled)
- * - DASHBOARD_NEW_BACKEND: Dashboard component (default: disabled)
- * - CHARTS_NEW_BACKEND: Charts page (default: disabled)
- * - TIMELINE_NEW_BACKEND: Timeline slider (default: disabled)
- * - CSV_IMPORT_NEW_BACKEND: CSV import (default: disabled)
- * - FORM_NEW_BACKEND: Add/Edit forms (default: disabled)
  */
 export async function initializeBackendFlags(): Promise<void> {
-  const { setFeatureFlag } = await import('./featureFlags');
-
   const defaultFlags = [
     {
       name: 'NEW_BACKEND_ENABLED',
@@ -136,13 +159,8 @@ export async function initializeBackendFlags(): Promise<void> {
 
 /**
  * Get all backend-related feature flags
- * Useful for admin UI or debugging
- *
- * @returns Array of backend feature flags
  */
 export async function getAllBackendFlags() {
-  const { getFeatureFlag } = await import('./featureFlags');
-
   const flagNames = [
     'NEW_BACKEND_ENABLED',
     'DASHBOARD_NEW_BACKEND',

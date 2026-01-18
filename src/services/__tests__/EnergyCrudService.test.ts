@@ -89,7 +89,10 @@ describe('EnergyCrudService', () => {
 
       const result = await service.create(newReading);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(newReading);
+      expect(mockRepository.create).toHaveBeenCalledWith({
+        ...newReading,
+        unit: 'kWh',
+      });
       expect(result).toEqual(createdReading);
     });
 
@@ -179,7 +182,10 @@ describe('EnergyCrudService', () => {
 
       const result = await service.createMany(newReadings);
 
-      expect(mockRepository.createMany).toHaveBeenCalledWith(newReadings);
+      expect(mockRepository.createMany).toHaveBeenCalledWith([
+        { ...newReadings[0], unit: 'kWh' },
+        { ...newReadings[1], unit: 'm³' },
+      ]);
       expect(result).toEqual(createdReadings);
     });
 

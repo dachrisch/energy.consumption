@@ -58,6 +58,7 @@ export interface IDisplayDataRepository {
    * Invalidate all display data for a user
    * This soft-deletes or marks data for recalculation
    * @param userId - User ID (for data isolation)
+   * @returns Number of records invalidated
    */
-  invalidateForUser(userId: string): Promise<void>;
+  invalidateForUser(userId: string): Promise<number>;
 }

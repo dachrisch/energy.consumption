@@ -11,6 +11,23 @@
  */
 
 import { addEnergyAction, deleteEnergyAction, importCSVAction } from '../energy';
+import { getServerSession } from 'next-auth';
+
+// Mock NextAuth session for this file
+jest.mock('next-auth', () => {
+  const mockFunc: any = jest.fn(() => jest.fn());
+  mockFunc.getServerSession = jest.fn(() =>
+    Promise.resolve({
+      user: { id: '000000000000000000000002', email: 'test@example.com' },
+    })
+  );
+  return {
+    __esModule: true,
+    default: mockFunc,
+    getServerSession: mockFunc.getServerSession,
+  };
+});
+
 import { setFeatureFlag } from '@/lib/featureFlags';
 import { connectDB } from '@/lib/mongodb';
 import { resetServices, initializeEventHandlers } from '@/services';
@@ -20,19 +37,10 @@ import SourceEnergyReading from '@/models/SourceEnergyReading';
 import FeatureFlag from '@/models/FeatureFlag';
 import { EnergyBase } from '@/app/types';
 
-// Mock NextAuth session
-jest.mock('next-auth', () => ({
-  getServerSession: jest.fn(() =>
-    Promise.resolve({
-      user: { id: 'test-user-actions', email: 'test@example.com' },
-    })
-  ),
-}));
-
 jest.setTimeout(30000);
 
 describe('Energy Server Actions Integration Tests', () => {
-  const testUserId = 'test-user-actions';
+  const testUserId = '000000000000000000000002';
 
   beforeAll(async () => {
     await connectDB();
@@ -182,6 +190,7 @@ describe('Energy Server Actions Integration Tests', () => {
         type: 'gas',
         date: new Date('2024-11-17'),
         amount: 50,
+        unit: 'm³',
       });
       const savedNew = await newReading.save();
       newBackendId = savedNew._id.toString();

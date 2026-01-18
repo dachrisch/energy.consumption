@@ -134,14 +134,11 @@ describe('Backend Flags Integration Tests', () => {
         rolloutPercent: 50,
       });
 
-      // Test multiple users - some should be enabled, some disabled
-      const results = await Promise.all([
-        checkBackendFlag(undefined, 'user-a'),
-        checkBackendFlag(undefined, 'user-b'),
-        checkBackendFlag(undefined, 'user-c'),
-        checkBackendFlag(undefined, 'user-d'),
-        checkBackendFlag(undefined, 'user-e'),
-      ]);
+      // Test more users to ensure we get both true and false (statistically)
+      const results = [];
+      for (let i = 0; i < 20; i++) {
+        results.push(await checkBackendFlag(undefined, `user-${i}`));
+      }
 
       // At least one should be true, at least one should be false
       expect(results.some(r => r === true)).toBe(true);
@@ -281,22 +278,25 @@ describe('Backend Flags Integration Tests', () => {
     it('Scenario: Enable globally but disable Dashboard (component override)', async () => {
       const testUser = 'test-user';
 
-      // Global ON
+      // Enable global
       await setFeatureFlag('NEW_BACKEND_ENABLED', {
         enabled: true,
         rolloutPercent: 100,
       });
 
-      // Dashboard OFF (emergency disable)
+      // Explicitly disable dashboard
       await setFeatureFlag('DASHBOARD_NEW_BACKEND', {
         enabled: false,
         rolloutPercent: 0,
       });
 
-      // Charts should use new backend
+      // Delete charts flag so it falls back to global
+      await FeatureFlag.deleteOne({ name: 'CHARTS_NEW_BACKEND' });
+
+      // Charts should use new backend (fallback to global)
       expect(await checkBackendFlag('charts', testUser)).toBe(true);
 
-      // Dashboard should use old backend (emergency disabled)
+      // Dashboard should use old backend (explicit component override disable)
       expect(await checkBackendFlag('dashboard', testUser)).toBe(false);
     });
 

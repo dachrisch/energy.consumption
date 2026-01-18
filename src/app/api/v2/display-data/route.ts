@@ -58,67 +58,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalize filters for consistent cache lookup
+    const normalizedFilters: Record<string, any> = { ...filters };
+    if (filters.year) normalizedFilters.year = Number(filters.year);
+    if (filters.bucketCount) normalizedFilters.bucketCount = Number(filters.bucketCount);
+
     // Get service instance
     const service = getDisplayDataService();
 
-    // Route to appropriate calculation method
+    // Phase 2 Optimization: Resolve actual display type and check cache FIRST
+    let resolvedDisplayType = displayType;
+    if (displayType === 'monthly-chart') {
+      const type = (filters.type as EnergyOptions) || 'power';
+      resolvedDisplayType = `monthly-chart-${type}`;
+    } else if (displayType === 'histogram') {
+      const type = (filters.type as EnergyOptions) || 'power';
+      resolvedDisplayType = `histogram-${type}`;
+    }
+
     let data;
     let cacheHit = false;
 
-    switch (displayType) {
-      case 'monthly-chart': {
-        const type = (filters.type as EnergyOptions) || 'power';
-        const year: number = Number(filters.year) || new Date().getFullYear();
-
-        // Calculate (uses cache if available)
-        data = await service.calculateMonthlyChartData(session.user.id, type, year);
-
-        // Cache hit if calculated less than 5 seconds ago
-        if (data.calculatedAt) {
-          const ageMs = Date.now() - new Date(data.calculatedAt).getTime();
-          cacheHit = ageMs < 5000;
+    const cached = await service.getDisplayData(session.user.id, resolvedDisplayType as any, normalizedFilters);
+    if (cached) {
+      data = cached;
+      cacheHit = true;
+    } else {
+      // Cache miss - calculate on demand
+      switch (displayType) {
+        case 'monthly-chart': {
+          const type = (normalizedFilters.type as EnergyOptions) || 'power';
+          const year: number = normalizedFilters.year || new Date().getFullYear();
+          data = await service.calculateMonthlyChartData(session.user.id, type, year);
+          break;
         }
-        break;
-      }
 
-      case 'histogram': {
-        const type = (filters.type as EnergyOptions) || 'power';
-        const bucketCount = Number(filters.bucketCount) || 100;
-        const startDate = filters.startDate ? new Date(filters.startDate as string) : new Date(0);
-        const endDate = filters.endDate ? new Date(filters.endDate as string) : new Date();
-
-        // Calculate (uses cache if available)
-        data = await service.calculateHistogramData(session.user.id, type, startDate, endDate, bucketCount);
-
-        // Cache hit if calculated less than 5 seconds ago
-        if (data.calculatedAt) {
-          const ageMs = Date.now() - new Date(data.calculatedAt).getTime();
-          cacheHit = ageMs < 5000;
+        case 'histogram': {
+          const type = (normalizedFilters.type as EnergyOptions) || 'power';
+          const bucketCount = normalizedFilters.bucketCount || 100;
+          const startDate = normalizedFilters.startDate ? new Date(normalizedFilters.startDate as string) : new Date(0);
+          const endDate = normalizedFilters.endDate ? new Date(normalizedFilters.endDate as string) : new Date();
+          data = await service.calculateHistogramData(session.user.id, type, startDate, endDate, bucketCount);
+          break;
         }
-        break;
+
+        case 'table': {
+          const { getEnergyCrudService } = await import('@/services');
+          const crudService = getEnergyCrudService();
+          data = await crudService.findAll(session.user.id, {
+            type: filters.type as EnergyOptions | undefined,
+            limit: Number(filters.limit) || 1000,
+            offset: Number(filters.offset) || 0,
+          });
+          break;
+        }
+
+        default:
+          return NextResponse.json(
+            { success: false, message: `Unknown display type: ${displayType}` },
+            { status: 400 }
+          );
       }
-
-      case 'table': {
-        // For table data, fetch from source readings (no pre-calculation yet)
-        const { getEnergyCrudService } = await import('@/services');
-        const crudService = getEnergyCrudService();
-
-        const readings = await crudService.findAll(session.user.id, {
-          type: filters.type as EnergyOptions | undefined,
-          limit: Number(filters.limit) || 1000,
-          offset: Number(filters.offset) || 0,
-        });
-
-        data = readings;
-        cacheHit = false; // No cache for table data yet
-        break;
-      }
-
-      default:
-        return NextResponse.json(
-          { success: false, message: `Unknown display type: ${displayType}` },
-          { status: 400 }
-        );
     }
 
     return NextResponse.json({

@@ -11,24 +11,36 @@
 
 import { NextRequest } from 'next/server';
 import { GET, POST, PUT, DELETE } from '../energy/route';
+import { getServerSession } from 'next-auth';
+
+// Mock NextAuth session for this file
+jest.mock('next-auth', () => {
+  const mockFunc: any = jest.fn(() => jest.fn());
+  mockFunc.getServerSession = jest.fn(() =>
+    Promise.resolve({
+      user: { id: '000000000000000000000003', email: 'v2@example.com' },
+    })
+  );
+  return {
+    __esModule: true,
+    default: mockFunc,
+    getServerSession: mockFunc.getServerSession,
+  };
+});
+
+import { setFeatureFlag } from '@/lib/featureFlags';
 import { connectDB } from '@/lib/mongodb';
 import { getEnergyCrudService, getDisplayDataService, resetServices } from '@/services';
 import { getEventBus, EnergyEventTypes, resetEventBus } from '@/events';
 import SourceEnergyReading from '@/models/SourceEnergyReading';
 
-// Mock NextAuth session
-jest.mock('next-auth', () => ({
-  getServerSession: jest.fn(() =>
-    Promise.resolve({
-      user: { id: 'test-user-api', email: 'test@example.com' },
-    })
-  ),
-}));
+import FeatureFlag from '@/models/FeatureFlag';
+import { EnergyBase } from '@/app/types';
 
 jest.setTimeout(30000);
 
 describe('/api/v2/energy Integration Tests', () => {
-  const testUserId = 'test-user-api';
+  const testUserId = '000000000000000000000003';
 
   beforeAll(async () => {
     await connectDB();

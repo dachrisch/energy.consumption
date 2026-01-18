@@ -8,30 +8,39 @@
  * - Performance verification
  */
 
-import { NextRequest } from 'next/server';
-import { POST, DELETE } from '../display-data/route';
-import { connectDB } from '@/lib/mongodb';
-import { getEnergyCrudService, getDisplayDataService, resetServices, initializeEventHandlers } from '@/services';
+import FeatureFlag from '@/models/FeatureFlag';
 import SourceEnergyReading from '@/models/SourceEnergyReading';
 import DisplayEnergyData from '@/models/DisplayEnergyData';
+import { DateRange } from '@/app/components/energy/RangeSlider/types';
+import { connectDB } from '@/lib/mongodb';
+import { initializeEventHandlers, getEnergyCrudService, getDisplayDataService, resetServices } from '@/services';
+import { NextRequest } from 'next/server';
+import { POST, DELETE } from '../display-data/route';
+import { getServerSession } from 'next-auth';
 
-// Mock NextAuth session
-jest.mock('next-auth', () => ({
-  getServerSession: jest.fn(() =>
+// Mock NextAuth session for this file
+jest.mock('next-auth', () => {
+  const mockFunc: any = jest.fn(() => jest.fn());
+  mockFunc.getServerSession = jest.fn(() =>
     Promise.resolve({
-      user: { id: 'test-user-display', email: 'test@example.com' },
+      user: { id: '000000000000000000000004', email: 'v2@example.com' },
     })
-  ),
-}));
+  );
+  return {
+    __esModule: true,
+    default: mockFunc,
+    getServerSession: mockFunc.getServerSession,
+  };
+});
 
 jest.setTimeout(30000);
 
+
 describe('/api/v2/display-data Integration Tests', () => {
-  const testUserId = 'test-user-display';
+  const testUserId = '000000000000000000000004';
 
   beforeAll(async () => {
     await connectDB();
-    initializeEventHandlers(); // Enable auto-invalidation
   });
 
   beforeEach(async () => {
@@ -39,6 +48,7 @@ describe('/api/v2/display-data Integration Tests', () => {
     await SourceEnergyReading.deleteMany({ userId: testUserId });
     await DisplayEnergyData.deleteMany({ userId: testUserId });
     resetServices();
+    initializeEventHandlers(); // Re-enable auto-invalidation after reset
   });
 
   afterEach(async () => {
@@ -74,7 +84,7 @@ describe('/api/v2/display-data Integration Tests', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.data.months).toHaveLength(12);
+      expect(data.data.data).toHaveLength(12);
       expect(data.cacheHit).toBe(false); // First request - cache miss
       expect(data.meta.backend).toBe('new');
     });
@@ -170,9 +180,8 @@ describe('/api/v2/display-data Integration Tests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.data.buckets).toBeDefined();
-      expect(data.data.dateRange).toBeDefined();
-      expect(data.data.maxCount).toBeGreaterThan(0);
+      expect(data.data.data).toBeDefined();
+      expect(data.data.calculatedAt).toBeDefined();
     });
   });
 

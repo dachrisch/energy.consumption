@@ -19,12 +19,15 @@ export const getProjectionsAction = async (
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
-      return null;
+      throw new Error("User not authenticated");
     }
 
     const projectionService = getProjectionService();
     return await projectionService.getProjections(session.user.id, type);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message === "User not authenticated") {
+      throw error;
+    }
     console.error(`[getProjectionsAction] Error:`, error);
     return null;
   }

@@ -7,11 +7,13 @@ const SourceEnergyReadingSchema: Schema = new Schema({
   userId: { type: String, required: true, index: true },
   date: { type: Date, required: true },
   type: { type: String, enum: ['power', 'gas'], required: true },
-  amount: { type: Number, required: true },
+  amount: { type: Number, required: true, min: 0 },
   unit: { type: String, required: true },
   provider: { type: String },
   comment: { type: String },
   createdAt: { type: Date, default: Date.now },
+}, {
+  timestamps: true,
 });
 
 // Compound unique index to prevent duplicate readings

@@ -32,10 +32,10 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 4: State Integration & UX' (Protocol in workflow.md)
 
 ## Phase 5: Final Verification & Cleanup
-- [ ] Task: Regression Testing
-    - [ ] Run full test suite to ensure no impact on chart rendering or data filtering
-- [ ] Task: Documentation Update
-    - [ ] Update any component documentation if necessary
+- [x] Task: Regression Testing
+    - [x] Run full test suite to ensure no impact on chart rendering or data filtering
+- [x] Task: Documentation Update
+    - [x] Update any component documentation if necessary
 - [ ] Task: Merge and Push
     - [ ] Merge to `main` branch
     - [ ] Final visual check on production-like environment

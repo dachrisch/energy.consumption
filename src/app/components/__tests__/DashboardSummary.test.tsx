@@ -10,6 +10,11 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock projections action
+jest.mock('@/actions/projections', () => ({
+  getProjectionsAction: jest.fn().mockResolvedValue(null),
+}));
+
 describe('DashboardSummary', () => {
   // Use current month for accurate consumption calculations
   const now = new Date();

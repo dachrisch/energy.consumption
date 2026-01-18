@@ -2,6 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import DashboardTabs from '../DashboardTabs';
 import { EnergyType, ContractType } from '../../types';
 
+// Mock projections action
+jest.mock('@/actions/projections', () => ({
+  getProjectionsAction: jest.fn().mockResolvedValue(null),
+}));
+
 // Mock the child components to simplify testing
 jest.mock('../energy/EnergyTableFilters', () => {
   return function MockEnergyTableFilters({ onReset }: { onReset: () => void }) {

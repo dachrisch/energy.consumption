@@ -119,7 +119,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash123',
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       expect(mockEnergyRepo.findByDateRange).toHaveBeenCalledWith(
         userId,
@@ -144,7 +144,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash123',
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       expect(calculateMonthlyReadings).toHaveBeenCalledWith(readings, year, 'power');
     });
@@ -164,7 +164,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash123',
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       // Verify upsert was called with sourceDataHash
       expect(mockDisplayRepo.upsert).toHaveBeenCalledWith(
@@ -190,7 +190,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash123',
       });
 
-      const result = await service.calculateMonthlyChartData(userId, year, 'power');
+      const result = await service.calculateMonthlyChartData(userId, 'power', year);
 
       expect(mockDisplayRepo.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -231,7 +231,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash123',
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       const upsertCall = mockDisplayRepo.upsert.mock.calls[0][0];
       expect(upsertCall.metadata).toEqual({
@@ -254,7 +254,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash456',
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'gas');
+      await service.calculateMonthlyChartData(userId, 'gas', year);
 
       expect(mockEnergyRepo.findByDateRange).toHaveBeenCalledWith(
         userId,
@@ -281,7 +281,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: expect.any(String),
       });
 
-      const result = await service.calculateMonthlyChartData(userId, year, 'power');
+      const result = await service.calculateMonthlyChartData(userId, 'power', year);
 
       expect(result.data).toEqual([]);
       expect(mockDisplayRepo.upsert).toHaveBeenCalledWith(
@@ -297,7 +297,7 @@ describe('DisplayDataCalculationService', () => {
       mockEnergyRepo.findByDateRange.mockRejectedValue(new Error('DB error'));
 
       await expect(
-        service.calculateMonthlyChartData(userId, year, 'power')
+        service.calculateMonthlyChartData(userId, 'power', year)
       ).rejects.toThrow('DB error');
     });
   });
@@ -570,8 +570,8 @@ describe('DisplayDataCalculationService', () => {
         } as DisplayEnergyData);
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'power');
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       expect(hash1).toBe(hash2);
     });
@@ -596,10 +596,10 @@ describe('DisplayDataCalculationService', () => {
       });
 
       mockEnergyRepo.findByDateRange.mockResolvedValueOnce(readings1);
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       mockEnergyRepo.findByDateRange.mockResolvedValueOnce(readings2);
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       expect(hash1).not.toBe(hash2);
     });
@@ -616,7 +616,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash-empty',
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       expect(mockDisplayRepo.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -640,7 +640,7 @@ describe('DisplayDataCalculationService', () => {
         sourceDataHash: 'hash123',
       });
 
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
 
       const upsertCall = mockDisplayRepo.upsert.mock.calls[0][0];
       expect(upsertCall.metadata?.calculationTimeMs).toBeGreaterThanOrEqual(0);
@@ -661,7 +661,7 @@ describe('DisplayDataCalculationService', () => {
       });
 
       const beforeTime = Date.now();
-      await service.calculateMonthlyChartData(userId, year, 'power');
+      await service.calculateMonthlyChartData(userId, 'power', year);
       const afterTime = Date.now();
 
       const upsertCall = mockDisplayRepo.upsert.mock.calls[0][0];

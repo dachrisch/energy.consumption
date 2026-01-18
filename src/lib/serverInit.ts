@@ -48,9 +48,11 @@ export async function initializeServer() {
   }
 }
 
-// Auto-initialize when this module is imported
-initializeServer().catch((error) => {
-  console.error('[ServerInit] Fatal initialization error:', error);
-});
+// Auto-initialize when this module is imported (EXCEPT in test environment)
+if (process.env.NODE_ENV !== 'test') {
+  initializeServer().catch((error) => {
+    console.error('[ServerInit] Fatal initialization error:', error);
+  });
+}
 
 export { initialized };

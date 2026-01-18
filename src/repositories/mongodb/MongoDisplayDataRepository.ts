@@ -56,11 +56,18 @@ export class MongoDisplayDataRepository implements IDisplayDataRepository {
   ): Promise<DisplayEnergyDataType | null> {
     await connectDB();
 
-    return await DisplayEnergyData.findOne({
+    // Build query with individual filter fields to avoid key-order sensitivity
+    const query: Record<string, any> = {
       userId,
       displayType,
-      'metadata.filters': filters,
-    }).exec();
+    };
+
+    // Add each filter as a metadata.filters.KEY field
+    Object.keys(filters).forEach((key) => {
+      query[`metadata.filters.${key}`] = filters[key];
+    });
+
+    return await DisplayEnergyData.findOne(query).exec();
   }
 
   /**
@@ -99,13 +106,15 @@ export class MongoDisplayDataRepository implements IDisplayDataRepository {
    * Currently implements hard delete, but could be extended
    * to support soft-delete or marking for recalculation
    */
-  async invalidateForUser(userId: string): Promise<void> {
+  async invalidateForUser(userId: string): Promise<number> {
     await connectDB();
 
-    await DisplayEnergyData.deleteMany({
+    const result = await DisplayEnergyData.deleteMany({
       userId,
     })
       .where({ userId })
       .exec();
+    
+    return result.deletedCount;
   }
 }

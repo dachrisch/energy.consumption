@@ -1,97 +1,85 @@
 /**
  * Jest Setup for Integration Tests
- *
- * This file configures the test environment for integration tests that require:
- * - MongoDB connection
- * - Mongoose models
- * - NextAuth mocking
  */
 
 import mongoose from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
-// Mock NextAuth to avoid import errors in integration tests
+let mongod: MongoMemoryServer;
+
+const mockSession = {
+  user: {
+    id: '000000000000000000000001',
+    email: 'test@example.com',
+    name: 'Test User',
+  },
+};
+
+// EXTREMELY robust mock for NextAuth
 jest.mock('next-auth', () => {
-  const mockFunc = jest.fn(() => ({
+  const getServerSession = jest.fn(() => Promise.resolve(mockSession));
+  
+  // The mock function itself
+  const mockNextAuth: any = jest.fn(() => ({
     GET: jest.fn(),
     POST: jest.fn(),
   }));
 
-  // Define named exports
-  const getServerSession = jest.fn(() =>
-    Promise.resolve({
-      user: {
-        id: '000000000000000000000001',
-        email: 'test@example.com',
-        name: 'Test User',
-      },
-    })
-  );
-  const getSession = jest.fn();
-  const auth = jest.fn();
-
-  // Attach named exports to the default export function
-  Object.assign(mockFunc, {
-    getServerSession,
-    getSession,
-    auth,
-  });
-
+  // Standard NextAuth pattern: default export is the function, 
+  // and it also has named exports
+  mockNextAuth.getServerSession = getServerSession;
+  
+  // For ESM
   return {
     __esModule: true,
-    default: mockFunc,
+    default: mockNextAuth,
     getServerSession,
-    getSession,
-    auth,
   };
 });
 
+jest.mock('next-auth/next', () => ({
+  __esModule: true,
+  default: mockNextAuth,
+  getServerSession: mockNextAuth.getServerSession,
+}));
+
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(() => ({
-    data: null,
-    status: 'unauthenticated',
+    data: mockSession,
+    status: 'authenticated',
   })),
   signIn: jest.fn(),
   signOut: jest.fn(),
-  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+  SessionProvider: ({ children }: any) => children,
 }));
 
-// Global test setup
 beforeAll(async () => {
-  // Set a longer timeout for integration tests
-  jest.setTimeout(30000);
+  jest.setTimeout(60000);
 
-  // Ensure we start with a clean Mongoose state
+  // Spin up in-memory MongoDB
+  mongod = await MongoMemoryServer.create();
+  const uri = mongod.getUri();
+  process.env.MONGODB_URI = uri;
+
   if (mongoose.connection.readyState !== 0) {
     await mongoose.disconnect();
   }
 
-  // Connect to MongoDB if MONGODB_URI is set
-  const mongoUri = process.env.MONGODB_URI;
-  if (mongoUri) {
-    try {
-      await mongoose.connect(mongoUri, {
-        dbName: 'energy_consumption',
-        serverSelectionTimeoutMS: 5000,
-      });
-      console.log('[Test Setup] MongoDB connected successfully');
-    } catch (error) {
-      console.error('[Test Setup] MongoDB connection failed:', error);
-    }
-  }
+  await mongoose.connect(uri, {
+    dbName: 'energy_consumption_test',
+  });
+  console.log('[Integration Setup] In-memory MongoDB connected');
+
+  // Initialize server infrastructure after DB is ready
+  const { initializeServer } = await import('./src/lib/serverInit');
+  await initializeServer();
 });
 
-// Cleanup after all tests
 afterAll(async () => {
-  // Close all mongoose connections
   if (mongoose.connection.readyState !== 0) {
-    await mongoose.connection.close(true); // Force close
+    await mongoose.connection.close();
   }
-
-  // Clear all timers
-  jest.clearAllTimers();
-});
-
-// Global error handler for unhandled promise rejections
-process.on('unhandledRejection', (error) => {
-  console.error('Unhandled Promise Rejection in tests:', error);
+  if (mongod) {
+    await mongod.stop();
+  }
 });

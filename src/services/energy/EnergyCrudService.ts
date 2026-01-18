@@ -38,8 +38,14 @@ export class EnergyCrudService {
   async create(
     reading: Omit<SourceEnergyReading, '_id' | 'createdAt' | 'updatedAt'>
   ): Promise<SourceEnergyReading> {
+    // Business logic: Default unit based on type if missing
+    const readingWithUnit = {
+      ...reading,
+      unit: reading.unit || (reading.type === 'power' ? 'kWh' : 'm³'),
+    };
+
     // Create via repository
-    const created = await this.repository.create(reading);
+    const created = await this.repository.create(readingWithUnit);
 
     // Emit event after successful creation
     const event = EnergyEventFactory.createCreatedEvent(created);
@@ -60,8 +66,14 @@ export class EnergyCrudService {
   async createMany(
     readings: Omit<SourceEnergyReading, '_id' | 'createdAt' | 'updatedAt'>[]
   ): Promise<SourceEnergyReading[]> {
+    // Business logic: Default unit based on type if missing
+    const readingsWithUnits = readings.map((r) => ({
+      ...r,
+      unit: r.unit || (r.type === 'power' ? 'kWh' : 'm³'),
+    }));
+
     // Create via repository
-    const created = await this.repository.createMany(readings);
+    const created = await this.repository.createMany(readingsWithUnits);
 
     // Emit bulk imported event (NOT individual created events - performance)
     const event = EnergyEventFactory.createBulkImportedEvent(

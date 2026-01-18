@@ -12,6 +12,7 @@ jest.mock('next-auth', () => ({
 jest.mock('../featureFlags', () => ({
   isFeatureEnabledForUser: jest.fn(),
   isFeatureEnabled: jest.fn(),
+  isFeatureFlagEnabled: jest.fn(),
   getFeatureFlag: jest.fn(),
   setFeatureFlag: jest.fn(),
 }));
@@ -21,6 +22,8 @@ const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getS
 const mockIsFeatureEnabledForUser = require('../featureFlags').isFeatureEnabledForUser as jest.Mock;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockIsFeatureEnabled = require('../featureFlags').isFeatureEnabled as jest.Mock;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const mockIsFeatureFlagEnabled = require('../featureFlags').isFeatureFlagEnabled as jest.Mock;
 const mockGetFeatureFlag = getFeatureFlag as jest.MockedFunction<typeof getFeatureFlag>;
 const mockSetFeatureFlag = setFeatureFlag as jest.MockedFunction<typeof setFeatureFlag>;
 
@@ -32,6 +35,7 @@ describe('Backend Flags', () => {
   describe('checkBackendFlag()', () => {
     it('should return false when no user session', async () => {
       mockGetServerSession.mockResolvedValue(null);
+      mockIsFeatureEnabled.mockResolvedValue(false);
 
       const result = await checkBackendFlag();
 
