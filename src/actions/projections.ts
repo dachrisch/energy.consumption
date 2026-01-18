@@ -3,8 +3,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getProjectionService } from "@/services/serviceFactory";
-import { EnergyOptions } from "@/app/types";
-import { ProjectionResult } from "@/services/projections/ProjectionService";
+import { EnergyOptions, ProjectionResult } from "@/app/types";
 
 // Initialize server infrastructure
 import "@/lib/serverInit";

@@ -8,7 +8,8 @@ import {
   PlusCircleIcon,
   DocumentTextIcon,
   TableIcon,
-  ChartIcon
+  ChartIcon,
+  ViewIcon
 } from "./icons";
 
 interface NavItem {
@@ -22,6 +23,11 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     path: "/dashboard",
     icon: HomeIcon,
+  },
+  {
+    name: "Insights",
+    path: "/insights",
+    icon: ViewIcon,
   },
   {
     name: "Readings",

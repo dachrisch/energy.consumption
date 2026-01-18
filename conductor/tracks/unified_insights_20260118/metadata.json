@@ -1,0 +1,8 @@
+{
+  "track_id": "unified_insights_20260118",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-18T16:15:00Z",
+  "updated_at": "2026-01-18T16:15:00Z",
+  "description": "history (not in ui), chart and readings must be intelligently combined to a useful ui. ui will show readings and analysis (this will show hostory charts and furure predictions). remove duplications, reuse code, integrate but also rewrite where it need to be done to look goofd"
+}

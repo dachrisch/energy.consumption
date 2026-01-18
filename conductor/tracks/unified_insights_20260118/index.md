@@ -1,4 +1,4 @@
-# Track radix_slider_20260117 Context
+# Track unified_insights_20260118 Context
 
 - [Specification](./spec.md)
 - [Implementation Plan](./plan.md)

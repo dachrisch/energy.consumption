@@ -146,6 +146,73 @@ export type EnergyFilters = {
   dateRange?: { start: Date; end: Date };
   limit?: number;
   offset?: number;
-  sortBy?: "date" | "amount" | "type";
-  sortOrder?: "asc" | "desc";
-};
+    sortBy?: "date" | "amount" | "type";
+    sortOrder?: "asc" | "desc";
+  };
+  
+  // ============================================================================
+  // Unified Energy Insights Types
+  // ============================================================================
+  
+  /**
+   * Data point representing consumption for a specific month in the insights view
+   * Combines history (actual/interpolated) and future (projected)
+   */
+  export type InsightDataPoint = {
+    month: number; // 0-11
+    year: number;
+    monthLabel: string;
+    consumption: number | null;
+    cost: number | null;
+    type: "actual" | "interpolated" | "projected" | "mixed";
+    isForecast: boolean;
+  };
+  
+  /**
+   * Summary statistics for the insights period
+   */
+  export type UnifiedInsightSummary = {
+    periodActual: number;
+    periodProjected: number;
+    periodTotal: number;
+    periodCost: number;
+    comparisonPrevious?: {
+      absolute: number;
+      percentage: number;
+      isHigher: boolean;
+    };
+  };
+  
+  /**
+   * Full data set for the unified insights view
+   */
+  export type UnifiedInsightData = {
+    points: InsightDataPoint[];
+    summary: UnifiedInsightSummary;
+    energyType: EnergyOptions;
+  };
+  
+  /**
+   * Result from projection service
+   */
+  export interface ProjectionResult {
+    currentMonth: {
+      actual: number;
+      projected: number;
+      estimatedTotal: number;
+      estimatedCost: number;
+      daysRemaining: number;
+    };
+    year: {
+      actualToDate: number;
+      projectedRemainder: number;
+      estimatedTotal: number;
+      estimatedCost: number;
+    };
+    monthlyData: {
+      month: number;
+      actual: number | null;
+      projected: number;
+    }[];
+  }
+  

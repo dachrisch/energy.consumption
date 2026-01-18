@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { HomeIcon, PlusCircleIcon, ChartIcon, TableIcon } from "./icons";
+import { HomeIcon, PlusCircleIcon, ChartIcon, TableIcon, ViewIcon } from "./icons";
 
 interface NavItem {
   name: string;
@@ -12,19 +12,24 @@ interface NavItem {
 
 const bottomNavItems: NavItem[] = [
   {
-    name: "Dashboard",
+    name: "Home",
     path: "/dashboard",
     icon: HomeIcon,
   },
   {
-    name: "Readings",
-    path: "/readings",
-    icon: TableIcon,
+    name: "Insights",
+    path: "/insights",
+    icon: ViewIcon,
   },
   {
     name: "Add",
     path: "/add",
     icon: PlusCircleIcon,
+  },
+  {
+    name: "Readings",
+    path: "/readings",
+    icon: TableIcon,
   },
   {
     name: "Charts",

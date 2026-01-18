@@ -1,28 +1,7 @@
 import { IEnergyRepository } from '@/repositories/interfaces/IEnergyRepository';
 import { IContractRepository } from '@/repositories/interfaces/IContractRepository';
 import { ProjectionCalculationService } from '@/app/services/ProjectionCalculationService';
-import { EnergyOptions, SourceEnergyReading } from '@/app/types';
-
-export interface ProjectionResult {
-  currentMonth: {
-    actual: number;
-    projected: number;
-    estimatedTotal: number;
-    estimatedCost: number;
-    daysRemaining: number;
-  };
-  year: {
-    actualToDate: number;
-    projectedRemainder: number;
-    estimatedTotal: number;
-    estimatedCost: number;
-  };
-  monthlyData: {
-    month: number;
-    actual: number | null;
-    projected: number;
-  }[];
-}
+import { EnergyOptions, SourceEnergyReading, ProjectionResult } from '@/app/types';
 
 export class ProjectionService {
   constructor(
