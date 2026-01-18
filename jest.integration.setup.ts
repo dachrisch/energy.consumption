@@ -16,31 +16,22 @@ const mockSession = {
 };
 
 // EXTREMELY robust mock for NextAuth
-jest.mock('next-auth', () => {
-  const getServerSession = jest.fn(() => Promise.resolve(mockSession));
-  
-  // The mock function itself
-  const mockNextAuth: any = jest.fn(() => ({
-    GET: jest.fn(),
-    POST: jest.fn(),
-  }));
+const mockNextAuthFunc: any = jest.fn(() => ({
+  GET: jest.fn(),
+  POST: jest.fn(),
+}));
+mockNextAuthFunc.getServerSession = jest.fn(() => Promise.resolve(mockSession));
 
-  // Standard NextAuth pattern: default export is the function, 
-  // and it also has named exports
-  mockNextAuth.getServerSession = getServerSession;
-  
-  // For ESM
-  return {
-    __esModule: true,
-    default: mockNextAuth,
-    getServerSession,
-  };
-});
+jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: mockNextAuthFunc,
+  getServerSession: mockNextAuthFunc.getServerSession,
+}));
 
 jest.mock('next-auth/next', () => ({
   __esModule: true,
-  default: mockNextAuth,
-  getServerSession: mockNextAuth.getServerSession,
+  default: mockNextAuthFunc,
+  getServerSession: mockNextAuthFunc.getServerSession,
 }));
 
 jest.mock('next-auth/react', () => ({
