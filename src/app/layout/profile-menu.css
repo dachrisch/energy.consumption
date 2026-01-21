@@ -18,7 +18,7 @@
   cursor: pointer;
   background-color: var(--secondary);
   color: var(--foreground);
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s ease;
   border: 2px solid transparent;
 }
 
@@ -30,9 +30,7 @@
 
 @media (hover: hover) {
   .menu-button:hover {
-    background-color: var(--primary);
-    color: var(--primary-foreground);
-    transform: scale(1.05);
+    background-color: var(--accent);
   }
 }
 
@@ -55,17 +53,30 @@
 /* Menu Dropdown */
 .menu-dropdown {
   position: fixed;
-  top: 4.5rem;
-  right: 1rem;
+  top: calc(2rem + 4.5rem);
+  right: calc((100vw - 1400px) / 2 + 2rem);
   width: 13rem;
   border-radius: 0.875rem;
   box-shadow: var(--shadow-lg);
   padding: 0.5rem;
   z-index: 1000;
-  background-color: var(--background-elevated);
+  background-color: var(--card);
   color: var(--foreground);
   border: 1px solid var(--border);
   animation: slideDown 0.2s ease-out;
+}
+
+@media (max-width: 1400px) {
+  .menu-dropdown {
+    right: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-dropdown {
+    top: 4.5rem;
+    right: 1rem;
+  }
 }
 
 @keyframes slideDown {

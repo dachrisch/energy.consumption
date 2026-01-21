@@ -25,19 +25,9 @@ const navItems: NavItem[] = [
     icon: HomeIcon,
   },
   {
-    name: "Insights",
-    path: "/insights",
-    icon: ViewIcon,
-  },
-  {
     name: "Readings",
     path: "/readings",
     icon: TableIcon,
-  },
-  {
-    name: "Charts",
-    path: "/charts",
-    icon: ChartIcon,
   },
   {
     name: "Add Data",
@@ -91,7 +81,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="sidebar-nav">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.path;
+            const isActive = (pathname || "") === item.path || (item.path !== '/' && (pathname || "").startsWith(item.path));
 
             return (
               <button
@@ -108,33 +98,44 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
       </aside>
 
-      {/* Mobile Dropdown Menu */}
+      {/* Mobile Dropdown Menu Overlay */}
       {isOpen && (
-        <>
-          <div
-            className="mobile-menu-backdrop"
-            onClick={onClose}
-            aria-hidden="true"
-          />
-          <nav className="mobile-menu-dropdown">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.path;
+        <div
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+        >
+          <div 
+            className="fixed inset-y-0 left-0 w-64 bg-card border-r shadow-xl p-6 flex flex-col gap-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 px-2">
+              <PlusCircleIcon className="h-6 w-6 text-primary" />
+              <span className="font-bold text-xl">EnergyMonitor</span>
+            </div>
+            
+            <nav className="flex flex-col gap-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = (pathname || "") === item.path || (item.path !== '/' && (pathname || "").startsWith(item.path));
 
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => handleNavigation(item.path)}
-                  className={`mobile-menu-item ${isActive ? "mobile-menu-item-active" : ""}`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </>
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavigation(item.path)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive 
+                        ? "bg-primary text-primary-foreground font-semibold" 
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
       )}
     </>
   );

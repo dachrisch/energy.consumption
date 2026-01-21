@@ -1,0 +1,11 @@
+
+> energy.consumption@2.7.1 db:memory
+> node scripts/startMemoryMongo.js
+
+[MongoDB] 🚀 Starting in-memory MongoDB...
+[MongoDB] ✅ Started at: mongodb://127.0.0.1:27017/energy_consumption
+[MongoDB] 📝 Updated .env.local
+[MongoDB] 🌱 Seeding database...
+[MongoDB] ✅ Database seeded for user 000000000000000000000001!
+[MongoDB] 📊 Added 28 energy readings
+[MongoDB] ✨ Ready! Login: admin@test.com / password123

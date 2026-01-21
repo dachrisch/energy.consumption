@@ -1,7 +1,7 @@
 /* Desktop Sidebar */
 .sidebar {
   width: 16rem;
-  background: var(--background-elevated);
+  background: var(--card);
   border-right: 1px solid var(--border);
   flex-shrink: 0;
   overflow-y: auto;
@@ -26,41 +26,37 @@
   gap: 0.875rem;
   padding: 0.875rem 1rem;
   border-radius: 0.75rem;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  color: var(--foreground-muted);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  color: var(--muted-foreground);
   width: 100%;
   text-align: left;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: none;
   background: none;
 }
 
 @media (hover: hover) {
   .sidebar-nav-item:hover {
     color: var(--foreground);
-    background-color: var(--background-hover);
+    background-color: var(--accent);
   }
 }
 
 .sidebar-nav-item:focus,
 .sidebar-nav-item:focus-visible {
-  outline: none;
-  box-shadow: none;
-  border-color: transparent;
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
 
 .sidebar-nav-item-active {
-  background-color: var(--primary-subtle);
-  color: var(--primary-light);
-  border-left: 3px solid var(--primary);
+  background-color: color-mix(in oklch, var(--primary), transparent 90%);
+  color: var(--primary);
   font-weight: 600;
-  padding-left: calc(1rem - 3px);
 }
 
 @media (hover: hover) {
   .sidebar-nav-item-active:hover {
-    background-color: var(--primary-subtle);
-    color: var(--primary-light);
+    background-color: color-mix(in oklch, var(--primary), transparent 85%);
   }
 }
 
@@ -148,7 +144,7 @@
   position: fixed;
   top: 4.5rem; /* Below the AppBar */
   left: 1rem;
-  background: var(--background-elevated);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   box-shadow: var(--shadow-xl);
@@ -189,7 +185,7 @@
 
 @media (hover: hover) {
   .mobile-menu-item:hover {
-    background-color: var(--background-hover);
+    background-color: var(--accent);
     color: var(--primary);
   }
 }
@@ -202,13 +198,13 @@
 }
 
 .mobile-menu-item:active {
-  background-color: var(--primary-subtle);
+  background-color: color-mix(in oklch, var(--primary), transparent 85%);
   /* Haptic feedback simulation */
   transform: scale(0.98);
 }
 
 .mobile-menu-item-active {
-  background-color: var(--primary-subtle);
+  background-color: color-mix(in oklch, var(--primary), transparent 85%);
   color: var(--primary);
   font-weight: 600;
 }

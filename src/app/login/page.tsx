@@ -3,32 +3,21 @@
 import { useLayoutEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
-import { isFeatureEnabled } from "@/lib/featureFlags";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   useLayoutEffect(() => {
     setIsClient(true);
-  }, []);
-
-  useLayoutEffect(() => {
-    const checkFeature = async () => {
-      const enabled = await isFeatureEnabled("registration");
-      setRegistrationEnabled(enabled);
-    };
-    checkFeature();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,6 +37,8 @@ const LoginPage = () => {
       router.push("/");
     }
   };
+
+  if (!isClient) return null;
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -94,16 +85,6 @@ const LoginPage = () => {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          {isClient && registrationEnabled && (
-            <div className="text-sm text-center text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/register" className="text-primary hover:underline underline-offset-4">
-                Sign up
-              </Link>
-            </div>
-          )}
-        </CardFooter>
       </Card>
     </div>
   );

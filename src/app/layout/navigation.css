@@ -40,7 +40,7 @@
 
 @media (hover: hover) {
   .logo-clickable:hover {
-    opacity: 0.8;
+    opacity: 0.7;
   }
 }
 
@@ -67,7 +67,7 @@
 
 .logo-version {
   font-size: 0.75rem;
-  color: var(--foreground-muted);
+  color: var(--muted-foreground);
   margin-top: 0.125rem;
 }
 
@@ -98,11 +98,11 @@
   height: 2.75rem;
   padding: 0.5rem;
   background: var(--primary);
-  border: 2px solid var(--primary);
+  border: 1px solid var(--primary);
   border-radius: 0.5rem;
   color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease;
   flex-shrink: 0;
   z-index: 10;
 }
@@ -110,16 +110,12 @@
 @media (hover: hover) {
   .hamburger-button:hover {
     background: var(--primary);
-    border-color: white;
-    color: white;
-    transform: scale(1.05);
-    box-shadow: 0 0 0 2px var(--primary), 0 0 0 4px white;
+    opacity: 0.9;
   }
 }
 
 .hamburger-button:active {
-  background: var(--primary);
-  transform: scale(0.95);
+  opacity: 0.8;
 }
 
 .hamburger-button:focus {

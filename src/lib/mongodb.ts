@@ -13,6 +13,8 @@ export const connectDB = async () => {
     uri = 'mongodb://localhost:27017/energy_consumption';
   }
 
+  console.log(`[MongoDB] Connecting to ${uri.split('@').pop()}...`);
+
   return mongoose
     .connect(uri, {
       dbName: 'energy_consumption',

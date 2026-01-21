@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./layout/globals.css";
-// import "./layout/main.css";
-// import "./layout/sidebar.css";
+import "./layout/main.css";
+import "./layout/sidebar.css";
 import { Provider } from "./provider";
 import LayoutClient from './components/LayoutClient';
 
@@ -33,11 +33,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <Provider>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen overflow-hidden`}
         >
-          <div className="app-container">
-            <LayoutClient>{children}</LayoutClient>
-          </div>
+          <LayoutClient>{children}</LayoutClient>
         </body>
       </Provider>
     </html>

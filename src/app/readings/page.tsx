@@ -1,152 +1,214 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import Toast from "../components/Toast";
-import { EnergyType, ToastMessage, EnergyOptions } from "../types";
-import { deleteEnergyAction } from "@/actions/energy";
-import EnergyTableFilters from "../components/energy/EnergyTableFilters";
-import EnergyTable from "../components/energy/EnergyTable";
-import { DateRange } from "../components/energy/RangeSlider/types";
-import { ENERGY_TYPES } from "../constants/energyTypes";
+import { useState, useEffect } from "react";
+import { Loader2, Trash2, Zap, Flame, TableIcon } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/app/components/ui/table";
+import { getMeters } from "@/actions/meter";
+import { getReadings, deleteReadingAction } from "@/actions/reading";
+import { Meter, Reading } from "@/app/types";
+import { format } from "date-fns";
+import Toast from "@/app/components/Toast";
+import { ToastMessage } from "@/app/types";
 
-const ReadingsPage = () => {
-  const [energyData, setEnergyData] = useState<EnergyType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function ReadingsPage() {
+  const [meters, setMeters] = useState<Meter[]>([]);
+  const [selectedMeterId, setSelectedMeterId] = useState<string>("");
+  const [readings, setReadings] = useState<Reading[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
-  // V3 API: Multi-select types (empty array = all types)
-  const [selectedTypes, setSelectedTypes] = useState<EnergyOptions[]>([]);
-
-  // V3 API: DateRange with non-null dates (initialize with wide range)
-  const [dateRange, setDateRange] = useState<DateRange>(() => {
-    const now = new Date();
-    const past = new Date(now);
-    past.setFullYear(past.getFullYear() - 1);
-    return { start: past, end: now };
-  });
-
   useEffect(() => {
-    fetchEnergyData();
+    loadMeters();
   }, []);
 
-  const fetchEnergyData = async () => {
+  useEffect(() => {
+    if (selectedMeterId) {
+      loadReadings(selectedMeterId);
+    }
+  }, [selectedMeterId]);
+
+  async function loadMeters() {
+    setLoading(true);
     try {
-      const response = await fetch("/api/energy");
-      if (!response.ok) throw new Error("Failed to fetch data");
-      const data = await response.json();
-      const parsed = data.map((item: { date: string | number | Date }) => ({
-        ...item,
-        date: new Date(item.date),
-      }));
-      setEnergyData(parsed);
+      const data = await getMeters();
+      setMeters(data);
+      if (data.length > 0) {
+        setSelectedMeterId(data[0]._id);
+      }
     } catch (err) {
-      setError("Failed to load energy data");
-      console.error(err);
+      console.error("Failed to load meters", err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }
 
-  const onDelete = async (id: string): Promise<void> => {
+  async function loadReadings(meterId: string) {
     try {
-      await deleteEnergyAction(id);
-      fetchEnergyData();
-      setToast({
-        message: "Energy data deleted",
-        type: "success",
-      });
+      const data = await getReadings(meterId);
+      setReadings(data);
     } catch (err) {
-      setError("Failed to delete energy data");
-      console.error(err);
+      console.error("Failed to load readings", err);
     }
-  };
+  }
 
-  const handleResetFilters = () => {
-    setSelectedTypes([]); // Empty = all types
-    // Reset to full data range
-    if (energyData.length > 0) {
-      const dates = energyData.map((item) => new Date(item.date));
-      setDateRange({
-        start: new Date(Math.min(...dates.map((d) => d.getTime()))),
-        end: new Date(Math.max(...dates.map((d) => d.getTime()))),
-      });
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to delete this reading?")) return;
+    
+    setActionLoading(id);
+    try {
+      const result = await deleteReadingAction(id);
+      if (result.success) {
+        setReadings(readings.filter(r => r._id !== id));
+        setToast({ message: "Reading deleted successfully", type: "success" });
+      } else {
+        setToast({ message: result.error || "Failed to delete reading", type: "error" });
+      }
+    } catch (err) {
+      console.error("Failed to delete reading", err);
+      setToast({ message: "An error occurred", type: "error" });
+    } finally {
+      setActionLoading(null);
     }
-  };
+  }
 
-  // Convert new API to old API for EnergyTable (backward compatibility)
-  const typeFilterLegacy: EnergyOptions | "all" = useMemo(() => {
-    if (selectedTypes.length === 0 || selectedTypes.length === ENERGY_TYPES.length) {
-      return "all";
-    }
-    return selectedTypes[0]; // Use first selected type
-  }, [selectedTypes]);
+  const selectedMeter = meters.find(m => m._id === selectedMeterId);
 
-  const dateRangeLegacy = useMemo(() => ({
-    start: dateRange.start,
-    end: dateRange.end,
-  }), [dateRange]);
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="app-root">
-        <div className="page-content">
-          <div className="page-header">
-            <h1 className="app-heading">Energy Readings</h1>
-            <p className="page-description">View and manage all your meter readings</p>
-          </div>
-          <p>Loading...</p>
-        </div>
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="app-root" data-testid="readings-page">
-      <div className="page-content">
-        <div className="page-header">
-          <h1 className="app-heading">Energy Readings</h1>
-          <p className="page-description">View and manage all your meter readings</p>
-        </div>
+    <div className="flex flex-col gap-8 p-4 md:p-8">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Readings</h1>
+        <p className="text-muted-foreground">
+          View and manage your historical meter readings.
+        </p>
+      </div>
 
-        {error && (
-          <div className="alert-error">
-            {error}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-muted/50 p-4 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Meter:</span>
+          <Select
+            value={selectedMeterId}
+            onValueChange={setSelectedMeterId}
+          >
+            <SelectTrigger className="w-[200px] bg-background">
+              <SelectValue placeholder="Select a meter" />
+            </SelectTrigger>
+            <SelectContent>
+              {meters.map((m) => (
+                <SelectItem key={m._id} value={m._id}>
+                  <div className="flex items-center gap-2">
+                    {m.type === "power" ? <Zap className="h-3 w-3" /> : <Flame className="h-3 w-3" />}
+                    {m.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {selectedMeter && (
+          <div className="text-xs text-muted-foreground">
+            Number: <span className="font-mono">{selectedMeter.meterNumber}</span> • Unit: <span className="font-medium">{selectedMeter.unit}</span>
           </div>
         )}
-
-        <div className="content-card">
-          <h2 className="section-title">Filter Readings</h2>
-          <EnergyTableFilters
-            energyData={energyData}
-            selectedTypes={selectedTypes}
-            onTypesChange={setSelectedTypes}
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-            onReset={handleResetFilters}
-          />
-        </div>
-
-        <div className="content-card">
-          <h2 className="section-title">Your Readings</h2>
-          <EnergyTable
-            energyData={energyData}
-            onDelete={onDelete}
-            typeFilter={typeFilterLegacy}
-            dateRange={dateRangeLegacy}
-          />
-        </div>
-
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
       </div>
+
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <div className="p-4 border-b bg-muted/30 flex items-center gap-2">
+          <TableIcon className="h-4 w-4 text-muted-foreground" />
+          <h2 className="font-semibold">Reading History</h2>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Reading Value</TableHead>
+              <TableHead>Consumption</TableHead>
+              <TableHead className="w-[100px] text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {readings.length > 0 ? (
+              readings.map((reading, index) => {
+                // Calculate consumption since previous reading (next in list due to sort)
+                const prevReading = readings[index + 1];
+                const consumption = prevReading ? reading.value - prevReading.value : null;
+
+                return (
+                  <TableRow key={reading._id}>
+                    <TableCell className="font-medium">
+                      {format(new Date(reading.date), "PPP")}
+                    </TableCell>
+                    <TableCell>
+                      {reading.value.toLocaleString()} {selectedMeter?.unit}
+                    </TableCell>
+                    <TableCell>
+                      {consumption !== null ? (
+                        <span className="text-primary font-medium">
+                          +{consumption.toLocaleString()} {selectedMeter?.unit}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground italic text-xs">Initial reading</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDelete(reading._id)}
+                        disabled={actionLoading === reading._id}
+                      >
+                        {actionLoading === reading._id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                  No readings found for this meter.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
-};
-
-export default ReadingsPage;
+}
