@@ -178,4 +178,18 @@ h3 {
     border-radius: 0;
     border: none;
   }
+
+  /* Touch Target Optimizations (Min 44px) */
+  [data-slot="button"], 
+  [data-slot="input"], 
+  [data-slot="select-trigger"],
+  [data-slot="select-item"] {
+    min-height: 44px !important;
+    font-size: 16px !important; /* Prevent iOS zoom */
+  }
+
+  [data-slot="button"][data-size="sm"],
+  [data-slot="select-trigger"][data-size="sm"] {
+    min-height: 40px !important; /* Slightly smaller but still touchable */
+  }
 }

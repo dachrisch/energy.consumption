@@ -26,12 +26,12 @@
     - [x] Add tests to confirm Bottom Nav is visible on mobile and Top Nav is visible on desktop.
 
 ## Phase 3: Touch Optimization & Component Audit
-- [ ] Task: Global audit of interactive elements for touch accessibility.
-    - [ ] Ensure all buttons in forms (`add`, `contracts`) meet the 44px minimum height.
-    - [ ] Update input field heights and padding for better touch support.
-- [ ] Task: Final CSS cleanup and stability.
-    - [ ] Remove any remaining aggressive transitions or scaling effects.
-    - [ ] Ensure layout stability when switching focus or hovering.
+- [x] Task: Global audit of interactive elements for touch accessibility.
+    - [x] Ensure all buttons in forms (`add`, `contracts`) meet the 44px minimum height.
+    - [x] Update input field heights and padding for better touch support.
+- [x] Task: Final CSS cleanup and stability.
+    - [x] Remove any remaining aggressive transitions or scaling effects.
+    - [x] Ensure layout stability when switching focus or hovering.
 
 ## Phase 4: Verification & Regression
 - [ ] Task: Visual verification using Chrome DevTools MCP.
