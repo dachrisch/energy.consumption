@@ -35,7 +35,9 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen overflow-hidden`}
         >
-          <LayoutClient>{children}</LayoutClient>
+          <div className="app-container">
+            <LayoutClient>{children}</LayoutClient>
+          </div>
         </body>
       </Provider>
     </html>

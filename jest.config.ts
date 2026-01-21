@@ -29,28 +29,6 @@ const config: Config = {
   // Integration tests use Node environment
   projects: [
     {
-      displayName: "integration",
-      testMatch: ["**/*.integration.test.ts", "**/integration/**/*.test.ts"],
-      testEnvironment: "node",
-      preset: "ts-jest",
-      setupFilesAfterEnv: ["<rootDir>/jest.integration.setup.ts"],
-      transform: {
-        "^.+\\.tsx?$": ["ts-jest", {
-          tsconfig: {
-            esModuleInterop: true,
-            allowSyntheticDefaultImports: true,
-          },
-        }],
-      },
-      moduleNameMapper: {
-        "^@/(.*)$": "<rootDir>/src/$1",
-        "^next-auth/react$": "<rootDir>/__mocks__/next-auth__react.ts",
-      },
-      transformIgnorePatterns: [
-        "node_modules/(?!(bson|mongodb|jose|@panva|openid-client)/)",
-      ],
-    },
-    {
       displayName: "unit",
       testMatch: ["**/__tests__/**/*.test.[jt]s?(x)", "!**/*.integration.test.ts", "!**/integration/**/*.test.ts"],
       testEnvironment: "jsdom",
