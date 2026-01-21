@@ -57,4 +57,28 @@ describe("LayoutClient Structure", () => {
     // Header should contain the logo text
     expect(screen.getByText("EnergyMonitor")).toBeInTheDocument();
   });
+
+  it("renders both navigation components for responsive display", () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { name: "Test User", email: "test@example.com" } },
+      status: "authenticated",
+    });
+    (usePathname as jest.Mock).mockReturnValue("/dashboard");
+
+    const { container } = render(
+      <LayoutClient>
+        <div>Content</div>
+      </LayoutClient>
+    );
+
+    // Desktop nav should be in the header
+    const desktopNav = container.querySelector("header nav");
+    expect(desktopNav).toBeInTheDocument();
+    expect(desktopNav).toHaveClass("hidden", "md:flex");
+
+    // Mobile nav should be at the bottom
+    const bottomNav = container.querySelector("nav.fixed.bottom-0");
+    expect(bottomNav).toBeInTheDocument();
+    expect(bottomNav).toHaveClass("md:hidden");
+  });
 });

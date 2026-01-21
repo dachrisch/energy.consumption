@@ -11,7 +11,11 @@ import {
   Zap, 
   Moon, 
   Sun,
-  ChevronDown
+  ChevronDown,
+  Home,
+  Table,
+  PlusCircle,
+  FileText
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -22,12 +26,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
-import Sidebar from "./Sidebar";
+import BottomNav from "./BottomNav";
+import Link from "next/link";
+
+const navItems = [
+  { name: "Dashboard", path: "/dashboard", icon: Home },
+  { name: "Readings", path: "/readings", icon: Table },
+  { name: "Add Data", path: "/add", icon: PlusCircle },
+  { name: "Contracts", path: "/contracts", icon: FileText },
+];
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const toggleDarkMode = () => {
@@ -42,29 +53,38 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-background">
-      {/* Sidebar for Desktop */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-
+    <div className="flex flex-col h-full w-full overflow-hidden bg-background">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Header / AppBar */}
         <header className="h-16 border-b bg-card flex items-center justify-between px-4 md:px-8 shrink-0 z-20">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            
+          <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <div className="bg-primary p-1.5 rounded-lg">
                 <Zap className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-xl tracking-tight hidden sm:block">EnergyMonitor</span>
+              <span className="font-bold text-xl tracking-tight hidden lg:block">EnergyMonitor</span>
             </div>
+
+            {/* Desktop Top Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = (pathname || "") === item.path || (item.path !== '/' && (pathname || "").startsWith(item.path));
+                
+                return (
+                  <Link key={item.path} href={item.path}>
+                    <Button 
+                      variant={isActive ? "secondary" : "ghost"} 
+                      size="sm"
+                      className={`gap-2 h-9 px-4 ${isActive ? "text-primary font-semibold" : "text-muted-foreground"}`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Button>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
           <div className="flex items-center gap-2">
@@ -107,12 +127,15 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto relative custom-scrollbar">
+        <main className="flex-1 overflow-y-auto relative custom-scrollbar pb-16 md:pb-0">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Nav */}
+      <BottomNav />
     </div>
   );
 }

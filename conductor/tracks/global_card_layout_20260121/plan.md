@@ -12,18 +12,18 @@
     - [x] Create a layout test to ensure the card container exists and has correct width constraints.
 
 ## Phase 2: Navigation Overhaul
-- [ ] Task: Create the Mobile Bottom Navigation component.
-    - [ ] Re-purpose existing icons for a horizontal bottom bar.
-    - [ ] Ensure touch targets are at least 44x44px.
-    - [ ] Add fixed positioning to the bottom of the viewport.
-- [ ] Task: Create the Desktop Top Navigation component.
-    - [ ] Implement a horizontal nav bar to be placed inside the card header.
-    - [ ] Clean up redundant sidebar logic.
-- [ ] Task: Integrate navigation in `LayoutClient.tsx`.
-    - [ ] Use media queries to switch between Top and Bottom navigation.
-    - [ ] Verify navigation state and active link highlighting in both views.
-- [ ] Task: TDD - Verify navigation responsiveness.
-    - [ ] Add tests to confirm Bottom Nav is visible on mobile and Top Nav is visible on desktop.
+- [x] Task: Create the Mobile Bottom Navigation component.
+    - [x] Re-purpose existing icons for a horizontal bottom bar.
+    - [x] Ensure touch targets are at least 44x44px.
+    - [x] Add fixed positioning to the bottom of the viewport.
+- [x] Task: Create the Desktop Top Navigation component.
+    - [x] Implement a horizontal nav bar to be placed inside the card header.
+    - [x] Clean up redundant sidebar logic.
+- [x] Task: Integrate navigation in `LayoutClient.tsx`.
+    - [x] Use media queries to switch between Top and Bottom navigation.
+    - [x] Verify navigation state and active link highlighting in both views.
+- [x] Task: TDD - Verify navigation responsiveness.
+    - [x] Add tests to confirm Bottom Nav is visible on mobile and Top Nav is visible on desktop.
 
 ## Phase 3: Touch Optimization & Component Audit
 - [ ] Task: Global audit of interactive elements for touch accessibility.
