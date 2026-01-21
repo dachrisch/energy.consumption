@@ -34,9 +34,9 @@
     - [x] Ensure layout stability when switching focus or hovering.
 
 ## Phase 4: Verification & Regression
-- [ ] Task: Visual verification using Chrome DevTools MCP.
-    - [ ] Inspect mobile layout (375px/390px width) for thumb reachability.
-    - [ ] Inspect desktop layout (1440px+) for card centering and proper sizing.
-- [ ] Task: Execute full quality check.
-    - [ ] Run `npm run type-check`.
-    - [ ] Run all tests to ensure no regressions in reading or contract logic.
+- [x] Task: Visual verification using Chrome DevTools MCP.
+    - [x] Inspect mobile layout (375px/390px width) for thumb reachability.
+    - [x] Inspect desktop layout (1440px+) for card centering and proper sizing.
+- [x] Task: Execute full quality check.
+    - [x] Run `npm run type-check`.
+    - [x] Run all tests to ensure no regressions in reading or contract logic.
