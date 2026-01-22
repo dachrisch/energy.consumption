@@ -2,16 +2,16 @@
 > energy.consumption@2.7.1 dev
 > concurrently --names "DB,NEXT" --prefix-colors "cyan,green" "npm run db:memory" "npm run dev:next"
 
-[DB] 
-[DB] > energy.consumption@2.7.1 db:memory
-[DB] > node scripts/startMemoryMongo.js
-[DB] 
 [NEXT] 
 [NEXT] > energy.consumption@2.7.1 dev:next
 [NEXT] > next dev --turbopack --port 3100
 [NEXT] 
+[DB] 
+[DB] > energy.consumption@2.7.1 db:memory
+[DB] > node scripts/startMemoryMongo.js
+[DB] 
 [DB] [MongoDB] 🚀 Starting in-memory MongoDB...
-[DB] [MongoDB] ✅ Started at: mongodb://127.0.0.1:27017/energy_consumption
+[DB] [MongoDB] ✅ Started at: mongodb://127.0.0.1:37297/energy_consumption
 [DB] [MongoDB] 📝 Updated .env.local
 [DB] [MongoDB] 🌱 Seeding database...
 [DB] [MongoDB] ✅ Database seeded for user 000000000000000000000001!
@@ -23,6 +23,9 @@
 [NEXT] - Environments: .env.local
 [NEXT] 
 [NEXT] ✓ Starting...
-[NEXT] ✓ Ready in 494ms
+[NEXT] ✓ Ready in 488ms
+[NEXT]  GET /login 200 in 290ms (compile: 151ms, render: 139ms)
+[NEXT]  GET /api/auth/session 200 in 289ms (compile: 258ms, render: 31ms)
+[NEXT]  HEAD /login 200 in 23ms (compile: 3ms, render: 20ms)
 [DB] npm run db:memory exited with code SIGHUP
 [NEXT] npm run dev:next exited with code SIGHUP

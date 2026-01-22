@@ -25,7 +25,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/app/components/ui/card";
@@ -263,7 +262,7 @@ export default function SimplifiedAddReadingForm() {
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="type" className="text-right">Type</Label>
-                    <Select value={newMeterType} onValueChange={(v: any) => setNewMeterType(v)}>
+                    <Select value={newMeterType} onValueChange={(v: "power" | "gas") => setNewMeterType(v)}>
                       <SelectTrigger className="col-span-3">
                         <SelectValue />
                       </SelectTrigger>
@@ -323,7 +322,7 @@ export default function SimplifiedAddReadingForm() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="first-type">Energy Type</Label>
-                      <Select value={newMeterType} onValueChange={(v: any) => setNewMeterType(v)}>
+                      <Select value={newMeterType} onValueChange={(v: "power" | "gas") => setNewMeterType(v)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>

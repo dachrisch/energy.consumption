@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Loader2, Calculator, Info, AlertTriangle } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import {
@@ -31,11 +31,7 @@ export default function SimplifiedProjectionCard({ meter }: SimplifiedProjection
   const [loading, setLoading] = useState(true);
   const [isContractDialogOpen, setIsContractDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadProjections();
-  }, [meter._id]);
-
-  async function loadProjections() {
+  const loadProjections = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getSimplifiedProjections(meter._id);
@@ -45,7 +41,11 @@ export default function SimplifiedProjectionCard({ meter }: SimplifiedProjection
     } finally {
       setLoading(false);
     }
-  }
+  }, [meter._id]);
+
+  useEffect(() => {
+    loadProjections();
+  }, [loadProjections]);
 
   if (loading) {
     return (

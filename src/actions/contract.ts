@@ -29,9 +29,10 @@ export async function addOrUpdateContractAction(data: ContractBase & { _id?: str
       await contract.save();
     }
     return { success: true };
-  } catch (err: any) {
-    console.error("[addOrUpdateContractAction] Error:", err);
-    return { success: false, error: err.message || "Failed to save contract" };
+  } catch (err) {
+    const error = err as Error;
+    console.error("[addOrUpdateContractAction] Error:", error);
+    return { success: false, error: error.message || "Failed to save contract" };
   }
 }
 
@@ -43,9 +44,10 @@ export async function deleteContractAction(id: string): Promise<{ success: boole
     await connectDB();
     await Contract.findOneAndDelete({ _id: id, userId: session.user.id });
     return { success: true };
-  } catch (err: any) {
-    console.error("[deleteContractAction] Error:", err);
-    return { success: false, error: err.message || "Failed to delete contract" };
+  } catch (err) {
+    const error = err as Error;
+    console.error("[deleteContractAction] Error:", error);
+    return { success: false, error: error.message || "Failed to delete contract" };
   }
 }
 
@@ -54,7 +56,15 @@ export async function getContractForMeter(meterId: string): Promise<ContractType
   if (!session?.user?.id) return null;
 
   await connectDB();
-  return Contract.findOne({ meterId, userId: session.user.id }).sort({ startDate: -1 }).lean();
+  const contract = await Contract.findOne({ meterId, userId: session.user.id }).sort({ startDate: -1 }).lean();
+  if (!contract) return null;
+  
+  return {
+    ...(contract as any),
+    _id: (contract as any)._id.toString(),
+    startDate: (contract as any).startDate.toISOString(),
+    endDate: (contract as any).endDate?.toISOString()
+  };
 }
 
 export async function getContractsAction(): Promise<ContractType[]> {
@@ -62,5 +72,11 @@ export async function getContractsAction(): Promise<ContractType[]> {
   if (!session?.user?.id) return [];
 
   await connectDB();
-  return Contract.find({ userId: session.user.id }).sort({ startDate: -1 }).lean();
+  const contracts = await Contract.find({ userId: session.user.id }).sort({ startDate: -1 }).lean();
+  return (contracts as any[]).map(c => ({
+    ...c,
+    _id: c._id.toString(),
+    startDate: c.startDate.toISOString(),
+    endDate: c.endDate?.toISOString()
+  }));
 }

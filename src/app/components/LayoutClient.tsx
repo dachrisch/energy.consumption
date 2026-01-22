@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { 
-  Menu, 
   User, 
   LogOut, 
   Settings, 

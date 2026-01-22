@@ -15,13 +15,13 @@ export type Meter = UserSpecific & {
 export type Reading = UserSpecific & {
   meterId: string;
   value: number;
-  date: Date;
+  date: Date | string;
 };
 
 export type ContractBase = {
   type: EnergyOptions;
-  startDate: Date;
-  endDate?: Date;
+  startDate: Date | string;
+  endDate?: Date | string;
   basePrice: number;
   workingPrice: number;
   meterId?: string;

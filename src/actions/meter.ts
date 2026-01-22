@@ -10,7 +10,11 @@ export async function getMeters(): Promise<MeterType[]> {
   if (!session?.user?.id) return [];
 
   await connectDB();
-  return Meter.find({ userId: session.user.id }).lean();
+  const meters = await Meter.find({ userId: session.user.id }).lean();
+  return (meters as any[]).map(m => ({
+    ...m,
+    _id: m._id.toString()
+  }));
 }
 
 export async function createMeter(data: Partial<MeterType>): Promise<MeterType> {

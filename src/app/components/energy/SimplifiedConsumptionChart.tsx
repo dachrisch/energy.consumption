@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { format, startOfDay, startOfWeek, startOfMonth, isSameDay, isSameWeek, isSameMonth } from "date-fns";
+import { format, startOfWeek, startOfMonth } from "date-fns";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +14,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Line, Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import { Reading, Meter } from "@/app/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { TrendingUp } from "lucide-react";
@@ -122,7 +122,7 @@ export default function SimplifiedConsumptionChart({ readings, meter }: Simplifi
     maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
-      tooltip: { mode: "index", intersect: false }
+      tooltip: { mode: "index" as const, intersect: false }
     },
     scales: {
       y: {
@@ -145,7 +145,7 @@ export default function SimplifiedConsumptionChart({ readings, meter }: Simplifi
           </CardTitle>
           <CardDescription>Usage over time</CardDescription>
         </div>
-        <Tabs value={period} onValueChange={(v: any) => setPeriod(v)}>
+        <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
           <TabsList className="grid w-[240px] grid-cols-3">
             <TabsTrigger value="daily">Day</TabsTrigger>
             <TabsTrigger value="weekly">Week</TabsTrigger>
@@ -155,7 +155,7 @@ export default function SimplifiedConsumptionChart({ readings, meter }: Simplifi
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full mt-4">
-          {chartData && <Line data={chartData} options={options as any} />}
+          {chartData && <Line data={chartData} options={options} />}
         </div>
       </CardContent>
     </Card>

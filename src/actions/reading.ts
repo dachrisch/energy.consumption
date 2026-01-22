@@ -2,7 +2,7 @@
 import { connectDB } from "@/lib/mongodb";
 import Reading from "@/models/Reading";
 import Meter from "@/models/Meter";
-import { Reading as ReadingType, Meter as MeterType, SimplifiedProjectionResult } from "@/app/types";
+import { Reading as ReadingType, SimplifiedProjectionResult } from "@/app/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { SimplifiedProjectionService } from "@/services/projections/SimplifiedProjectionService";
@@ -50,9 +50,10 @@ export async function addReadingAction(data: {
 
     await reading.save();
     return { success: true };
-  } catch (err: any) {
-    console.error("[addReadingAction] Error:", err);
-    return { success: false, error: err.message || "Failed to add reading" };
+  } catch (err) {
+    const error = err as Error;
+    console.error("[addReadingAction] Error:", error);
+    return { success: false, error: error.message || "Failed to add reading" };
   }
 }
 
@@ -61,7 +62,12 @@ export async function getReadings(meterId: string): Promise<ReadingType[]> {
   if (!session?.user?.id) return [];
 
   await connectDB();
-  return Reading.find({ meterId, userId: session.user.id }).sort({ date: -1 }).lean();
+  const readings = await Reading.find({ meterId, userId: session.user.id }).sort({ date: -1 }).lean();
+  return (readings as any[]).map(r => ({
+    ...r,
+    _id: r._id.toString(),
+    date: r.date.toISOString() // Dates also need conversion to be "plain"
+  }));
 }
 
 export async function deleteReadingAction(id: string): Promise<{ success: boolean; error?: string }> {
@@ -72,9 +78,10 @@ export async function deleteReadingAction(id: string): Promise<{ success: boolea
     await connectDB();
     const result = await Reading.deleteOne({ _id: id, userId: session.user.id });
     return { success: result.deletedCount > 0 };
-  } catch (err: any) {
-    console.error("[deleteReadingAction] Error:", err);
-    return { success: false, error: err.message || "Failed to delete reading" };
+  } catch (err) {
+    const error = err as Error;
+    console.error("[deleteReadingAction] Error:", error);
+    return { success: false, error: error.message || "Failed to delete reading" };
   }
 }
 
