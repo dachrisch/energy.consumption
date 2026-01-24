@@ -1,5 +1,5 @@
 # Initial Concept
-A modern, mobile-first Next.js 16 application for tracking and visualizing household energy consumption (power and gas), featuring a focused global card layout.
+A professional, high-performance SolidJS application for tracking household energy consumption, featuring a focused app frame with responsive navigation and a centered global card layout.
 
 # Product Definition - Energy Consumption Monitor
 
@@ -17,7 +17,8 @@ The Energy Consumption Monitor aims to empower homeowners and shared-flat reside
 - **Simplified Data Entry:** Minimize the friction of recording meter readings to encourage frequent updates.
 
 ## Key Features
-- **Streamlined Entry:** Highly optimized mobile-first interface with a dedicated bottom navigation bar for rapid data logging.
+- **Streamlined Entry:** Highly optimized mobile-first interface with a dedicated bottom navigation bar and intuitive DaisyUI components for rapid data logging.
+- **Professional Framing:** A persistent AppBar and centered desktop layout that guides the user's focus and ensures a cohesive experience across all devices.
 - **Advanced Visualization:** Interactive charts for historical comparisons and trend analysis.
 - **Intelligent Insights:** Unified view combining historical consumption and future projections on a contiguous timeline.
 - **Contract Management:** Integration of pricing models (base price, working price) for precise cost calculation.
