@@ -6,12 +6,21 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## Active Tracks
 
-- [x] **Track: Modern Global Card Layout & Mobile-First UX**
-*Link: [./tracks/global_card_layout_20260121/](./tracks/global_card_layout_20260121/)*
+*(No active tracks)*
 
 ---
 
 ## Archived Tracks
+
+- [x] **Track: Modern Global Card Layout & Mobile-First UX**
+*Link: [./archive/global_card_layout_20260121/](./archive/global_card_layout_20260121/)*
+
+---
+
+- [x] **Track: SolidStart Migration & Clean Slate Restart**
+*Link: [./archive/solidstart_restart_20260123/](./archive/solidstart_restart_20260123/)*
+
+---
 
 - [x] **Track: Unified Energy Insights UI**
 *Link: [./archive/unified_insights_20260118/](./archive/unified_insights_20260118/)*

@@ -1,0 +1,8 @@
+{
+  "track_id": "solidstart_restart_20260123",
+  "type": "feature",
+  "status": "in_progress",
+  "created_at": "2026-01-23T00:00:00Z",
+  "updated_at": "2026-01-23T18:50:00Z",
+  "description": "Restart the project using SolidStart, SolidJS, and DaisyUI for a modern, high-performance architecture."
+}
