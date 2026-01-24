@@ -12,6 +12,11 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## Archived Tracks
 
+- [x] **Track: UI Design & App Framing**
+*Link: [./archive/ui_app_framing_20260124/](./archive/ui_app_framing_20260124/)*
+
+---
+
 - [x] **Track: Modern Global Card Layout & Mobile-First UX**
 *Link: [./archive/global_card_layout_20260121/](./archive/global_card_layout_20260121/)*
 
