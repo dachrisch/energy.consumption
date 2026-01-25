@@ -18,7 +18,7 @@ const Dashboard: Component = () => {
           <p class="text-base-content/60 font-bold">Aggregated insights across all your energy sources.</p>
         </div>
         <div class="flex gap-2">
-           <A href="/meters/add-reading" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
+           <A href="/add-reading" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
             Quick Add Reading
           </A>

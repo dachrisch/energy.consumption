@@ -71,6 +71,7 @@ render(() => (
     <Route path="/register" component={Register} />
     
     <Route path="/dashboard" component={() => <ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/add-reading" component={() => <ProtectedRoute><AddReading /></ProtectedRoute>} />
     <Route path="/meters" component={() => <ProtectedRoute><Meters /></ProtectedRoute>} />
     <Route path="/meters/add" component={() => <ProtectedRoute><AddMeter /></ProtectedRoute>} />
     <Route path="/meters/:id/edit" component={() => <ProtectedRoute><AddMeter /></ProtectedRoute>} />
