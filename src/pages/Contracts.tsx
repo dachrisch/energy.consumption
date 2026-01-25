@@ -8,7 +8,17 @@ const fetchContracts = async () => {
 };
 
 const Contracts: Component = () => {
-  const [contracts] = createResource(fetchContracts);
+  const [contracts, { refetch }] = createResource(fetchContracts);
+
+  const handleDeleteContract = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this contract?')) return;
+    try {
+      const res = await fetch(`/api/contracts/${id}`, { method: 'DELETE' });
+      if (res.ok) refetch();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div class="p-6 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-10">
@@ -17,7 +27,7 @@ const Contracts: Component = () => {
           <h1 class="text-4xl font-black tracking-tighter">Utility Contracts</h1>
           <p class="text-base-content/60 font-bold text-lg">Manage your energy provider pricing.</p>
         </div>
-        <A href="/contracts/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">
+        <A href="/contracts/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
           Add Contract
         </A>
@@ -58,17 +68,33 @@ const Contracts: Component = () => {
                   </div>
 
                   <h3 class="text-2xl font-black tracking-tight mb-1">{contract.providerName}</h3>
-                  <p class="text-xs font-bold opacity-40 uppercase tracking-widest mb-6">Linked to Meter: {contract.meterId}</p>
+                  <div class="mb-6">
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Linked to Meter</p>
+                    <A href={`/meters/${contract.meterId?._id}`} class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-3 h-8 lowercase">
+                      {contract.meterId?.name || 'Unknown Meter'}
+                    </A>
+                  </div>
 
                   <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
                     <div>
-                      <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Base Price</p>
+                      <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Base Price</p>
                       <p class="text-xl font-black">€{contract.basePrice.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">/mo</span></p>
                     </div>
                     <div>
-                      <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Working Price</p>
+                      <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Working Price</p>
                       <p class="text-xl font-black">€{contract.workingPrice.toFixed(4)}<span class="text-xs font-bold opacity-40 ml-1">/{contract.type === 'power' ? 'kWh' : 'm³'}</span></p>
                     </div>
+                  </div>
+
+                  <div class="flex justify-end gap-1 mt-6 pt-4 border-t border-base-content/5">
+                    <A href={`/contracts/${contract._id}/edit`} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Contract">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      <span class="text-[10px] uppercase tracking-tighter">Edit</span>
+                    </A>
+                    <button onClick={() => handleDeleteContract(contract._id)} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" title="Delete Contract">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <span class="text-[10px] uppercase tracking-tighter">Delete</span>
+                    </button>
                   </div>
                 </div>
               </div>

@@ -44,3 +44,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [x] **Track: Unified Simplified Energy Monitor (Restart)**
 *Link: [./archive/unified_simplified_restart_20260118/](./archive/unified_simplified_restart_20260118/)*
+---
+
+- [~] **Track: Unified Financial Dashboard & Quick Operations**
+*Link: [./tracks/financial_dash_quick_ops_20260125/](./financial_dash_quick_ops_20260125/)*

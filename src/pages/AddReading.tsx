@@ -27,7 +27,7 @@ const AddReading: Component = () => {
         }),
       });
       if (res.ok) {
-        navigate('/dashboard');
+        navigate(`/meters/${params.id}/readings`);
       } else {
         alert('Failed to add reading');
       }

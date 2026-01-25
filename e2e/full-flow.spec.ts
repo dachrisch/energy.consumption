@@ -13,6 +13,9 @@ test.describe('EnergyMonitor Core Flow', () => {
     await expect(page).toHaveURL('/dashboard');
     
     // 2. Add Meter
+    await page.click('a:has-text("Meters")');
+    await expect(page).toHaveURL('/meters');
+
     const uniqueMeterName = 'E2E-' + Date.now();
     await page.click('a:has-text("Add Meter")');
     await expect(page).toHaveURL('/meters/add');
@@ -22,7 +25,7 @@ test.describe('EnergyMonitor Core Flow', () => {
     await page.selectOption('select', 'power');
     await page.click('button:has-text("Save Meter")');
     
-    await expect(page).toHaveURL('/dashboard');
+    await expect(page).toHaveURL('/meters');
     const meterCard = page.locator('.card', { hasText: uniqueMeterName });
     await expect(meterCard).toBeVisible({ timeout: 10000 });
 
@@ -34,10 +37,13 @@ test.describe('EnergyMonitor Core Flow', () => {
     await page.fill('input[type="number"]', '1234.56');
     await page.click('button:has-text("Save Reading")');
     
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL('**/readings');
+    await expect(page.locator('h1')).toContainText('Reading History');
 
     // 4. Check Meter Details
-    await page.locator('.card', { hasText: uniqueMeterName }).locator('a:has-text("Details")').click();
+    await page.click('a:has-text("Meters")'); // Navigate back to meters to find the card again
+    await page.waitForURL('**/meters');
+    await page.locator('.card', { hasText: uniqueMeterName }).locator('a[title="Meter Details"]').click();
     await page.waitForURL('**/meters/**');
     
     const detailHeading = page.locator('h1');

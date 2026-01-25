@@ -3,6 +3,10 @@ export interface Reading {
   date: Date;
 }
 
+export interface ReadingWithDelta extends Reading {
+  delta: number;
+}
+
 export function calculateDailyAverage(readings: Reading[]): number {
   if (readings.length < 2) return 0;
 
@@ -27,4 +31,28 @@ export function calculateStats(readings: Reading[]) {
     dailyAverage,
     yearlyProjection
   };
+}
+
+/**
+ * Calculates deltas for a list of readings.
+ * Assumes readings are for the same meter.
+ * Returns readings in descending order (newest first).
+ */
+export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
+  if (readings.length === 0) return [];
+  
+  // Sort by date ascending to calculate deltas forward
+  const sorted = [...readings].sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+  const result: ReadingWithDelta[] = sorted.map((r, i) => {
+    const prev = sorted[i - 1];
+    const delta = prev ? r.value - prev.value : 0;
+    return {
+      ...r,
+      delta
+    };
+  });
+  
+  // Return descending (newest first) for UI
+  return result.sort((a, b) => b.date.getTime() - a.date.getTime());
 }

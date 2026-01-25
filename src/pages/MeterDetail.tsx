@@ -67,9 +67,13 @@ const MeterDetail: Component = () => {
               <div class="flex items-center gap-3 mb-2">
                 <div class={`p-2 rounded-lg ${data()?.meter.type === 'power' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
                   {data()?.meter.type === 'power' ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" />
+                    </svg>
                   )}
                 </div>
                 <span class="font-black text-xs uppercase tracking-[0.2em] opacity-40">{data()?.meter.meterNumber}</span>
@@ -78,7 +82,8 @@ const MeterDetail: Component = () => {
             </div>
             
             <div class="flex gap-3">
-              <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">Add Reading</A>
+              <A href={`/meters/${data()?.meter._id}/readings`} class="btn btn-ghost btn-md rounded-2xl border border-base-content/10 font-bold px-8">View History</A>
+              <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">Log Reading</A>
             </div>
           </div>
 
@@ -95,15 +100,19 @@ const MeterDetail: Component = () => {
                 <p class="text-3xl font-black">{Math.round(stats().yearlyProjection).toLocaleString()}<span class="text-sm font-bold opacity-40 ml-2">{data()?.meter.unit}/year</span></p>
               </div>
             </div>
-            <div class="card bg-primary text-primary-content shadow-2xl shadow-primary/30 border-none">
-              <div class="card-body p-8">
-                <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
-                <Show when={stats().estimatedYearlyCost > 0} fallback={<p class="text-xl font-black opacity-60">No active contract</p>}>
-                  <p class="text-4xl font-black tracking-tighter">€{stats().estimatedYearlyCost.toFixed(2)}</p>
-                </Show>
-              </div>
-            </div>
-          </div>
+                                          <div class="card bg-primary text-primary-content shadow-2xl shadow-primary/30 border-none">
+                                            <div class="card-body p-8">
+                                              <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
+                                              <Show when={stats().estimatedYearlyCost > 0} fallback={
+                                                <div class="bg-warning/5 border border-warning/20 p-4 rounded-xl mb-4">
+                                                  <p class="text-[10px] font-black text-warning uppercase tracking-widest leading-none mb-1">No Contract</p>
+                                                  <A href="/contracts/add" class="link link-warning text-xs font-bold">Configure pricing →</A>
+                                                </div>
+                                              }>
+                                                <p class="text-4xl font-black tracking-tighter">€{stats().estimatedYearlyCost.toFixed(2)}</p>
+                                              </Show>
+                                            </div>
+                                          </div>          </div>
 
           <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
             <div class="card-body p-8 md:p-12">

@@ -47,9 +47,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Meters = lazy(() => import("./pages/Meters"));
 const AddMeter = lazy(() => import("./pages/AddMeter"));
 const AddReading = lazy(() => import("./pages/AddReading"));
 const MeterDetail = lazy(() => import("./pages/MeterDetail"));
+const MeterReadings = lazy(() => import("./pages/MeterReadings"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const AddContract = lazy(() => import("./pages/AddContract"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -69,11 +71,15 @@ render(() => (
     <Route path="/register" component={Register} />
     
     <Route path="/dashboard" component={() => <ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/meters" component={() => <ProtectedRoute><Meters /></ProtectedRoute>} />
     <Route path="/meters/add" component={() => <ProtectedRoute><AddMeter /></ProtectedRoute>} />
+    <Route path="/meters/:id/edit" component={() => <ProtectedRoute><AddMeter /></ProtectedRoute>} />
     <Route path="/meters/:id" component={() => <ProtectedRoute><MeterDetail /></ProtectedRoute>} />
+    <Route path="/meters/:id/readings" component={() => <ProtectedRoute><MeterReadings /></ProtectedRoute>} />
     <Route path="/meters/:id/add-reading" component={() => <ProtectedRoute><AddReading /></ProtectedRoute>} />
     <Route path="/contracts" component={() => <ProtectedRoute><Contracts /></ProtectedRoute>} />
     <Route path="/contracts/add" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
+    <Route path="/contracts/:id/edit" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
     <Route path="/profile" component={() => <ProtectedRoute><Profile /></ProtectedRoute>} />
   </Router>
 ), root!);
