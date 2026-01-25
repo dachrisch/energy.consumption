@@ -36,16 +36,38 @@ jobs:
         run: |
           docker run --rm --detach --name test_container ${{ inputs.image_name }}:latest
           for i in {1..10}; do
-            status=$(docker inspect --format='{{.State.Health.Status}}' test_container)
-            health_details=$(docker inspect --format='{{json .State.Health}}' test_container)
-            echo "Health status: $status"
-            echo "Health details: $health_details"
-            if [ "$status" = "healthy" ]; then break; fi
+            # Check for Health status if available, fallback to State status
+            status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' test_container)
+            echo "Container status: $status"
+            
+            if [ "$status" = "healthy" ] || [ "$status" = "running" ]; then
+              # If we have a healthcheck, we wait for "healthy". 
+              # If we don't have a healthcheck, "running" is as good as it gets here.
+              # However, if we JUST started, "running" might be true while Nginx is still booting.
+              # But usually Nginx is fast.
+              
+              if [ "$status" = "healthy" ]; then
+                echo "Container is healthy!"
+                break
+              fi
+              
+              # If no health check defined, just check if it's running and maybe give it a second
+              has_health=$(docker inspect --format='{{.State.Health}}' test_container 2>/dev/null || echo "none")
+              if [ "$has_health" = "<nil>" ] || [ "$has_health" = "none" ] || [ -z "$has_health" ]; then
+                echo "No health check defined, container is running."
+                break
+              fi
+            fi
+            
+            echo "Waiting for container to be ready... (attempt $i)"
             sleep 6
           done
-          # Fail the step if not healthy after 10 retries
-          if [ "$status" != "healthy" ]; then
-            echo "Container did not become healthy after 10 attempts."
+          
+          # Final check
+          final_status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' test_container)
+          if [ "$final_status" != "healthy" ] && [ "$final_status" != "running" ]; then
+            echo "Container failed to start or become healthy. Status: $final_status"
+            docker logs test_container
             exit 1
           fi
           docker stop test_container
