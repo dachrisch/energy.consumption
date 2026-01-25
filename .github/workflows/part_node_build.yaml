@@ -37,6 +37,6 @@ jobs:
         uses: DerLev/eslint-annotations@v2
         with:
           typescript-log: ${{ inputs.project }}/typescript.log
-      - name: 🧪 Run vitest
+      - name: 🧪 Run jest
         run: |
-          npm run test -- --reporter=default --reporter=junit
+          npm run test -- --reporters=default --reporters=jest-junit
