@@ -13,7 +13,7 @@ const App: Component = (props: any) => {
         <Show when={auth.user()}>
           <Navigation />
         </Show>
-        <main class="flex-1 overflow-y-auto relative flex flex-col">
+        <main class="flex-1 overflow-y-auto relative flex flex-col pb-24 lg:pb-0">
           {props.children}
         </main>
         <Show when={auth.user()}>

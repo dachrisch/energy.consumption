@@ -1,0 +1,8 @@
+{
+  "track_id": "mobile_navigation_20260125",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-25T15:30:00Z",
+  "updated_at": "2026-01-25T15:30:00Z",
+  "description": "make navigation working on mobile with propper bottom bar navigation"
+}
