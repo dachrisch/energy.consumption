@@ -1,50 +1,24 @@
-import { UserSpecific } from "@/app/types";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import {
-  MongooseQueryMiddleware,
-  Query,
-  Document,
-  Schema,
-  MongooseDocumentMiddleware,
-} from "mongoose";
-import { getServerSession } from "next-auth";
+import { Schema } from "mongoose";
 
-const queryMethods: MongooseQueryMiddleware[] = [
-  "find",
-  "findOne",
-  "findOneAndUpdate",
-  "findOneAndDelete",
-];
+/**
+ * Applies a pre-filter to all query and update operations to ensure
+ * they are always isolated by userId.
+ * This is a critical security feature for multi-tenancy.
+ */
+export function applyPreFilter(schema: Schema) {
+  // Queries
+  schema.pre(['find', 'findOne', 'countDocuments', 'aggregate'], function () {
+    const userId = this.getOptions().userId;
+    if (userId) {
+      this.where({ userId });
+    }
+  });
 
-const addingMethods: MongooseDocumentMiddleware[] = ["save"];
-
-const filteredByUserId = async function <T extends Document>(
-  this: Query<unknown, T>
-): Promise<void> {
-  const session = await getServerSession(authOptions);
-  if (session?.user?.id) {
-    console.debug(`Filtering query by userId [${session.user.id}]`);
-    this.where({userId: session.user.id});
-  } else {
-    throw new Error("User not logged in or missing user ID");
-  }
-};
-
-const addUserId = async function (
-  this: UserSpecific
-) {
-  const session = await getServerSession(authOptions);
-  if (session?.user?.id) {
-    console.log(`Adding userId [${session.user.id}] to ${JSON.stringify(this)}`)
-    this.userId = session.user.id;
-  } else {
-    throw new Error("User not logged in or missing user ID");
-  }
-};
-
-export const applyPreFilter = async <T extends UserSpecific>(
-  schema: Schema<T>
-) => {
-  queryMethods.forEach((method) => schema.pre(method, filteredByUserId));
-  addingMethods.forEach((method) => schema.pre(method, addUserId));
-};
+  // Updates and Deletes
+  schema.pre(['updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'findOneAndUpdate', 'findOneAndDelete'], function () {
+    const userId = this.getOptions().userId;
+    if (userId) {
+      this.where({ userId });
+    }
+  });
+}

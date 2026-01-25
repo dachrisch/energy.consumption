@@ -1,7 +1,5 @@
-# Dockerfile
-
-# Use official Node.js image
-FROM node:slim AS builder
+# Build stage
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
@@ -9,27 +7,14 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-
 RUN npm run build
 
-# Production image
-FROM node:slim
+# Production stage
+FROM nginx:stable-alpine
 
-WORKDIR /app
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=builder /app/package*.json ./
-RUN npm install --omit=dev
+EXPOSE 80
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./
-COPY --from=builder /app/tsconfig.json ./
-
-EXPOSE 3000
-RUN apt -y update
-RUN apt -y install curl
-
-HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
-  CMD ["curl", "-sf", "-o", "/dev/null", "http://localhost:3000/api/health"]
-
-CMD ["npm", "start"]
+CMD ["nginx", "-g", "daemon off;"]

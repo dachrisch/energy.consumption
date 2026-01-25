@@ -1,30 +1,36 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-export const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) {
-    return;
-  }
+let cached = (global as any).mongoose;
 
-  let uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/energy_consumption';
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
+
+async function connectDB() {
+  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/energy_consumption_solid';
   
-  // Basic validation to prevent "Invalid scheme" error
-  if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
-    console.warn(`[MongoDB] Invalid URI scheme detected: "${uri}". Falling back to localhost.`);
-    uri = 'mongodb://localhost:27017/energy_consumption';
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  console.log(`[MongoDB] Connecting to ${uri.split('@').pop()}...`);
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+    };
 
-  return mongoose
-    .connect(uri, {
-      dbName: 'energy_consumption',
-    })
-    .then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose;
-    })
-    .catch((error) => {
-      throw new Error(`Database connection error: ${error.message}`);
     });
-};
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+
+  return cached.conn;
+}
 
 export default connectDB;

@@ -1,42 +1,15 @@
-import { Meter as MeterType } from "@/app/types";
-import mongoose, { model, Schema } from "mongoose";
-import { applyPreFilter } from "./sessionFilter";
+import mongoose from 'mongoose';
+import { applyPreFilter } from './sessionFilter';
 
-const MeterSchema = new Schema<MeterType>(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    meterNumber: {
-      type: String,
-      required: true,
-    },
-    type: {
-      type: String,
-      required: true,
-      enum: ["power", "gas"],
-    },
-    unit: {
-      type: String,
-      required: true,
-      default: "kWh",
-    },
-    userId: {
-      type: String,
-      ref: "User",
-      index: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+const meterSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  meterNumber: { type: String, required: true, unique: true },
+  type: { type: String, enum: ['power', 'gas'], required: true },
+  unit: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true });
 
-applyPreFilter(MeterSchema);
+applyPreFilter(meterSchema);
 
-const Meter =
-  mongoose.models?.Meter ||
-  model<MeterType>("Meter", MeterSchema);
-
+const Meter = mongoose.models.Meter || mongoose.model('Meter', meterSchema);
 export default Meter;

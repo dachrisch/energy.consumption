@@ -34,3 +34,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [x] **Track: Unified Simplified Energy Monitor (Restart)**
 *Link: [./archive/unified_simplified_restart_20260118/](./archive/unified_simplified_restart_20260118/)*
+---
+
+- [x] **Track: Profile & Contract Management**
+*Link: [./tracks/profile_contracts_20260124/](./profile_contracts_20260124/)*

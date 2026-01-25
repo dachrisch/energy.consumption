@@ -1,47 +1,18 @@
-import { ContractType } from "@/app/types";
-import mongoose, { model, Schema } from "mongoose";
-import { applyPreFilter } from "./sessionFilter";
+import mongoose from 'mongoose';
+import { applyPreFilter } from './sessionFilter';
 
+const contractSchema = new mongoose.Schema({
+  providerName: { type: String, required: true },
+  type: { type: String, enum: ['power', 'gas'], required: true },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date },
+  basePrice: { type: Number, required: true }, // Monthly fixed fee
+  workingPrice: { type: Number, required: true }, // Price per unit
+  meterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meter', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true });
 
-const ContractSchema = new Schema<ContractType>({
-  type: {
-    type: String,
-    required: true,
-    enum: ["power", "gas"]
-  },
-  startDate: {
-    type: Date,
-    required: true
-  },
-  endDate: {
-    type: Date
-  },
-  basePrice: {
-    type: Number,
-    required: true
-  },
-  workingPrice: {
-    type: Number,
-    required: true
-  },
-  meterId: {
-    type: String,
-    ref: 'Meter',
-    index: true
-  },
-  userId: {
-    type: String,
-    ref: 'User',
-    index: true
-  }
-}, {
-  timestamps: true
-});
+applyPreFilter(contractSchema);
 
-applyPreFilter(ContractSchema);
-
-const Contract =
-  mongoose.models?.Contract ||
-  model<ContractType>("Contract", ContractSchema);
-
+const Contract = mongoose.models.Contract || mongoose.model('Contract', contractSchema);
 export default Contract;

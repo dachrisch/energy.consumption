@@ -1,27 +1,26 @@
 # Technology Stack - Energy Consumption Monitor
 
 ## Frontend
-- **Framework:** Next.js 16 (App Router)
+- **Framework:** SolidJS + Vite
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS 4
-- **Component Library:** Shadcn/UI (Radix UI + Tailwind)
-- **Visualization:** Chart.js, React Chartjs 2
+- **Component Library:** DaisyUI
+- **Visualization:** Chart.js, Solid-Chartjs
 - **Icons:** Font Awesome 6.5.1, Lucide React
-- **Accessible Primitives:** Radix UI
-- **State Management:** React Context & Hooks
+- **State Management:** Solid Signals & Stores
 
 ## Backend
 - **Environment:** Node.js
-- **Architecture:** Service Layer & Event-Driven (EventBus)
-- **Framework:** Next.js Server Actions & Route Handlers
-- **Authentication:** NextAuth.js (JWT Strategy)
+- **Architecture:** Integrated API Middleware (Vite)
+- **Framework:** SolidJS Router + Mongoose
+- **Authentication:** Custom JWT-based Authentication
 - **Database:** MongoDB
 - **ORM/ODM:** Mongoose
 
 ## Infrastructure & Tools
 - **Version Control:** Git
 - **Package Manager:** npm
-- **Testing:** Jest, React Testing Library
+- **Testing:** Vitest, Solid Testing Library
 - **Time Series Ops:** Pond.js
 - **CI/CD:** GitHub Actions
 - **Containerization:** Docker

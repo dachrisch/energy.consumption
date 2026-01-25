@@ -1,31 +1,19 @@
 
-> energy.consumption@2.7.1 dev
-> concurrently --names "DB,NEXT" --prefix-colors "cyan,green" "npm run db:memory" "npm run dev:next"
+> vite-template-solid@0.0.0 dev
+> node scripts/startMemoryMongo.cjs
 
-[NEXT] 
-[NEXT] > energy.consumption@2.7.1 dev:next
-[NEXT] > next dev --turbopack --port 3100
-[NEXT] 
-[DB] 
-[DB] > energy.consumption@2.7.1 db:memory
-[DB] > node scripts/startMemoryMongo.js
-[DB] 
-[DB] [MongoDB] 🚀 Starting in-memory MongoDB...
-[DB] [MongoDB] ✅ Started at: mongodb://127.0.0.1:37297/energy_consumption
-[DB] [MongoDB] 📝 Updated .env.local
-[DB] [MongoDB] 🌱 Seeding database...
-[DB] [MongoDB] ✅ Database seeded for user 000000000000000000000001!
-[DB] [MongoDB] 📊 Added 28 energy readings
-[DB] [MongoDB] ✨ Ready! Login: admin@test.com / password123
-[NEXT] ▲ Next.js 16.1.3 (Turbopack)
-[NEXT] - Local:         http://localhost:3100
-[NEXT] - Network:       http://192.168.178.66:3100
-[NEXT] - Environments: .env.local
-[NEXT] 
-[NEXT] ✓ Starting...
-[NEXT] ✓ Ready in 488ms
-[NEXT]  GET /login 200 in 290ms (compile: 151ms, render: 139ms)
-[NEXT]  GET /api/auth/session 200 in 289ms (compile: 258ms, render: 31ms)
-[NEXT]  HEAD /login 200 in 23ms (compile: 3ms, render: 20ms)
-[DB] npm run db:memory exited with code SIGHUP
-[NEXT] npm run dev:next exited with code SIGHUP
+MongoDB Memory Server started at: mongodb://127.0.0.1:44053/
+Updated .env.local
+Created test user: test@example.com
+(node:878425) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> vite-template-solid@0.0.0 vite-dev
+> vite --host
+
+
+  VITE v7.3.1  ready in 799 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://192.168.178.66:3000/
+  ➜  Network: http://10.185.182.1:3000/

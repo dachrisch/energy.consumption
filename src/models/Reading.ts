@@ -1,38 +1,14 @@
-import { Reading as ReadingType } from "@/app/types";
-import mongoose, { model, Schema } from "mongoose";
-import { applyPreFilter } from "./sessionFilter";
+import mongoose from 'mongoose';
+import { applyPreFilter } from './sessionFilter';
 
-const ReadingSchema = new Schema<ReadingType>(
-  {
-    meterId: {
-      type: String,
-      ref: "Meter",
-      required: true,
-      index: true,
-    },
-    value: {
-      type: Number,
-      required: true,
-    },
-    date: {
-      type: Date,
-      required: true,
-    },
-    userId: {
-      type: String,
-      ref: "User",
-      index: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+const readingSchema = new mongoose.Schema({
+  meterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meter', required: true },
+  value: { type: Number, required: true },
+  date: { type: Date, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+}, { timestamps: true });
 
-applyPreFilter(ReadingSchema);
+applyPreFilter(readingSchema);
 
-const Reading =
-  mongoose.models?.Reading ||
-  model<ReadingType>("Reading", ReadingSchema);
-
+const Reading = mongoose.models.Reading || mongoose.model('Reading', readingSchema);
 export default Reading;
