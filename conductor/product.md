@@ -22,7 +22,7 @@ The Energy Consumption Monitor aims to empower homeowners and shared-flat reside
 - **Infrastructure Management:** Dedicated section for managing utility meters, history, and individual pricing contracts.
 - **Detailed History:** Comprehensive per-meter reading logs with automatic consumption delta tracking and CRUD operations.
 - **Professional Framing:** A persistent desktop AppBar and mobile Bottom Navigation bar that guides the user's focus and ensures an ergonomic experience across all devices.
-- **Advanced Visualization:** Interactive charts for historical comparisons and trend analysis.
+- **Advanced Visualization:** Interactive charts for historical comparisons and trend analysis, including mobile-optimized inverted layouts for better vertical readability.
 - **Contract Management:** Integration of pricing models (base price, working price) for precise cost calculation.
 
 ## Non-Functional Requirements
