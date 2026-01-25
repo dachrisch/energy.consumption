@@ -18,6 +18,7 @@ The Energy Consumption Monitor aims to empower homeowners and shared-flat reside
 
 ## Key Features
 - **Streamlined Entry:** Highly optimized mobile-first interface with a dedicated bottom navigation bar and intuitive DaisyUI components for rapid data logging.
+- **Detailed History:** Comprehensive per-meter reading logs with automatic consumption delta tracking and CRUD operations.
 - **Professional Framing:** A persistent AppBar and centered desktop layout that guides the user's focus and ensures a cohesive experience across all devices.
 - **Advanced Visualization:** Interactive charts for historical comparisons and trend analysis.
 - **Intelligent Insights:** Unified view combining historical consumption and future projections on a contiguous timeline.
