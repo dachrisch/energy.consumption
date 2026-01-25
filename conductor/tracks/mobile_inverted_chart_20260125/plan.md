@@ -14,10 +14,10 @@
     - [x] Verify via unit tests that the axes are correctly swapped in the config object.
 
 ## Phase 3: Component Refactoring
-- [ ] Task: Update `ConsumptionChart.tsx` for responsive rendering.
-    - [ ] Implement a `createMemo` or similar reactive signal to track window width.
-    - [ ] Add conditional logic to switch between standard and inverted Chart.js instances (or update the configuration dynamically).
-    - [ ] Style the inverted chart to ensure it utilizes vertical space effectively within the Global Card.
+- [x] Task: Update `ConsumptionChart.tsx` for responsive rendering.
+    - [x] Implement a `createMemo` or similar reactive signal to track window width.
+    - [x] Add conditional logic to switch between standard and inverted Chart.js instances (or update the configuration dynamically).
+    - [x] Style the inverted chart to ensure it utilizes vertical space effectively within the Global Card.
 
 ## Phase 4: Layout & UI Integration
 - [ ] Task: Audit Dashboard and Meter Detail layouts.
