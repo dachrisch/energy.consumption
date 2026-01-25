@@ -49,3 +49,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [x] **Track: Unified Financial Dashboard & Quick Operations**
 *Link: [./archive/financial_dash_quick_ops_20260125/](./archive/financial_dash_quick_ops_20260125/)*
+
+---
+
+- [x] **Track: Mobile-Responsive Inverted Chart View**
+*Link: [./tracks/mobile_inverted_chart_20260125/](./tracks/mobile_inverted_chart_20260125/)*
