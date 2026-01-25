@@ -6,7 +6,7 @@ import { useToast } from '../context/ToastContext';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
-  if (!res.ok) throw new Error('Failed to fetch dashboard data');
+  if (!res.ok) {throw new Error('Failed to fetch dashboard data');}
   return res.json();
 };
 
@@ -16,7 +16,7 @@ const Meters: Component = () => {
 
   const handleDeleteMeter = async (id: string) => {
     const confirmed = await toast.confirm('Are you sure you want to delete this meter? This will also remove all its readings and contracts.');
-    if (!confirmed) return;
+    if (!confirmed) {return;}
     try {
       const res = await fetch(`/api/meters/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -64,7 +64,7 @@ const Meters: Component = () => {
               
               const stats = () => {
                 const readings = meterReadings();
-                if (readings.length < 2) return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };
+                if (readings.length < 2) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };}
                 
                 const consumptionStats = calculateStats(readings.map((r: any) => ({
                   value: r.value,

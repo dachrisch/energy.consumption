@@ -29,7 +29,7 @@ const MeterReadings: Component = () => {
 
   const handleDelete = async (id: string) => {
     const confirmed = await toast.confirm('Are you sure you want to delete this reading?');
-    if (!confirmed) return;
+    if (!confirmed) {return;}
     
     setDeleting(id);
     try {

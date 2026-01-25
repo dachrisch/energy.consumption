@@ -31,7 +31,7 @@ const MeterDetail: Component = () => {
 
   const stats = () => {
     try {
-      if (!data()?.readings) return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };
+      if (!data()?.readings) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };}
       const consumptionStats = calculateStats(data()?.readings.map((r: any) => ({
         value: r.value,
         date: new Date(r.date)

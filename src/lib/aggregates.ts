@@ -23,7 +23,7 @@ export function calculateAggregates(
         date: new Date(r.date)
       }));
 
-    if (meterReadings.length < 2) continue;
+    if (meterReadings.length < 2) {continue;}
 
     const stats = calculateStats(meterReadings);
     const meterContracts = contracts.filter(

@@ -4,7 +4,7 @@ import { useToast } from '../context/ToastContext';
 
 const fetchContracts = async () => {
   const res = await fetch('/api/contracts');
-  if (!res.ok) throw new Error('Failed to fetch contracts');
+  if (!res.ok) {throw new Error('Failed to fetch contracts');}
   return res.json();
 };
 
@@ -14,7 +14,7 @@ const Contracts: Component = () => {
 
   const handleDeleteContract = async (id: string) => {
     const confirmed = await toast.confirm('Are you sure you want to delete this contract?');
-    if (!confirmed) return;
+    if (!confirmed) {return;}
     try {
       const res = await fetch(`/api/contracts/${id}`, { method: 'DELETE' });
       if (res.ok) {

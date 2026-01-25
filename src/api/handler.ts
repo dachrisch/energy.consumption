@@ -11,9 +11,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-123';
 
 function getUserId(req: any) {
   const cookie = req.headers.cookie;
-  if (!cookie) return null;
+  if (!cookie) {return null;}
   const token = cookie.split('; ').find((c: string) => c.trim().startsWith('token='))?.split('=')[1];
-  if (!token) return null;
+  if (!token) {return null;}
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     return decoded.userId;
@@ -88,7 +88,7 @@ export async function apiHandler(req: any, res: any) {
       const { name, email, password } = req.body;
       const updateData: any = {};
       
-      if (name) updateData.name = name;
+      if (name) {updateData.name = name;}
       if (email) {
         const existing = await User.findOne({ email, _id: { $ne: userId } });
         if (existing) {

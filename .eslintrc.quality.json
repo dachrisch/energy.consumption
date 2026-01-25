@@ -1,5 +1,10 @@
 {
-  "extends": ["next/core-web-vitals"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
   "rules": {
     "complexity": ["error", { "max": 10 }],
     "max-lines-per-function": ["warn", { "max": 50, "skipBlankLines": true, "skipComments": true }],

@@ -8,7 +8,7 @@ export interface ReadingWithDelta extends Reading {
 }
 
 export function calculateDailyAverage(readings: Reading[]): number {
-  if (readings.length < 2) return 0;
+  if (readings.length < 2) {return 0;}
 
   // Sort by date ascending
   const sorted = [...readings].sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -39,7 +39,7 @@ export function calculateStats(readings: Reading[]) {
  * Returns readings in descending order (newest first).
  */
 export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
-  if (readings.length === 0) return [];
+  if (readings.length === 0) {return [];}
   
   // Sort by date ascending to calculate deltas forward
   const sorted = [...readings].sort((a, b) => a.date.getTime() - b.date.getTime());

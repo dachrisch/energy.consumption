@@ -36,7 +36,7 @@ const AddContract: Component = () => {
       setProviderName(data.providerName);
       setType(data.type);
       setStartDate(new Date(data.startDate).toISOString().split('T')[0]);
-      if (data.endDate) setEndDate(new Date(data.endDate).toISOString().split('T')[0]);
+      if (data.endDate) {setEndDate(new Date(data.endDate).toISOString().split('T')[0]);}
       setBasePrice(data.basePrice.toString());
       setWorkingPrice(data.workingPrice.toString());
       setMeterId(data.meterId?._id || data.meterId);

@@ -3,7 +3,7 @@ import { A } from '@solidjs/router';
 
 const fetchAggregates = async () => {
   const res = await fetch('/api/aggregates');
-  if (!res.ok) throw new Error('Failed to fetch aggregates');
+  if (!res.ok) {throw new Error('Failed to fetch aggregates');}
   const aggregates = await res.json();
   
   const meterRes = await fetch('/api/meters');
