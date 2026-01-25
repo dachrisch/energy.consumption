@@ -42,6 +42,7 @@ const Landing = () => (
 );
 
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const Login = lazy(() => import("./pages/Login"));
@@ -65,7 +66,13 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 render(() => (
-  <Router root={(props) => <AuthProvider><App {...props} /></AuthProvider>}>
+  <Router root={(props) => (
+    <AuthProvider>
+      <ToastProvider>
+        <App {...props} />
+      </ToastProvider>
+    </AuthProvider>
+  )}>
     <Route path="/" component={Landing} />
     <Route path="/login" component={Login} />
     <Route path="/register" component={Register} />

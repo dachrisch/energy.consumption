@@ -1,5 +1,6 @@
 import { Component, createResource, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
+import { useToast } from '../context/ToastContext';
 
 const fetchContracts = async () => {
   const res = await fetch('/api/contracts');
@@ -9,14 +10,22 @@ const fetchContracts = async () => {
 
 const Contracts: Component = () => {
   const [contracts, { refetch }] = createResource(fetchContracts);
+  const toast = useToast();
 
   const handleDeleteContract = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this contract?')) return;
+    const confirmed = await toast.confirm('Are you sure you want to delete this contract?');
+    if (!confirmed) return;
     try {
       const res = await fetch(`/api/contracts/${id}`, { method: 'DELETE' });
-      if (res.ok) refetch();
+      if (res.ok) {
+        toast.showToast('Contract deleted successfully', 'success');
+        refetch();
+      } else {
+        toast.showToast('Failed to delete contract', 'error');
+      }
     } catch (err) {
       console.error(err);
+      toast.showToast('An error occurred while deleting the contract', 'error');
     }
   };
 

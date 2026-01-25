@@ -1,5 +1,6 @@
 import { Component, createSignal, createResource, Show, createEffect, For } from 'solid-js';
-import { useNavigate, useParams } from '@solidjs/router';
+import { useNavigate, useParams, A } from '@solidjs/router';
+import { useToast } from '../context/ToastContext';
 
 const fetchMeters = async () => {
   const res = await fetch('/api/meters');
@@ -9,6 +10,7 @@ const fetchMeters = async () => {
 const AddReading: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   
   const [selectedMeterId, setSelectedMeterId] = createSignal(params.id || localStorage.getItem('lastMeterId') || '');
   const [value, setValue] = createSignal('');
@@ -48,7 +50,7 @@ const AddReading: Component = () => {
     e.preventDefault();
     const meterId = selectedMeterId();
     if (!meterId) {
-      alert('Please select a meter');
+      toast.showToast('Please select a meter', 'warning');
       return;
     }
 
@@ -64,14 +66,16 @@ const AddReading: Component = () => {
       });
       if (res.ok) {
         localStorage.setItem('lastMeterId', meterId);
+        toast.showToast('Reading saved successfully', 'success');
         // If we came from a specific meter detail/readings page, go back there.
         // Otherwise go to the readings list for the selected meter.
         navigate(`/meters/${meterId}/readings`);
       } else {
-        alert('Failed to add reading');
+        toast.showToast('Failed to add reading', 'error');
       }
     } catch (err) {
       console.error(err);
+      toast.showToast('An error occurred while saving', 'error');
     }
   };
 

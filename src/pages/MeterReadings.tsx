@@ -1,6 +1,7 @@
 import { Component, createResource, For, Show, createSignal } from 'solid-js';
 import { useParams, A } from '@solidjs/router';
 import { calculateDeltas } from '../lib/consumption';
+import { useToast } from '../context/ToastContext';
 
 const fetchMeterReadings = async (id: string) => {
   const [meterRes, readingsRes] = await Promise.all([
@@ -24,20 +25,24 @@ const MeterReadings: Component = () => {
   const params = useParams();
   const [data, { refetch }] = createResource(() => params.id, fetchMeterReadings);
   const [deleting, setDeleting] = createSignal<string | null>(null);
+  const toast = useToast();
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this reading?')) return;
+    const confirmed = await toast.confirm('Are you sure you want to delete this reading?');
+    if (!confirmed) return;
     
     setDeleting(id);
     try {
       const res = await fetch(`/api/readings/${id}`, { method: 'DELETE' });
       if (res.ok) {
+        toast.showToast('Reading deleted successfully', 'success');
         refetch();
       } else {
-        alert('Failed to delete reading');
+        toast.showToast('Failed to delete reading', 'error');
       }
     } catch (err) {
       console.error(err);
+      toast.showToast('An error occurred while deleting', 'error');
     } finally {
       setDeleting(null);
     }

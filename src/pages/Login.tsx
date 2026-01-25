@@ -1,12 +1,14 @@
 import { Component, createSignal } from 'solid-js';
 import { useNavigate, A } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const Login: Component = () => {
   const auth = useAuth();
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleLogin = async (e: Event) => {
     e.preventDefault();
@@ -19,13 +21,14 @@ const Login: Component = () => {
       const data = await res.json();
       if (res.ok) {
         auth.revalidate();
+        toast.showToast('Successfully logged in!', 'success');
         navigate('/dashboard');
       } else {
-        alert(data.error || 'Login failed');
+        toast.showToast(data.error || 'Login failed', 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred during login');
+      toast.showToast('An error occurred during login', 'error');
     }
   };
 

@@ -1,5 +1,6 @@
 import { Component, createSignal, createResource, onMount, Show } from 'solid-js';
 import { useNavigate, useParams } from '@solidjs/router';
+import { useToast } from '../context/ToastContext';
 
 const fetchMeter = async (id: string) => {
   const res = await fetch(`/api/meters?id=${id}`);
@@ -10,6 +11,7 @@ const fetchMeter = async (id: string) => {
 const AddMeter: Component = () => {
   const params = useParams();
   const isEdit = () => !!params.id;
+  const toast = useToast();
   
   const [name, setName] = createSignal('');
   const [meterNumber, setMeterNumber] = createSignal('');
@@ -47,12 +49,14 @@ const AddMeter: Component = () => {
         body: JSON.stringify({ name: name(), meterNumber: meterNumber(), type: type(), unit: unit() }),
       });
       if (res.ok) {
+        toast.showToast(`Meter ${isEdit() ? 'updated' : 'saved'} successfully`, 'success');
         navigate('/meters');
       } else {
-        alert('Failed to save meter');
+        toast.showToast('Failed to save meter', 'error');
       }
     } catch (err) {
       console.error(err);
+      toast.showToast('An error occurred while saving the meter', 'error');
     }
   };
 

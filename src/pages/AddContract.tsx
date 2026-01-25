@@ -1,5 +1,6 @@
 import { Component, createSignal, createResource, For, Show, onMount } from 'solid-js';
 import { useNavigate, useParams } from '@solidjs/router';
+import { useToast } from '../context/ToastContext';
 
 const fetchContract = async (id: string) => {
   const res = await fetch(`/api/contracts?id=${id}`);
@@ -15,6 +16,7 @@ const fetchMeters = async () => {
 const AddContract: Component = () => {
   const params = useParams();
   const isEdit = () => !!params.id;
+  const toast = useToast();
 
   const [providerName, setProviderName] = createSignal('');
   const [type, setType] = createSignal('power');
@@ -62,12 +64,14 @@ const AddContract: Component = () => {
       });
       const data = await res.json();
       if (res.ok) {
+        toast.showToast(`Contract ${isEdit() ? 'updated' : 'saved'} successfully`, 'success');
         navigate('/contracts');
       } else {
-        alert(data.error || 'Failed to save contract');
+        toast.showToast(data.error || 'Failed to save contract', 'error');
       }
     } catch (err) {
       console.error(err);
+      toast.showToast('An error occurred while saving the contract', 'error');
     }
   };
 

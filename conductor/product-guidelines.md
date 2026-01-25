@@ -16,6 +16,7 @@
 - **Action-Oriented Dashboard:** Front-load projections and critical cost data so users see high-value insights immediately upon login.
 - **Input-Focused Design:** The "Add Reading" action is the most prominent and accessible part of the navigation to minimize friction.
 - **Comparative Context:** Data is rarely shown in isolation; current consumption is always presented alongside historical trends or contract benchmarks.
+- **Non-Blocking Feedback:** The application MUST NOT use native `alert()` or `confirm()` dialogs. All feedback and confirmations must be handled via non-intrusive Toast notifications or in-app modal components to maintain a seamless, professional experience.
 
 ## Accessibility and Support
 - **Fluid Typography:** The UI uses dynamic font scaling (fluid scale) to ensure optimal readability across all device sizes without manual adjustment.

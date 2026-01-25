@@ -1,11 +1,13 @@
 import { Component, createSignal } from 'solid-js';
 import { useNavigate, A } from '@solidjs/router';
+import { useToast } from '../context/ToastContext';
 
 const Register: Component = () => {
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleRegister = async (e: Event) => {
     e.preventDefault();
@@ -17,14 +19,14 @@ const Register: Component = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('Account created! Please sign in.');
+        toast.showToast('Account created! Please sign in.', 'success');
         navigate('/login');
       } else {
-        alert(data.error || 'Registration failed');
+        toast.showToast(data.error || 'Registration failed', 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred during registration');
+      toast.showToast('An error occurred during registration', 'error');
     }
   };
 

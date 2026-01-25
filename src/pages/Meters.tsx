@@ -2,6 +2,7 @@ import { Component, createResource, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { calculateStats } from '../lib/consumption';
 import { findContractForDate, calculateCostForContract } from '../lib/pricing';
+import { useToast } from '../context/ToastContext';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -11,14 +12,22 @@ const fetchDashboardData = async () => {
 
 const Meters: Component = () => {
   const [data, { refetch }] = createResource(fetchDashboardData);
+  const toast = useToast();
 
   const handleDeleteMeter = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this meter? This will also remove all its readings and contracts.')) return;
+    const confirmed = await toast.confirm('Are you sure you want to delete this meter? This will also remove all its readings and contracts.');
+    if (!confirmed) return;
     try {
       const res = await fetch(`/api/meters/${id}`, { method: 'DELETE' });
-      if (res.ok) refetch();
+      if (res.ok) {
+        toast.showToast('Meter deleted successfully', 'success');
+        refetch();
+      } else {
+        toast.showToast('Failed to delete meter', 'error');
+      }
     } catch (err) {
       console.error(err);
+      toast.showToast('An error occurred while deleting the meter', 'error');
     }
   };
 
