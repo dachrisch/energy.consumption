@@ -6,7 +6,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## Active Tracks
 
-*(No active tracks)*
+- [x] **Track: Mobile-Responsive Bottom Navigation**
+*Link: [./tracks/mobile_navigation_20260125/](./tracks/mobile_navigation_20260125/)*
 
 ---
 
@@ -18,7 +19,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 - [x] **Track: Profile & Contract Management**
-*Link: [./archive/profile_contracts_20260124/](./profile_contracts_20260124/)*
+*Link: [./archive/profile_contracts_20260124/](./archive/profile_contracts_20260124/)*
 
 ---
 
@@ -47,4 +48,4 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 - [x] **Track: Unified Financial Dashboard & Quick Operations**
-*Link: [./tracks/financial_dash_quick_ops_20260125/](./financial_dash_quick_ops_20260125/)*
+*Link: [./archive/financial_dash_quick_ops_20260125/](./archive/financial_dash_quick_ops_20260125/)*
