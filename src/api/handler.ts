@@ -3,6 +3,7 @@ import User from '../models/User';
 import Meter from '../models/Meter';
 import Reading from '../models/Reading';
 import Contract from '../models/Contract';
+import { calculateAggregates } from '../lib/aggregates';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -114,6 +115,17 @@ export async function apiHandler(req: any, res: any) {
         Reading.find({}).setOptions({ userId }).sort({ date: -1 })
       ]);
       res.end(JSON.stringify({ meters, contracts, readings }));
+      return;
+    }
+
+    if (path === '/api/aggregates' && req.method === 'GET') {
+      const [meters, contracts, readings] = await Promise.all([
+        Meter.find({}).setOptions({ userId }),
+        Contract.find({}).setOptions({ userId }),
+        Reading.find({}).setOptions({ userId }).sort({ date: -1 })
+      ]);
+      const aggregates = calculateAggregates(meters, readings, contracts);
+      res.end(JSON.stringify(aggregates));
       return;
     }
 
