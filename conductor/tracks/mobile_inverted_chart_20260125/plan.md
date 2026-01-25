@@ -20,12 +20,12 @@
     - [x] Style the inverted chart to ensure it utilizes vertical space effectively within the Global Card.
 
 ## Phase 4: Layout & UI Integration
-- [ ] Task: Audit Dashboard and Meter Detail layouts.
-    - [ ] Ensure the container height is flexible on mobile to accommodate the vertically growing inverted chart.
-    - [ ] Verify the "Total Consumption" summary label visibility above the chart area.
-- [ ] Task: Visual verification via Chrome MCP.
-    - [ ] Test on various mobile device presets (iPhone, Pixel).
-    - [ ] Verify smooth transition when resizing from desktop to mobile.
+- [x] Task: Audit Dashboard and Meter Detail layouts.
+    - [x] Ensure the container height is flexible on mobile to accommodate the vertically growing inverted chart.
+    - [x] Verify the "Total Consumption" summary label visibility above the chart area.
+- [x] Task: Visual verification via Chrome MCP.
+    - [x] Test on various mobile device presets (iPhone, Pixel).
+    - [x] Verify smooth transition when resizing from desktop to mobile.
 
 ## Phase 5: Final Quality Audit
 - [ ] Task: Execute full unit and integration test suite.
