@@ -54,7 +54,7 @@ const Meters: Component = () => {
                 </div>
                 <h3 class="text-xl font-black opacity-40 uppercase tracking-widest">No meters found</h3>
                 <p class="text-base-content/40 font-bold mb-6">Start by adding your first utility meter before logging readings.</p>
-                <A href="/meters/add" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20">Add First Meter</A>
+                <A href="/meters/add" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20">Add Meter</A>
               </div>
             </div>
           }>

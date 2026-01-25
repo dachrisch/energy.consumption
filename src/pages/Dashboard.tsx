@@ -4,7 +4,12 @@ import { A } from '@solidjs/router';
 const fetchAggregates = async () => {
   const res = await fetch('/api/aggregates');
   if (!res.ok) throw new Error('Failed to fetch aggregates');
-  return res.json();
+  const aggregates = await res.json();
+  
+  const meterRes = await fetch('/api/meters');
+  const meters = await meterRes.json();
+  
+  return { ...aggregates, hasMeters: meters.length > 0 };
 };
 
 const Dashboard: Component = () => {
@@ -49,11 +54,19 @@ const Dashboard: Component = () => {
              <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
              </div>
-             <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Meter Management</h3>
+             <h3 class="text-lg font-black tracking-tight uppercase opacity-40">
+               {data()?.hasMeters ? 'Meter Management' : 'Getting Started'}
+             </h3>
              <p class="text-sm font-bold text-base-content/60 max-w-xs">
-               Manage your individual meters, history and contracts in the new section.
+               {data()?.hasMeters 
+                 ? 'Manage your individual meters, history and contracts in the new section.' 
+                 : 'To begin tracking your energy costs, you first need to register a utility meter.'}
              </p>
-             <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2">Go to Meters</A>
+             <Show when={data()?.hasMeters} fallback={
+               <A href="/meters/add" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20">Add Meter</A>
+             }>
+               <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2">Go to Meters</A>
+             </Show>
           </div>
         </div>
       </Show>
