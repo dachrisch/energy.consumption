@@ -1,0 +1,8 @@
+{
+  "track_id": "chart_width_constraint_20260125",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-01-25T23:46:00Z",
+  "updated_at": "2026-01-25T23:46:00Z",
+  "description": "Constrain Chart to Viewport Width"
+}

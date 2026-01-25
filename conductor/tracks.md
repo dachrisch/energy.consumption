@@ -54,3 +54,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [x] **Track: Mobile-Responsive Inverted Chart View**
 *Link: [./tracks/mobile_inverted_chart_20260125/](./tracks/mobile_inverted_chart_20260125/)*
+
+---
+
+- [x] **Track: Constrain Chart to Viewport Width**
+*Link: [./tracks/chart_width_constraint_20260125/](./tracks/chart_width_constraint_20260125/)*

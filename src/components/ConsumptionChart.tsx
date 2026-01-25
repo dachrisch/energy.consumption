@@ -43,13 +43,15 @@ const ConsumptionChart: Component<{ readings: any[], unit: string }> = (props) =
   const chartOptions = createMemo(() => getChartOptions(isMobile()));
 
   return (
-    <div class="h-64 w-full transition-all duration-300">
+    <div class="h-64 w-full min-w-0 max-w-full overflow-hidden transition-all duration-300 relative">
        {/* Re-render chart when mode changes to ensure full option re-application */}
-       {isMobile() ? (
-         <Line data={chartData()} options={chartOptions()} width={500} height={400} />
-       ) : (
-         <Line data={chartData()} options={chartOptions()} />
-       )}
+       <div class="absolute inset-0">
+         {isMobile() ? (
+           <Line data={chartData()} options={chartOptions()} />
+         ) : (
+           <Line data={chartData()} options={chartOptions()} />
+         )}
+       </div>
     </div>
   );
 };

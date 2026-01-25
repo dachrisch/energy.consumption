@@ -16,7 +16,7 @@ const Dashboard: Component = () => {
   const [data] = createResource(fetchAggregates);
 
   return (
-    <div class="p-6 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-10 flex-1">
+    <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 class="text-4xl font-black tracking-tighter">Financial Cockpit</h1>

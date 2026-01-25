@@ -59,11 +59,11 @@ const MeterDetail: Component = () => {
   };
 
   return (
-    <div class="p-6 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-10 flex-1">
+    <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
       <ErrorBoundary fallback={(err) => <div class="alert alert-error font-bold">Something went wrong rendering meter details: {err.message}</div>}>
         <Show when={data()?.meter} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
+            <div class="min-w-0 w-full">
               <div class="flex items-center gap-3 mb-2">
                 <div class={`p-2 rounded-lg ${data()?.meter.type === 'power' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
                   {data()?.meter.type === 'power' ? (
@@ -78,7 +78,7 @@ const MeterDetail: Component = () => {
                 </div>
                 <span class="font-black text-xs uppercase tracking-[0.2em] opacity-40">{data()?.meter.meterNumber}</span>
               </div>
-              <h1 class="text-5xl font-black tracking-tighter">{data()?.meter.name}</h1>
+              <h1 class="text-3xl md:text-5xl font-black tracking-tighter break-words">{data()?.meter.name}</h1>
             </div>
             
             <div class="flex gap-3">
