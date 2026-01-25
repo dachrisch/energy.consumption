@@ -41,6 +41,9 @@ const Landing = () => (
   </div>
 );
 
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -60,16 +63,17 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 render(() => (
-  <Router root={App}>
+  <Router root={(props) => <AuthProvider><App {...props} /></AuthProvider>}>
     <Route path="/" component={Landing} />
     <Route path="/login" component={Login} />
     <Route path="/register" component={Register} />
-    <Route path="/dashboard" component={Dashboard} />
-    <Route path="/meters/add" component={AddMeter} />
-    <Route path="/meters/:id" component={MeterDetail} />
-    <Route path="/meters/:id/add-reading" component={AddReading} />
-    <Route path="/contracts" component={Contracts} />
-    <Route path="/contracts/add" component={AddContract} />
-    <Route path="/profile" component={Profile} />
+    
+    <Route path="/dashboard" component={() => <ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/meters/add" component={() => <ProtectedRoute><AddMeter /></ProtectedRoute>} />
+    <Route path="/meters/:id" component={() => <ProtectedRoute><MeterDetail /></ProtectedRoute>} />
+    <Route path="/meters/:id/add-reading" component={() => <ProtectedRoute><AddReading /></ProtectedRoute>} />
+    <Route path="/contracts" component={() => <ProtectedRoute><Contracts /></ProtectedRoute>} />
+    <Route path="/contracts/add" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
+    <Route path="/profile" component={() => <ProtectedRoute><Profile /></ProtectedRoute>} />
   </Router>
 ), root!);

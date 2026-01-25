@@ -1,7 +1,9 @@
 import { Component, createSignal } from 'solid-js';
 import { useNavigate, A } from '@solidjs/router';
+import { useAuth } from '../context/AuthContext';
 
 const Login: Component = () => {
+  const auth = useAuth();
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Login: Component = () => {
       });
       const data = await res.json();
       if (res.ok) {
+        auth.revalidate();
         navigate('/dashboard');
       } else {
         alert(data.error || 'Login failed');
