@@ -58,6 +58,13 @@ jobs:
                 break
               fi
             fi
+
+            if [ "$status" = "unhealthy" ]; then
+              echo "Container became unhealthy."
+              docker logs test_container
+              docker inspect test_container
+              exit 1
+            fi
             
             echo "Waiting for container to be ready... (attempt $i)"
             sleep 6
@@ -67,6 +74,9 @@ jobs:
           final_status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' test_container)
           if [ "$final_status" != "healthy" ] && [ "$final_status" != "running" ]; then
             echo "Container failed to start or become healthy. Status: $final_status"
+            echo "Full inspect output:"
+            docker inspect test_container
+            echo "Container logs:"
             docker logs test_container
             exit 1
           fi
