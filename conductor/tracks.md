@@ -7,7 +7,7 @@ This file tracks all major tracks for the project. Each track has its own detail
 ## Active Tracks
 
 - [x] **Track: Mobile-Responsive Bottom Navigation**
-*Link: [./tracks/mobile_navigation_20260125/](./tracks/mobile_navigation_20260125/)*
+*Link: [./archive/mobile_navigation_20260125/](./archive/mobile_navigation_20260125/)*
 
 ---
 
