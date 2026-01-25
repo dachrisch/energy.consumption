@@ -2,9 +2,8 @@ import { Component, createResource, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 
 const fetchAggregates = async () => {
-  // Placeholder for upcoming aggregation API
-  const res = await fetch('/api/dashboard');
-  if (!res.ok) throw new Error('Failed to fetch dashboard data');
+  const res = await fetch('/api/aggregates');
+  if (!res.ok) throw new Error('Failed to fetch aggregates');
   return res.json();
 };
 
@@ -28,20 +27,19 @@ const Dashboard: Component = () => {
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Total Energy Cost Card (Coming in Phase 3) */}
           <div class="card bg-primary text-primary-content shadow-2xl p-8 rounded-3xl relative overflow-hidden group">
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
             <div class="relative z-10">
               <p class="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-2">Total Projected Yearly Cost</p>
-              <h2 class="text-6xl font-black tracking-tighter mb-6">€---</h2>
+              <h2 class="text-6xl font-black tracking-tighter mb-6">€{Math.round(data()?.totalYearlyCost || 0)}</h2>
               <div class="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
                 <div>
                   <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p>
-                  <p class="text-xl font-black">€--</p>
+                  <p class="text-xl font-black">€{Math.round(data()?.powerYearlyCost || 0)}</p>
                 </div>
                 <div>
                   <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p>
-                  <p class="text-xl font-black">€--</p>
+                  <p class="text-xl font-black">€{Math.round(data()?.gasYearlyCost || 0)}</p>
                 </div>
               </div>
             </div>
@@ -51,11 +49,11 @@ const Dashboard: Component = () => {
              <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
              </div>
-             <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Dashboard Evolution</h3>
+             <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Meter Management</h3>
              <p class="text-sm font-bold text-base-content/60 max-w-xs">
-               The meter grid has moved to the new <A href="/meters" class="text-primary hover:underline">Meters</A> section. 
-               This space is becoming your unified financial overview.
+               Manage your individual meters, history and contracts in the new section.
              </p>
+             <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2">Go to Meters</A>
           </div>
         </div>
       </Show>
