@@ -1,5 +1,4 @@
 import { Component, createSignal, Show, onMount } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -8,7 +7,6 @@ const Profile: Component = () => {
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
-  const navigate = useNavigate();
   const toast = useToast();
 
   onMount(() => {

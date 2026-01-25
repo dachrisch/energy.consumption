@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Schema, Query, Aggregate } from "mongoose";
 
 /**
  * Applies a pre-filter to all query and update operations to ensure
@@ -9,7 +9,7 @@ export function applyPreFilter(schema: Schema) {
   // Queries
   const queryMethods = ['find', 'findOne', 'countDocuments'] as const;
   queryMethods.forEach(method => {
-    schema.pre(method, function (this: any) {
+    schema.pre(method, function (this: Query<unknown, unknown>) {
       const userId = this.getOptions().userId;
       if (userId) {
         this.where({ userId });
@@ -18,8 +18,8 @@ export function applyPreFilter(schema: Schema) {
   });
 
   // Aggregate
-  schema.pre('aggregate', function (this: any) {
-    const userId = this.options?.userId;
+  schema.pre('aggregate', function (this: Aggregate<unknown>) {
+    const userId = (this as any).options?.userId;
     if (userId) {
       this.pipeline().unshift({ $match: { userId } });
     }
@@ -28,7 +28,7 @@ export function applyPreFilter(schema: Schema) {
   // Updates and Deletes
   const updateMethods = ['updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'findOneAndUpdate', 'findOneAndDelete'] as const;
   updateMethods.forEach(method => {
-    schema.pre(method, function (this: any) {
+    schema.pre(method, function (this: Query<unknown, unknown>) {
       const userId = this.getOptions().userId;
       if (userId) {
         this.where({ userId });

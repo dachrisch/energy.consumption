@@ -1,4 +1,4 @@
-import { Component, createSignal, createResource, For, Show, onMount } from 'solid-js';
+import { Component, createSignal, createResource, For, Show } from 'solid-js';
 import { useNavigate, useParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 
@@ -31,7 +31,7 @@ const AddContract: Component = () => {
   
   const navigate = useNavigate();
 
-  const syncData = (data: any) => {
+  const _syncData = (data: any) => {
     if (data) {
       setProviderName(data.providerName);
       setType(data.type);

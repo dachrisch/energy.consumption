@@ -4,7 +4,6 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import Contract from '../../models/Contract';
 import Meter from '../../models/Meter';
 import User from '../../models/User';
-import { apiHandler } from '../handler';
 
 describe('Contract API & Validation', () => {
   let mongoServer: MongoMemoryServer;
@@ -45,7 +44,7 @@ describe('Contract API & Validation', () => {
     });
 
     // Try to create overlapping contract: March to Dec
-    const req = {
+    const _req = {
       url: '/api/contracts',
       method: 'POST',
       headers: { host: 'localhost', cookie: 'token=dummy' },

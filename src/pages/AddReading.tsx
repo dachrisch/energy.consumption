@@ -28,19 +28,21 @@ const AddReading: Component = () => {
   // Auto-select if only one meter exists or if lastMeterId is valid
   createEffect(() => {
     const list = meters();
-    if (list && list.length > 0) {
-      const current = selectedMeterId();
-      // If no valid selection yet, try to find a default
-      if (!current || !list.find((m: any) => m._id === current)) {
-        if (list.length === 1) {
-          setSelectedMeterId(list[0]._id);
-        } else {
-          const lastId = localStorage.getItem('lastMeterId');
-          if (lastId && list.find((m: any) => m._id === lastId)) {
-            setSelectedMeterId(lastId);
-          }
-        }
-      }
+    if (!list || list.length === 0) {return;}
+    
+    const current = selectedMeterId();
+    // If we already have a valid selection, do nothing
+    if (current && list.find((m: any) => m._id === current)) {return;}
+
+    // Try to find a default
+    if (list.length === 1) {
+      setSelectedMeterId(list[0]._id);
+      return;
+    }
+
+    const lastId = localStorage.getItem('lastMeterId');
+    if (lastId && list.find((m: any) => m._id === lastId)) {
+      setSelectedMeterId(lastId);
     }
   });
 

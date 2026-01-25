@@ -1,4 +1,4 @@
-import { JSX, Show, onMount, createEffect } from 'solid-js';
+import { JSX, Show, createEffect } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 

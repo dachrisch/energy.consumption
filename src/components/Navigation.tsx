@@ -1,9 +1,8 @@
 import { Component, For, Show } from 'solid-js';
-import { A, useLocation } from '@solidjs/router';
+import { A } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 
 const Navigation: Component = () => {
-  const location = useLocation();
   const auth = useAuth();
 
   const navItems = [

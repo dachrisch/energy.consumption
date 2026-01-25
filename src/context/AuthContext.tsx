@@ -1,5 +1,5 @@
-import { createContext, useContext, createResource, JSX, createSignal, onMount } from 'solid-js';
-import { useNavigate, useLocation } from '@solidjs/router';
+import { createContext, useContext, createResource, JSX } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 
 interface User {
   _id: string;
@@ -18,7 +18,6 @@ const AuthContext = createContext<AuthContextType>();
 
 export function AuthProvider(props: { children: JSX.Element }) {
   const navigate = useNavigate();
-  const location = useLocation();
   
   const [user, { mutate, refetch }] = createResource(async () => {
     const res = await fetch('/api/session');

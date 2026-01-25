@@ -28,7 +28,7 @@ const AddMeter: Component = () => {
   });
 
   // Sync resource data to signals
-  const syncData = (data: any) => {
+  const _syncData = (data: any) => {
     if (data) {
       setName(data.name);
       setMeterNumber(data.meterNumber);
