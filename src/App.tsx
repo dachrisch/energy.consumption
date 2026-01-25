@@ -1,10 +1,10 @@
-import type { Component } from 'solid-js';
+import { ParentComponent } from 'solid-js';
 import { Show } from 'solid-js';
 import Navigation from './components/Navigation';
 import BottomNav from './components/BottomNav';
 import { useAuth } from './context/AuthContext';
 
-const App: Component = (props: any) => {
+const App: ParentComponent = (props) => {
   const auth = useAuth();
 
   return (

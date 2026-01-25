@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@solidjs/testing-library';
-import ConsumptionChart from '../components/ConsumptionChart';
+import ConsumptionChart from '../ConsumptionChart';
 import { getChartOptions } from '../../lib/chartConfig';
 
 // Mock chart.js to avoid canvas errors in JSDOM

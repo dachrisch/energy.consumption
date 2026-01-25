@@ -7,18 +7,32 @@ import { Schema } from "mongoose";
  */
 export function applyPreFilter(schema: Schema) {
   // Queries
-  schema.pre(['find', 'findOne', 'countDocuments', 'aggregate'], function () {
-    const userId = this.getOptions().userId;
+  const queryMethods = ['find', 'findOne', 'countDocuments'] as const;
+  queryMethods.forEach(method => {
+    schema.pre(method, function (this: any) {
+      const userId = this.getOptions().userId;
+      if (userId) {
+        this.where({ userId });
+      }
+    });
+  });
+
+  // Aggregate
+  schema.pre('aggregate', function (this: any) {
+    const userId = this.options?.userId;
     if (userId) {
-      this.where({ userId });
+      this.pipeline().unshift({ $match: { userId } });
     }
   });
 
   // Updates and Deletes
-  schema.pre(['updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'findOneAndUpdate', 'findOneAndDelete'], function () {
-    const userId = this.getOptions().userId;
-    if (userId) {
-      this.where({ userId });
-    }
+  const updateMethods = ['updateOne', 'updateMany', 'deleteOne', 'deleteMany', 'findOneAndUpdate', 'findOneAndDelete'] as const;
+  updateMethods.forEach(method => {
+    schema.pre(method, function (this: any) {
+      const userId = this.getOptions().userId;
+      if (userId) {
+        this.where({ userId });
+      }
+    });
   });
 }
