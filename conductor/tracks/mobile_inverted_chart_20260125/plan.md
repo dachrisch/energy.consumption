@@ -8,10 +8,10 @@
     - [x] Ensure it correctly identifies the required chart configuration (standard vs. inverted).
 
 ## Phase 2: Core Logic - Inverted Configuration
-- [ ] Task: TDD - Implement Inverted Chart Configuration logic.
-    - [ ] Create a utility function to generate Chart.js options for an inverted Y-axis (Time) and X-axis (Amount).
-    - [ ] Implement the "Oldest at Top" sorting logic for the Y-axis.
-    - [ ] Verify via unit tests that the axes are correctly swapped in the config object.
+- [x] Task: TDD - Implement Inverted Chart Configuration logic.
+    - [x] Create a utility function to generate Chart.js options for an inverted Y-axis (Time) and X-axis (Amount).
+    - [x] Implement the "Oldest at Top" sorting logic for the Y-axis.
+    - [x] Verify via unit tests that the axes are correctly swapped in the config object.
 
 ## Phase 3: Component Refactoring
 - [ ] Task: Update `ConsumptionChart.tsx` for responsive rendering.
