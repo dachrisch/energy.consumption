@@ -59,3 +59,8 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [x] **Track: Constrain Chart to Viewport Width**
 *Link: [./tracks/chart_width_constraint_20260125/](./tracks/chart_width_constraint_20260125/)*
+
+---
+
+- [ ] **Track: CSV and Photo Reading Import with AI OCR**
+*Link: [./tracks/csv_photo_import_20260126/](./tracks/csv_photo_import_20260126/)*
