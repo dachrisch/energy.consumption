@@ -93,7 +93,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
   const parseDate = (dateStr: string) => {
     if (!dateStr) {return null;}
     // Try ISO
-    let date = new Date(dateStr);
+    const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {return date;}
 
     // Try dd.mm.yyyy (European)

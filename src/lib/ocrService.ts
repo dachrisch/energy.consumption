@@ -3,7 +3,7 @@ export async function performOcr(file: File): Promise<string> {
   const reader = new FileReader();
   const base64 = await new Promise<string>((resolve, reject) => {
       reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = (e) => reject(new Error('Failed to read file'));
+      reader.onerror = (_e) => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
   });
 

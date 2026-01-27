@@ -30,7 +30,7 @@ const MeterReadings: Component = () => {
 
   const filteredReadings = () => {
     const d = data();
-    if (!d) return [];
+    if (!d) {return [];}
     // Filter out pending deletions and re-calculate deltas to fill gaps
     const filtered = d.readings.filter((r: any) => !pendingDeletions().has(r._id));
     return calculateDeltas(filtered);
@@ -55,7 +55,7 @@ const MeterReadings: Component = () => {
     });
 
     setTimeout(async () => {
-      if (undoClicked) return;
+      if (undoClicked) {return;}
       
       setDeleting(id);
       try {

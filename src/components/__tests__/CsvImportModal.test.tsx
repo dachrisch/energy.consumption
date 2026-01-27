@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent, screen, waitFor } from '@solidjs/testing-library';
+import { render, screen } from '@solidjs/testing-library';
 import CsvImportModal from '../CsvImportModal';
-import { createSignal } from 'solid-js';
 
 // Mock the CSV parser since we tested it separately
 vi.mock('../../lib/csvParser', () => ({

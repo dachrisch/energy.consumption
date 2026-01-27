@@ -31,9 +31,6 @@ const ConsumptionChart: Component<{ readings: any[], projection?: any[], unit: s
     ];
 
     if (props.projection && props.projection.length > 0) {
-      // Find where projection starts
-      const lastActualDate = sorted[sorted.length - 1]?.date;
-      
       // We need to merge labels if projection extends beyond
       const projLabels = props.projection.map(p => new Date(p.date).toLocaleDateString());
       

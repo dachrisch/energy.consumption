@@ -19,9 +19,6 @@ export function parseCsv(content: string, options: { delimiter?: string } = {}):
   }
 
   const splitLine = (line: string, delim: string): string[] => {
-    // Escape delimiter for regex
-    const escapedDelim = delim.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
     // Regex explanation:
     // Match one of:
     // 1. A quoted string: "..." (capturing group 1)

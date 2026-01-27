@@ -39,32 +39,32 @@ const AddContract: Component = () => {
     }
   });
 
-  // Smart default for startDate based on last contract OR URL params
-  createEffect(async () => {
+  // Handle pre-fill from search params
+  createEffect(() => {
     if (isEdit()) { return; }
-
     if (typeof searchParams.meterId === 'string') { setMeterId(searchParams.meterId); }
     if (typeof searchParams.startDate === 'string') { setStartDate(searchParams.startDate); }
     if (typeof searchParams.endDate === 'string') { setEndDate(searchParams.endDate); }
+  });
 
+  // Smart default for startDate based on last contract
+  createEffect(async () => {
     const mId = meterId();
-    // Only pre-fill if it's a new contract AND no specific startDate was provided in URL
-    if (mId && !searchParams.startDate) {
-      try {
-        const res = await fetch(`/api/contracts?meterId=${mId}`);
-        const list = await res.json();
-        if (list && list.length > 0) {
-          // API returns contracts sorted by startDate DESC
-          const last = list[0];
-          if (last.endDate) {
-            const nextDay = new Date(last.endDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-            setStartDate(nextDay.toISOString().split('T')[0]);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to fetch previous contracts for pre-fill', e);
+    if (isEdit() || !mId || searchParams.startDate) { return; }
+
+    try {
+      const res = await fetch(`/api/contracts?meterId=${mId}`);
+      const list = await res.json();
+      if (!list?.length) { return; }
+
+      const last = list[0];
+      if (last.endDate) {
+        const nextDay = new Date(last.endDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        setStartDate(nextDay.toISOString().split('T')[0]);
       }
+    } catch (e) {
+      console.error('Failed to fetch previous contracts for pre-fill', e);
     }
   });
 

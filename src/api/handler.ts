@@ -278,17 +278,22 @@ async function handleAggregatedRoutes({ res, userId, path }: RouteParams) {
 
 async function handleAuthenticatedRoute(params: RouteParams) {
   const { req, res, userId, path } = params;
-  if (path === '/api/session' && req.method === 'GET') {return handleSession(res, userId);}
-  if (path === '/api/profile' && req.method === 'POST') {return handleProfileUpdate(req, res, userId);}
-  if (path === '/api/ocr/scan' && req.method === 'POST') {return handleOcrScan(params);}
   
-  if (path === '/api/dashboard' || path === '/api/aggregates') {
-    return handleAggregatedRoutes(params);
+  const routes: Record<string, () => Promise<void>> = {
+    '/api/session': async () => { if (req.method === 'GET') { await handleSession(res, userId); } },
+    '/api/profile': async () => { if (req.method === 'POST') { await handleProfileUpdate(req, res, userId); } },
+    '/api/ocr/scan': async () => { if (req.method === 'POST') { await handleOcrScan(params); } },
+    '/api/dashboard': async () => handleAggregatedRoutes(params),
+    '/api/aggregates': async () => handleAggregatedRoutes(params)
+  };
+
+  if (routes[path]) {
+    return routes[path]();
   }
 
-  if (path.includes('/api/meters')) {return handleMetersRoutes(params);}
-  if (path.includes('/api/readings')) {return handleReadingsRoutes(params);}
-  if (path.includes('/api/contracts')) {return handleContractsRoutes(params);}
+  if (path.includes('/api/meters')) { return handleMetersRoutes(params); }
+  if (path.includes('/api/readings')) { return handleReadingsRoutes(params); }
+  if (path.includes('/api/contracts')) { return handleContractsRoutes(params); }
 
   res.statusCode = 404;
   res.end(JSON.stringify({ error: 'Not Found' }));

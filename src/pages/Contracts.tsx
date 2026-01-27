@@ -27,7 +27,7 @@ const Contracts: Component = () => {
 
   const sortedItems = () => {
     const d = data();
-    if (!d) return [];
+    if (!d) {return [];}
 
     const contractItems = (d.contracts || []).map((c: any) => ({
       type: 'contract',
