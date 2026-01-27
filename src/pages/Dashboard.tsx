@@ -20,12 +20,18 @@ interface Contract {
   meterId: string | { _id: string };
 }
 
+interface Aggregates {
+  totalYearlyCost: number;
+  powerYearlyCost: number;
+  gasYearlyCost: number;
+}
+
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
   if (!res.ok) {throw new Error('Failed to fetch dashboard data');}
   const data = await res.json();
   
-  const aggregates = calculateAggregates(data.meters, data.readings, data.contracts);
+  const aggregates = calculateAggregates(data.meters, data.readings, data.contracts) as Aggregates;
   
   const hasPower = data.meters.some((m: Meter) => m.type === 'power');
   const hasGas = data.meters.some((m: Meter) => m.type === 'gas');
@@ -39,7 +45,7 @@ const fetchDashboardData = async () => {
 
   const metersWithPartialGaps = data.meters.map((m: Meter) => {
     // Only check for gaps if they HAVE at least one contract (otherwise they are in the 'no contracts' list)
-    if (metersWithNoContracts.some((nm: Meter) => nm._id === m._id)) {return { ...m, gaps: [] };}
+    if (metersWithNoContracts.some((nm: Meter) => nm._id === m._id)) {return { ...m, gaps: [] as Gap[] };}
     
     const meterReadings = data.readings.filter((r: Reading) => r.meterId === m._id);
     const meterContracts = data.contracts.filter((c: Contract) => {

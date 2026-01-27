@@ -3,6 +3,13 @@ import { useNavigate, useParams, A } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 import { performOcr } from '../lib/ocrService';
 
+interface Meter {
+  _id: string;
+  name: string;
+  meterNumber: string;
+  unit: string;
+}
+
 const fetchMeters = async () => {
   const res = await fetch('/api/meters');
   return res.json();
@@ -19,7 +26,7 @@ const AddReading: Component = () => {
   const [isScanning, setIsScanning] = createSignal(false);
   const [scanPreview, setScanPreview] = createSignal<string | null>(null);
   
-  const [meters] = createResource(fetchMeters);
+  const [meters] = createResource<Meter[]>(fetchMeters);
 
   // Sync selectedMeterId if params.id changes (e.g. navigating from a specific meter)
   createEffect(() => {
@@ -35,7 +42,7 @@ const AddReading: Component = () => {
     
     const current = selectedMeterId();
     // If we already have a valid selection, do nothing
-    if (current && list.find((m: any) => m._id === current)) {return;}
+    if (current && list.find((m: Meter) => m._id === current)) {return;}
 
     // Try to find a default
     if (list.length === 1) {
@@ -44,7 +51,7 @@ const AddReading: Component = () => {
     }
 
     const lastId = localStorage.getItem('lastMeterId');
-    if (lastId && list.find((m: any) => m._id === lastId)) {
+    if (lastId && list.find((m: Meter) => m._id === lastId)) {
       setSelectedMeterId(lastId);
     }
   });
@@ -78,7 +85,7 @@ const AddReading: Component = () => {
     }
   };
 
-  const selectedMeter = () => meters()?.find((m: any) => m._id === selectedMeterId());
+  const selectedMeter = () => meters()?.find((m: Meter) => m._id === selectedMeterId());
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();

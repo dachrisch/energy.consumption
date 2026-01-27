@@ -2,10 +2,28 @@ import { Component, createSignal, createResource, For, Show, createEffect } from
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 
+interface Meter {
+  _id: string;
+  name: string;
+  meterNumber: string;
+  type: string;
+}
+
+interface Contract {
+  _id: string;
+  providerName: string;
+  type: string;
+  startDate: string;
+  endDate?: string;
+  basePrice: number;
+  workingPrice: number;
+  meterId: string | { _id: string };
+}
+
 const fetchContract = async (id: string) => {
   const res = await fetch(`/api/contracts?id=${id}`);
   const data = await res.json();
-  return Array.isArray(data) ? data.find((c: any) => c._id === id) : data;
+  return Array.isArray(data) ? data.find((c: Contract) => c._id === id) : data;
 };
 
 const fetchMeters = async () => {
@@ -27,15 +45,16 @@ const AddContract: Component = () => {
   const [workingPrice, setWorkingPrice] = createSignal('');
   const [meterId, setMeterId] = createSignal('');
   
-  const [meters] = createResource(fetchMeters);
-  const [contract] = createResource(() => params.id, fetchContract);
+  const [meters] = createResource<Meter[]>(fetchMeters);
+  const [contract] = createResource<Contract, string>(() => params.id, fetchContract);
   
   const navigate = useNavigate();
 
   // Sync data when editing
   createEffect(() => {
-    if (isEdit() && contract()) {
-      _syncData(contract());
+    const c = contract();
+    if (isEdit() && c) {
+      _syncData(c);
     }
   });
 
@@ -73,14 +92,14 @@ const AddContract: Component = () => {
     const mId = meterId();
     const list = meters();
     if (mId && list) {
-      const meter = list.find((m: any) => m._id === mId);
+      const meter = list.find((m: Meter) => m._id === mId);
       if (meter) {
         setType(meter.type);
       }
     }
   });
 
-  const _syncData = (data: any) => {
+  const _syncData = (data: Contract) => {
     if (data) {
       setProviderName(data.providerName);
       setType(data.type);
@@ -88,7 +107,8 @@ const AddContract: Component = () => {
       if (data.endDate) {setEndDate(new Date(data.endDate).toISOString().split('T')[0]);}
       setBasePrice(data.basePrice.toString());
       setWorkingPrice(data.workingPrice.toString());
-      setMeterId(data.meterId?._id || data.meterId);
+      const mId = typeof data.meterId === 'string' ? data.meterId : data.meterId?._id;
+      if (mId) { setMeterId(mId); }
     }
   };
 
