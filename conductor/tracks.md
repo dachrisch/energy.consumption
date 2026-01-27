@@ -6,12 +6,16 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ## Active Tracks
 
-- [x] **Track: Mobile-Responsive Bottom Navigation**
-*Link: [./archive/mobile_navigation_20260125/](./archive/mobile_navigation_20260125/)*
+*(No active tracks)*
 
 ---
 
 ## Archived Tracks
+
+- [x] **Track: Mobile-Responsive Bottom Navigation**
+*Link: [./archive/mobile_navigation_20260125/](./archive/mobile_navigation_20260125/)*
+
+---
 
 - [x] **Track: Enhanced Dashboard & Reading Management**
 *Link: [./archive/enhanced_dash_readings_20260125/](./archive/enhanced_dash_readings_20260125/)*
@@ -53,17 +57,17 @@ This file tracks all major tracks for the project. Each track has its own detail
 ---
 
 - [x] **Track: Mobile-Responsive Inverted Chart View**
-*Link: [./tracks/mobile_inverted_chart_20260125/](./tracks/mobile_inverted_chart_20260125/)*
+*Link: [./archive/mobile_inverted_chart_20260125/](./archive/mobile_inverted_chart_20260125/)*
 
 ---
 
 - [x] **Track: Constrain Chart to Viewport Width**
-*Link: [./tracks/chart_width_constraint_20260125/](./tracks/chart_width_constraint_20260125/)*
+*Link: [./archive/chart_width_constraint_20260125/](./archive/chart_width_constraint_20260125/)*
 
 ---
 
 - [x] **Track: Meter Insights & Contract Validation (Daily cost, 2-col grid, gap detection, projection chart)**
-*Link: [./tracks/meter_insights_validation_20260127/](./tracks/meter_insights_validation_20260127/)*
+*Link: [./archive/meter_insights_validation_20260127/](./archive/meter_insights_validation_20260127/)*
 
 ---
 
