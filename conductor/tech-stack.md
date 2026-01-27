@@ -24,3 +24,4 @@
 - **Time Series Ops:** Pond.js
 - **CI/CD:** GitHub Actions
 - **Containerization:** Docker
+- **AI/ML Integration:** Hugging Face Inference API (OCR)

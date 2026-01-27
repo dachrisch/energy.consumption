@@ -18,7 +18,7 @@ The Energy Consumption Monitor aims to empower homeowners and shared-flat reside
 
 ## Key Features
 - **Financial Cockpit:** A unified dashboard providing an aggregated view of total projected energy costs, with clear breakdowns for different utility types (e.g., Power vs. Gas).
-- **Streamlined Entry & Quick Ops:** Highly optimized mobile-first interface with "Quick Add" operations for meter readings, reducing the time from app launch to data entry.
+- **Streamlined Entry & AI Assistance:** Highly optimized mobile-first interface with "Quick Add" operations, bulk CSV importing, and AI-assisted photo OCR for frictionless meter reading entry.
 - **Infrastructure Management:** Dedicated section for managing utility meters, history, and individual pricing contracts.
 - **Detailed History:** Comprehensive per-meter reading logs with automatic consumption delta tracking and CRUD operations.
 - **Professional Framing:** A persistent desktop AppBar and mobile Bottom Navigation bar that guides the user's focus and ensures an ergonomic experience across all devices.
