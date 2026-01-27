@@ -39,11 +39,17 @@ const AddContract: Component = () => {
     }
   });
 
-  // Smart default for startDate based on last contract
+  // Smart default for startDate based on last contract OR URL params
   createEffect(async () => {
+    if (isEdit()) { return; }
+
+    if (typeof searchParams.meterId === 'string') { setMeterId(searchParams.meterId); }
+    if (typeof searchParams.startDate === 'string') { setStartDate(searchParams.startDate); }
+    if (typeof searchParams.endDate === 'string') { setEndDate(searchParams.endDate); }
+
     const mId = meterId();
     // Only pre-fill if it's a new contract AND no specific startDate was provided in URL
-    if (mId && !isEdit() && !searchParams.startDate) {
+    if (mId && !searchParams.startDate) {
       try {
         const res = await fetch(`/api/contracts?meterId=${mId}`);
         const list = await res.json();

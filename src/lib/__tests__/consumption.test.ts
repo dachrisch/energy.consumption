@@ -22,4 +22,21 @@ describe('Consumption Logic', () => {
     expect(result[2].value).toBe(100);
     expect(result[2].delta).toBe(0);
   });
+
+  it('handles meter resets gracefully', () => {
+    const readings = [
+      { value: 6575, date: new Date('2025-07-03') },
+      { value: 0, date: new Date('2025-09-17') },
+      { value: 426, date: new Date('2026-01-20') }
+    ];
+    
+    const result = calculateDeltas(readings);
+    
+    // 2026-01-20
+    expect(result[0].delta).toBe(426);
+    // 2025-09-17 (Reset to 0)
+    expect(result[1].delta).toBe(0);
+    // 2025-07-03
+    expect(result[2].delta).toBe(0);
+  });
 });

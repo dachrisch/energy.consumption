@@ -25,27 +25,64 @@ const MeterReadings: Component = () => {
   const params = useParams();
   const [data, { refetch }] = createResource(() => params.id, fetchMeterReadings);
   const [deleting, setDeleting] = createSignal<string | null>(null);
+  const [pendingDeletions, setPendingDeletions] = createSignal<Set<string>>(new Set());
   const toast = useToast();
 
+  const filteredReadings = () => {
+    const d = data();
+    if (!d) return [];
+    // Filter out pending deletions and re-calculate deltas to fill gaps
+    const filtered = d.readings.filter((r: any) => !pendingDeletions().has(r._id));
+    return calculateDeltas(filtered);
+  };
+
   const handleDelete = async (id: string) => {
-    const confirmed = await toast.confirm('Are you sure you want to delete this reading?');
-    if (!confirmed) {return;}
+    // Add to pending set to hide from UI immediately
+    setPendingDeletions(prev => new Set(prev).add(id));
     
-    setDeleting(id);
-    try {
-      const res = await fetch(`/api/readings/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.showToast('Reading deleted successfully', 'success');
-        refetch();
-      } else {
-        toast.showToast('Failed to delete reading', 'error');
+    let undoClicked = false;
+    
+    toast.showToast('Reading deleted', 'info', {
+      label: 'Undo',
+      onClick: () => {
+        undoClicked = true;
+        setPendingDeletions(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       }
-    } catch (err) {
-      console.error(err);
-      toast.showToast('An error occurred while deleting', 'error');
-    } finally {
-      setDeleting(null);
-    }
+    });
+
+    setTimeout(async () => {
+      if (undoClicked) return;
+      
+      setDeleting(id);
+      try {
+        const res = await fetch(`/api/readings/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          refetch();
+        } else {
+          toast.showToast('Failed to delete reading', 'error');
+          // Restore if failed
+          setPendingDeletions(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        toast.showToast('An error occurred while deleting', 'error');
+      } finally {
+        setDeleting(null);
+        setPendingDeletions(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
+    }, 5000);
   };
 
   return (
@@ -78,7 +115,7 @@ const MeterReadings: Component = () => {
                 </tr>
               </thead>
               <tbody>
-                <For each={data()?.readings} fallback={
+                <For each={filteredReadings()} fallback={
                   <tr>
                     <td colspan="4" class="py-20 text-center font-bold opacity-40 text-lg">No readings recorded yet.</td>
                   </tr>

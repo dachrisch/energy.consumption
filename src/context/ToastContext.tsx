@@ -6,10 +6,14 @@ interface Toast {
   id: number;
   message: string;
   type: ToastType;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (message: string, type?: ToastType, action?: { label: string; onClick: () => void }) => void;
   confirm: (message: string) => Promise<boolean>;
 }
 
@@ -20,9 +24,9 @@ export const ToastProvider = (props: { children: JSX.Element }) => {
   const [confirmState, setConfirmState] = createSignal<{ message: string; resolve: (val: boolean) => void } | null>(null);
   let nextId = 0;
 
-  const showToast = (message: string, type: ToastType = 'info') => {
+  const showToast = (message: string, type: ToastType = 'info', action?: { label: string; onClick: () => void }) => {
     const id = nextId++;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type, action }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 5000);
@@ -50,7 +54,7 @@ export const ToastProvider = (props: { children: JSX.Element }) => {
       <div class="toast toast-end toast-bottom z-[1000] p-6">
         <For each={toasts()}>
           {(toast) => (
-            <div class={`alert alert-${toast.type} shadow-2xl rounded-2xl border-none font-black text-sm animate-in slide-in-from-right-10 duration-300`}>
+            <div class={`alert alert-${toast.type} shadow-2xl rounded-2xl border-none font-black text-sm animate-in slide-in-from-right-10 duration-300 flex justify-between gap-4`}>
               <div class="flex items-center gap-3">
                 <Show when={toast.type === 'success'}>
                   <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
@@ -60,6 +64,17 @@ export const ToastProvider = (props: { children: JSX.Element }) => {
                 </Show>
                 <span>{toast.message}</span>
               </div>
+              <Show when={toast.action}>
+                <button 
+                  class="btn btn-xs btn-ghost bg-white/20 hover:bg-white/30 text-current border-none rounded-lg px-3"
+                  onClick={() => {
+                    toast.action?.onClick();
+                    setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+                  }}
+                >
+                  {toast.action?.label}
+                </button>
+              </Show>
             </div>
           )}
         </For>
