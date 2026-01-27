@@ -1,15 +1,15 @@
 # Implementation Plan: CSV and Photo Reading Import
 
 ## Phase 1: Foundation & CSV Parsing Logic
-- [ ] Task: TDD - Create unit tests for CSV parsing utility.
-    - [ ] Handle various delimiters (comma, semicolon, space as seen in user example).
-    - [ ] Support European number formatting (e.g., `3877,3` with comma as decimal).
-    - [ ] Handle multiple date formats.
-- [ ] Task: Implement CSV parsing utility in `src/lib/csvParser.ts`.
-- [ ] Task: TDD - Create unit tests for Reading bulk insertion logic.
-    - [ ] Verify validation against existing Meters.
-    - [ ] Verify duplicate detection logic.
-- [ ] Task: Implement bulk insertion API handler or service logic.
+- [x] Task: TDD - Create unit tests for CSV parsing utility.
+    - [x] Handle various delimiters (comma, semicolon, space as seen in user example).
+    - [x] Support European number formatting (e.g., `3877,3` with comma as decimal).
+    - [x] Handle multiple date formats.
+- [x] Task: Implement CSV parsing utility in `src/lib/csvParser.ts`.
+- [x] Task: TDD - Create unit tests for Reading bulk insertion logic.
+    - [x] Verify validation against existing Meters.
+    - [x] Verify duplicate detection logic.
+- [x] Task: Implement bulk insertion API handler or service logic.
 
 ## Phase 2: CSV Import UI (Dashboard)
 - [ ] Task: TDD - Create component tests for `CsvImportModal`.

@@ -4,6 +4,7 @@ import Meter from '../models/Meter';
 import Reading from '../models/Reading';
 import Contract from '../models/Contract';
 import { calculateAggregates } from '../lib/aggregates';
+import { processBulkReadings } from '../lib/readingService';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -137,6 +138,24 @@ async function handleMeterItem({ req, res, userId, path }: RouteParams) {
   }
 }
 
+async function handleBulkReadings({ req, res, userId }: RouteParams) {
+  if (req.method === 'POST') {
+    const readings = req.body as any[];
+    if (!Array.isArray(readings)) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: 'Expected array of readings' }));
+      return;
+    }
+    
+    // Pass Mongoose models explicitly to service
+    const result = await processBulkReadings(readings, userId, Meter, Reading);
+    
+    res.statusCode = 200;
+    res.end(JSON.stringify(result));
+    return;
+  }
+}
+
 async function handleReadings({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
     const meterId = url.searchParams.get('meterId');
@@ -204,6 +223,7 @@ async function handleMetersRoutes(params: RouteParams) {
 }
 
 async function handleReadingsRoutes(params: RouteParams) {
+  if (params.path === '/api/readings/bulk') {return handleBulkReadings(params);}
   if (params.path === '/api/readings') {return handleReadings(params);}
   if (params.path.startsWith('/api/readings/')) {return handleReadingItem(params);}
 }
