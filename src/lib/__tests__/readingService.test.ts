@@ -24,6 +24,8 @@ describe('Reading Service - Bulk Import', () => {
     mockMeterModel = {
       findOne: vi.fn(),
       find: vi.fn(),
+      create: vi.fn(),
+      insertMany: vi.fn(),
     };
   });
 

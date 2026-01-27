@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
           server.middlewares.use(bodyParser.json());
           server.middlewares.use(async (req, res, next) => {
             if (req.url?.startsWith('/api')) {
-              await apiHandler(req, res);
+              await apiHandler(req as any, res as any);
               return;
             }
             next();
@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
           server.middlewares.use(bodyParser.json());
           server.middlewares.use(async (req, res, next) => {
             if (req.url?.startsWith('/api')) {
-              await apiHandler(req, res);
+              await apiHandler(req as any, res as any);
               return;
             }
             next();

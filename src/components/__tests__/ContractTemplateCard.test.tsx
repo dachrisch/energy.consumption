@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@solidjs/testing-library';
+import '@testing-library/jest-dom';
 import ContractTemplateCard from '../ContractTemplateCard';
 import { Router, Route } from '@solidjs/router';
 
