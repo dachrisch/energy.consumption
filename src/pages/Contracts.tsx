@@ -1,16 +1,29 @@
 import { Component, createResource, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
+import { findContractGaps } from '../lib/gapDetection';
+import ContractTemplateCard from '../components/ContractTemplateCard';
 
-const fetchContracts = async () => {
-  const res = await fetch('/api/contracts');
-  if (!res.ok) {throw new Error('Failed to fetch contracts');}
+const fetchDashboardData = async () => {
+  const res = await fetch('/api/dashboard');
+  if (!res.ok) {throw new Error('Failed to fetch dashboard data');}
   return res.json();
 };
 
 const Contracts: Component = () => {
-  const [contracts, { refetch }] = createResource(fetchContracts);
+  const [data, { refetch }] = createResource(fetchDashboardData);
   const toast = useToast();
+
+  const gaps = () => {
+    const d = data();
+    if (!d) {return [];}
+    
+    return d.meters.flatMap((meter: any) => {
+      const meterReadings = d.readings.filter((r: any) => r.meterId === meter._id);
+      const meterContracts = d.contracts.filter((c: any) => c.meterId === meter._id || c.meterId?._id === meter._id);
+      return findContractGaps(meterReadings, meterContracts).map(gap => ({ gap, meter }));
+    });
+  };
 
   const handleDeleteContract = async (id: string) => {
     const confirmed = await toast.confirm('Are you sure you want to delete this contract?');
@@ -42,19 +55,25 @@ const Contracts: Component = () => {
         </A>
       </div>
 
-      <Show when={!contracts.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
+      <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <For each={contracts()} fallback={
-            <div class="col-span-full card bg-base-100 border border-dashed border-base-content/20 py-20 text-center">
-              <div class="card-body items-center text-center">
-                <div class="bg-base-200 p-6 rounded-full mb-4 text-base-content/20">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          <For each={gaps()}>
+            {(item) => <ContractTemplateCard gap={item.gap} meter={item.meter} />}
+          </For>
+
+          <For each={data()?.contracts} fallback={
+            <Show when={gaps().length === 0}>
+              <div class="col-span-full card bg-base-100 border border-dashed border-base-content/20 py-20 text-center">
+                <div class="card-body items-center text-center">
+                  <div class="bg-base-200 p-6 rounded-full mb-4 text-base-content/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  </div>
+                  <h3 class="text-xl font-black opacity-40 uppercase tracking-widest">No contracts defined</h3>
+                  <p class="text-base-content/40 font-bold mb-6 max-w-sm">Enter your contract details to enable precise cost projections and historical analysis.</p>
+                  <A href="/contracts/add" class="btn btn-outline btn-wide rounded-2xl border-2">Register First Contract</A>
                 </div>
-                <h3 class="text-xl font-black opacity-40 uppercase tracking-widest">No contracts defined</h3>
-                <p class="text-base-content/40 font-bold mb-6 max-w-sm">Enter your contract details to enable precise cost projections and historical analysis.</p>
-                <A href="/contracts/add" class="btn btn-outline btn-wide rounded-2xl border-2">Register First Contract</A>
               </div>
-            </div>
+            </Show>
           }>
             {(contract) => (
               <div class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden">

@@ -19,11 +19,11 @@
 - [x] Task: Add warning indicators to the Meter cards when gaps are present.
 
 ## Phase 3: Contract Templates & UI Polish
-- [ ] Task: TDD - Create component tests for `ContractTemplateCard`.
-    - [ ] Verify it displays the correct missing date range.
-    - [ ] Verify the "Add" action pre-fills the creation form.
-- [ ] Task: Implement `ContractTemplateCard` and integrate it into the `Contracts.tsx` page.
-- [ ] Task: Visual Verification - Use Chrome DevTools to verify the 2-column grid and warning visibility.
+- [x] Task: TDD - Create component tests for `ContractTemplateCard`.
+    - [x] Verify it displays the correct missing date range.
+    - [x] Verify the "Add" action pre-fills the creation form.
+- [x] Task: Implement `ContractTemplateCard` and integrate it into the `Contracts.tsx` page.
+- [x] Task: Visual Verification - Use Chrome DevTools to verify the 2-column grid and warning visibility.
 
 ## Phase 4: Finalization & Quality Assurance
 - [ ] Task: Run full regression test suite (non-interactive mode).

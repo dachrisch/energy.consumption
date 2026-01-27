@@ -1,11 +1,11 @@
-import { Component, createSignal, createResource, For, Show } from 'solid-js';
-import { useNavigate, useParams } from '@solidjs/router';
+import { Component, createSignal, createResource, For, Show, createEffect } from 'solid-js';
+import { useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 
 const fetchContract = async (id: string) => {
   const res = await fetch(`/api/contracts?id=${id}`);
   const data = await res.json();
-  return Array.isArray(data) ? data.find(c => c._id === id) : data;
+  return Array.isArray(data) ? data.find((c: any) => c._id === id) : data;
 };
 
 const fetchMeters = async () => {
@@ -15,6 +15,7 @@ const fetchMeters = async () => {
 
 const AddContract: Component = () => {
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const isEdit = () => !!params.id;
   const toast = useToast();
 
@@ -30,6 +31,27 @@ const AddContract: Component = () => {
   const [contract] = createResource(() => params.id, fetchContract);
   
   const navigate = useNavigate();
+
+  // Handle pre-fill from search params
+  createEffect(() => {
+    if (!isEdit()) {
+      if (searchParams.meterId) {setMeterId(searchParams.meterId);}
+      if (searchParams.startDate) {setStartDate(searchParams.startDate);}
+      if (searchParams.endDate) {setEndDate(searchParams.endDate);}
+    }
+  });
+
+  // Sync type with selected meter
+  createEffect(() => {
+    const mId = meterId();
+    const list = meters();
+    if (mId && list) {
+      const meter = list.find((m: any) => m._id === mId);
+      if (meter) {
+        setType(meter.type);
+      }
+    }
+  });
 
   const _syncData = (data: any) => {
     if (data) {
