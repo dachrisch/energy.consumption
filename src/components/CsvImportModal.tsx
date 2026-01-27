@@ -1,6 +1,7 @@
 import { Component, Show, createSignal, For, createEffect } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { parseCsv } from '../lib/csvParser';
+import { parseLocaleNumber } from '../lib/numberUtils';
 
 interface Meter {
   _id: string;
@@ -20,14 +21,21 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
   const [step, setStep] = createSignal<Step>('upload');
   const [csvData, setCsvData] = createSignal<Record<string, string>[]>([]);
   const [headers, setHeaders] = createSignal<string[]>([]);
-  const [mapping, setMapping] = createSignal<Record<string, string>>({}); // Header -> MeterID
+  
+  // New Mapping State
+  const [targetMeterId, setTargetMeterId] = createSignal<string>('');
+  const [dateColumn, setDateColumn] = createSignal<string>('');
+  const [valueColumn, setValueColumn] = createSignal<string>('');
+  
   const [error, setError] = createSignal<string | null>(null);
 
   const reset = () => {
     setStep('upload');
     setCsvData([]);
     setHeaders([]);
-    setMapping({});
+    setTargetMeterId('');
+    setDateColumn('');
+    setValueColumn('');
     setError(null);
   };
 
@@ -44,9 +52,17 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
         setError('No data found in pasted content');
         return;
       }
-      const headers = Object.keys(parsed[0]);
+      const cols = Object.keys(parsed[0]);
       setCsvData(parsed);
-      setHeaders(headers);
+      setHeaders(cols);
+      
+      // Heuristic for auto-selection
+      const dateCol = cols.find(h => /date|datum/i.test(h)) || cols[0];
+      const valCol = cols.find(h => /value|wert|strom|gas|wasser/i.test(h)) || (cols.length > 1 ? cols[1] : '');
+      
+      setDateColumn(dateCol);
+      setValueColumn(valCol);
+      
       setStep('mapping');
       setError(null);
     } catch (err) {
@@ -74,83 +90,34 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     }
   };
 
-  const handleMappingChange = (header: string, meterId: string) => {
-    setMapping(prev => ({ ...prev, [header]: meterId }));
-  };
-
-  const parseValue = (val: string) => {
-    // Handle "3877,3" -> 3877.3
-    return parseFloat(val.replace(',', '.').replace(/\s/g, ''));
-  };
-
-  const parseDate = (dateStr: string) => {
-    // Try ISO
-    let date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {return date;}
-
-    // Try dd.mm.yyyy (European)
-    const euMatch = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
-    if (euMatch) {
-      return new Date(`${euMatch[3]}-${euMatch[2]}-${euMatch[1]}`);
-    }
-    
-    return null;
-  };
-
   const getPreviewData = () => {
     const data = csvData();
-    const map = mapping();
+    const meterId = targetMeterId();
+    const dateCol = dateColumn();
+    const valCol = valueColumn();
+    
+    if (!meterId || !dateCol || !valCol) {return [];}
+
     const result: any[] = [];
     
-    // Find Date header (heuristic: contains 'date' or 'datum' or check values?)
-    // For now, let user map "Date" column to a special key or auto-detect?
-    // Let's assume user maps a header to "Date" (special) or we detect "Date"
-    // Actually, in the spec: "User maps each header to a specific existing Meter...".
-    // Where is the date?
-    // The example: "Date Strom ..."
-    // So there is a Date column. We need to identify it.
-    // Let's force user to identify the Date column or auto-detect 'Date'/'Datum'.
-    
-    // Heuristic: Header with 'date' or 'datum' is the date column.
-    // Remaining mapped headers are values for meters.
-    
-    let dateHeader = headers().find(h => /date|datum/i.test(h));
-    
-    if (!dateHeader) {
-        // Fallback: Use the first unmapped column? Or asking user is better.
-        // For simplicity/MVP: assume 'Date' or 'Datum' exists.
-        // Or if one header is mapped to nothing/special.
-    }
-
-    if (!dateHeader) {
-        // If we can't find a date header, we can't proceed.
-        // In a real app, we'd add a selector "Which column is Date?".
-        // For this MVP, let's pick the first column if no "Date" match.
-        dateHeader = headers()[0]; 
-    }
-
     data.forEach(row => {
-      const dateStr = row[dateHeader!];
+      const dateStr = row[dateCol];
       const date = parseDate(dateStr);
       
-      if (!date) {return;} // Skip invalid dates
+      if (!date) {return;}
 
-      Object.entries(map).forEach(([header, meterId]) => {
-        if (header === dateHeader || !meterId || meterId === 'ignore') {return;}
-        
-        const valStr = row[header];
-        if (!valStr) {return;}
-        
-        const value = parseValue(valStr);
-        if (isNaN(value)) {return;}
+      const valStr = row[valCol];
+      if (!valStr) {return;}
+      
+      const value = parseLocaleNumber(valStr);
+      if (isNaN(value)) {return;}
 
-        result.push({
-          meterId,
-          date,
-          value,
-          originalDate: dateStr,
-          originalValue: valStr
-        });
+      result.push({
+        meterId,
+        date,
+        value,
+        originalDate: dateStr,
+        originalValue: valStr
       });
     });
 
@@ -158,11 +125,12 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
   };
 
   const handleNextToPreview = () => {
-     // Validate that at least one meter is mapped
-     const map = mapping();
-     const hasMeter = Object.values(map).some(v => v && v !== 'ignore');
-     if (!hasMeter) {
-         setError('Please map at least one column to a meter.');
+     if (!targetMeterId()) {
+         setError('Please select a target meter.');
+         return;
+     }
+     if (!dateColumn() || !valueColumn()) {
+         setError('Please map both Date and Value columns.');
          return;
      }
      setStep('preview');
@@ -189,8 +157,8 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     <Show when={props.isOpen}>
       <Portal>
         <div class="modal modal-open">
-          <div class="modal-box w-11/12 max-w-5xl">
-            <h3 class="font-bold text-lg">Import Readings from CSV</h3>
+          <div class="modal-box w-11/12 max-w-2xl">
+            <h3 class="font-bold text-lg">Import Readings</h3>
             
             <div class="py-4">
                {error() && <div class="alert alert-error mb-4">{error()}</div>}
@@ -219,47 +187,92 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
                </Show>
 
                <Show when={step() === 'mapping'}>
-                 <p class="mb-4">Map CSV columns to your Meters.</p>
-                 <div class="grid grid-cols-2 gap-4">
-                    <For each={headers()}>{(header) => (
-                        <div class="card bg-base-100 shadow-sm border p-4">
+                 <div class="space-y-6">
+                    <div class="form-control w-full">
+                        <label class="label">
+                            <span class="label-text font-bold">1. Select Target Meter</span>
+                        </label>
+                        <select 
+                            class="select select-bordered w-full" 
+                            value={targetMeterId()} 
+                            onChange={(e) => setTargetMeterId(e.currentTarget.value)}
+                        >
+                            <option value="" disabled selected>Choose Meter...</option>
+                            <For each={props.meters}>{(meter) => (
+                                <option value={meter._id}>{meter.name}</option>
+                            )}</For>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-control">
                             <label class="label">
-                                <span class="label-text font-bold">{header}</span>
-                                <span class="label-text-alt text-xs opacity-50">Sample: {csvData()[0]?.[header]}</span>
+                                <span class="label-text font-bold">2. Date Column</span>
                             </label>
                             <select 
                                 class="select select-bordered w-full" 
-                                value={mapping()[header] || ''} 
-                                onChange={(e) => handleMappingChange(header, e.currentTarget.value)}
+                                value={dateColumn()} 
+                                onChange={(e) => setDateColumn(e.currentTarget.value)}
                             >
-                                <option value="" disabled selected>Select Meter...</option>
-                                <option value="ignore">Ignore</option>
-                                <For each={props.meters}>{(meter) => (
-                                    <option value={meter._id}>{meter.name}</option>
+                                <For each={headers()}>{(header) => (
+                                    <option value={header}>{header}</option>
                                 )}</For>
                             </select>
                         </div>
-                    )}</For>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-bold">3. Value Column</span>
+                            </label>
+                            <select 
+                                class="select select-bordered w-full" 
+                                value={valueColumn()} 
+                                onChange={(e) => setValueColumn(e.currentTarget.value)}
+                            >
+                                <For each={headers()}>{(header) => (
+                                    <option value={header}>{header}</option>
+                                )}</For>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-base-200 p-4 rounded-lg">
+                        <p class="text-xs font-bold uppercase opacity-50 mb-2">Data Sample</p>
+                        <div class="overflow-x-auto">
+                            <table class="table table-xs">
+                                <thead>
+                                    <tr>
+                                        <For each={headers()}>{(h) => <th>{h}</th>}</For>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <For each={headers()}>{(h) => <td>{csvData()[0]?.[h]}</td>}</For>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                  </div>
                </Show>
 
                <Show when={step() === 'preview'}>
-                  <p class="mb-4">Preview Readings ({getPreviewData().length})</p>
-                  <div class="overflow-x-auto max-h-96">
-                      <table class="table table-xs">
+                  <p class="mb-4 font-bold">Preview Readings ({getPreviewData().length})</p>
+                  <div class="overflow-x-auto max-h-96 border rounded-lg">
+                      <table class="table table-xs table-pin-rows">
                           <thead>
                               <tr>
                                   <th>Date</th>
-                                  <th>Meter</th>
                                   <th>Value</th>
+                                  <th class="opacity-50 italic">Original</th>
                               </tr>
                           </thead>
                           <tbody>
                               <For each={getPreviewData()}>{(row) => (
                                   <tr>
                                       <td>{row.date.toLocaleDateString()}</td>
-                                      <td>{props.meters.find(m => m._id === row.meterId)?.name || row.meterId}</td>
-                                      <td>{row.value}</td>
+                                      <td class="font-bold">{row.value}</td>
+                                      <td class="opacity-50 italic">{row.originalDate} | {row.originalValue}</td>
                                   </tr>
                               )}</For>
                           </tbody>
