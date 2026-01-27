@@ -21,7 +21,7 @@ describe('CsvImportModal', () => {
     render(() => <CsvImportModal isOpen={true} onClose={() => {}} onSave={async () => {}} meters={[]} />);
     expect(screen.getByText('Import Readings')).toBeInTheDocument();
     expect(screen.getByText('Paste from Clipboard')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Date.*Value\.\.\./)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/01\.01\.2022.*2\.852\.\.\./)).toBeInTheDocument();
   });
 
   // Note: Testing file input change and async parsing logic requires careful setup of File objects

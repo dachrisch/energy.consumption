@@ -195,7 +195,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
                         <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Manual Paste (CSV / Tab-separated)</span>
                       </label>
                       <textarea 
-                        class="textarea textarea-bordered h-40 font-mono text-sm bg-base-200/50 border-none focus:ring-2 focus:ring-primary transition-all" 
+                        class="textarea textarea-bordered w-full h-40 font-mono text-sm bg-base-200/50 border-none focus:ring-2 focus:ring-primary transition-all" 
                         placeholder="01.01.2022	2.852..."
                         onInput={(e) => handleManualPaste(e)}
                       ></textarea>

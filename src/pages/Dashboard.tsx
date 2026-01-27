@@ -1,21 +1,36 @@
 import { Component, createResource, Show, createSignal } from 'solid-js';
-import { A, useNavigate } from '@solidjs/router';
+import { A } from '@solidjs/router';
 import CsvImportModal from '../components/CsvImportModal';
 import { useToast } from '../context/ToastContext';
+import { calculateAggregates } from '../lib/aggregates';
 
-const fetchAggregates = async () => {
-  const res = await fetch('/api/aggregates');
-  if (!res.ok) {throw new Error('Failed to fetch aggregates');}
-  const aggregates = await res.json();
+const fetchDashboardData = async () => {
+  const res = await fetch('/api/dashboard');
+  if (!res.ok) {throw new Error('Failed to fetch dashboard data');}
+  const data = await res.json();
   
-  const meterRes = await fetch('/api/meters');
-  const meters = await meterRes.json();
+  const aggregates = calculateAggregates(data.meters, data.readings, data.contracts);
   
-  return { ...aggregates, hasMeters: meters.length > 0, meters };
+  const hasPower = data.meters.some((m: any) => m.type === 'power');
+  const hasGas = data.meters.some((m: any) => m.type === 'gas');
+  
+  const metersMissingContracts = data.meters.filter((m: any) => 
+    !data.contracts.some((c: any) => c.meterId === m._id || c.meterId?._id === m._id)
+  );
+
+  return { 
+    ...data, 
+    aggregates, 
+    hasPower, 
+    hasGas, 
+    hasMeters: data.meters.length > 0,
+    hasMissingContracts: metersMissingContracts.length > 0,
+    metersMissingContracts
+  };
 };
 
 const Dashboard: Component = () => {
-  const [data, { refetch }] = createResource(fetchAggregates);
+  const [data, { refetch }] = createResource(fetchDashboardData);
   const [isImportOpen, setImportOpen] = createSignal(false);
   const { showToast } = useToast();
 
@@ -62,42 +77,68 @@ const Dashboard: Component = () => {
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="card bg-primary text-primary-content shadow-2xl p-8 rounded-3xl relative overflow-hidden group">
-            <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-            <div class="relative z-10">
-              <p class="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-2">Total Projected Yearly Cost</p>
-              <h2 class="text-6xl font-black tracking-tighter mb-6">€{Math.round(data()?.totalYearlyCost || 0)}</h2>
-              <div class="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
-                <div>
-                  <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p>
-                  <p class="text-xl font-black">€{Math.round(data()?.powerYearlyCost || 0)}</p>
-                </div>
-                <div>
-                  <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p>
-                  <p class="text-xl font-black">€{Math.round(data()?.gasYearlyCost || 0)}</p>
+          <Show when={data()?.hasMeters}>
+            <div class="card bg-primary text-primary-content shadow-2xl p-8 rounded-3xl relative overflow-hidden group">
+              <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+              <div class="relative z-10">
+                <p class="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-2">Total Projected Yearly Cost</p>
+                <h2 class="text-6xl font-black tracking-tighter mb-6">€{Math.round(data()?.aggregates.totalYearlyCost || 0)}</h2>
+                <div class="flex gap-10 pt-6 border-t border-white/10">
+                  <Show when={data()?.hasPower}>
+                    <div>
+                      <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p>
+                      <p class="text-xl font-black">€{Math.round(data()?.aggregates.powerYearlyCost || 0)}</p>
+                    </div>
+                  </Show>
+                  <Show when={data()?.hasGas}>
+                    <div>
+                      <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p>
+                      <p class="text-xl font-black">€{Math.round(data()?.aggregates.gasYearlyCost || 0)}</p>
+                    </div>
+                  </Show>
                 </div>
               </div>
             </div>
-          </div>
+          </Show>
 
-          <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
-             <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
-             </div>
-             <h3 class="text-lg font-black tracking-tight uppercase opacity-40">
-               {data()?.hasMeters ? 'Meter Management' : 'Getting Started'}
-             </h3>
-             <p class="text-sm font-bold text-base-content/60 max-w-xs">
-               {data()?.hasMeters 
-                 ? 'Manage your individual meters, history and contracts in the new section.' 
-                 : 'To begin tracking your energy costs, you first need to register a utility meter.'}
-             </p>
-             <Show when={data()?.hasMeters} fallback={
+          <Show when={data()?.hasMissingContracts}>
+            <div class="card bg-warning text-warning-content shadow-xl p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
+               <div class="bg-black/10 p-4 rounded-2xl">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+               </div>
+               <h3 class="text-lg font-black tracking-tight uppercase">Missing Contracts</h3>
+               <p class="text-sm font-bold opacity-80 max-w-xs">
+                 Some of your meters don't have pricing contracts configured. Add them to see cost projections.
+               </p>
+               <A href="/contracts/add" class="btn btn-neutral btn-wide rounded-2xl shadow-xl">Configure Contracts</A>
+            </div>
+          </Show>
+
+          <Show when={!data()?.hasMeters}>
+            <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
+               <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
+               </div>
+               <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Getting Started</h3>
+               <p class="text-sm font-bold text-base-content/60 max-w-xs">
+                 To begin tracking your energy costs, you first need to register a utility meter.
+               </p>
                <A href="/meters/add" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20">Add Meter</A>
-             }>
+            </div>
+          </Show>
+
+          <Show when={data()?.hasMeters && !data()?.hasMissingContracts}>
+            <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
+               <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
+               </div>
+               <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Meter Management</h3>
+               <p class="text-sm font-bold text-base-content/60 max-w-xs">
+                 Manage your individual meters, history and contracts in the new section.
+               </p>
                <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2">Go to Meters</A>
-             </Show>
-          </div>
+            </div>
+          </Show>
         </div>
       </Show>
     </div>
