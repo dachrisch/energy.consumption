@@ -11,6 +11,27 @@ const fetchDashboardData = async () => {
   return res.json();
 };
 
+interface Meter {
+  _id: string;
+  name: string;
+  unit: string;
+  type: string;
+  meterNumber: string;
+}
+
+interface Reading {
+  meterId: string;
+  date: string | Date;
+  value: number;
+}
+
+interface Contract {
+  _id: string;
+  meterId: string;
+  startDate: string | Date;
+  endDate?: string | Date;
+}
+
 const Meters: Component = () => {
   const [data, { refetch }] = createResource(fetchDashboardData);
   const toast = useToast();
@@ -59,15 +80,15 @@ const Meters: Component = () => {
               </div>
             </div>
           }>
-            {(meter) => {
-              const meterReadings = () => data()?.readings?.filter((r: any) => r.meterId === meter._id) || [];
-              const meterContracts = () => data()?.contracts?.filter((c: any) => c.meterId === meter._id) || [];
+            {(meter: Meter) => {
+              const meterReadings = () => data()?.readings?.filter((r: Reading) => r.meterId === meter._id) || [];
+              const meterContracts = () => data()?.contracts?.filter((c: Contract) => c.meterId === meter._id) || [];
               
               const stats = () => {
                 const readings = meterReadings();
                 if (readings.length < 2) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };}
                 
-                const consumptionStats = calculateStats(readings.map((r: any) => ({
+                const consumptionStats = calculateStats(readings.map((r: Reading) => ({
                   value: r.value,
                   date: new Date(r.date)
                 })));

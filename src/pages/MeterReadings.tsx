@@ -3,6 +3,19 @@ import { useParams, A } from '@solidjs/router';
 import { calculateDeltas } from '../lib/consumption';
 import { useToast } from '../context/ToastContext';
 
+interface Meter {
+  _id: string;
+  name: string;
+  unit: string;
+}
+
+interface Reading {
+  _id: string;
+  date: Date;
+  value: number;
+  delta: number;
+}
+
 const fetchMeterReadings = async (id: string) => {
   const [meterRes, readingsRes] = await Promise.all([
     fetch(`/api/meters?id=${id}`),
@@ -13,8 +26,8 @@ const fetchMeterReadings = async (id: string) => {
   const readings = await readingsRes.json();
   
   return {
-    meter: meters.find((m: any) => m._id === id),
-    readings: calculateDeltas(readings.map((r: any) => ({
+    meter: meters.find((m: Meter) => m._id === id),
+    readings: calculateDeltas(readings.map((r: { value: number, date: string | Date }) => ({
       ...r,
       date: new Date(r.date)
     })))
@@ -32,7 +45,7 @@ const MeterReadings: Component = () => {
     const d = data();
     if (!d) {return [];}
     // Filter out pending deletions and re-calculate deltas to fill gaps
-    const filtered = d.readings.filter((r: any) => !pendingDeletions().has(r._id));
+    const filtered = d.readings.filter((r: Reading) => !pendingDeletions().has(r._id));
     return calculateDeltas(filtered);
   };
 
@@ -120,7 +133,7 @@ const MeterReadings: Component = () => {
                     <td colspan="4" class="py-20 text-center font-bold opacity-40 text-lg">No readings recorded yet.</td>
                   </tr>
                 }>
-                  {(reading: any) => (
+                  {(reading: Reading) => (
                     <tr class="hover:bg-base-200/30 transition-colors">
                       <td class="p-6 text-center">
                         <span class="font-mono font-bold opacity-60">

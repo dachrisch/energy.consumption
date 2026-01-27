@@ -139,9 +139,15 @@ async function handleMeterItem({ req, res, userId, path }: RouteParams) {
   }
 }
 
+interface BulkReading {
+  meterId: string;
+  date: string | Date;
+  value: number;
+}
+
 async function handleBulkReadings({ req, res, userId }: RouteParams) {
   if (req.method === 'POST') {
-    const readings = req.body as unknown as any[];
+    const readings = req.body as unknown as BulkReading[];
     if (!Array.isArray(readings)) {
       res.statusCode = 400;
       res.end(JSON.stringify({ error: 'Expected array of readings' }));

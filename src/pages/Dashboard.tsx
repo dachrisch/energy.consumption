@@ -3,7 +3,22 @@ import { A } from '@solidjs/router';
 import CsvImportModal from '../components/CsvImportModal';
 import { useToast } from '../context/ToastContext';
 import { calculateAggregates } from '../lib/aggregates';
-import { findContractGaps } from '../lib/gapDetection';
+import { findContractGaps, Gap } from '../lib/gapDetection';
+
+interface Meter {
+  _id: string;
+  type: string;
+}
+
+interface Reading {
+  meterId: string;
+  date: string | Date;
+  value: number;
+}
+
+interface Contract {
+  meterId: string | { _id: string };
+}
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -12,22 +27,28 @@ const fetchDashboardData = async () => {
   
   const aggregates = calculateAggregates(data.meters, data.readings, data.contracts);
   
-  const hasPower = data.meters.some((m: any) => m.type === 'power');
-  const hasGas = data.meters.some((m: any) => m.type === 'gas');
+  const hasPower = data.meters.some((m: Meter) => m.type === 'power');
+  const hasGas = data.meters.some((m: Meter) => m.type === 'gas');
   
-  const metersWithNoContracts = data.meters.filter((m: any) => 
-    !data.contracts.some((c: any) => c.meterId === m._id || c.meterId?._id === m._id)
+  const metersWithNoContracts = data.meters.filter((m: Meter) => 
+    !data.contracts.some((c: Contract) => {
+      const cId = typeof c.meterId === 'string' ? c.meterId : c.meterId?._id;
+      return cId === m._id;
+    })
   );
 
-  const metersWithPartialGaps = data.meters.map((m: any) => {
+  const metersWithPartialGaps = data.meters.map((m: Meter) => {
     // Only check for gaps if they HAVE at least one contract (otherwise they are in the 'no contracts' list)
-    if (metersWithNoContracts.some((nm: any) => nm._id === m._id)) {return { ...m, gaps: [] };}
+    if (metersWithNoContracts.some((nm: Meter) => nm._id === m._id)) {return { ...m, gaps: [] };}
     
-    const meterReadings = data.readings.filter((r: any) => r.meterId === m._id);
-    const meterContracts = data.contracts.filter((c: any) => c.meterId === m._id || c.meterId?._id === m._id);
+    const meterReadings = data.readings.filter((r: Reading) => r.meterId === m._id);
+    const meterContracts = data.contracts.filter((c: Contract) => {
+      const cId = typeof c.meterId === 'string' ? c.meterId : c.meterId?._id;
+      return cId === m._id;
+    });
     const gaps = findContractGaps(meterReadings, meterContracts);
     return { ...m, gaps };
-  }).filter((m: any) => m.gaps.length > 0);
+  }).filter((m: { gaps: Gap[] }) => m.gaps.length > 0);
 
   return { 
     ...data, 
@@ -47,7 +68,7 @@ const Dashboard: Component = () => {
   const [isImportOpen, setImportOpen] = createSignal(false);
   const { showToast } = useToast();
 
-  const handleBulkImport = async (readings: any[]) => {
+  const handleBulkImport = async (readings: Reading[]) => {
     const res = await fetch('/api/readings/bulk', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

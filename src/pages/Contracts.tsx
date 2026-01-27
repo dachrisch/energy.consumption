@@ -1,7 +1,7 @@
 import { Component, createResource, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
-import { findContractGaps } from '../lib/gapDetection';
+import { findContractGaps, Gap } from '../lib/gapDetection';
 import ContractTemplateCard from '../components/ContractTemplateCard';
 
 const fetchDashboardData = async () => {
@@ -9,6 +9,22 @@ const fetchDashboardData = async () => {
   if (!res.ok) {throw new Error('Failed to fetch dashboard data');}
   return res.json();
 };
+
+interface Meter {
+  _id: string;
+  name: string;
+}
+
+interface Contract {
+  _id: string;
+  providerName: string;
+  type: 'power' | 'gas';
+  startDate: string | Date;
+  endDate?: string | Date;
+  basePrice: number;
+  workingPrice: number;
+  meterId: Meter;
+}
 
 const Contracts: Component = () => {
   const [data, { refetch }] = createResource(fetchDashboardData);
@@ -18,9 +34,9 @@ const Contracts: Component = () => {
     const d = data();
     if (!d) {return [];}
     
-    return d.meters.flatMap((meter: any) => {
-      const meterReadings = d.readings.filter((r: any) => r.meterId === meter._id);
-      const meterContracts = d.contracts.filter((c: any) => c.meterId === meter._id || c.meterId?._id === meter._id);
+    return d.meters.flatMap((meter: Meter) => {
+      const meterReadings = d.readings.filter((r: { meterId: string }) => r.meterId === meter._id);
+      const meterContracts = d.contracts.filter((c: Contract) => c.meterId === meter._id || c.meterId?._id === meter._id);
       return findContractGaps(meterReadings, meterContracts).map(gap => ({ gap, meter }));
     });
   };
@@ -29,13 +45,13 @@ const Contracts: Component = () => {
     const d = data();
     if (!d) {return [];}
 
-    const contractItems = (d.contracts || []).map((c: any) => ({
+    const contractItems = (d.contracts || []).map((c: Contract) => ({
       type: 'contract',
       data: c,
       date: new Date(c.startDate).getTime()
     }));
 
-    const gapItems = gaps().map((g: any) => ({
+    const gapItems = gaps().map((g: { gap: Gap, meter: Meter }) => ({
       type: 'gap',
       data: g,
       date: g.gap.startDate.getTime()
@@ -88,12 +104,12 @@ const Contracts: Component = () => {
               </div>
             </div>
           }>
-            {(item) => (
+            {(item: { type: string, data: Contract | { gap: Gap, meter: Meter } }) => (
               <Show when={item.type === 'contract'} fallback={
                 <ContractTemplateCard gap={item.data.gap} meter={item.data.meter} />
               }>
                 {(() => {
-                  const contract = item.data;
+                  const contract = item.data as Contract;
                   return (
                     <div class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden">
                       <div class="card-body p-8">

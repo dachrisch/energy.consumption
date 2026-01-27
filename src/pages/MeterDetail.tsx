@@ -5,6 +5,19 @@ import { calculateStats } from '../lib/consumption';
 import { findContractForDate, calculateCostForContract } from '../lib/pricing';
 import { calculateProjection } from '../lib/projectionUtils';
 
+interface Meter {
+  _id: string;
+  name: string;
+  unit: string;
+  type: string;
+  meterNumber: string;
+}
+
+interface Reading {
+  date: string | Date;
+  value: number;
+}
+
 const fetchMeterData = async (id: string) => {
   console.log(`[MeterDetail] Fetching data for: ${id}`);
   const [meterRes, readingsRes, contractsRes] = await Promise.all([
@@ -20,7 +33,7 @@ const fetchMeterData = async (id: string) => {
   console.log(`[MeterDetail] Data received. Readings: ${readings.length}, Contracts: ${contracts.length}`);
   
   return {
-    meter: meterData.find((m: any) => m._id === id),
+    meter: meterData.find((m: Meter) => m._id === id),
     readings,
     contracts
   };
@@ -33,7 +46,7 @@ const MeterDetail: Component = () => {
   const stats = () => {
     try {
       if (!data()?.readings) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };}
-      const consumptionStats = calculateStats(data()?.readings.map((r: any) => ({
+      const consumptionStats = calculateStats(data()?.readings.map((r: Reading) => ({
         value: r.value,
         date: new Date(r.date)
       })));
