@@ -21,9 +21,10 @@ The Energy Consumption Monitor aims to empower homeowners and shared-flat reside
 - **Streamlined Entry & AI Assistance:** Highly optimized mobile-first interface with "Quick Add" operations, bulk CSV importing, and AI-assisted photo OCR for frictionless meter reading entry.
 - **Infrastructure Management:** Dedicated section for managing utility meters, history, and individual pricing contracts.
 - **Detailed History:** Comprehensive per-meter reading logs with automatic consumption delta tracking and CRUD operations.
+- **Daily Financial Insights:** Granular "Cost per Day" metrics for each meter, calculated using the specific contracts active during reading intervals.
 - **Professional Framing:** A persistent desktop AppBar and mobile Bottom Navigation bar that guides the user's focus and ensures an ergonomic experience across all devices.
-- **Advanced Visualization:** Interactive charts for historical comparisons and trend analysis, including mobile-optimized inverted layouts for better vertical readability.
-- **Contract Management:** Integration of pricing models (base price, working price) for precise cost calculation.
+- **Advanced Visualization:** Interactive charts for historical comparisons and 365-day predictive forecasting based on recent consumption velocity.
+- **Contract Lifecycle & Validation:** Automated detection of contract coverage gaps across reading history, with template-driven tools to ensure 100% financial data integrity.
 
 ## Non-Functional Requirements
 - **Data Privacy & Isolation:** Strict multi-tenant security ensures user data remains completely private.
