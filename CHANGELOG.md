@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/dachrisch/energy.consumption/compare/v3.0.1...v3.1.0) (2026-01-27)
+
+
+### Features
+
+* **conductor:** initialize CSV and Photo import track ([4d57af4](https://github.com/dachrisch/energy.consumption/commit/4d57af4dbb98e0084ecdbb0997b89b6ffc4cfc66))
+* implement AI photo OCR for reading entry ([ec07351](https://github.com/dachrisch/energy.consumption/commit/ec07351266a7f24f75b8ae14dfddde3194b711a5))
+* implement CSV parser and bulk reading backend logic ([bac4f02](https://github.com/dachrisch/energy.consumption/commit/bac4f02ad660361180925cd1ba17a0cb4798ee6d))
+* **ui:** add CSV import modal to dashboard ([6f2c653](https://github.com/dachrisch/energy.consumption/commit/6f2c6537dfe888da9b7e6137d1925011af5a5880))
+* **ui:** enhance dashboard with dynamic summaries and contract prompts ([a696d8b](https://github.com/dachrisch/energy.consumption/commit/a696d8b28fd66e33510739895ee2dc4eae0e5ac0))
+* **ui:** simplify CSV mapping and add locale-aware number parsing ([f63d33d](https://github.com/dachrisch/energy.consumption/commit/f63d33d390f19ff84fecd1c83505d1ea21ca8920))
+* **ui:** support clipboard paste for CSV import ([cd5f558](https://github.com/dachrisch/energy.consumption/commit/cd5f558d7436b8cf398367174e18138692e24335))
+
+
+### Bug Fixes
+
+* restore missing parseDate function in CsvImportModal ([4d68e3e](https://github.com/dachrisch/energy.consumption/commit/4d68e3ef84f7ea035fa15f9a7141961ccc3e7238))
+
 ### [3.0.1](https://github.com/dachrisch/energy.consumption/compare/v0.0.1...v3.0.1) (2026-01-26)
 
 ### [0.0.1](https://github.com/dachrisch/energy.consumption/compare/v2.5.1...v0.0.1) (2026-01-25)
