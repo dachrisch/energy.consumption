@@ -29,6 +29,6 @@
 - [x] Task: Implement photo-to-value population logic with user confirmation.
 
 ## Phase 4: Finalization & Quality Assurance
-- [ ] Task: Run full integration test suite to ensure no regressions in reading history or aggregates.
-- [ ] Task: Verify test coverage for new utilities and components (target >80%).
-- [ ] Task: Final visual polish and error state handling (e.g., API failures, invalid CSV formats).
+- [x] Task: Run full integration test suite to ensure no regressions in reading history or aggregates.
+- [x] Task: Verify test coverage for new utilities and components (target >80%).
+- [x] Task: Final visual polish and error state handling (e.g., API failures, invalid CSV formats).

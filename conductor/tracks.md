@@ -62,5 +62,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: CSV and Photo Reading Import with AI OCR**
+- [x] **Track: CSV and Photo Reading Import with AI OCR**
 *Link: [./tracks/csv_photo_import_20260126/](./tracks/csv_photo_import_20260126/)*
