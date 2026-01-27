@@ -12,13 +12,13 @@
 - [x] Task: Implement bulk insertion API handler or service logic.
 
 ## Phase 2: CSV Import UI (Dashboard)
-- [ ] Task: TDD - Create component tests for `CsvImportModal`.
-    - [ ] Test file upload/drop interaction.
-    - [ ] Test header mapping interface.
-    - [ ] Test preview table rendering.
-- [ ] Task: Implement `CsvImportModal` component using DaisyUI.
-- [ ] Task: Integrate "Import CSV" button into the `Dashboard.tsx` page.
-- [ ] Task: Visual Verification - Use Chrome DevTools to verify responsive layout of the import flow.
+- [x] Task: TDD - Create component tests for `CsvImportModal`.
+    - [x] Test file upload/drop interaction.
+    - [x] Test header mapping interface.
+    - [x] Test preview table rendering.
+- [x] Task: Implement `CsvImportModal` component using DaisyUI.
+- [x] Task: Integrate "Import CSV" button into the `Dashboard.tsx` page.
+- [x] Task: Visual Verification - Use Chrome DevTools to verify responsive layout of the import flow.
 
 ## Phase 3: Photo OCR Integration (Add Reading)
 - [ ] Task: TDD - Create backend route tests for OCR proxy (security verification).

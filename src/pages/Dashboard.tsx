@@ -1,5 +1,7 @@
-import { Component, createResource, Show } from 'solid-js';
-import { A } from '@solidjs/router';
+import { Component, createResource, Show, createSignal } from 'solid-js';
+import { A, useNavigate } from '@solidjs/router';
+import CsvImportModal from '../components/CsvImportModal';
+import { useToast } from '../context/ToastContext';
 
 const fetchAggregates = async () => {
   const res = await fetch('/api/aggregates');
@@ -9,20 +11,48 @@ const fetchAggregates = async () => {
   const meterRes = await fetch('/api/meters');
   const meters = await meterRes.json();
   
-  return { ...aggregates, hasMeters: meters.length > 0 };
+  return { ...aggregates, hasMeters: meters.length > 0, meters };
 };
 
 const Dashboard: Component = () => {
-  const [data] = createResource(fetchAggregates);
+  const [data, { refetch }] = createResource(fetchAggregates);
+  const [isImportOpen, setImportOpen] = createSignal(false);
+  const { showToast } = useToast();
+
+  const handleBulkImport = async (readings: any[]) => {
+    const res = await fetch('/api/readings/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(readings)
+    });
+    
+    const result = await res.json();
+    if (res.ok) {
+        showToast(`Imported ${result.successCount} readings. Skipped ${result.skippedCount}.`, 'success');
+        refetch();
+    } else {
+        showToast('Failed to import readings', 'error');
+    }
+  };
 
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
+      <CsvImportModal 
+          isOpen={isImportOpen()} 
+          onClose={() => setImportOpen(false)} 
+          onSave={handleBulkImport}
+          meters={data()?.meters || []}
+      />
+      
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 class="text-4xl font-black tracking-tighter">Financial Cockpit</h1>
           <p class="text-base-content/60 font-bold">Aggregated insights across all your energy sources.</p>
         </div>
         <div class="flex gap-2">
+           <button class="btn btn-ghost btn-md rounded-2xl" onClick={() => setImportOpen(true)}>
+             Import CSV
+           </button>
            <A href="/add-reading" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
             Quick Add Reading
