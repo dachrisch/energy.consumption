@@ -32,12 +32,33 @@ const AddContract: Component = () => {
   
   const navigate = useNavigate();
 
-  // Handle pre-fill from search params
+  // Sync data when editing
   createEffect(() => {
-    if (!isEdit()) {
-      if (searchParams.meterId) {setMeterId(searchParams.meterId);}
-      if (searchParams.startDate) {setStartDate(searchParams.startDate);}
-      if (searchParams.endDate) {setEndDate(searchParams.endDate);}
+    if (isEdit() && contract()) {
+      _syncData(contract());
+    }
+  });
+
+  // Smart default for startDate based on last contract
+  createEffect(async () => {
+    const mId = meterId();
+    // Only pre-fill if it's a new contract AND no specific startDate was provided in URL
+    if (mId && !isEdit() && !searchParams.startDate) {
+      try {
+        const res = await fetch(`/api/contracts?meterId=${mId}`);
+        const list = await res.json();
+        if (list && list.length > 0) {
+          // API returns contracts sorted by startDate DESC
+          const last = list[0];
+          if (last.endDate) {
+            const nextDay = new Date(last.endDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            setStartDate(nextDay.toISOString().split('T')[0]);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch previous contracts for pre-fill', e);
+      }
     }
   });
 

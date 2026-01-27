@@ -1,4 +1,4 @@
-import { Component, createSignal, createResource, onMount, Show } from 'solid-js';
+import { Component, createSignal, createResource, createEffect, Show } from 'solid-js';
 import { useNavigate, useParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 
@@ -21,21 +21,16 @@ const AddMeter: Component = () => {
   
   const navigate = useNavigate();
 
-  onMount(() => {
-    if (isEdit()) {
-      // Data will be set via the createResource effect below
-    }
-  });
-
   // Sync resource data to signals
-  const _syncData = (data: any) => {
-    if (data) {
+  createEffect(() => {
+    if (isEdit() && meter()) {
+      const data = meter();
       setName(data.name);
       setMeterNumber(data.meterNumber);
       setType(data.type);
       setUnit(data.unit);
     }
-  };
+  });
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();

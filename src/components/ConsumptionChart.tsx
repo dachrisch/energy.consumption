@@ -3,7 +3,7 @@ import { Chart, Title, Tooltip, Legend, Colors, LineController, LineElement, Poi
 import { Line } from 'solid-chartjs';
 import { getChartOptions } from '../lib/chartConfig';
 
-const ConsumptionChart: Component<{ readings: any[], unit: string }> = (props) => {
+const ConsumptionChart: Component<{ readings: any[], projection?: any[], unit: string }> = (props) => {
   const [isMobile, setIsMobile] = createSignal(window.innerWidth < 768);
 
   onMount(() => {
@@ -15,28 +15,61 @@ const ConsumptionChart: Component<{ readings: any[], unit: string }> = (props) =
   });
 
   const chartData = createMemo(() => {
-    // Standard sort: Oldest to Newest
     const sorted = [...props.readings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    // For mobile (inverted), we want Oldest at Top (Y-axis 0).
-    // Since Chart.js renders index 0 at the origin, and Y-axis usually goes up:
-    // With `indexAxis: 'y'`, the Category scale is on Y.
-    // By default, Category scale is top-to-bottom? No, usually bottom-to-top.
-    // Let's rely on standard sorting first. 
-    // If we use `scales.y.reverse: true` in config, 0 will be at top.
+    const labels = sorted.map(r => new Date(r.date).toLocaleDateString());
+    const values = sorted.map(r => r.value);
+
+    const datasets: any[] = [
+      {
+        label: `Consumption (${props.unit})`,
+        data: values,
+        borderColor: '#9311fb',
+        backgroundColor: 'rgba(147, 17, 251, 0.1)',
+        tension: 0.4,
+        fill: true
+      }
+    ];
+
+    if (props.projection && props.projection.length > 0) {
+      // Find where projection starts
+      const lastActualDate = sorted[sorted.length - 1]?.date;
+      
+      // We need to merge labels if projection extends beyond
+      const projLabels = props.projection.map(p => new Date(p.date).toLocaleDateString());
+      
+      // Create a combined label set
+      const allLabels = [...labels];
+      projLabels.forEach(l => {
+        if (!allLabels.includes(l)) {
+          allLabels.push(l);
+        }
+      });
+
+      // Align projection data to allLabels
+      const projData = allLabels.map(l => {
+        const pPoint = props.projection?.find(p => new Date(p.date).toLocaleDateString() === l);
+        return pPoint ? pPoint.value : null;
+      });
+
+      datasets.push({
+        label: `Projection (365 days)`,
+        data: projData,
+        borderColor: '#9311fb',
+        borderDash: [5, 5],
+        tension: 0.4,
+        fill: false,
+        pointRadius: 0 // Hide points for projection
+      });
+
+      return {
+        labels: allLabels,
+        datasets
+      };
+    }
     
     return {
-      labels: sorted.map(r => new Date(r.date).toLocaleDateString()),
-      datasets: [
-        {
-          label: `Consumption (${props.unit})`,
-          data: sorted.map(r => r.value),
-          borderColor: '#9311fb',
-          backgroundColor: 'rgba(147, 17, 251, 0.1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
+      labels,
+      datasets
     };
   });
 

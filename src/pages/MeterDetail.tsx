@@ -3,6 +3,7 @@ import { useParams, A } from '@solidjs/router';
 import ConsumptionChart from '../components/ConsumptionChart';
 import { calculateStats } from '../lib/consumption';
 import { findContractForDate, calculateCostForContract } from '../lib/pricing';
+import { calculateProjection } from '../lib/projectionUtils';
 
 const fetchMeterData = async (id: string) => {
   console.log(`[MeterDetail] Fetching data for: ${id}`);
@@ -58,6 +59,12 @@ const MeterDetail: Component = () => {
     }
   };
 
+  const projection = () => {
+    const readings = data()?.readings;
+    if (!readings) {return [];}
+    return calculateProjection(readings, 365);
+  };
+
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
       <ErrorBoundary fallback={(err) => <div class="alert alert-error font-bold">Something went wrong rendering meter details: {err.message}</div>}>
@@ -100,24 +107,32 @@ const MeterDetail: Component = () => {
                 <p class="text-3xl font-black">{Math.round(stats().yearlyProjection).toLocaleString()}<span class="text-sm font-bold opacity-40 ml-2">{data()?.meter.unit}/year</span></p>
               </div>
             </div>
-                                          <div class="card bg-primary text-primary-content shadow-2xl shadow-primary/30 border-none">
-                                            <div class="card-body p-8">
-                                              <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
-                                              <Show when={stats().estimatedYearlyCost > 0} fallback={
-                                                <div class="bg-warning/5 border border-warning/20 p-4 rounded-xl mb-4">
-                                                  <p class="text-[10px] font-black text-warning uppercase tracking-widest leading-none mb-1">No Contract</p>
-                                                  <A href="/contracts/add" class="link link-warning text-xs font-bold">Configure pricing →</A>
-                                                </div>
-                                              }>
-                                                <p class="text-4xl font-black tracking-tighter">€{stats().estimatedYearlyCost.toFixed(2)}</p>
-                                              </Show>
-                                            </div>
-                                          </div>          </div>
+            <Show when={stats().estimatedYearlyCost > 0} fallback={
+              <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl shadow-warning/5">
+                <div class="card-body p-8">
+                  <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Estimated Yearly Cost</p>
+                  <p class="text-xs font-bold mb-4">No contract configured for this meter.</p>
+                  <A href={`/contracts/add?meterId=${data()?.meter._id}`} class="btn btn-warning btn-sm rounded-xl font-black w-full">Configure Pricing</A>
+                </div>
+              </div>
+            }>
+              <div class="card bg-primary text-primary-content shadow-2xl shadow-primary/30 border-none">
+                <div class="card-body p-8">
+                  <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
+                  <p class="text-4xl font-black tracking-tighter">€{stats().estimatedYearlyCost.toFixed(2)}</p>
+                </div>
+              </div>
+            </Show>
+          </div>
 
           <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
             <div class="card-body p-8 md:p-12">
-              <h2 class="text-xl font-black uppercase tracking-widest opacity-20 mb-8">Consumption Trend</h2>
-              <ConsumptionChart readings={data()?.readings || []} unit={data()?.meter.unit} />
+              <h2 class="text-xl font-black uppercase tracking-widest opacity-20 mb-8">Consumption Trend & Projection</h2>
+              <ConsumptionChart 
+                readings={data()?.readings || []} 
+                projection={projection()}
+                unit={data()?.meter.unit} 
+              />
             </div>
           </div>
         </Show>

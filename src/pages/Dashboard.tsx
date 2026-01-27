@@ -15,7 +15,14 @@ const fetchDashboardData = async () => {
   const hasPower = data.meters.some((m: any) => m.type === 'power');
   const hasGas = data.meters.some((m: any) => m.type === 'gas');
   
-  const metersWithGaps = data.meters.map((m: any) => {
+  const metersWithNoContracts = data.meters.filter((m: any) => 
+    !data.contracts.some((c: any) => c.meterId === m._id || c.meterId?._id === m._id)
+  );
+
+  const metersWithPartialGaps = data.meters.map((m: any) => {
+    // Only check for gaps if they HAVE at least one contract (otherwise they are in the 'no contracts' list)
+    if (metersWithNoContracts.some((nm: any) => nm._id === m._id)) {return { ...m, gaps: [] };}
+    
     const meterReadings = data.readings.filter((r: any) => r.meterId === m._id);
     const meterContracts = data.contracts.filter((c: any) => c.meterId === m._id || c.meterId?._id === m._id);
     const gaps = findContractGaps(meterReadings, meterContracts);
@@ -28,8 +35,10 @@ const fetchDashboardData = async () => {
     hasPower, 
     hasGas, 
     hasMeters: data.meters.length > 0,
-    hasMissingContracts: metersWithGaps.length > 0,
-    metersWithGaps
+    hasMissingContracts: metersWithNoContracts.length > 0,
+    hasPartialGaps: metersWithPartialGaps.length > 0,
+    metersWithNoContracts,
+    metersWithPartialGaps
   };
 };
 
@@ -106,15 +115,28 @@ const Dashboard: Component = () => {
           </Show>
 
           <Show when={data()?.hasMissingContracts}>
-            <div class="card bg-warning text-warning-content shadow-xl p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
-               <div class="bg-black/10 p-4 rounded-2xl">
+            <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
+               <div class="bg-warning/20 p-4 rounded-2xl">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                </div>
-               <h3 class="text-lg font-black tracking-tight uppercase">Missing Contracts</h3>
-               <p class="text-sm font-bold opacity-80 max-w-xs">
-                 Some of your meters don't have pricing contracts configured. Add them to see cost projections.
+               <h3 class="text-lg font-black tracking-tight uppercase">No contract on meter</h3>
+               <p class="text-sm font-bold opacity-80 max-w-xs text-base-content/70">
+                 One or more of your meters have no pricing contracts configured. Add one to see cost projections.
                </p>
-               <A href="/contracts/add" class="btn btn-neutral btn-wide rounded-2xl shadow-xl">Configure Contracts</A>
+               <A href="/contracts/add" class="btn btn-warning btn-wide rounded-2xl shadow-xl shadow-warning/20 font-black">Add Contract</A>
+            </div>
+          </Show>
+
+          <Show when={data()?.hasPartialGaps}>
+            <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
+               <div class="bg-warning/20 p-4 rounded-2xl">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>
+               </div>
+               <h3 class="text-lg font-black tracking-tight uppercase">Partial contracts missing</h3>
+               <p class="text-sm font-bold opacity-80 max-w-xs text-base-content/70">
+                 We detected gaps in your contract coverage. Fill them to ensure 100% accurate financial history.
+               </p>
+               <A href="/contracts" class="btn btn-warning btn-wide rounded-2xl shadow-xl shadow-warning/20 font-black">Show Contract Page</A>
             </div>
           </Show>
 
