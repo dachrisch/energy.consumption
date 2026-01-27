@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/dachrisch/energy.consumption/compare/v3.1.0...v3.2.0) (2026-01-27)
+
+
+### Features
+
+* 2-column meter grid and daily cost metric ([ae713be](https://github.com/dachrisch/energy.consumption/commit/ae713be663bf69d02ef253cb30b34e173c291ba9))
+* contract gap detection and warning indicators ([37d9db5](https://github.com/dachrisch/energy.consumption/commit/37d9db5c9babd4cef26aecd3a6d522591a95037c))
+* contract templates for coverage gaps ([105ac07](https://github.com/dachrisch/energy.consumption/commit/105ac07fcd02bdb39c7e69a650c9d5d0dce2120d))
+* implement contract gap detection, projections and sorted contract list ([823f85d](https://github.com/dachrisch/energy.consumption/commit/823f85d20446bbe9a17ce98b967523099efca48e))
+* non-blocking reading deletion with undo and robust consumption calculation ([baf7375](https://github.com/dachrisch/energy.consumption/commit/baf737524b0636752511f275539a5822030560e1))
+
 ## [3.1.0](https://github.com/dachrisch/energy.consumption/compare/v3.0.1...v3.1.0) (2026-01-27)
 
 
