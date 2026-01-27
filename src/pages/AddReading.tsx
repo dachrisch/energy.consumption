@@ -1,6 +1,7 @@
 import { Component, createSignal, createResource, Show, createEffect, For } from 'solid-js';
 import { useNavigate, useParams, A } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
+import { performOcr } from '../lib/ocrService';
 
 const fetchMeters = async () => {
   const res = await fetch('/api/meters');
@@ -15,6 +16,8 @@ const AddReading: Component = () => {
   const [selectedMeterId, setSelectedMeterId] = createSignal(params.id || localStorage.getItem('lastMeterId') || '');
   const [value, setValue] = createSignal('');
   const [date, setDate] = createSignal(new Date().toISOString().split('T')[0]);
+  const [isScanning, setIsScanning] = createSignal(false);
+  const [scanPreview, setScanPreview] = createSignal<string | null>(null);
   
   const [meters] = createResource(fetchMeters);
 
@@ -45,6 +48,35 @@ const AddReading: Component = () => {
       setSelectedMeterId(lastId);
     }
   });
+
+  const handleScan = async (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {return;}
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (re) => setScanPreview(re.target?.result as string);
+    reader.readAsDataURL(file);
+
+    setIsScanning(true);
+    try {
+        const text = await performOcr(file);
+        // Clean text: keep only numbers and decimals
+        const match = text.match(/[\d.,]+/);
+        if (match) {
+            const val = match[0].replace(',', '.');
+            setValue(val);
+            toast.showToast('Value detected!', 'info');
+        } else {
+            toast.showToast('Could not find a number in the photo', 'warning');
+        }
+    } catch (err) {
+        toast.showToast('OCR failed', 'error');
+    } finally {
+        setIsScanning(false);
+    }
+  };
 
   const selectedMeter = () => meters()?.find((m: any) => m._id === selectedMeterId());
 
@@ -129,9 +161,21 @@ const AddReading: Component = () => {
                 <Show when={selectedMeter()}>
                   {(meter) => (
                     <div class="form-control w-full flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-                      <label class="px-1">
-                        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
-                      </label>
+                      <div class="flex justify-between items-end px-1">
+                        <label>
+                          <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
+                        </label>
+                        <div class="relative">
+                          <input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input" onChange={handleScan} />
+                          <label for="photo-input" class="btn btn-xs btn-ghost gap-1 opacity-60 hover:opacity-100">
+                             <Show when={isScanning()} fallback={
+                                 <><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Scan Photo</>
+                             }>
+                                 <span class="loading loading-spinner loading-xs"></span> Scanning...
+                             </Show>
+                          </label>
+                        </div>
+                      </div>
                       <div class="relative group">
                         <input 
                           type="number" 
@@ -147,6 +191,14 @@ const AddReading: Component = () => {
                           <span class="text-xl font-black opacity-20 uppercase">{meter().unit}</span>
                         </div>
                       </div>
+                      <Show when={scanPreview()}>
+                        <div class="mt-2 flex justify-center">
+                           <div class="relative">
+                             <img src={scanPreview()!} class="h-20 w-auto rounded-lg border shadow-sm" />
+                             <button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => setScanPreview(null)}>✕</button>
+                           </div>
+                        </div>
+                      </Show>
                     </div>
                   )}
                 </Show>

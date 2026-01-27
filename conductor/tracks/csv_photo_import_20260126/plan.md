@@ -21,12 +21,12 @@
 - [x] Task: Visual Verification - Use Chrome DevTools to verify responsive layout of the import flow.
 
 ## Phase 3: Photo OCR Integration (Add Reading)
-- [ ] Task: TDD - Create backend route tests for OCR proxy (security verification).
-- [ ] Task: Implement backend API route `/api/ocr/scan` to proxy requests to Hugging Face (using `HUGGING_FACE_TOKEN`).
-- [ ] Task: Implement frontend `ocrService` to call the local backend proxy.
-- [ ] Task: TDD - Update `AddReading.tsx` tests to include photo upload triggers.
-- [ ] Task: Enhance `AddReading.tsx` UI with a "Scan Photo" button and image preview.
-- [ ] Task: Implement photo-to-value population logic with user confirmation.
+- [x] Task: TDD - Create backend route tests for OCR proxy (security verification).
+- [x] Task: Implement backend API route `/api/ocr/scan` to proxy requests to Hugging Face (using `HUGGING_FACE_TOKEN`).
+- [x] Task: Implement frontend `ocrService` to call the local backend proxy.
+- [x] Task: TDD - Update `AddReading.tsx` tests to include photo upload triggers.
+- [x] Task: Enhance `AddReading.tsx` UI with a "Scan Photo" button and image preview.
+- [x] Task: Implement photo-to-value population logic with user confirmation.
 
 ## Phase 4: Finalization & Quality Assurance
 - [ ] Task: Run full integration test suite to ensure no regressions in reading history or aggregates.

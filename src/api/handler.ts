@@ -5,6 +5,7 @@ import Reading from '../models/Reading';
 import Contract from '../models/Contract';
 import { calculateAggregates } from '../lib/aggregates';
 import { processBulkReadings } from '../lib/readingService';
+import { scanImage } from '../lib/ocrBackend';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -156,6 +157,38 @@ async function handleBulkReadings({ req, res, userId }: RouteParams) {
   }
 }
 
+async function handleOcrScan({ req, res }: RouteParams) {
+  if (req.method === 'POST') {
+    const { image } = req.body as { image?: string };
+    if (!image) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: 'Image required (base64)' }));
+      return;
+    }
+
+    const token = process.env.HUGGING_FACE_TOKEN;
+    if (!token) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: 'OCR service not configured' }));
+        return;
+    }
+
+    // Convert base64 to Blob
+    const base64Data = image.split(',')[1] || image;
+    const buffer = Buffer.from(base64Data, 'base64');
+    const blob = new Blob([buffer], { type: 'image/jpeg' });
+
+    try {
+        const text = await scanImage(blob, token);
+        res.end(JSON.stringify({ text }));
+    } catch (e) {
+        res.statusCode = 502;
+        res.end(JSON.stringify({ error: e instanceof Error ? e.message : 'OCR failed' }));
+    }
+    return;
+  }
+}
+
 async function handleReadings({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
     const meterId = url.searchParams.get('meterId');
@@ -247,6 +280,7 @@ async function handleAuthenticatedRoute(params: RouteParams) {
   const { req, res, userId, path } = params;
   if (path === '/api/session' && req.method === 'GET') {return handleSession(res, userId);}
   if (path === '/api/profile' && req.method === 'POST') {return handleProfileUpdate(req, res, userId);}
+  if (path === '/api/ocr/scan' && req.method === 'POST') {return handleOcrScan(params);}
   
   if (path === '/api/dashboard' || path === '/api/aggregates') {
     return handleAggregatedRoutes(params);
