@@ -25,7 +25,15 @@
 - [x] Task: Implement `ContractTemplateCard` and integrate it into the `Contracts.tsx` page.
 - [x] Task: Visual Verification - Use Chrome DevTools to verify the 2-column grid and warning visibility.
 
-## Phase 4: Finalization & Quality Assurance
-- [ ] Task: Run full regression test suite (non-interactive mode).
-- [ ] Task: Verify test coverage for new gap logic (target >80%).
-- [ ] Task: Final visual polish across mobile and desktop views.
+## Phase 4: Predictive Projection Chart
+- [x] Task: TDD - Create unit tests for projection extrapolation logic.
+    - [x] Verify calculation of the "Most Recent Velocity" (delta of last 2 readings).
+    - [x] Verify generation of 365 days of future data points.
+- [x] Task: Implement `src/lib/projectionUtils.ts`.
+- [x] Task: Update `ConsumptionChart.tsx` to support distinct styling (e.g., dotted lines) for projection data.
+- [x] Task: Add the projection chart to the `MeterDetail.tsx` page.
+
+## Phase 5: Finalization & Quality Assurance
+- [x] Task: Run full regression test suite (non-interactive mode).
+- [x] Task: Verify test coverage for new gap and projection logic (target >80%).
+- [x] Task: Final visual polish across mobile and desktop views.
