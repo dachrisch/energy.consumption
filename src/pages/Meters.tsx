@@ -2,6 +2,7 @@ import { Component, createResource, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { calculateStats } from '../lib/consumption';
 import { findContractForDate, calculateCostForContract, calculateIntervalCost } from '../lib/pricing';
+import { findContractGaps } from '../lib/gapDetection';
 import { useToast } from '../context/ToastContext';
 
 const fetchDashboardData = async () => {
@@ -101,23 +102,39 @@ const Meters: Component = () => {
                 return { ...consumptionStats, estimatedYearlyCost, dailyCost };
               };
 
+              const gaps = () => {
+                const readings = meterReadings();
+                const contracts = meterContracts();
+                return findContractGaps(readings, contracts);
+              };
+
               const hasContract = () => meterContracts().length > 0;
+              const hasGaps = () => gaps().length > 0;
               
               return (
                 <div class="card bg-base-100 shadow-xl border border-base-content/5 hover:border-primary/30 transition-all group overflow-hidden">
                   <div class="card-body p-8">
-                    <div class="flex items-center gap-4 mb-6">
-                      <div class={`p-3 rounded-2xl ${meter.type === 'power' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
-                        {meter.type === 'power' ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
-                        )}
+                    <div class="flex items-center justify-between gap-4 mb-6">
+                      <div class="flex items-center gap-4">
+                        <div class={`p-3 rounded-2xl ${meter.type === 'power' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
+                          {meter.type === 'power' ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
+                          )}
+                        </div>
+                        <div>
+                          <h3 class="text-xl font-black tracking-tight">{meter.name}</h3>
+                          <p class="text-xs font-mono opacity-40">{meter.meterNumber}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 class="text-xl font-black tracking-tight">{meter.name}</h3>
-                        <p class="text-xs font-mono opacity-40">{meter.meterNumber}</p>
-                      </div>
+                      <Show when={hasGaps()}>
+                        <div class="tooltip tooltip-left" data-tip="Coverage gaps detected in reading history">
+                          <div class="bg-warning/20 text-warning p-2 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                          </div>
+                        </div>
+                      </Show>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-base-content/5">

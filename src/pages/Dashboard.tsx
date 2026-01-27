@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import CsvImportModal from '../components/CsvImportModal';
 import { useToast } from '../context/ToastContext';
 import { calculateAggregates } from '../lib/aggregates';
+import { findContractGaps } from '../lib/gapDetection';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -14,9 +15,12 @@ const fetchDashboardData = async () => {
   const hasPower = data.meters.some((m: any) => m.type === 'power');
   const hasGas = data.meters.some((m: any) => m.type === 'gas');
   
-  const metersMissingContracts = data.meters.filter((m: any) => 
-    !data.contracts.some((c: any) => c.meterId === m._id || c.meterId?._id === m._id)
-  );
+  const metersWithGaps = data.meters.map((m: any) => {
+    const meterReadings = data.readings.filter((r: any) => r.meterId === m._id);
+    const meterContracts = data.contracts.filter((c: any) => c.meterId === m._id || c.meterId?._id === m._id);
+    const gaps = findContractGaps(meterReadings, meterContracts);
+    return { ...m, gaps };
+  }).filter((m: any) => m.gaps.length > 0);
 
   return { 
     ...data, 
@@ -24,8 +28,8 @@ const fetchDashboardData = async () => {
     hasPower, 
     hasGas, 
     hasMeters: data.meters.length > 0,
-    hasMissingContracts: metersMissingContracts.length > 0,
-    metersMissingContracts
+    hasMissingContracts: metersWithGaps.length > 0,
+    metersWithGaps
   };
 };
 

@@ -10,13 +10,13 @@
 - [x] Task: Update Meter components to display the new "€/day" metric.
 
 ## Phase 2: Contract Gap Detection
-- [ ] Task: TDD - Create unit tests for the gap detection utility.
-    - [ ] Verify detection of gaps between the first reading and the first contract.
-    - [ ] Verify detection of gaps between two sequential contracts.
-    - [ ] Verify detection of gaps between the last contract and the last reading.
-- [ ] Task: Implement gap detection utility in `src/lib/gapDetection.ts`.
-- [ ] Task: Integrate gap detection into the `Dashboard` data fetch/processing.
-- [ ] Task: Add warning indicators to the Meter cards when gaps are present.
+- [x] Task: TDD - Create unit tests for the gap detection utility.
+    - [x] Verify detection of gaps between the first reading and the first contract.
+    - [x] Verify detection of gaps between two sequential contracts.
+    - [x] Verify detection of gaps between the last contract and the last reading.
+- [x] Task: Implement gap detection utility in `src/lib/gapDetection.ts`.
+- [x] Task: Integrate gap detection into the `Dashboard` data fetch/processing.
+- [x] Task: Add warning indicators to the Meter cards when gaps are present.
 
 ## Phase 3: Contract Templates & UI Polish
 - [ ] Task: TDD - Create component tests for `ContractTemplateCard`.
