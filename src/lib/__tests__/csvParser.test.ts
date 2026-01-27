@@ -35,6 +35,17 @@ describe('CSV Parser', () => {
       ]);
   });
 
+  it('parses TSV (tab-separated) values (Excel/Sheets copy-paste)', () => {
+      const tsv = `Date\tStrom
+01.01.2022\t2.852
+21.11.2022\t3877,3`;
+      const result = parseCsv(tsv);
+      expect(result).toEqual([
+          { Date: '01.01.2022', Strom: '2.852' },
+          { Date: '21.11.2022', Strom: '3877,3' }
+      ]);
+  });
+
   it('handles European number formats correctly (quoted)', () => {
       const csv = `Val
 "1.234,56"`;

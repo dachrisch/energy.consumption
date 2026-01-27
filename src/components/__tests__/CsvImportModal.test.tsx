@@ -17,10 +17,11 @@ describe('CsvImportModal', () => {
     expect(screen.queryByText('Import Readings from CSV')).not.toBeInTheDocument();
   });
 
-  it('renders upload area when open', () => {
-    render(() => <CsvImportModal isOpen={true} onClose={() => {}} onSave={() => {}} meters={[]} />);
+  it('renders paste area when open', () => {
+    render(() => <CsvImportModal isOpen={true} onClose={() => {}} onSave={async () => {}} meters={[]} />);
     expect(screen.getByText('Import Readings from CSV')).toBeInTheDocument();
-    expect(screen.getByText('Select CSV File')).toBeInTheDocument();
+    expect(screen.getByText('Paste from Clipboard')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Date.*Value\.\.\./)).toBeInTheDocument();
   });
 
   // Note: Testing file input change and async parsing logic requires careful setup of File objects

@@ -9,7 +9,9 @@ export function parseCsv(content: string, options: { delimiter?: string } = {}):
   let delimiter = options.delimiter;
   if (!delimiter) {
     const firstLine = lines[0];
-    if (firstLine.includes(';')) {
+    if (firstLine.includes('\t')) {
+      delimiter = '\t';
+    } else if (firstLine.includes(';')) {
       delimiter = ';';
     } else {
       delimiter = ',';

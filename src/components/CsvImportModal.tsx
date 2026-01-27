@@ -37,30 +37,41 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     }
   });
 
-  const handleFileChange = (event: Event) => {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) {return;}
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string;
-        const parsed = parseCsv(text);
-        if (parsed.length === 0) {
-          setError('No data found in CSV');
-          return;
-        }
-        const headers = Object.keys(parsed[0]);
-        setCsvData(parsed);
-        setHeaders(headers);
-        setStep('mapping');
-        setError(null);
-      } catch (err) {
-        setError('Failed to parse CSV');
+  const handleTextProcess = (text: string) => {
+    try {
+      const parsed = parseCsv(text);
+      if (parsed.length === 0) {
+        setError('No data found in pasted content');
+        return;
       }
-    };
-    reader.readAsText(file);
+      const headers = Object.keys(parsed[0]);
+      setCsvData(parsed);
+      setHeaders(headers);
+      setStep('mapping');
+      setError(null);
+    } catch (err) {
+      setError('Failed to parse content');
+    }
+  };
+
+  const handlePasteButtonClick = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) {
+        setError('Clipboard is empty');
+        return;
+      }
+      handleTextProcess(text);
+    } catch (err) {
+      setError('Failed to read clipboard. Please paste manually into the box below.');
+    }
+  };
+
+  const handleManualPaste = (e: InputEvent) => {
+    const text = (e.target as HTMLTextAreaElement).value;
+    if (text) {
+      handleTextProcess(text);
+    }
   };
 
   const handleMappingChange = (header: string, meterId: string) => {
@@ -185,10 +196,25 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
                {error() && <div class="alert alert-error mb-4">{error()}</div>}
 
                <Show when={step() === 'upload'}>
-                 <div class="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-base-200 transition-colors relative">
-                    <p class="text-xl font-semibold">Select CSV File</p>
-                    <p class="text-sm opacity-60">or drop file here</p>
-                    <input type="file" accept=".csv" class="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileChange} />
+                 <div class="flex flex-col gap-4">
+                    <div 
+                      class="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+                      onClick={handlePasteButtonClick}
+                    >
+                        <p class="text-xl font-semibold">Paste from Clipboard</p>
+                        <p class="text-sm opacity-60">Click here or use the box below</p>
+                    </div>
+                    
+                    <div class="form-control">
+                      <label class="label">
+                        <span class="label-text">Or paste data manually here (CSV or Tab-separated):</span>
+                      </label>
+                      <textarea 
+                        class="textarea textarea-bordered h-32 font-mono text-xs" 
+                        placeholder="Date	Value..."
+                        onInput={(e) => handleManualPaste(e)}
+                      ></textarea>
+                    </div>
                  </div>
                </Show>
 
