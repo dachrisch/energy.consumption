@@ -1,7 +1,7 @@
 import { Component, createResource, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { calculateStats } from '../lib/consumption';
-import { findContractForDate, calculateCostForContract } from '../lib/pricing';
+import { findContractForDate, calculateCostForContract, calculateIntervalCost } from '../lib/pricing';
 import { useToast } from '../context/ToastContext';
 
 const fetchDashboardData = async () => {
@@ -45,7 +45,7 @@ const Meters: Component = () => {
       </div>
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div data-testid="meters-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <For each={data()?.meters} fallback={
             <div class="col-span-full card bg-base-100 border border-dashed border-base-content/20 py-20 text-center">
               <div class="card-body items-center">
@@ -64,12 +64,29 @@ const Meters: Component = () => {
               
               const stats = () => {
                 const readings = meterReadings();
-                if (readings.length < 2) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };}
+                if (readings.length < 2) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };}
                 
                 const consumptionStats = calculateStats(readings.map((r: any) => ({
                   value: r.value,
                   date: new Date(r.date)
                 })));
+
+                // Calculate cost for the most recent interval
+                const sortedReadings = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                const last = sortedReadings[0];
+                const prev = sortedReadings[1];
+                const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
+                
+                let dailyCost = 0;
+                if (intervalDays > 0) {
+                  const totalIntervalCost = calculateIntervalCost(
+                    new Date(prev.date),
+                    new Date(last.date),
+                    last.value - prev.value,
+                    meterContracts()
+                  );
+                  dailyCost = totalIntervalCost / intervalDays;
+                }
 
                 const activeContract = findContractForDate(meterContracts(), new Date());
                 let estimatedYearlyCost = 0;
@@ -81,7 +98,7 @@ const Meters: Component = () => {
                   });
                 }
 
-                return { ...consumptionStats, estimatedYearlyCost };
+                return { ...consumptionStats, estimatedYearlyCost, dailyCost };
               };
 
               const hasContract = () => meterContracts().length > 0;
@@ -105,8 +122,11 @@ const Meters: Component = () => {
 
                     <div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-base-content/5">
                       <div>
-                        <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Daily Avg</p>
-                        <p class="text-lg font-black">{stats().dailyAverage.toFixed(2)}<span class="text-[10px] font-bold opacity-40 ml-1">{meter.unit}</span></p>
+                        <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Consumption</p>
+                        <p class="text-lg font-black">{stats().dailyAverage.toFixed(2)}<span class="text-[10px] font-bold opacity-40 ml-1">{meter.unit}/day</span></p>
+                        <Show when={stats().dailyCost > 0}>
+                          <p class="text-[10px] font-bold text-success mt-0.5">€{stats().dailyCost.toFixed(2)}/day</p>
+                        </Show>
                       </div>
                       <div>
                         <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Yearly Cost</p>
