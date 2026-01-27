@@ -90,6 +90,21 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     }
   };
 
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) {return null;}
+    // Try ISO
+    let date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {return date;}
+
+    // Try dd.mm.yyyy (European)
+    const euMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (euMatch) {
+      return new Date(`${euMatch[3]}-${euMatch[2].padStart(2, '0')}-${euMatch[1].padStart(2, '0')}`);
+    }
+    
+    return null;
+  };
+
   const getPreviewData = () => {
     const data = csvData();
     const meterId = targetMeterId();
@@ -164,22 +179,24 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
                {error() && <div class="alert alert-error mb-4">{error()}</div>}
 
                <Show when={step() === 'upload'}>
-                 <div class="flex flex-col gap-4">
-                    <div 
-                      class="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+                 <div class="flex flex-col gap-6">
+                    <button 
+                      class="btn btn-outline btn-lg border-2 border-dashed h-32 flex flex-col gap-1 hover:bg-base-200 normal-case w-full"
                       onClick={handlePasteButtonClick}
                     >
-                        <p class="text-xl font-semibold">Paste from Clipboard</p>
-                        <p class="text-sm opacity-60">Click here or use the box below</p>
-                    </div>
+                        <span class="text-xl font-black">Paste from Clipboard</span>
+                        <span class="text-xs opacity-60 font-bold uppercase tracking-widest">Click here to auto-fill</span>
+                    </button>
                     
-                    <div class="form-control">
+                    <div class="divider opacity-20 text-xs font-black uppercase tracking-[0.2em]">OR</div>
+
+                    <div class="form-control w-full">
                       <label class="label">
-                        <span class="label-text">Or paste data manually here (CSV or Tab-separated):</span>
+                        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Manual Paste (CSV / Tab-separated)</span>
                       </label>
                       <textarea 
-                        class="textarea textarea-bordered h-32 font-mono text-xs" 
-                        placeholder="Date	Value..."
+                        class="textarea textarea-bordered h-40 font-mono text-sm bg-base-200/50 border-none focus:ring-2 focus:ring-primary transition-all" 
+                        placeholder="01.01.2022	2.852..."
                         onInput={(e) => handleManualPaste(e)}
                       ></textarea>
                     </div>
