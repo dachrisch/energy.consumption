@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import devtools from 'solid-devtools/vite';
 import { apiHandler } from './src/api/handler';
 import bodyParser from 'body-parser';
+import { IncomingMessage, ServerResponse } from 'http';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -22,7 +23,7 @@ export default defineConfig(({ mode }) => {
         name: 'api-middleware',
         configureServer(server) {
           server.middlewares.use(bodyParser.json());
-          server.middlewares.use(async (req, res, next) => {
+          server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next) => {
             if (req.url?.startsWith('/api')) {
               await apiHandler(req as any, res as any);
               return;
@@ -32,7 +33,7 @@ export default defineConfig(({ mode }) => {
         },
         configurePreviewServer(server) {
           server.middlewares.use(bodyParser.json());
-          server.middlewares.use(async (req, res, next) => {
+          server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next) => {
             if (req.url?.startsWith('/api')) {
               await apiHandler(req as any, res as any);
               return;

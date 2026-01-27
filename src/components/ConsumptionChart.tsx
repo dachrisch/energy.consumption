@@ -3,7 +3,28 @@ import { Chart, Title, Tooltip, Legend, Colors, LineController, LineElement, Poi
 import { Line } from 'solid-chartjs';
 import { getChartOptions } from '../lib/chartConfig';
 
-const ConsumptionChart: Component<{ readings: any[], projection?: any[], unit: string }> = (props) => {
+interface Reading {
+  date: string | Date;
+  value: number;
+}
+
+interface ProjectionPoint {
+  date: string | Date;
+  value: number;
+}
+
+interface ChartDataset {
+  label: string;
+  data: (number | null)[];
+  borderColor: string;
+  backgroundColor?: string;
+  tension: number;
+  fill: boolean;
+  borderDash?: number[];
+  pointRadius?: number;
+}
+
+const ConsumptionChart: Component<{ readings: Reading[], projection?: ProjectionPoint[], unit: string }> = (props) => {
   const [isMobile, setIsMobile] = createSignal(window.innerWidth < 768);
 
   onMount(() => {
@@ -19,7 +40,7 @@ const ConsumptionChart: Component<{ readings: any[], projection?: any[], unit: s
     const labels = sorted.map(r => new Date(r.date).toLocaleDateString());
     const values = sorted.map(r => r.value);
 
-    const datasets: any[] = [
+    const datasets: ChartDataset[] = [
       {
         label: `Consumption (${props.unit})`,
         data: values,

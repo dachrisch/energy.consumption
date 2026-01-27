@@ -19,7 +19,6 @@ interface Reading {
 }
 
 const fetchMeterData = async (id: string) => {
-  console.log(`[MeterDetail] Fetching data for: ${id}`);
   const [meterRes, readingsRes, contractsRes] = await Promise.all([
     fetch(`/api/meters?id=${id}`),
     fetch(`/api/readings?meterId=${id}`),
@@ -29,8 +28,6 @@ const fetchMeterData = async (id: string) => {
   const meterData = await meterRes.json();
   const readings = await readingsRes.json();
   const contracts = await contractsRes.json();
-  
-  console.log(`[MeterDetail] Data received. Readings: ${readings.length}, Contracts: ${contracts.length}`);
   
   return {
     meter: meterData.find((m: Meter) => m._id === id),
