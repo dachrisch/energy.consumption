@@ -33,7 +33,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     setStep('upload');
     setCsvData([]);
     setHeaders([]);
-    setTargetMeterId('');
+    setTargetMeterId(props.meters[0]?._id || '');
     setDateColumn('');
     setValueColumn('');
     setError(null);
@@ -42,6 +42,12 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
   createEffect(() => {
     if (props.isOpen) {
       reset();
+    }
+  });
+
+  createEffect(() => {
+    if (props.isOpen && !targetMeterId() && props.meters.length > 0) {
+      setTargetMeterId(props.meters[0]._id);
     }
   });
 
@@ -176,6 +182,16 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
             <h3 class="font-bold text-lg">Import Readings</h3>
             
             <div class="py-4">
+               <Show when={props.meters.length === 0}>
+                 <div class="alert alert-warning mb-6 shadow-sm border-none rounded-2xl flex items-start gap-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6 mt-0.5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <div>
+                      <h3 class="font-black uppercase text-xs tracking-widest opacity-80 mb-1">No Meters Found</h3>
+                      <p class="text-sm font-bold opacity-70">You must register at least one utility meter before you can import readings.</p>
+                    </div>
+                 </div>
+               </Show>
+
                {error() && <div class="alert alert-error mb-4">{error()}</div>}
 
                <Show when={step() === 'upload'}>
