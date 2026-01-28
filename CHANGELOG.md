@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/dachrisch/energy.consumption/compare/v3.2.0...v3.3.0) (2026-01-28)
+
+
+### Features
+
+* use time scale for chronological chart spacing ([7980ba7](https://github.com/dachrisch/energy.consumption/commit/7980ba74be9590dd5713e7728701c030476a2471))
+
+
+### Bug Fixes
+
+* resolve more any types and fix linting ([6ba27ea](https://github.com/dachrisch/energy.consumption/commit/6ba27eadd75b5bb6d2a55a5b8ef9e51d1e70e7c7))
+* resolve more linting issues and remove console logs ([afcacda](https://github.com/dachrisch/energy.consumption/commit/afcacda16740dc21820f02ec9dcd91bb9a74cd55))
+* resolve remaining linting errors and reduce warnings ([20e1a97](https://github.com/dachrisch/energy.consumption/commit/20e1a972f921aadeed59f9060ae0558295f30561))
+* resolve typescript errors and strict linting rules ([737cdea](https://github.com/dachrisch/energy.consumption/commit/737cdeafff6c5aaa2994f81bb4c3aacb4e09b6ff))
+
 ## [3.2.0](https://github.com/dachrisch/energy.consumption/compare/v3.1.0...v3.2.0) (2026-01-27)
 
 
