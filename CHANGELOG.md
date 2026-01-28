@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.4.0](https://github.com/dachrisch/energy.consumption/compare/v3.3.0...v3.4.0) (2026-01-28)
+
+
+### Features
+
+* display daily cost average on meter details page ([27b33bc](https://github.com/dachrisch/energy.consumption/commit/27b33bcb73f9a936132690f7c808795e9c2d8dcd))
+* pre-select first meter in CSV import and add warning if no meters available ([b02fdff](https://github.com/dachrisch/energy.consumption/commit/b02fdff7ae8c920e56d068fdd13bb9d9e61a7286))
+
+
+### Bug Fixes
+
+* correct static file paths in production server ([d7ad9c2](https://github.com/dachrisch/energy.consumption/commit/d7ad9c2cff2e5a5382d077c70e7348a88dd925c2))
+* downgrade express to v4 and optimize backend bundle for production ([979ba17](https://github.com/dachrisch/energy.consumption/commit/979ba1768c2d94864012f5cfbdc79aed80ce171b))
+* implement production node server to resolve api registration error ([92fe904](https://github.com/dachrisch/energy.consumption/commit/92fe904c8aca84ef86e0becfb196ebc33353b5bf))
+* restore HEALTHCHECK to Dockerfile for CI tests ([484048a](https://github.com/dachrisch/energy.consumption/commit/484048a962be4aa90e31ed7dc212369820cb2d8e))
+
 ### [3.3.1](https://github.com/dachrisch/energy.consumption/compare/v3.3.0...v3.3.1) (2026-01-28)
 
 
