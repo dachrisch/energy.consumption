@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.3.1](https://github.com/dachrisch/energy.consumption/compare/v3.3.0...v3.3.1) (2026-01-28)
+
+
+### Features
+
+* display daily cost average on meter details page ([27b33bc](https://github.com/dachrisch/energy.consumption/commit/27b33bcb73f9a936132690f7c808795e9c2d8dcd))
+* pre-select first meter in CSV import and add warning if no meters available ([b02fdff](https://github.com/dachrisch/energy.consumption/commit/b02fdff7ae8c920e56d068fdd13bb9d9e61a7286))
+
+
+### Bug Fixes
+
+* implement production node server to resolve api registration error ([92fe904](https://github.com/dachrisch/energy.consumption/commit/92fe904c8aca84ef86e0becfb196ebc33353b5bf))
+
 ## [3.3.0](https://github.com/dachrisch/energy.consumption/compare/v3.2.0...v3.3.0) (2026-01-28)
 
 
