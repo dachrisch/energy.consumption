@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.5.0](https://github.com/dachrisch/energy.consumption/compare/v3.4.0...v3.5.0) (2026-01-28)
+
+
+### Features
+
+* implement registration feature flag (ALLOW_SIGNUP) ([823065f](https://github.com/dachrisch/energy.consumption/commit/823065fafeaece27edb72c522c3297d3fd670c2b))
+
 ## [3.4.0](https://github.com/dachrisch/energy.consumption/compare/v3.3.0...v3.4.0) (2026-01-28)
 
 
