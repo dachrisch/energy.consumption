@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.6.0](https://github.com/dachrisch/energy.consumption/compare/v3.5.0...v3.6.0) (2026-01-28)
+
+
+### Features
+
+* remove OCR feature due to accuracy issues ([b281f6c](https://github.com/dachrisch/energy.consumption/commit/b281f6c2e69e38d34925e4a236221551782a58cb))
+
 ## [3.5.0](https://github.com/dachrisch/energy.consumption/compare/v3.4.0...v3.5.0) (2026-01-28)
 
 
