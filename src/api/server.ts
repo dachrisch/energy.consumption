@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 80;
 app.use(bodyParser.json());
 
 // Serve static files from the 'dist' directory
-app.use(express.static(path.join(__dirname, '../../dist')));
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // Handle all /api/* routes
 app.all('/api/*', async (req, res) => {
@@ -44,7 +44,7 @@ app.all('/api/*', async (req, res) => {
 
 // SPA fallback: Serve index.html for all other routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../dist/index.html'));
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 app.listen(PORT, () => {
