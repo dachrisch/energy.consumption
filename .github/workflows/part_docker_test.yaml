@@ -46,6 +46,7 @@ jobs:
           # Fail the step if not healthy after 10 retries
           if [ "$status" != "healthy" ]; then
             echo "Container did not become healthy after 10 attempts."
+            docker logs test_container
             exit 1
           fi
           docker stop test_container
