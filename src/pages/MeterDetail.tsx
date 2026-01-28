@@ -2,7 +2,7 @@ import { Component, createResource, Show, ErrorBoundary } from 'solid-js';
 import { useParams, A } from '@solidjs/router';
 import ConsumptionChart from '../components/ConsumptionChart';
 import { calculateStats } from '../lib/consumption';
-import { findContractForDate, calculateCostForContract } from '../lib/pricing';
+import { findContractForDate, calculateCostForContract, calculateIntervalCost } from '../lib/pricing';
 import { calculateProjection } from '../lib/projectionUtils';
 
 interface Meter {
@@ -42,11 +42,31 @@ const MeterDetail: Component = () => {
 
   const stats = () => {
     try {
-      if (!data()?.readings) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };}
-      const consumptionStats = calculateStats(data()?.readings.map((r: Reading) => ({
+      if (!data()?.readings) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };}
+      const readings = data()?.readings;
+      const consumptionStats = calculateStats(readings.map((r: Reading) => ({
         value: r.value,
         date: new Date(r.date)
       })));
+
+      // Calculate cost for the most recent interval
+      let dailyCost = 0;
+      if (readings.length >= 2) {
+        const sortedReadings = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const last = sortedReadings[0];
+        const prev = sortedReadings[1];
+        const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
+        
+        if (intervalDays > 0) {
+          const totalIntervalCost = calculateIntervalCost(
+            new Date(prev.date),
+            new Date(last.date),
+            last.value - prev.value,
+            data()?.contracts || []
+          );
+          dailyCost = totalIntervalCost / intervalDays;
+        }
+      }
 
       const activeContract = findContractForDate(data()?.contracts || [], new Date());
       let estimatedYearlyCost = 0;
@@ -61,11 +81,12 @@ const MeterDetail: Component = () => {
 
       return {
         ...consumptionStats,
-        estimatedYearlyCost
+        estimatedYearlyCost,
+        dailyCost
       };
     } catch (err) {
       console.error('[MeterDetail] Stats calculation error:', err);
-      return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0 };
+      return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
     }
   };
 
@@ -109,6 +130,9 @@ const MeterDetail: Component = () => {
               <div class="card-body p-8">
                 <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Daily Average</p>
                 <p class="text-3xl font-black">{stats().dailyAverage.toFixed(2)}<span class="text-sm font-bold opacity-40 ml-2">{data()?.meter.unit}/day</span></p>
+                <Show when={stats().dailyCost > 0}>
+                  <p class="text-sm font-bold text-success mt-1">€{stats().dailyCost.toFixed(2)}/day</p>
+                </Show>
               </div>
             </div>
             <div class="card bg-base-100 shadow-xl border border-base-content/5">
