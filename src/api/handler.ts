@@ -5,7 +5,6 @@ import Reading from '../models/Reading';
 import Contract from '../models/Contract';
 import { calculateAggregates } from '../lib/aggregates';
 import { processBulkReadings } from '../lib/readingService';
-import { scanImage } from '../lib/ocrBackend';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -34,9 +33,9 @@ interface RouteParams {
 
 function getUserId(req: ApiRequest) {
   const cookie = req.headers.cookie;
-  if (!cookie) {return null;}
+  if (!cookie) { return null; }
   const token = cookie.split('; ').find((c: string) => c.trim().startsWith('token='))?.split('=')[1];
-  if (!token) {return null;}
+  if (!token) { return null; }
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     return decoded.userId;
@@ -92,8 +91,8 @@ async function handleLogin(req: ApiRequest, res: ApiResponse) {
 async function handleProfileUpdate(req: ApiRequest, res: ApiResponse, userId: string) {
   const { name, email, password } = req.body as { name?: string, email?: string, password?: string };
   const updateData: Record<string, unknown> = {};
-  
-  if (name) {updateData.name = name;}
+
+  if (name) { updateData.name = name; }
   if (email) {
     const existing = await User.findOne({ email, _id: { $ne: userId } });
     if (existing) {
@@ -159,47 +158,17 @@ async function handleBulkReadings({ req, res, userId }: RouteParams) {
       res.end(JSON.stringify({ error: 'Expected array of readings' }));
       return;
     }
-    
+
     // Pass Mongoose models explicitly to service
     const result = await processBulkReadings(readings, userId, Meter, Reading);
-    
+
     res.statusCode = 200;
     res.end(JSON.stringify(result));
     return;
   }
 }
 
-async function handleOcrScan({ req, res }: RouteParams) {
-  if (req.method === 'POST') {
-    const { image } = req.body as { image?: string };
-    if (!image) {
-      res.statusCode = 400;
-      res.end(JSON.stringify({ error: 'Image required (base64)' }));
-      return;
-    }
 
-    const token = process.env.HUGGING_FACE_TOKEN;
-    if (!token) {
-        res.statusCode = 500;
-        res.end(JSON.stringify({ error: 'OCR service not configured' }));
-        return;
-    }
-
-    // Convert base64 to Blob
-    const base64Data = image.split(',')[1] || image;
-    const buffer = Buffer.from(base64Data, 'base64');
-    const blob = new Blob([buffer], { type: 'image/jpeg' });
-
-    try {
-        const text = await scanImage(blob, token);
-        res.end(JSON.stringify({ text }));
-    } catch (e) {
-        res.statusCode = 502;
-        res.end(JSON.stringify({ error: e instanceof Error ? e.message : 'OCR failed' }));
-    }
-    return;
-  }
-}
 
 async function handleReadings({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
@@ -263,19 +232,19 @@ async function handleContractItem({ req, res, userId, path }: RouteParams) {
 }
 
 async function handleMetersRoutes(params: RouteParams) {
-  if (params.path === '/api/meters') {return handleMeters(params);}
-  if (params.path.startsWith('/api/meters/')) {return handleMeterItem(params);}
+  if (params.path === '/api/meters') { return handleMeters(params); }
+  if (params.path.startsWith('/api/meters/')) { return handleMeterItem(params); }
 }
 
 async function handleReadingsRoutes(params: RouteParams) {
-  if (params.path === '/api/readings/bulk') {return handleBulkReadings(params);}
-  if (params.path === '/api/readings') {return handleReadings(params);}
-  if (params.path.startsWith('/api/readings/')) {return handleReadingItem(params);}
+  if (params.path === '/api/readings/bulk') { return handleBulkReadings(params); }
+  if (params.path === '/api/readings') { return handleReadings(params); }
+  if (params.path.startsWith('/api/readings/')) { return handleReadingItem(params); }
 }
 
 async function handleContractsRoutes(params: RouteParams) {
-  if (params.path === '/api/contracts') {return handleContracts(params);}
-  if (params.path.startsWith('/api/contracts/')) {return handleContractItem(params);}
+  if (params.path === '/api/contracts') { return handleContracts(params); }
+  if (params.path.startsWith('/api/contracts/')) { return handleContractItem(params); }
 }
 
 async function handleAggregatedRoutes({ res, userId, path }: RouteParams) {
@@ -290,11 +259,10 @@ async function handleAggregatedRoutes({ res, userId, path }: RouteParams) {
 
 async function handleAuthenticatedRoute(params: RouteParams) {
   const { req, res, userId, path } = params;
-  
+
   const routes: Record<string, () => Promise<void>> = {
     '/api/session': async () => { if (req.method === 'GET') { await handleSession(res, userId); } },
     '/api/profile': async () => { if (req.method === 'POST') { await handleProfileUpdate(req, res, userId); } },
-    '/api/ocr/scan': async () => { if (req.method === 'POST') { await handleOcrScan(params); } },
     '/api/dashboard': async () => handleAggregatedRoutes(params),
     '/api/aggregates': async () => handleAggregatedRoutes(params)
   };
@@ -317,9 +285,9 @@ export async function apiHandler(req: ApiRequest, res: ApiResponse) {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const path = url.pathname;
     const userId = getUserId(req);
-    
-    if (path === '/api/register' && req.method === 'POST') {return handleRegister(req, res);}
-    if (path === '/api/login' && req.method === 'POST') {return handleLogin(req, res);}
+
+    if (path === '/api/register' && req.method === 'POST') { return handleRegister(req, res); }
+    if (path === '/api/login' && req.method === 'POST') { return handleLogin(req, res); }
 
     if (!userId) {
       res.statusCode = 401;

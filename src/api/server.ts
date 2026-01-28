@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 80;
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
 
 // Serve static files from the 'dist' directory
 app.use(express.static(path.join(__dirname, '../dist')));
@@ -23,7 +23,7 @@ app.all('/api/*', async (req, res) => {
     headers: req.headers as Record<string, string | undefined>,
     body: req.body
   };
-  
+
   const apiRes = {
     statusCode: 200,
     setHeader(name: string, value: string) {

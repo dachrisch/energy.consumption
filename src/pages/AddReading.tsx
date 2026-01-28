@@ -1,7 +1,6 @@
 import { Component, createSignal, createResource, Show, createEffect, For } from 'solid-js';
 import { useNavigate, useParams, A } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
-import { performOcr } from '../lib/ocrService';
 
 interface Meter {
   _id: string;
@@ -19,13 +18,11 @@ const AddReading: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
   const toast = useToast();
-  
+
   const [selectedMeterId, setSelectedMeterId] = createSignal(params.id || localStorage.getItem('lastMeterId') || '');
   const [value, setValue] = createSignal('');
   const [date, setDate] = createSignal(new Date().toISOString().split('T')[0]);
-  const [isScanning, setIsScanning] = createSignal(false);
-  const [scanPreview, setScanPreview] = createSignal<string | null>(null);
-  
+
   const [meters] = createResource<Meter[]>(fetchMeters);
 
   // Sync selectedMeterId if params.id changes (e.g. navigating from a specific meter)
@@ -38,11 +35,11 @@ const AddReading: Component = () => {
   // Auto-select if only one meter exists or if lastMeterId is valid
   createEffect(() => {
     const list = meters();
-    if (!list || list.length === 0) {return;}
-    
+    if (!list || list.length === 0) { return; }
+
     const current = selectedMeterId();
     // If we already have a valid selection, do nothing
-    if (current && list.find((m: Meter) => m._id === current)) {return;}
+    if (current && list.find((m: Meter) => m._id === current)) { return; }
 
     // Try to find a default
     if (list.length === 1) {
@@ -56,36 +53,11 @@ const AddReading: Component = () => {
     }
   });
 
-  const handleScan = async (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) {return;}
-
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = (re) => setScanPreview(re.target?.result as string);
-    reader.readAsDataURL(file);
-
-    setIsScanning(true);
-    try {
-        const text = await performOcr(file);
-        // Clean text: keep only numbers and decimals
-        const match = text.match(/[\d.,]+/);
-        if (match) {
-            const val = match[0].replace(',', '.');
-            setValue(val);
-            toast.showToast('Value detected!', 'info');
-        } else {
-            toast.showToast('Could not find a number in the photo', 'warning');
-        }
-    } catch (err) {
-        toast.showToast('OCR failed', 'error');
-    } finally {
-        setIsScanning(false);
-    }
+  const selectedMeter = () => {
+    const list = meters();
+    if (!list) return undefined;
+    return list.find((m: Meter) => m._id === selectedMeterId());
   };
-
-  const selectedMeter = () => meters()?.find((m: Meter) => m._id === selectedMeterId());
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -99,10 +71,10 @@ const AddReading: Component = () => {
       const res = await fetch('/api/readings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          meterId, 
-          value: Number(value()), 
-          date: new Date(date()) 
+        body: JSON.stringify({
+          meterId,
+          value: Number(value()),
+          date: new Date(date())
         }),
       });
       if (res.ok) {
@@ -139,16 +111,16 @@ const AddReading: Component = () => {
             <h1 class="text-4xl font-black tracking-tighter">Add Reading</h1>
             <p class="text-base-content/60 font-bold text-lg">Record current consumption for your utility.</p>
           </div>
-          
+
           <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
             <div class="card-body p-8 md:p-12">
               <form onSubmit={handleSubmit} class="space-y-8">
-                
+
                 <div class="form-control w-full flex flex-col gap-2">
                   <label class="px-1">
                     <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Select Meter</span>
                   </label>
-                  <select 
+                  <select
                     class="select select-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
                     value={selectedMeterId()}
                     onChange={(e) => setSelectedMeterId(e.currentTarget.value)}
@@ -168,45 +140,26 @@ const AddReading: Component = () => {
                 <Show when={selectedMeter()}>
                   {(meter) => (
                     <div class="form-control w-full flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-                      <div class="flex justify-between items-end px-1">
-                        <label>
-                          <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
-                        </label>
-                        <div class="relative">
-                          <input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input" onChange={handleScan} />
-                          <label for="photo-input" class="btn btn-xs btn-ghost gap-1 opacity-60 hover:opacity-100">
-                             <Show when={isScanning()} fallback={
-                                 <><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Scan Photo</>
-                             }>
-                                 <span class="loading loading-spinner loading-xs"></span> Scanning...
-                             </Show>
-                          </label>
-                        </div>
-                      </div>
+                      <label class="px-1">
+                        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
+                      </label>
                       <div class="relative group">
-                        <input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          class="input input-bordered w-full h-20 rounded-2xl bg-base-200/50 border-none font-black text-4xl focus:ring-4 focus:ring-primary/20 text-center transition-all" 
-                          value={value()} 
-                          onInput={(e) => setValue(e.currentTarget.value)} 
-                          required 
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
+                          class="input input-bordered w-full h-20 rounded-2xl bg-base-200/50 border-none font-black text-4xl focus:ring-4 focus:ring-primary/20 text-center transition-all"
+                          value={value()}
+                          onInput={(e) => setValue(e.currentTarget.value)}
+                          required
                           autofocus
                         />
                         <div class="absolute inset-y-0 right-6 flex items-center pointer-events-none">
                           <span class="text-xl font-black opacity-20 uppercase">{meter().unit}</span>
                         </div>
                       </div>
-                      <Show when={scanPreview()}>
-                        <div class="mt-2 flex justify-center">
-                           <div class="relative">
-                             <img src={scanPreview()!} class="h-20 w-auto rounded-lg border shadow-sm" />
-                             <button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => setScanPreview(null)}>✕</button>
-                           </div>
-                        </div>
-                      </Show>
                     </div>
+
                   )}
                 </Show>
 
@@ -214,12 +167,12 @@ const AddReading: Component = () => {
                   <label class="px-1">
                     <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Date of Reading</span>
                   </label>
-                  <input 
-                    type="date" 
-                    class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" 
-                    value={date()} 
-                    onInput={(e) => setDate(e.currentTarget.value)} 
-                    required 
+                  <input
+                    type="date"
+                    class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+                    value={date()}
+                    onInput={(e) => setDate(e.currentTarget.value)}
+                    required
                   />
                 </div>
 

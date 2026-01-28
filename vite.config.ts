@@ -9,7 +9,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 const apiMiddleware = {
   name: 'api-middleware',
   configureServer(server: any) {
-    server.middlewares.use(bodyParser.json());
+    server.middlewares.use(bodyParser.json({ limit: '10mb' }));
     server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: any) => {
       if (req.url?.startsWith('/api')) {
         await apiHandler(req as any, res as any);
@@ -19,7 +19,7 @@ const apiMiddleware = {
     });
   },
   configurePreviewServer(server: any) {
-    server.middlewares.use(bodyParser.json());
+    server.middlewares.use(bodyParser.json({ limit: '10mb' }));
     server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: any) => {
       if (req.url?.startsWith('/api')) {
         await apiHandler(req as any, res as any);
@@ -40,8 +40,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      devtools(), 
-      tailwindcss(), 
+      devtools(),
+      tailwindcss(),
       solidPlugin(),
       apiMiddleware
     ],
