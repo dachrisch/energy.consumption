@@ -6,6 +6,30 @@ import { apiHandler } from './src/api/handler';
 import bodyParser from 'body-parser';
 import { IncomingMessage, ServerResponse } from 'http';
 
+const apiMiddleware = {
+  name: 'api-middleware',
+  configureServer(server: any) {
+    server.middlewares.use(bodyParser.json());
+    server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: any) => {
+      if (req.url?.startsWith('/api')) {
+        await apiHandler(req as any, res as any);
+        return;
+      }
+      next();
+    });
+  },
+  configurePreviewServer(server: any) {
+    server.middlewares.use(bodyParser.json());
+    server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: any) => {
+      if (req.url?.startsWith('/api')) {
+        await apiHandler(req as any, res as any);
+        return;
+      }
+      next();
+    });
+  }
+};
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   for (const key in env) {
@@ -19,29 +43,7 @@ export default defineConfig(({ mode }) => {
       devtools(), 
       tailwindcss(), 
       solidPlugin(),
-      {
-        name: 'api-middleware',
-        configureServer(server) {
-          server.middlewares.use(bodyParser.json());
-          server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next) => {
-            if (req.url?.startsWith('/api')) {
-              await apiHandler(req as any, res as any);
-              return;
-            }
-            next();
-          });
-        },
-        configurePreviewServer(server) {
-          server.middlewares.use(bodyParser.json());
-          server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next) => {
-            if (req.url?.startsWith('/api')) {
-              await apiHandler(req as any, res as any);
-              return;
-            }
-            next();
-          });
-        }
-      }
+      apiMiddleware
     ],
     server: {
       port: 3000,

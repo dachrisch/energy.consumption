@@ -54,8 +54,6 @@ test.describe('Chart Responsiveness', () => {
       };
     });
     
-    console.log('Widths:', widths);
-    
     expect(widths.canvasOffsetWidth).toBeLessThanOrEqual(widths.viewport);
     expect(widths.cardOffsetWidth).toBeLessThanOrEqual(widths.viewport);
   });

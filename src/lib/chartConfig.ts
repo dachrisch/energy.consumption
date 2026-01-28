@@ -9,16 +9,31 @@ export const getChartOptions = (isMobile: boolean): ChartOptions => {
       plugins: {
         legend: {
           display: false
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false
         }
       },
       scales: {
         x: {
+          type: 'linear',
           beginAtZero: false,
-          position: 'top', // Optional: put values at top for better visibility
+          position: 'top',
         },
         y: {
-          // Inverted time sorting is handled by data sorting, but we might want to reverse axis here if needed
-          reverse: true 
+          type: 'time',
+          time: {
+            unit: 'month',
+            displayFormats: {
+              month: 'MMM yyyy'
+            }
+          },
+          reverse: true, // Newest at top
+          ticks: {
+            autoSkip: true,
+            maxRotation: 0
+          }
         }
       }
     };
@@ -30,10 +45,28 @@ export const getChartOptions = (isMobile: boolean): ChartOptions => {
     plugins: {
       legend: {
         display: false
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false
       }
     },
     scales: {
+      x: {
+        type: 'time',
+        time: {
+          unit: 'month',
+          displayFormats: {
+            month: 'MMM yyyy'
+          }
+        },
+        ticks: {
+          autoSkip: true,
+          maxRotation: 0
+        }
+      },
       y: {
+        type: 'linear',
         beginAtZero: false
       }
     }
