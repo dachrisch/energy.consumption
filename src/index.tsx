@@ -28,9 +28,11 @@ const Landing = () => (
           <A href="/login" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20">
             Sign In
           </A>
-          <A href="/register" class="btn btn-ghost btn-lg rounded-2xl font-bold opacity-60">
-            Create Account
-          </A>
+          <Show when={import.meta.env.VITE_ALLOW_SIGNUP !== 'false'}>
+            <A href="/register" class="btn btn-ghost btn-lg rounded-2xl font-bold opacity-60">
+              Create Account
+            </A>
+          </Show>
         </div>
       </div>
     </div>

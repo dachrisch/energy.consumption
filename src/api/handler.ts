@@ -51,6 +51,12 @@ async function handleSession(res: ApiResponse, userId: string) {
 }
 
 async function handleRegister(req: ApiRequest, res: ApiResponse) {
+  const allowSignup = process.env.ALLOW_SIGNUP !== 'false';
+  if (!allowSignup) {
+    res.statusCode = 403;
+    res.end(JSON.stringify({ error: 'Registration is currently disabled' }));
+    return;
+  }
   const { name, email, password } = req.body as { name?: string, email?: string, password?: string };
   const existingUser = await User.findOne({ email });
   if (existingUser) {
