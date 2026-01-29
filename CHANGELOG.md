@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.19](https://github.com/dachrisch/energy.consumption/compare/v3.8.18...v3.8.19) (2026-01-29)
+
+
+### Features
+
+* add OcrCache model for image hash caching ([42ca380](https://github.com/dachrisch/energy.consumption/commit/42ca3809141980d9f7adc60bfb625ff10662352f))
+
 ### [3.8.18](https://github.com/dachrisch/energy.consumption/compare/v3.8.17...v3.8.18) (2026-01-29)
 
 ### [3.8.17](https://github.com/dachrisch/energy.consumption/compare/v3.8.16...v3.8.17) (2026-01-29)
