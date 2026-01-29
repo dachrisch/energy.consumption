@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.5](https://github.com/dachrisch/energy.consumption/compare/v3.8.4...v3.8.5) (2026-01-29)
+
+
+### Bug Fixes
+
+* use boolean capture attribute to allow camera + gallery choice on mobile ([e9786a1](https://github.com/dachrisch/energy.consumption/commit/e9786a1356579acb5ef055b5a6a16d11be5d981c))
+
 ### [3.8.4](https://github.com/dachrisch/energy.consumption/compare/v3.8.3...v3.8.4) (2026-01-29)
 
 
