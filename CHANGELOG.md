@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.12](https://github.com/dachrisch/energy.consumption/compare/v3.8.11...v3.8.12) (2026-01-29)
+
+
+### Features
+
+* add 'Register New Meter' option to reading selection dropdown ([4047d70](https://github.com/dachrisch/energy.consumption/commit/4047d7028d7fc521093de5d30da2db670941946e))
+
 ### [3.8.11](https://github.com/dachrisch/energy.consumption/compare/v3.8.10...v3.8.11) (2026-01-29)
 
 
