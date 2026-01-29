@@ -226,14 +226,6 @@ const AddReading: Component = () => {
                         <label>
                           <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
                         </label>
-                        <Show when={!auth.user()?.googleApiKey && !isScanning()}>
-                          <div class="animate-in fade-in slide-in-from-right-2">
-                            <A href="/profile" class="text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors flex items-center gap-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                              Enable AI Scanning
-                            </A>
-                          </div>
-                        </Show>
                       </div>
 
                       <div class="flex gap-3 items-start">
