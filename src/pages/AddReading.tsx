@@ -163,7 +163,7 @@ const AddReading: Component = () => {
 
               <div class="flex flex-col gap-3 items-center">
                 <div class="relative w-full max-w-xs">
-                  <input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input-empty" onChange={handleScan} />
+                  <input type="file" accept="image/*" class="hidden" id="photo-input-empty" onChange={handleScan} />
                   <label for="photo-input-empty" class="btn btn-outline btn-primary btn-lg rounded-2xl w-full gap-3">
                     <Show when={isScanning()} fallback={
                       <><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Scan Photo to Start</>
@@ -226,7 +226,7 @@ const AddReading: Component = () => {
                           <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
                         </label>
                         <div class="relative">
-                          <input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input" onChange={handleScan} />
+                          <input type="file" accept="image/*" class="hidden" id="photo-input" onChange={handleScan} />
                           <label for="photo-input" class="btn btn-xs btn-ghost gap-1 opacity-60 hover:opacity-100" title="Take a photo of the meter">
                             <Show when={isScanning()} fallback={
                               <><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Scan Photo</>
