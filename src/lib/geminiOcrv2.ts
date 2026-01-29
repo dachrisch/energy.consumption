@@ -9,7 +9,7 @@ export async function scanImageWithGemini(image: Blob, apiKey: string): Promise<
     const payload = {
         contents: [{
             parts: [
-                { text: "Read the exact numeric value on the meter display AND the meter serial number. Also identify if it is a power meter (kWh) or gas meter (m³). Return your response in JSON format: { \"value\": number, \"meter_number\": \"string\", \"type\": \"power\"|\"gas\", \"unit\": \"kWh\"|\"m³\" }" },
+                { text: "Read the exact numeric value on the meter display AND the meter serial number. Identify if it is a power meter (usually has 'kWh', 'CL', or a digital LCD) or a gas meter (usually has 'm³', 'cubic feet', or analog dials). Return your response in JSON format: { \"value\": number, \"meter_number\": \"string\", \"type\": \"power\"|\"gas\", \"unit\": \"kWh\"|\"m³\" }" },
                 {
                     inline_data: {
                         mime_type: "image/jpeg",
