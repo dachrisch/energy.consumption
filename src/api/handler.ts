@@ -307,7 +307,8 @@ async function handleOcrScan({ req, res, userId }: RouteParams) {
       value: result.value,
       meterId: meter._id,
       meterName: meter.name,
-      unit: meter.unit
+      unit: meter.unit,
+      type: meter.type
     }));
   } catch (e) {
     console.error('Gemini OCR Error:', e);
