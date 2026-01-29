@@ -29,6 +29,7 @@ jobs:
     with:
       dockerfile: Dockerfile
       image_name: energy.consumption
+      version: "${{ github.ref_name }}"
 
   image-test:
     needs:

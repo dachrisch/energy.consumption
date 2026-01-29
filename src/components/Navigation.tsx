@@ -1,9 +1,15 @@
 import { Component, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
+import { getVersion, getVersionLink } from '../lib/version';
 
 const Navigation: Component = () => {
   const auth = useAuth();
+
+  const closeDropdown = () => {
+    const elem = document.activeElement as HTMLElement;
+    elem?.blur();
+  };
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard' },
@@ -64,9 +70,20 @@ const Navigation: Component = () => {
               <p class="text-sm font-black tracking-tight text-base-content">{auth.user()?.name || 'Operator'}</p>
               <p class="text-xs opacity-40 font-bold text-base-content">{auth.user()?.email || 'N/A'}</p>
             </div>
-            <li><A href="/profile" class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Profile Settings</A></li>
+            <li><A href="/profile" onClick={closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Profile Settings</A></li>
+            <li>
+              <a
+                href={getVersionLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={closeDropdown}
+                class="rounded-lg font-mono text-[11px] py-3 hover:bg-primary/5 hover:text-primary text-base-content/50"
+              >
+                {getVersion()}
+              </a>
+            </li>
             <div class="divider my-1 opacity-50"></div>
-            <li><button onClick={() => auth.logout()} class="text-error font-black uppercase text-[10px] tracking-widest py-3 hover:bg-error/10">Logout</button></li>
+            <li><button onClick={() => { closeDropdown(); auth.logout(); }} class="text-error font-black uppercase text-[10px] tracking-widest py-3 hover:bg-error/10">Logout</button></li>
           </ul>
         </div>
       </div>
