@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.11](https://github.com/dachrisch/energy.consumption/compare/v3.8.10...v3.8.11) (2026-01-29)
+
+
+### Bug Fixes
+
+* remove redundant AI scanning prompt from reading input area ([03e6bb6](https://github.com/dachrisch/energy.consumption/commit/03e6bb6bd7c78f97cdae5c2bfb4d036b14fde143))
+
 ### [3.8.10](https://github.com/dachrisch/energy.consumption/compare/v3.8.9...v3.8.10) (2026-01-29)
 
 
