@@ -1,4 +1,11 @@
-export function calculateProjection(readings: any[], days: number): any[] {
+import { IReading } from '../types/models';
+
+export interface ProjectedPoint {
+  date: Date;
+  value: number;
+}
+
+export function calculateProjection(readings: IReading[], days: number): ProjectedPoint[] {
   if (readings.length < 2) {return [];}
 
   // Sort by date ascending

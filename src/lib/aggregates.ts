@@ -1,5 +1,6 @@
 import { calculateStats } from './consumption';
 import { findContractForDate, calculateCostForContract } from './pricing';
+import { IMeter, IReading, IContract } from '../types/models';
 
 export interface AggregateResult {
   totalYearlyCost: number;
@@ -8,9 +9,9 @@ export interface AggregateResult {
 }
 
 export function calculateAggregates(
-  meters: any[],
-  readings: any[],
-  contracts: any[]
+  meters: IMeter[],
+  readings: IReading[],
+  contracts: IContract[]
 ): AggregateResult {
   let powerYearlyCost = 0;
   let gasYearlyCost = 0;
@@ -29,13 +30,13 @@ export function calculateAggregates(
     const meterContracts = contracts.filter(
       (c) => c.meterId.toString() === meter._id.toString()
     );
-    const activeContract = findContractForDate(meterContracts, new Date());
+    const activeContract = findContractForDate(meterContracts as any, new Date());
 
     if (activeContract) {
       const estimatedYearlyCost = calculateCostForContract({
         consumption: stats.yearlyProjection,
         days: 365.25,
-        contract: activeContract
+        contract: activeContract as any
       });
 
       if (meter.type === 'power') {

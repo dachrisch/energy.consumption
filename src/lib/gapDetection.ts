@@ -1,9 +1,11 @@
+import { IReading, IContract } from '../types/models';
+
 export interface Gap {
   startDate: Date;
   endDate: Date;
 }
 
-export function findContractGaps(readings: any[], contracts: any[]): Gap[] {
+export function findContractGaps(readings: IReading[], contracts: IContract[]): Gap[] {
   if (readings.length < 1) {return [];}
   
   const readingDates = readings.map(r => new Date(r.date).getTime());

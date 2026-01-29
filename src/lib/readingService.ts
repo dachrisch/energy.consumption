@@ -1,17 +1,25 @@
+import { IReading, IMeter } from '../types/models';
+import { Model } from 'mongoose';
+
 interface BulkImportResult {
   successCount: number;
   skippedCount: number;
   errors: Array<{ index: number, message: string }>;
 }
 
-export async function processBulkReadings(readings: any[], userId: string, MeterModel: any, ReadingModel: any): Promise<BulkImportResult> {
+export async function processBulkReadings(
+  readings: Partial<IReading>[], 
+  userId: string, 
+  MeterModel: Model<any>, 
+  ReadingModel: Model<any>
+): Promise<BulkImportResult> {
   const result: BulkImportResult = {
     successCount: 0,
     skippedCount: 0,
     errors: []
   };
 
-  const validReadingsToInsert: any[] = [];
+  const validReadingsToInsert: Partial<IReading>[] = [];
   
   // Cache owned meter IDs for fast lookup
   // In a real DB scenario, we might want to batch this or just check inclusion if list is small.
@@ -23,7 +31,7 @@ export async function processBulkReadings(readings: any[], userId: string, Meter
     const reading = readings[i];
     
     // 1. Validate Meter Ownership
-    if (!ownedMeterIds.has(reading.meterId)) {
+    if (!reading.meterId || !ownedMeterIds.has(reading.meterId)) {
       result.errors.push({ index: i, message: `Meter not found or not owned: ${reading.meterId}` });
       continue;
     }

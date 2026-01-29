@@ -30,7 +30,51 @@ interface ChartDataset {
   pointRadius?: number;
 }
 
-const ConsumptionChart: Component<{ readings: Reading[], projection?: ProjectionPoint[], unit: string }> = (props) => {
+interface ConsumptionChartProps {
+  readings: Reading[];
+  projection?: ProjectionPoint[];
+  unit: string;
+}
+
+const transformData = (props: ConsumptionChartProps): { datasets: ChartDataset[] } => {
+  const sorted = [...props.readings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const actualPoints: ChartPoint[] = sorted.map(r => ({
+    x: new Date(r.date).getTime(),
+    y: r.value
+  }));
+
+  const datasets: ChartDataset[] = [
+    {
+      label: `Consumption (${props.unit})`,
+      data: actualPoints,
+      borderColor: '#9311fb',
+      backgroundColor: 'rgba(147, 17, 251, 0.1)',
+      tension: 0.4,
+      fill: true
+    }
+  ];
+
+  if (props.projection && props.projection.length > 0) {
+    const projectionPoints: ChartPoint[] = props.projection.map(p => ({
+      x: new Date(p.date).getTime(),
+      y: p.value
+    }));
+
+    datasets.push({
+      label: `Projection (365 days)`,
+      data: projectionPoints,
+      borderColor: '#9311fb',
+      borderDash: [5, 5],
+      tension: 0.4,
+      fill: false,
+      pointRadius: 0
+    });
+  }
+  
+  return { datasets };
+};
+
+const ConsumptionChart: Component<ConsumptionChartProps> = (props) => {
   const [isMobile, setIsMobile] = createSignal(window.innerWidth < 768);
 
   onMount(() => {
@@ -41,57 +85,14 @@ const ConsumptionChart: Component<{ readings: Reading[], projection?: Projection
     onCleanup(() => window.removeEventListener('resize', handleResize));
   });
 
-  const chartData = createMemo(() => {
-    const sorted = [...props.readings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const actualPoints: ChartPoint[] = sorted.map(r => ({
-      x: new Date(r.date).getTime(),
-      y: r.value
-    }));
-
-    const datasets: ChartDataset[] = [
-      {
-        label: `Consumption (${props.unit})`,
-        data: actualPoints,
-        borderColor: '#9311fb',
-        backgroundColor: 'rgba(147, 17, 251, 0.1)',
-        tension: 0.4,
-        fill: true
-      }
-    ];
-
-    if (props.projection && props.projection.length > 0) {
-      const projectionPoints: ChartPoint[] = props.projection.map(p => ({
-        x: new Date(p.date).getTime(),
-        y: p.value
-      }));
-
-      datasets.push({
-        label: `Projection (365 days)`,
-        data: projectionPoints,
-        borderColor: '#9311fb',
-        borderDash: [5, 5],
-        tension: 0.4,
-        fill: false,
-        pointRadius: 0 // Hide points for projection
-      });
-    }
-    
-    return {
-      datasets
-    };
-  });
-
+  const chartData = createMemo(() => transformData(props));
   const chartOptions = createMemo(() => getChartOptions(isMobile()));
 
   return (
     <div class="h-64 w-full min-w-0 max-w-full overflow-hidden transition-all duration-300 relative">
        {/* Re-render chart when mode changes to ensure full option re-application */}
        <div class="absolute inset-0">
-         {isMobile() ? (
-           <Line data={chartData()} options={chartOptions()} />
-         ) : (
-           <Line data={chartData()} options={chartOptions()} />
-         )}
+         <Line data={chartData()} options={chartOptions()} />
        </div>
     </div>
   );

@@ -19,12 +19,157 @@ interface PreviewReading extends ImportReading {
   originalValue: string;
 }
 
+interface Meter {
+  _id: string;
+  name: string;
+}
+
+interface ImportReading {
+  meterId: string;
+  date: Date;
+  value: number;
+}
+
+interface PreviewReading extends ImportReading {
+  originalDate: string;
+  originalValue: string;
+}
+
 interface CsvImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (readings: ImportReading[]) => Promise<void>;
   meters: Meter[];
 }
+
+const StepUpload: Component<{ onPasteClick: () => void, onManualPaste: (e: any) => void }> = (props) => (
+  <div class="flex flex-col gap-6">
+    <button 
+      class="btn btn-outline btn-lg border-2 border-dashed h-32 flex flex-col gap-1 hover:bg-base-200 normal-case w-full"
+      onClick={props.onPasteClick}
+    >
+        <span class="text-xl font-black">Paste from Clipboard</span>
+        <span class="text-xs opacity-60 font-bold uppercase tracking-widest">Click here to auto-fill</span>
+    </button>
+    <div class="divider opacity-20 text-xs font-black uppercase tracking-[0.2em]">OR</div>
+    <div class="form-control w-full">
+      <label class="label">
+        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Manual Paste (CSV / Tab-separated)</span>
+      </label>
+      <textarea 
+        class="textarea textarea-bordered w-full h-40 font-mono text-sm bg-base-200/50 border-none focus:ring-2 focus:ring-primary transition-all" 
+        placeholder="01.01.2022	2.852..."
+        onInput={props.onManualPaste}
+      ></textarea>
+    </div>
+  </div>
+);
+
+const StepMapping: Component<{ 
+  meters: Meter[], 
+  targetMeterId: string, 
+  setTargetMeterId: (v: string) => void,
+  headers: string[],
+  dateColumn: string,
+  setDateColumn: (v: string) => void,
+  valueColumn: string,
+  setValueColumn: (v: string) => void,
+  sampleRow?: Record<string, string>
+}> = (props) => (
+  <div class="space-y-6">
+    <div class="form-control w-full">
+        <label class="label">
+            <span class="label-text font-bold">1. Select Target Meter</span>
+        </label>
+        <select 
+            class="select select-bordered w-full" 
+            value={props.targetMeterId} 
+            onChange={(e) => props.setTargetMeterId(e.currentTarget.value)}
+        >
+            <option value="" disabled>Choose Meter...</option>
+            <For each={props.meters}>{(meter) => (
+                <option value={meter._id}>{meter.name}</option>
+            )}</For>
+        </select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text font-bold">2. Date Column</span>
+            </label>
+            <select 
+                class="select select-bordered w-full" 
+                value={props.dateColumn} 
+                onChange={(e) => props.setDateColumn(e.currentTarget.value)}
+            >
+                <For each={props.headers}>{(header) => (
+                    <option value={header}>{header}</option>
+                )}</For>
+            </select>
+        </div>
+
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text font-bold">3. Value Column</span>
+            </label>
+            <select 
+                class="select select-bordered w-full" 
+                value={props.valueColumn} 
+                onChange={(e) => props.setValueColumn(e.currentTarget.value)}
+            >
+                <For each={props.headers}>{(header) => (
+                    <option value={header}>{header}</option>
+                )}</For>
+            </select>
+        </div>
+    </div>
+    
+    <div class="bg-base-200 p-4 rounded-lg">
+        <p class="text-xs font-bold uppercase opacity-50 mb-2">Data Sample</p>
+        <div class="overflow-x-auto">
+            <table class="table table-xs">
+                <thead>
+                    <tr>
+                        <For each={props.headers}>{(h) => <th>{h}</th>}</For>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <For each={props.headers}>{(h) => <td>{props.sampleRow?.[h]}</td>}</For>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+);
+
+const StepPreview: Component<{ data: PreviewReading[] }> = (props) => (
+  <>
+    <p class="mb-4 font-bold">Preview Readings ({props.data.length})</p>
+    <div class="overflow-x-auto max-h-96 border rounded-lg">
+        <table class="table table-xs table-pin-rows">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Value</th>
+                    <th class="opacity-50 italic">Original</th>
+                </tr>
+            </thead>
+            <tbody>
+                <For each={props.data}>{(row) => (
+                    <tr>
+                        <td>{row.date.toLocaleDateString()}</td>
+                        <td class="font-bold">{row.value}</td>
+                        <td class="opacity-50 italic">{row.originalDate} | {row.originalValue}</td>
+                    </tr>
+                )}</For>
+            </tbody>
+        </table>
+    </div>
+  </>
+);
 
 type Step = 'upload' | 'mapping' | 'preview' | 'importing';
 
@@ -33,7 +178,6 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
   const [csvData, setCsvData] = createSignal<Record<string, string>[]>([]);
   const [headers, setHeaders] = createSignal<string[]>([]);
   
-  // New Mapping State
   const [targetMeterId, setTargetMeterId] = createSignal<string>('');
   const [dateColumn, setDateColumn] = createSignal<string>('');
   const [valueColumn, setValueColumn] = createSignal<string>('');
@@ -56,12 +200,6 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     }
   });
 
-  createEffect(() => {
-    if (props.isOpen && !targetMeterId() && props.meters.length > 0) {
-      setTargetMeterId(props.meters[0]._id);
-    }
-  });
-
   const handleTextProcess = (text: string) => {
     try {
       const parsed = parseCsv(text);
@@ -73,12 +211,8 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
       setCsvData(parsed);
       setHeaders(cols);
       
-      // Heuristic for auto-selection
-      const dateCol = cols.find(h => /date|datum/i.test(h)) || cols[0];
-      const valCol = cols.find(h => /value|wert|strom|gas|wasser/i.test(h)) || (cols.length > 1 ? cols[1] : '');
-      
-      setDateColumn(dateCol);
-      setValueColumn(valCol);
+      setDateColumn(cols.find(h => /date|datum/i.test(h)) || cols[0]);
+      setValueColumn(cols.find(h => /value|wert|strom|gas|wasser/i.test(h)) || (cols.length > 1 ? cols[1] : ''));
       
       setStep('mapping');
       setError(null);
@@ -87,38 +221,14 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     }
   };
 
-  const handlePasteButtonClick = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (!text) {
-        setError('Clipboard is empty');
-        return;
-      }
-      handleTextProcess(text);
-    } catch (err) {
-      setError('Failed to read clipboard. Please paste manually into the box below.');
-    }
-  };
-
-  const handleManualPaste = (e: InputEvent) => {
-    const text = (e.target as HTMLTextAreaElement).value;
-    if (text) {
-      handleTextProcess(text);
-    }
-  };
-
   const parseDate = (dateStr: string) => {
     if (!dateStr) {return null;}
-    // Try ISO
     const date = new Date(dateStr);
     if (!isNaN(date.getTime())) {return date;}
-
-    // Try dd.mm.yyyy (European)
     const euMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
     if (euMatch) {
       return new Date(`${euMatch[3]}-${euMatch[2].padStart(2, '0')}-${euMatch[1].padStart(2, '0')}`);
     }
-    
     return null;
   };
 
@@ -131,53 +241,20 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     if (!meterId || !dateCol || !valCol) {return [];}
 
     const result: PreviewReading[] = [];
-    
     data.forEach(row => {
-      const dateStr = row[dateCol];
-      const date = parseDate(dateStr);
-      
-      if (!date) {return;}
-
-      const valStr = row[valCol];
-      if (!valStr) {return;}
-      
-      const value = parseLocaleNumber(valStr);
-      if (isNaN(value)) {return;}
-
-      result.push({
-        meterId,
-        date,
-        value,
-        originalDate: dateStr,
-        originalValue: valStr
-      });
+      const date = parseDate(row[dateCol]);
+      const value = parseLocaleNumber(row[valCol]);
+      if (date && !isNaN(value)) {
+        result.push({ meterId, date, value, originalDate: row[dateCol], originalValue: row[valCol] });
+      }
     });
-
     return result;
-  };
-
-  const handleNextToPreview = () => {
-     if (!targetMeterId()) {
-         setError('Please select a target meter.');
-         return;
-     }
-     if (!dateColumn() || !valueColumn()) {
-         setError('Please map both Date and Value columns.');
-         return;
-     }
-     setStep('preview');
-     setError(null);
   };
 
   const handleImport = async () => {
     setStep('importing');
     try {
-      const readings = getPreviewData().map(r => ({
-          meterId: r.meterId,
-          date: r.date,
-          value: r.value
-      }));
-      await props.onSave(readings);
+      await props.onSave(getPreviewData());
       props.onClose();
     } catch (e) {
       setError('Import failed');
@@ -191,7 +268,6 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
         <div class="modal modal-open">
           <div class="modal-box w-11/12 max-w-2xl">
             <h3 class="font-bold text-lg">Import Readings</h3>
-            
             <div class="py-4">
                <Show when={props.meters.length === 0}>
                  <div class="alert alert-warning mb-6 shadow-sm border-none rounded-2xl flex items-start gap-4">
@@ -206,138 +282,29 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
                {error() && <div class="alert alert-error mb-4">{error()}</div>}
 
                <Show when={step() === 'upload'}>
-                 <div class="flex flex-col gap-6">
-                    <button 
-                      class="btn btn-outline btn-lg border-2 border-dashed h-32 flex flex-col gap-1 hover:bg-base-200 normal-case w-full"
-                      onClick={handlePasteButtonClick}
-                    >
-                        <span class="text-xl font-black">Paste from Clipboard</span>
-                        <span class="text-xs opacity-60 font-bold uppercase tracking-widest">Click here to auto-fill</span>
-                    </button>
-                    
-                    <div class="divider opacity-20 text-xs font-black uppercase tracking-[0.2em]">OR</div>
-
-                    <div class="form-control w-full">
-                      <label class="label">
-                        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Manual Paste (CSV / Tab-separated)</span>
-                      </label>
-                      <textarea 
-                        class="textarea textarea-bordered w-full h-40 font-mono text-sm bg-base-200/50 border-none focus:ring-2 focus:ring-primary transition-all" 
-                        placeholder="01.01.2022	2.852..."
-                        onInput={(e) => handleManualPaste(e)}
-                      ></textarea>
-                    </div>
-                 </div>
+                 <StepUpload 
+                   onPasteClick={async () => handleTextProcess(await navigator.clipboard.readText())} 
+                   onManualPaste={(e) => handleTextProcess(e.target.value)} 
+                 />
                </Show>
 
                <Show when={step() === 'mapping'}>
-                 <div class="space-y-6">
-                    <div class="form-control w-full">
-                        <label class="label">
-                            <span class="label-text font-bold">1. Select Target Meter</span>
-                        </label>
-                        <select 
-                            class="select select-bordered w-full" 
-                            value={targetMeterId()} 
-                            onChange={(e) => setTargetMeterId(e.currentTarget.value)}
-                        >
-                            <option value="" disabled selected>Choose Meter...</option>
-                            <For each={props.meters}>{(meter) => (
-                                <option value={meter._id}>{meter.name}</option>
-                            )}</For>
-                        </select>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text font-bold">2. Date Column</span>
-                            </label>
-                            <select 
-                                class="select select-bordered w-full" 
-                                value={dateColumn()} 
-                                onChange={(e) => setDateColumn(e.currentTarget.value)}
-                            >
-                                <For each={headers()}>{(header) => (
-                                    <option value={header}>{header}</option>
-                                )}</For>
-                            </select>
-                        </div>
-
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text font-bold">3. Value Column</span>
-                            </label>
-                            <select 
-                                class="select select-bordered w-full" 
-                                value={valueColumn()} 
-                                onChange={(e) => setValueColumn(e.currentTarget.value)}
-                            >
-                                <For each={headers()}>{(header) => (
-                                    <option value={header}>{header}</option>
-                                )}</For>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-base-200 p-4 rounded-lg">
-                        <p class="text-xs font-bold uppercase opacity-50 mb-2">Data Sample</p>
-                        <div class="overflow-x-auto">
-                            <table class="table table-xs">
-                                <thead>
-                                    <tr>
-                                        <For each={headers()}>{(h) => <th>{h}</th>}</For>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <For each={headers()}>{(h) => <td>{csvData()[0]?.[h]}</td>}</For>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                 </div>
+                 <StepMapping 
+                   meters={props.meters} targetMeterId={targetMeterId()} setTargetMeterId={setTargetMeterId}
+                   headers={headers()} dateColumn={dateColumn()} setDateColumn={setDateColumn}
+                   valueColumn={valueColumn()} setValueColumn={setValueColumn} sampleRow={csvData()[0]}
+                 />
                </Show>
 
-               <Show when={step() === 'preview'}>
-                  <p class="mb-4 font-bold">Preview Readings ({getPreviewData().length})</p>
-                  <div class="overflow-x-auto max-h-96 border rounded-lg">
-                      <table class="table table-xs table-pin-rows">
-                          <thead>
-                              <tr>
-                                  <th>Date</th>
-                                  <th>Value</th>
-                                  <th class="opacity-50 italic">Original</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              <For each={getPreviewData()}>{(row) => (
-                                  <tr>
-                                      <td>{row.date.toLocaleDateString()}</td>
-                                      <td class="font-bold">{row.value}</td>
-                                      <td class="opacity-50 italic">{row.originalDate} | {row.originalValue}</td>
-                                  </tr>
-                              )}</For>
-                          </tbody>
-                      </table>
-                  </div>
-               </Show>
-               
-               <Show when={step() === 'importing'}>
-                   <div class="flex justify-center p-10">
-                       <span class="loading loading-spinner loading-lg"></span>
-                   </div>
-               </Show>
+               <Show when={step() === 'preview'}><StepPreview data={getPreviewData()} /></Show>
+               <Show when={step() === 'importing'}><div class="flex justify-center p-10"><span class="loading loading-spinner loading-lg"></span></div></Show>
             </div>
 
             <div class="modal-action">
-              <Show when={step() === 'upload'}>
-                  <button class="btn" onClick={props.onClose}>Cancel</button>
-              </Show>
+              <Show when={step() === 'upload'}><button class="btn" onClick={props.onClose}>Cancel</button></Show>
               <Show when={step() === 'mapping'}>
                   <button class="btn" onClick={() => setStep('upload')}>Back</button>
-                  <button class="btn btn-primary" onClick={handleNextToPreview}>Next: Preview</button>
+                  <button class="btn btn-primary" onClick={() => { if(targetMeterId() && dateColumn() && valueColumn()) setStep('preview'); else setError('Please map all fields.'); }}>Next: Preview</button>
               </Show>
               <Show when={step() === 'preview'}>
                   <button class="btn" onClick={() => setStep('mapping')}>Back</button>
