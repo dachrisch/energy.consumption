@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.7.0](https://github.com/dachrisch/energy.consumption/compare/v3.6.0...v3.7.0) (2026-01-29)
+
+
+### Features
+
+* integrate gemini ocr with auto-meter matching and user-specific api keys ([a940642](https://github.com/dachrisch/energy.consumption/commit/a940642005aa22f249645159189e051cc5dbf2b6))
+
 ## [3.6.0](https://github.com/dachrisch/energy.consumption/compare/v3.5.0...v3.6.0) (2026-01-28)
 
 
