@@ -1,6 +1,6 @@
 {
   "name": "vite-template-solid",
-  "version": "3.8.3",
+  "version": "3.8.4",
   "description": "",
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "build:server": "esbuild src/api/server.ts --bundle --platform=node --outfile=dist-server/server.js --format=esm --packages=external",
     "start:prod": "node dist-server/server.js",
     "serve": "vite preview",
-    "test": "vitest",
+    "test": "vitest --run",
     "test:e2e": "playwright test",
     "lint": "eslint src --ext .ts,.tsx -c .eslintrc.quality.json",
     "release": "standard-version && git push --follow-tags origin HEAD",
