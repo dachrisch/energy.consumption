@@ -6,6 +6,7 @@ import Contract from '../models/Contract';
 import { calculateAggregates } from '../lib/aggregates';
 import { processBulkReadings } from '../lib/readingService';
 import { scanImageWithGemini } from '../lib/geminiOcrv2';
+import { encrypt, decrypt } from '../lib/encryption';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -51,7 +52,10 @@ function getUserId(req: ApiRequest) {
 }
 
 async function handleSession(res: ApiResponse, userId: string) {
-  const user = await User.findById(userId).select('-password');
+  const user = await User.findById(userId).select('-password').lean();
+  if (user && user.googleApiKey) {
+    user.googleApiKey = decrypt(user.googleApiKey);
+  }
   res.end(JSON.stringify(user));
 }
 
@@ -112,10 +116,13 @@ async function handleProfileUpdate(req: ApiRequest, res: ApiResponse, userId: st
     updateData.password = await bcrypt.hash(password, 10);
   }
   if (req.body.googleApiKey !== undefined) {
-    updateData.googleApiKey = req.body.googleApiKey;
+    updateData.googleApiKey = encrypt(req.body.googleApiKey as string);
   }
 
-  const updated = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
+  const updated = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password').lean();
+  if (updated && updated.googleApiKey) {
+    updated.googleApiKey = decrypt(updated.googleApiKey);
+  }
   res.end(JSON.stringify(updated));
 }
 
@@ -178,7 +185,8 @@ async function handleBulkReadings({ req, res, userId }: RouteParams) {
 }
 async function getGeminiApiKey(userId: string): Promise<string | undefined> {
   const user = await User.findById(userId);
-  return user?.googleApiKey || process.env.GOOGLE_API_KEY;
+  const key = user?.googleApiKey ? decrypt(user.googleApiKey) : undefined;
+  return key || process.env.GOOGLE_API_KEY;
 }
 
 function parseGeminiResult(ocrResultText: string) {
