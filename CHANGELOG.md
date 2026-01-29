@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.20](https://github.com/dachrisch/energy.consumption/compare/v3.8.19...v3.8.20) (2026-01-29)
+
+
+### Bug Fixes
+
+* resolve linting errors preventing CI build ([badf3a2](https://github.com/dachrisch/energy.consumption/commit/badf3a236cffbd79cf9cca0f2e8e75f9551abd46))
+
 ### [3.8.19](https://github.com/dachrisch/energy.consumption/compare/v3.8.18...v3.8.19) (2026-01-29)
 
 
