@@ -35,9 +35,11 @@ const authLimiter = rateLimit({
 	legacyHeaders: false,
 });
 
-app.use('/api/', apiLimiter);
 app.use('/api/register', authLimiter);
 app.use('/api/login', authLimiter);
+
+// Apply general API limiter to all routes (including static and fallback)
+app.use(apiLimiter);
 
 app.use(bodyParser.json({ limit: '10mb' }));
 

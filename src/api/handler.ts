@@ -67,7 +67,7 @@ async function handleRegister(req: ApiRequest, res: ApiResponse) {
     return;
   }
   const { name, email, password } = req.body as { name?: string, email?: string, password?: string };
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email: { $eq: email } });
   if (existingUser) {
     res.statusCode = 400;
     res.end(JSON.stringify({ error: 'User already exists' }));
@@ -86,7 +86,7 @@ async function handleRegister(req: ApiRequest, res: ApiResponse) {
 
 async function handleLogin(req: ApiRequest, res: ApiResponse) {
   const { email, password } = req.body as { email?: string, password?: string };
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: { $eq: email } });
   if (!user || !password || !(await bcrypt.compare(password, user.password))) {
     res.statusCode = 401;
     res.end(JSON.stringify({ error: 'Invalid credentials' }));
@@ -104,7 +104,7 @@ async function handleProfileUpdate(req: ApiRequest, res: ApiResponse, userId: st
 
   if (name) { updateData.name = name; }
   if (email) {
-    const existing = await User.findOne({ email, _id: { $ne: userId } });
+    const existing = await User.findOne({ email: { $eq: email }, _id: { $ne: userId } });
     if (existing) {
       res.statusCode = 400;
       res.end(JSON.stringify({ error: 'Email already in use' }));
@@ -129,7 +129,7 @@ async function handleProfileUpdate(req: ApiRequest, res: ApiResponse, userId: st
 async function handleMeters({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
     const id = url.searchParams.get('id');
-    const query = id ? { _id: id } : {};
+    const query = id ? { _id: { $eq: id } } : {};
     const meters = await Meter.find(query).setOptions({ userId });
     res.end(JSON.stringify(meters));
     return;
@@ -146,15 +146,15 @@ async function handleMeterItem({ req, res, userId, path }: RouteParams) {
   const id = path.split('/').pop()!;
   if (req.method === 'DELETE') {
     await Promise.all([
-      Reading.deleteMany({ meterId: id }).setOptions({ userId }),
-      Contract.deleteMany({ meterId: id }).setOptions({ userId }),
-      Meter.deleteOne({ _id: id }).setOptions({ userId })
+      Reading.deleteMany({ meterId: { $eq: id } }).setOptions({ userId }),
+      Contract.deleteMany({ meterId: { $eq: id } }).setOptions({ userId }),
+      Meter.deleteOne({ _id: { $eq: id } }).setOptions({ userId })
     ]);
     res.end(JSON.stringify({ message: 'Meter and associated data deleted' }));
     return;
   }
   if (req.method === 'PATCH' || req.method === 'PUT') {
-    const updated = await Meter.findOneAndUpdate({ _id: id }, { $set: req.body }, { new: true }).setOptions({ userId });
+    const updated = await Meter.findOneAndUpdate({ _id: { $eq: id } }, { $set: req.body }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
     return;
   }
@@ -211,7 +211,7 @@ interface GeminiOcrResult {
 
 async function findOrCreateMeter(result: GeminiOcrResult, userId: string) {
   const { meter_number: meterNumber, type, unit } = result;
-  let meter = await Meter.findOne({ meterNumber }).setOptions({ userId });
+  let meter = await Meter.findOne({ meterNumber: { $eq: meterNumber } }).setOptions({ userId });
 
   if (!meter) {
     meter = await Meter.create({
@@ -268,7 +268,7 @@ async function handleOcrScan({ req, res, userId }: RouteParams) {
 async function handleReadings({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
     const meterId = url.searchParams.get('meterId');
-    const query = meterId ? { meterId } : {};
+    const query = meterId ? { meterId: { $eq: meterId } } : {};
     const readings = await Reading.find(query).setOptions({ userId }).sort({ date: -1 });
     res.end(JSON.stringify(readings));
     return;
@@ -284,12 +284,12 @@ async function handleReadings({ req, res, userId, url }: RouteParams) {
 async function handleReadingItem({ req, res, userId, path }: RouteParams) {
   const id = path.split('/').pop()!;
   if (req.method === 'DELETE') {
-    await Reading.deleteOne({ _id: id }).setOptions({ userId });
+    await Reading.deleteOne({ _id: { $eq: id } }).setOptions({ userId });
     res.end(JSON.stringify({ message: 'Deleted' }));
     return;
   }
   if (req.method === 'PATCH' || req.method === 'PUT') {
-    const updated = await Reading.findOneAndUpdate({ _id: id }, { $set: req.body }, { new: true }).setOptions({ userId });
+    const updated = await Reading.findOneAndUpdate({ _id: { $eq: id } }, { $set: req.body }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
     return;
   }
@@ -299,7 +299,7 @@ async function handleContracts({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
     const meterId = url.searchParams.get('meterId');
     const id = url.searchParams.get('id');
-    const query = id ? { _id: id } : (meterId ? { meterId } : {});
+    const query = id ? { _id: { $eq: id } } : (meterId ? { meterId: { $eq: meterId } } : {});
     const contracts = await Contract.find(query).populate('meterId').setOptions({ userId }).sort({ startDate: -1 });
     res.end(JSON.stringify(contracts));
     return;
@@ -315,12 +315,12 @@ async function handleContracts({ req, res, userId, url }: RouteParams) {
 async function handleContractItem({ req, res, userId, path }: RouteParams) {
   const id = path.split('/').pop()!;
   if (req.method === 'DELETE') {
-    await Contract.deleteOne({ _id: id }).setOptions({ userId });
+    await Contract.deleteOne({ _id: { $eq: id } }).setOptions({ userId });
     res.end(JSON.stringify({ message: 'Deleted' }));
     return;
   }
   if (req.method === 'PATCH' || req.method === 'PUT') {
-    const updated = await Contract.findOneAndUpdate({ _id: id }, { $set: req.body }, { new: true }).setOptions({ userId });
+    const updated = await Contract.findOneAndUpdate({ _id: { $eq: id } }, { $set: req.body }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
     return;
   }

@@ -16,7 +16,7 @@ export async function processBulkReadings(readings: any[], userId: string, Meter
   // Cache owned meter IDs for fast lookup
   // In a real DB scenario, we might want to batch this or just check inclusion if list is small.
   // Assuming user doesn't have thousands of meters.
-  const ownedMeters = await MeterModel.find({ userId });
+  const ownedMeters = await MeterModel.find({ userId: { $eq: userId } });
   const ownedMeterIds = new Set(ownedMeters.map((m: any) => m._id.toString()));
 
   for (let i = 0; i < readings.length; i++) {
@@ -34,9 +34,9 @@ export async function processBulkReadings(readings: any[], userId: string, Meter
     // Given the "bulk" nature, maybe verify existence 1-by-1 or via a complex $or query.
     // For now, 1-by-1 check is acceptable for typical user import sizes (~hundreds).
     const existing = await ReadingModel.find({
-        meterId: reading.meterId,
-        date: reading.date,
-        userId: userId // redundant if meter check passed, but good for safety
+        meterId: { $eq: reading.meterId },
+        date: { $eq: reading.date },
+        userId: { $eq: userId } // redundant if meter check passed, but good for safety
     });
 
     if (existing.length > 0) {
