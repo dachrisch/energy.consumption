@@ -112,7 +112,7 @@ const AddReading: Component = () => {
 
   const selectedMeter = () => {
     const list = meters();
-    if (!list) return undefined;
+    if (!list) {return undefined;}
     return list.find((m: Meter) => m._id === selectedMeterId());
   };
 

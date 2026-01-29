@@ -171,71 +171,75 @@ async function handleBulkReadings({ req, res, userId }: RouteParams) {
     return;
   }
 }
+async function getGeminiApiKey(userId: string): Promise<string | undefined> {
+  const user = await User.findById(userId);
+  return user?.googleApiKey || process.env.GOOGLE_API_KEY;
+}
+
+function parseGeminiResult(ocrResultText: string) {
+  const jsonMatch = ocrResultText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Gemini failed to return structured JSON');
+  }
+
+  const result = JSON.parse(jsonMatch[0]);
+  if (!result.value || !result.meter_number) {
+    throw new Error('Gemini missed critical fields in JSON');
+  }
+  return result;
+}
+
+async function findOrCreateMeter(result: any, userId: string) {
+  const { meter_number: meterNumber, type, unit } = result;
+  let meter = await Meter.findOne({ meterNumber }).setOptions({ userId });
+
+  if (!meter) {
+    meter = await Meter.create({
+      name: `Meter ${meterNumber}`,
+      meterNumber,
+      type: type || 'power',
+      unit: unit || 'kWh',
+      userId
+    });
+  }
+  return meter;
+}
+
 async function handleOcrScan({ req, res, userId }: RouteParams) {
-  if (req.method === 'POST') {
-    const { image } = req.body as { image?: string };
-    if (!image) {
-      res.statusCode = 400;
-      res.end(JSON.stringify({ error: 'Image required (base64)' }));
-      return;
-    }
+  if (req.method !== 'POST') {return;}
 
-    const user = await User.findById(userId);
-    const apiKey = user?.googleApiKey || process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      res.statusCode = 503;
-      res.end(JSON.stringify({ error: 'Gemini OCR not configured. Set GOOGLE_API_KEY in Profile Settings.' }));
-      return;
-    }
-
-    // Convert base64 to Blob
-    const base64Data = image.split(',')[1] || image;
-    const buffer = Buffer.from(base64Data, 'base64');
-    const blob = new Blob([buffer], { type: 'image/jpeg' });
-
-    try {
-      const ocrResultText = await scanImageWithGemini(blob, apiKey);
-
-      // Extract JSON from markdown if Gemini wraps it
-      const jsonMatch = ocrResultText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Gemini failed to return structured JSON');
-      }
-
-      const result = JSON.parse(jsonMatch[0]);
-      const value = result.value;
-      const meterNumber = result.meter_number;
-
-      if (!value || !meterNumber) {
-        throw new Error('Gemini missed critical fields in JSON');
-      }
-
-      // 2. Matching Logic
-      let meter = await Meter.findOne({ meterNumber }).setOptions({ userId });
-
-      if (!meter) {
-        // Create it
-        meter = await Meter.create({
-          name: `Meter ${meterNumber}`,
-          meterNumber: meterNumber,
-          type: result.type || 'power',
-          unit: result.unit || 'kWh',
-          userId
-        });
-      }
-
-      res.end(JSON.stringify({
-        value,
-        meterId: meter._id,
-        meterName: meter.name,
-        unit: meter.unit
-      }));
-    } catch (e) {
-      console.error('Gemini OCR Error:', e);
-      res.statusCode = 502;
-      res.end(JSON.stringify({ error: e instanceof Error ? e.message : 'OCR failed' }));
-    }
+  const { image } = req.body as { image?: string };
+  if (!image) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'Image required (base64)' }));
     return;
+  }
+
+  const apiKey = await getGeminiApiKey(userId);
+  if (!apiKey) {
+    res.statusCode = 503;
+    res.end(JSON.stringify({ error: 'Gemini OCR not configured. Set GOOGLE_API_KEY in Profile Settings.' }));
+    return;
+  }
+
+  try {
+    const base64Data = image.split(',')[1] || image;
+    const blob = new Blob([Buffer.from(base64Data, 'base64')], { type: 'image/jpeg' });
+
+    const ocrResultText = await scanImageWithGemini(blob, apiKey);
+    const result = parseGeminiResult(ocrResultText);
+    const meter = await findOrCreateMeter(result, userId);
+
+    res.end(JSON.stringify({
+      value: result.value,
+      meterId: meter._id,
+      meterName: meter.name,
+      unit: meter.unit
+    }));
+  } catch (e) {
+    console.error('Gemini OCR Error:', e);
+    res.statusCode = 502;
+    res.end(JSON.stringify({ error: e instanceof Error ? e.message : 'OCR failed' }));
   }
 }
 

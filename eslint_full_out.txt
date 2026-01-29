@@ -1,0 +1,143 @@
+
+> vite-template-solid@3.7.0 lint
+> eslint src --ext .ts,.tsx -c .eslintrc.quality.json
+
+
+/home/cda/dev/playground/energy.consumption/src/api/__tests__/contracts.test.ts
+  8:39  warning  Arrow function has too many lines (54). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/api/handler.ts
+  192:42  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  209:30  error    Expected { after 'if' condition           curly
+
+/home/cda/dev/playground/energy.consumption/src/api/server.ts
+  51:3  warning  Unexpected console statement  no-console
+
+/home/cda/dev/playground/energy.consumption/src/components/ConsumptionChart.tsx
+  33:108  warning  Arrow function has too many lines (57). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/components/CsvImportModal.tsx
+   14:22  warning  Unexpected any. Specify a different type                        @typescript-eslint/no-explicit-any
+   20:56  warning  Arrow function has too many lines (280). Maximum allowed is 50  max-lines-per-function
+  122:19  warning  Unexpected any. Specify a different type                        @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/components/Navigation.tsx
+  5:31  warning  Arrow function has too many lines (67). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/components/__tests__/ConsumptionChart.test.tsx
+   6:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  19:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/components/__tests__/ContractTemplateCard.test.tsx
+  17:90  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:90  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/context/ToastContext.tsx
+  22:30  warning  Arrow function has too many lines (72). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/lib/__tests__/aggregates.test.ts
+  50:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/lib/__tests__/csvParser.test.ts
+  4:24  warning  Arrow function has too many lines (55). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/lib/__tests__/gapDetection.test.ts
+  14:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/lib/__tests__/readingService.test.ts
+   6:12   warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+   7:9    warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+   8:11   warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+   9:15   warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  12:43   warning  Arrow function has too many lines (65). Maximum allowed is 50  max-lines-per-function
+  47:82   warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  47:107  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  67:82   warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  67:107  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  89:82   warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  89:107  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/lib/aggregates.ts
+  11:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/lib/chartConfig.ts
+  3:32  warning  Arrow function has too many lines (71). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/lib/csvParser.ts
+  1:8  warning  Function 'parseCsv' has too many lines (53). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/lib/gapDetection.ts
+  6:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  6:62  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/lib/mongodb.ts
+  3:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  6:23  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/lib/projectionUtils.ts
+  1:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/lib/readingService.ts
+   7:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   7:88   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   7:107  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:32   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:53   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/models/__tests__/contracts.test.ts
+  8:39  warning  Arrow function has too many lines (54). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/models/sessionFilter.ts
+  22:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/pages/AddContract.tsx
+   34:32  warning  Arrow function has too many lines (161). Maximum allowed is 50  max-lines-per-function
+  175:53  warning  Unexpected any. Specify a different type                        @typescript-eslint/no-explicit-any
+
+/home/cda/dev/playground/energy.consumption/src/pages/AddMeter.tsx
+  11:29  warning  Arrow function has too many lines (89). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/AddReading.tsx
+  18:31  warning  Arrow function has too many lines (244). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/Contracts.tsx
+   29:30  warning  Arrow function has too many lines (133). Maximum allowed is 50  max-lines-per-function
+  107:14  warning  Arrow function has too many lines (58). Maximum allowed is 50   max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/Dashboard.tsx
+  72:30  warning  Arrow function has too many lines (119). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/Login.tsx
+  6:26  warning  Arrow function has too many lines (80). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/MeterDetail.tsx
+  39:32  warning  Arrow function has too many lines (126). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/MeterReadings.tsx
+  37:34  warning  Arrow function has too many lines (126). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/Meters.tsx
+  35:27  warning  Arrow function has too many lines (172). Maximum allowed is 50  max-lines-per-function
+  83:14  warning  Arrow function has too many lines (121). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/Profile.tsx
+  5:28  warning  Arrow function has too many lines (119). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/Register.tsx
+  5:29  warning  Arrow function has too many lines (109). Maximum allowed is 50  max-lines-per-function
+
+/home/cda/dev/playground/energy.consumption/src/pages/__tests__/Meters.test.tsx
+  12:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 67 problems (1 error, 66 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
