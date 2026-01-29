@@ -12,8 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 80;
 
 if (!process.env.JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable is not set.');
-  process.exit(1);
+  console.warn('WARNING: JWT_SECRET environment variable is not set. Using a random secret.');
 }
 
 const apiLimiter = rateLimit({

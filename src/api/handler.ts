@@ -9,12 +9,12 @@ import { scanImageWithGemini } from '../lib/geminiOcrv2';
 import { encrypt, decrypt } from '../lib/encryption';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
 
-if (!JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable is not set.');
-  process.exit(1);
+if (!process.env.JWT_SECRET) {
+  console.warn('WARNING: JWT_SECRET environment variable is not set. Using a random secret. Sessions will not persist across restarts.');
 }
 
 interface ApiRequest {
