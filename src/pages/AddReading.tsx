@@ -205,7 +205,13 @@ const AddReading: Component = () => {
                   <select
                     class="select select-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
                     value={selectedMeterId()}
-                    onChange={(e) => setSelectedMeterId(e.currentTarget.value)}
+                    onChange={(e) => {
+                      if (e.currentTarget.value === 'NEW_METER') {
+                        navigate('/meters/add');
+                      } else {
+                        setSelectedMeterId(e.currentTarget.value);
+                      }
+                    }}
                     required
                   >
                     <option value="" disabled>Choose a meter...</option>
@@ -216,6 +222,7 @@ const AddReading: Component = () => {
                         </option>
                       )}
                     </For>
+                    <option value="NEW_METER" class="text-primary font-bold">+ Register New Meter...</option>
                   </select>
                 </div>
 
