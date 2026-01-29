@@ -14,6 +14,11 @@ on:
         required: true
         description: The local name to use for the image
         type: string
+      version:
+        required: false
+        description: Version string to embed in the build
+        type: string
+        default: "dev"
     outputs:
       artifact_name:
         description: "Name of the uploaded artifact containing the Docker image"
@@ -41,6 +46,8 @@ jobs:
           outputs: type=docker,dest=/tmp/${{ inputs.image_name }}.tar
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VITE_BUILD_VERSION=${{ inputs.version }}
 
       - name: 📤 Upload Docker image as artifact
         uses: actions/upload-artifact@v6

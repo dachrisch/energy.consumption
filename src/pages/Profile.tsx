@@ -1,14 +1,17 @@
 import { Component, createSignal, Show, onMount } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { getVersion, getVersionLink, isDevVersion } from '../lib/version';
 
 const Profile: Component = () => {
   const auth = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [googleApiKey, setGoogleApiKey] = createSignal('');
-  const toast = useToast();
 
   onMount(() => {
     const user = auth.user();
@@ -37,6 +40,7 @@ const Profile: Component = () => {
         toast.showToast('Profile updated successfully!', 'success');
         auth.revalidate();
         setPassword('');
+        setTimeout(() => navigate(-1), 500);
       } else {
         toast.showToast(data.error || 'Update failed', 'error');
       }
@@ -119,6 +123,23 @@ const Profile: Component = () => {
                     <button type="submit" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full">
                       Update Account
                     </button>
+                  </div>
+
+                  <div class="divider my-8 opacity-30"></div>
+                  <div class="text-center">
+                    <a
+                      href={getVersionLink()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-[11px] font-mono opacity-40 hover:opacity-100 hover:text-primary transition-all inline-flex items-center gap-2"
+                    >
+                      <Show when={!isDevVersion()} fallback={<span>dev</span>}>
+                        <span>{getVersion()}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </Show>
+                    </a>
                   </div>
                 </form>
               </div>

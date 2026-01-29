@@ -45,6 +45,11 @@ export default defineConfig(({ mode }) => {
       solidPlugin(),
       apiMiddleware
     ],
+    define: {
+      'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(
+        process.env.VITE_BUILD_VERSION || 'dev'
+      ),
+    },
     server: {
       port: 3000,
     },

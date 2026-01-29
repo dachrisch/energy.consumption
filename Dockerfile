@@ -1,6 +1,10 @@
 # Build stage
 FROM node:24-alpine AS build
 
+# Accept version as build argument
+ARG VITE_BUILD_VERSION=dev
+ENV VITE_BUILD_VERSION=${VITE_BUILD_VERSION}
+
 WORKDIR /app
 
 COPY package*.json ./
