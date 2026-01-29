@@ -2,10 +2,10 @@ import CryptoJS from 'crypto-js';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 if (!ENCRYPTION_KEY && process.env.NODE_ENV === 'production') {
-    throw new Error('CRITICAL: ENCRYPTION_KEY environment variable is required in production.');
+    console.warn('WARNING: ENCRYPTION_KEY environment variable is not set in production. Using a fallback key. Database data will be insecure and may become unreadable if the key is changed later.');
 }
 
-// Fallback for dev only to prevent breaking local setup
+// Fallback for dev/build to prevent breaking local setup or build process
 const KEY = ENCRYPTION_KEY || 'dev-encryption-key-321';
 
 export function encrypt(text: string): string {
