@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
+import rateLimit from 'express-rate-limit';
 import { apiHandler } from './handler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,6 +15,25 @@ if (!process.env.JWT_SECRET) {
   console.error('FATAL: JWT_SECRET environment variable is not set.');
   process.exit(1);
 }
+
+const apiLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 100, // Limit each IP to 100 requests per window
+	standardHeaders: true,
+	legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+	windowMs: 60 * 60 * 1000, // 1 hour
+	max: 10, // Limit each IP to 10 registration/login attempts per hour
+	message: 'Too many requests from this IP, please try again after an hour',
+    standardHeaders: true,
+	legacyHeaders: false,
+});
+
+app.use('/api/', apiLimiter);
+app.use('/api/register', authLimiter);
+app.use('/api/login', authLimiter);
 
 app.use(bodyParser.json({ limit: '10mb' }));
 
