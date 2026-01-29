@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.8.0](https://github.com/dachrisch/energy.consumption/compare/v3.7.1...v3.8.0) (2026-01-29)
+
+
+### Features
+
+* add build version display in profile with CI injection ([#285](https://github.com/dachrisch/energy.consumption/issues/285)) ([6b461fe](https://github.com/dachrisch/energy.consumption/commit/6b461fe2ed9dc93defbad19f750fd2f080a07111))
+
+
+### Bug Fixes
+
+* allow photo picker to select from gallery on mobile ([#284](https://github.com/dachrisch/energy.consumption/issues/284)) ([ff02dc1](https://github.com/dachrisch/energy.consumption/commit/ff02dc1dd80f817c33164a07f27083c474dd69e7))
+
 ### [3.7.1](https://github.com/dachrisch/energy.consumption/compare/v3.7.0...v3.7.1) (2026-01-29)
 
 ## [3.7.0](https://github.com/dachrisch/energy.consumption/compare/v3.6.0...v3.7.0) (2026-01-29)
