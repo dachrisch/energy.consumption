@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.10](https://github.com/dachrisch/energy.consumption/compare/v3.8.9...v3.8.10) (2026-01-29)
+
+
+### Features
+
+* display discovered meter type in scan results ([65b9477](https://github.com/dachrisch/energy.consumption/commit/65b9477bb56d02d2a3da6aa51a58a69f4e0b4887))
+* enhance Gemini prompt for better meter type discovery ([51e8360](https://github.com/dachrisch/energy.consumption/commit/51e83602011ec8435c276cb8523d0ca2fef5bab4))
+* include discovered meter type in OCR scan API response ([7d76397](https://github.com/dachrisch/energy.consumption/commit/7d763978dcef52e992f4e14fa4188cbca27edc10))
+
 ### [3.8.9](https://github.com/dachrisch/energy.consumption/compare/v3.8.8...v3.8.9) (2026-01-29)
 
 ### [3.8.8](https://github.com/dachrisch/energy.consumption/compare/v3.8.7...v3.8.8) (2026-01-29)
