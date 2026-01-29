@@ -1,4 +1,4 @@
-import { IReading, IMeter } from '../types/models';
+import { IReading } from '../types/models';
 import { Model } from 'mongoose';
 
 interface BulkImportResult {

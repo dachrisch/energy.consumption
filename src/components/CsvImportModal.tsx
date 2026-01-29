@@ -304,7 +304,13 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
               <Show when={step() === 'upload'}><button class="btn" onClick={props.onClose}>Cancel</button></Show>
               <Show when={step() === 'mapping'}>
                   <button class="btn" onClick={() => setStep('upload')}>Back</button>
-                  <button class="btn btn-primary" onClick={() => { if(targetMeterId() && dateColumn() && valueColumn()) setStep('preview'); else setError('Please map all fields.'); }}>Next: Preview</button>
+                  <button class="btn btn-primary" onClick={() => { 
+                    if (targetMeterId() && dateColumn() && valueColumn()) {
+                      setStep('preview');
+                    } else {
+                      setError('Please map all fields.');
+                    }
+                  }}>Next: Preview</button>
               </Show>
               <Show when={step() === 'preview'}>
                   <button class="btn" onClick={() => setStep('mapping')}>Back</button>
