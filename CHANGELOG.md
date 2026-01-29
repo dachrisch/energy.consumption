@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.2](https://github.com/dachrisch/energy.consumption/compare/v3.8.1...v3.8.2) (2026-01-29)
+
+
+### Bug Fixes
+
+* defer strict ENCRYPTION_KEY check to runtime to allow builds without it ([474dbf0](https://github.com/dachrisch/energy.consumption/commit/474dbf0c1d3557d2a19ef929360fec6837433cd3))
+
 ### [3.8.1](https://github.com/dachrisch/energy.consumption/compare/v3.8.0...v3.8.1) (2026-01-29)
 
 ## [3.8.0](https://github.com/dachrisch/energy.consumption/compare/v3.7.1...v3.8.0) (2026-01-29)
