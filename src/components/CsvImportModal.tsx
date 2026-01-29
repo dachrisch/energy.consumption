@@ -8,10 +8,21 @@ interface Meter {
   name: string;
 }
 
+interface ImportReading {
+  meterId: string;
+  date: Date;
+  value: number;
+}
+
+interface PreviewReading extends ImportReading {
+  originalDate: string;
+  originalValue: string;
+}
+
 interface CsvImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (readings: any[]) => Promise<void>;
+  onSave: (readings: ImportReading[]) => Promise<void>;
   meters: Meter[];
 }
 
@@ -111,7 +122,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     return null;
   };
 
-  const getPreviewData = () => {
+  const getPreviewData = (): PreviewReading[] => {
     const data = csvData();
     const meterId = targetMeterId();
     const dateCol = dateColumn();
@@ -119,7 +130,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     
     if (!meterId || !dateCol || !valCol) {return [];}
 
-    const result: any[] = [];
+    const result: PreviewReading[] = [];
     
     data.forEach(row => {
       const dateStr = row[dateCol];
