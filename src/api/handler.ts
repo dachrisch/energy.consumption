@@ -5,6 +5,7 @@ import Reading from '../models/Reading';
 import Contract from '../models/Contract';
 import { calculateAggregates } from '../lib/aggregates';
 import { processBulkReadings } from '../lib/readingService';
+import { scanImageWithGemini } from '../lib/geminiOcrv2';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -105,6 +106,9 @@ async function handleProfileUpdate(req: ApiRequest, res: ApiResponse, userId: st
   if (password) {
     updateData.password = await bcrypt.hash(password, 10);
   }
+  if (req.body.googleApiKey !== undefined) {
+    updateData.googleApiKey = req.body.googleApiKey;
+  }
 
   const updated = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password');
   res.end(JSON.stringify(updated));
@@ -164,6 +168,73 @@ async function handleBulkReadings({ req, res, userId }: RouteParams) {
 
     res.statusCode = 200;
     res.end(JSON.stringify(result));
+    return;
+  }
+}
+async function handleOcrScan({ req, res, userId }: RouteParams) {
+  if (req.method === 'POST') {
+    const { image } = req.body as { image?: string };
+    if (!image) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: 'Image required (base64)' }));
+      return;
+    }
+
+    const user = await User.findById(userId);
+    const apiKey = user?.googleApiKey || process.env.GOOGLE_API_KEY;
+    if (!apiKey) {
+      res.statusCode = 503;
+      res.end(JSON.stringify({ error: 'Gemini OCR not configured. Set GOOGLE_API_KEY in Profile Settings.' }));
+      return;
+    }
+
+    // Convert base64 to Blob
+    const base64Data = image.split(',')[1] || image;
+    const buffer = Buffer.from(base64Data, 'base64');
+    const blob = new Blob([buffer], { type: 'image/jpeg' });
+
+    try {
+      const ocrResultText = await scanImageWithGemini(blob, apiKey);
+
+      // Extract JSON from markdown if Gemini wraps it
+      const jsonMatch = ocrResultText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('Gemini failed to return structured JSON');
+      }
+
+      const result = JSON.parse(jsonMatch[0]);
+      const value = result.value;
+      const meterNumber = result.meter_number;
+
+      if (!value || !meterNumber) {
+        throw new Error('Gemini missed critical fields in JSON');
+      }
+
+      // 2. Matching Logic
+      let meter = await Meter.findOne({ meterNumber }).setOptions({ userId });
+
+      if (!meter) {
+        // Create it
+        meter = await Meter.create({
+          name: `Meter ${meterNumber}`,
+          meterNumber: meterNumber,
+          type: result.type || 'power',
+          unit: result.unit || 'kWh',
+          userId
+        });
+      }
+
+      res.end(JSON.stringify({
+        value,
+        meterId: meter._id,
+        meterName: meter.name,
+        unit: meter.unit
+      }));
+    } catch (e) {
+      console.error('Gemini OCR Error:', e);
+      res.statusCode = 502;
+      res.end(JSON.stringify({ error: e instanceof Error ? e.message : 'OCR failed' }));
+    }
     return;
   }
 }
@@ -263,6 +334,7 @@ async function handleAuthenticatedRoute(params: RouteParams) {
   const routes: Record<string, () => Promise<void>> = {
     '/api/session': async () => { if (req.method === 'GET') { await handleSession(res, userId); } },
     '/api/profile': async () => { if (req.method === 'POST') { await handleProfileUpdate(req, res, userId); } },
+    '/api/ocr/scan': async () => { if (req.method === 'POST') { await handleOcrScan(params); } },
     '/api/dashboard': async () => handleAggregatedRoutes(params),
     '/api/aggregates': async () => handleAggregatedRoutes(params)
   };

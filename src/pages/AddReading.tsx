@@ -1,5 +1,6 @@
 import { Component, createSignal, createResource, Show, createEffect, For } from 'solid-js';
 import { useNavigate, useParams, A } from '@solidjs/router';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
 interface Meter {
@@ -18,12 +19,15 @@ const AddReading: Component = () => {
   const params = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const auth = useAuth();
 
   const [selectedMeterId, setSelectedMeterId] = createSignal(params.id || localStorage.getItem('lastMeterId') || '');
   const [value, setValue] = createSignal('');
   const [date, setDate] = createSignal(new Date().toISOString().split('T')[0]);
+  const [isScanning, setIsScanning] = createSignal(false);
+  const [scanPreview, setScanPreview] = createSignal<string | null>(null);
 
-  const [meters] = createResource<Meter[]>(fetchMeters);
+  const [meters, { refetch }] = createResource<Meter[]>(fetchMeters);
 
   // Sync selectedMeterId if params.id changes (e.g. navigating from a specific meter)
   createEffect(() => {
@@ -52,6 +56,59 @@ const AddReading: Component = () => {
       setSelectedMeterId(lastId);
     }
   });
+
+  const handleScan = async (e: Event) => {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) { return; }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (re) => setScanPreview(re.target?.result as string);
+    reader.readAsDataURL(file);
+
+    setIsScanning(true);
+    try {
+      // Convert File to Base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = (re) => resolve(re.target?.result as string);
+        r.onerror = () => reject(new Error('Failed to read file'));
+        r.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/ocr/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `OCR failed with status: ${res.status}`);
+      }
+
+      const result = await res.json();
+      setValue(result.value.toString());
+
+      // Auto-match/create meter logic
+      if (result.meterId) {
+        // If we found a different meter or created one, let's switch to it
+        if (result.meterId !== selectedMeterId()) {
+          setSelectedMeterId(result.meterId);
+          // Refetch meters to show the new one in the list if it was created
+          refetch();
+          toast.showToast(`Matched to meter: ${result.meterName}`, 'info');
+        }
+      }
+
+      toast.showToast('Reading detected!', 'success');
+    } catch (err) {
+      toast.showToast(err instanceof Error ? err.message : 'OCR failed', 'error');
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   const selectedMeter = () => {
     const list = meters();
@@ -102,9 +159,33 @@ const AddReading: Component = () => {
             </div>
             <div>
               <h2 class="text-2xl font-black tracking-tighter">No Meters Found</h2>
-              <p class="text-base-content/60 font-bold">You need at least one meter before you can log readings.</p>
+              <p class="text-base-content/60 font-bold mb-4">You need at least one meter before you can log readings.</p>
+
+              <div class="flex flex-col gap-3 items-center">
+                <div class="relative w-full max-w-xs">
+                  <input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input-empty" onChange={handleScan} />
+                  <label for="photo-input-empty" class="btn btn-outline btn-primary btn-lg rounded-2xl w-full gap-3">
+                    <Show when={isScanning()} fallback={
+                      <><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Scan Photo to Start</>
+                    }>
+                      <span class="loading loading-spinner loading-md"></span> Scanning...
+                    </Show>
+                  </label>
+                </div>
+                <div class="divider text-[10px] font-black opacity-20 uppercase tracking-widest">or</div>
+                <A href="/meters/add" class="btn btn-ghost btn-lg rounded-2xl opacity-60 hover:opacity-100">Add Manually</A>
+              </div>
             </div>
-            <A href="/meters/add" class="btn btn-primary btn-lg rounded-2xl shadow-xl shadow-primary/20 px-12">Add Your First Meter</A>
+
+            <Show when={!auth.user()?.googleApiKey}>
+              <div class="bg-primary/5 p-4 rounded-2xl border border-primary/10 transition-all hover:bg-primary/10">
+                <p class="text-xs font-bold text-primary flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>AI Scanning is disabled</span>
+                </p>
+                <A href="/profile" class="text-[10px] font-black uppercase text-primary underline mt-1 block">Enable OCR in Profile</A>
+              </div>
+            </Show>
           </div>
         }>
           <div class="mb-10 text-center md:text-left">
@@ -140,9 +221,29 @@ const AddReading: Component = () => {
                 <Show when={selectedMeter()}>
                   {(meter) => (
                     <div class="form-control w-full flex flex-col gap-2 animate-in fade-in slide-in-from-top-2">
-                      <label class="px-1">
-                        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
-                      </label>
+                      <div class="flex justify-between items-end px-1">
+                        <label>
+                          <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
+                        </label>
+                        <div class="relative">
+                          <input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input" onChange={handleScan} />
+                          <label for="photo-input" class="btn btn-xs btn-ghost gap-1 opacity-60 hover:opacity-100" title="Take a photo of the meter">
+                            <Show when={isScanning()} fallback={
+                              <><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Scan Photo</>
+                            }>
+                              <span class="loading loading-spinner loading-xs"></span> Scanning...
+                            </Show>
+                          </label>
+                        </div>
+                      </div>
+                      <Show when={!auth.user()?.googleApiKey && !isScanning()}>
+                        <div class="px-1 text-right animate-in fade-in slide-in-from-right-2">
+                          <A href="/profile" class="text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors flex items-center justify-end gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Enable AI Scanning
+                          </A>
+                        </div>
+                      </Show>
                       <div class="relative group">
                         <input
                           type="number"
@@ -158,6 +259,14 @@ const AddReading: Component = () => {
                           <span class="text-xl font-black opacity-20 uppercase">{meter().unit}</span>
                         </div>
                       </div>
+                      <Show when={scanPreview()}>
+                        <div class="mt-2 flex justify-center">
+                          <div class="relative">
+                            <img src={scanPreview()!} class="h-20 w-auto rounded-lg border shadow-sm" />
+                            <button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => setScanPreview(null)}>✕</button>
+                          </div>
+                        </div>
+                      </Show>
                     </div>
 
                   )}

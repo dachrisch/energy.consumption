@@ -7,6 +7,7 @@ const Profile: Component = () => {
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
+  const [googleApiKey, setGoogleApiKey] = createSignal('');
   const toast = useToast();
 
   onMount(() => {
@@ -14,6 +15,7 @@ const Profile: Component = () => {
     if (user) {
       setName(user.name);
       setEmail(user.email);
+      setGoogleApiKey(user.googleApiKey || '');
     }
   });
 
@@ -26,7 +28,8 @@ const Profile: Component = () => {
         body: JSON.stringify({
           name: name(),
           email: email(),
-          password: password() || undefined
+          password: password() || undefined,
+          googleApiKey: googleApiKey()
         }),
       });
       const data = await res.json();
@@ -95,6 +98,21 @@ const Profile: Component = () => {
                       value={password()}
                       onInput={(e) => setPassword(e.currentTarget.value)}
                     />
+                  </div>
+
+                  <div class="form-control w-full flex flex-col gap-2">
+                    <label class="px-1 flex justify-between items-end">
+                      <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Google Gemini API Key</span>
+                      <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Get Key</a>
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="AIza..."
+                      class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+                      value={googleApiKey()}
+                      onInput={(e) => setGoogleApiKey(e.currentTarget.value)}
+                    />
+                    <p class="px-1 text-[10px] font-bold opacity-40 uppercase tracking-tight">Enable AI-powered meter scanning. Your key is stored securely.</p>
                   </div>
 
                   <div class="form-control mt-6 w-full">

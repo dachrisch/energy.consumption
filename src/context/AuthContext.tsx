@@ -5,6 +5,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  googleApiKey?: string;
 }
 
 interface AuthContextType {
@@ -18,10 +19,10 @@ const AuthContext = createContext<AuthContextType>();
 
 export function AuthProvider(props: { children: JSX.Element }) {
   const navigate = useNavigate();
-  
+
   const [user, { mutate, refetch }] = createResource(async () => {
     const res = await fetch('/api/session');
-    if (!res.ok) {return null;}
+    if (!res.ok) { return null; }
     return res.json();
   });
 
@@ -32,11 +33,11 @@ export function AuthProvider(props: { children: JSX.Element }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user: () => user(), 
+    <AuthContext.Provider value={{
+      user: () => user(),
       loading: () => user.loading,
       revalidate: refetch,
-      logout 
+      logout
     }}>
       {props.children}
     </AuthContext.Provider>
@@ -45,6 +46,6 @@ export function AuthProvider(props: { children: JSX.Element }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {throw new Error('useAuth must be used within an AuthProvider');}
+  if (!context) { throw new Error('useAuth must be used within an AuthProvider'); }
   return context;
 }
