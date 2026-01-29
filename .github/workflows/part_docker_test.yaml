@@ -34,7 +34,7 @@ jobs:
 
       - name: 🐳🧪 Test Docker image
         run: |
-          docker run --rm --detach --name test_container ${{ inputs.image_name }}:latest
+          docker run --rm --detach --name test_container -e ENCRYPTION_KEY=ci-test-key-123 ${{ inputs.image_name }}:latest
           for i in {1..10}; do
             status=$(docker inspect --format='{{.State.Health.Status}}' test_container)
             health_details=$(docker inspect --format='{{json .State.Health}}' test_container)
