@@ -98,7 +98,8 @@ const AddReading: Component = () => {
           setSelectedMeterId(result.meterId);
           // Refetch meters to show the new one in the list if it was created
           refetch();
-          toast.showToast(`Matched to meter: ${result.meterName}`, 'info');
+          const typeLabel = result.type === 'power' ? '⚡ Power' : '🔥 Gas';
+          toast.showToast(`Matched to ${typeLabel} meter: ${result.meterName}`, 'info');
         }
       }
 
@@ -225,50 +226,60 @@ const AddReading: Component = () => {
                         <label>
                           <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Reading Value ({meter().unit})</span>
                         </label>
+                        <Show when={!auth.user()?.googleApiKey && !isScanning()}>
+                          <div class="animate-in fade-in slide-in-from-right-2">
+                            <A href="/profile" class="text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              Enable AI Scanning
+                            </A>
+                          </div>
+                        </Show>
+                      </div>
+
+                      <div class="flex gap-3 items-start">
+                        <div class="relative flex-1 group">
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            class="input input-bordered w-full h-20 rounded-2xl bg-base-200/50 border-none font-black text-4xl focus:ring-4 focus:ring-primary/20 text-center transition-all"
+                            value={value()}
+                            onInput={(e) => setValue(e.currentTarget.value)}
+                            required
+                            autofocus
+                          />
+                          <div class="absolute inset-y-0 right-6 flex items-center pointer-events-none">
+                            <span class="text-xl font-black opacity-20 uppercase">{meter().unit}</span>
+                          </div>
+                        </div>
+
                         <div class="relative">
                           <input type="file" accept="image/*" capture class="hidden" id="photo-input" onChange={handleScan} />
-                          <label for="photo-input" class="btn btn-xs btn-ghost gap-1 opacity-60 hover:opacity-100" title="Take a photo of the meter">
+                          <label for="photo-input" class="btn btn-primary h-20 w-20 rounded-2xl flex flex-col gap-1 items-center justify-center p-0 shadow-lg shadow-primary/20" title="Take a photo of the meter">
                             <Show when={isScanning()} fallback={
-                              <><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Scan Photo</>
+                              <>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span class="text-[10px] font-black uppercase tracking-tighter">Scan</span>
+                              </>
                             }>
-                              <span class="loading loading-spinner loading-xs"></span> Scanning...
+                              <span class="loading loading-spinner loading-md"></span>
                             </Show>
                           </label>
                         </div>
                       </div>
-                      <Show when={!auth.user()?.googleApiKey && !isScanning()}>
-                        <div class="px-1 text-right animate-in fade-in slide-in-from-right-2">
-                          <A href="/profile" class="text-[10px] font-black uppercase text-primary/40 hover:text-primary transition-colors flex items-center justify-end gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            Enable AI Scanning
-                          </A>
-                        </div>
-                      </Show>
-                      <div class="relative group">
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          class="input input-bordered w-full h-20 rounded-2xl bg-base-200/50 border-none font-black text-4xl focus:ring-4 focus:ring-primary/20 text-center transition-all"
-                          value={value()}
-                          onInput={(e) => setValue(e.currentTarget.value)}
-                          required
-                          autofocus
-                        />
-                        <div class="absolute inset-y-0 right-6 flex items-center pointer-events-none">
-                          <span class="text-xl font-black opacity-20 uppercase">{meter().unit}</span>
-                        </div>
-                      </div>
+
                       <Show when={scanPreview()}>
                         <div class="mt-2 flex justify-center">
                           <div class="relative">
-                            <img src={scanPreview()!} class="h-20 w-auto rounded-lg border shadow-sm" />
+                            <img src={scanPreview()!} class="h-24 w-auto rounded-lg border-2 border-primary/20 shadow-md" />
                             <button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => setScanPreview(null)}>✕</button>
                           </div>
                         </div>
                       </Show>
                     </div>
-
                   )}
                 </Show>
 
