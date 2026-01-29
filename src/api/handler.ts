@@ -202,7 +202,14 @@ function parseGeminiResult(ocrResultText: string) {
   return result;
 }
 
-async function findOrCreateMeter(result: any, userId: string) {
+interface GeminiOcrResult {
+  value: number;
+  meter_number: string;
+  type: 'power' | 'gas';
+  unit: 'kWh' | 'm³';
+}
+
+async function findOrCreateMeter(result: GeminiOcrResult, userId: string) {
   const { meter_number: meterNumber, type, unit } = result;
   let meter = await Meter.findOne({ meterNumber }).setOptions({ userId });
 

@@ -9,12 +9,16 @@ if (!ENCRYPTION_KEY && process.env.NODE_ENV === 'production') {
 const KEY = ENCRYPTION_KEY || 'dev-encryption-key-321';
 
 export function encrypt(text: string): string {
-    if (!text) return '';
+    if (!text) {
+        return '';
+    }
     return CryptoJS.AES.encrypt(text, KEY).toString();
 }
 
 export function decrypt(ciphertext: string): string {
-    if (!ciphertext) return '';
+    if (!ciphertext) {
+        return '';
+    }
     try {
         const bytes = CryptoJS.AES.decrypt(ciphertext, KEY);
         const decrypted = bytes.toString(CryptoJS.enc.Utf8);
