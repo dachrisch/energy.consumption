@@ -4,7 +4,7 @@ export async function scanImageWithGemini(image: Blob, apiKey: string): Promise<
     const base64Image = Buffer.from(arrayBuffer).toString('base64');
 
     // Use the 2.5 flash model which worked in our external test
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
 
     const payload = {
         contents: [{
@@ -22,7 +22,10 @@ export async function scanImageWithGemini(image: Blob, apiKey: string): Promise<
 
     const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+        },
         body: JSON.stringify(payload)
     });
 
