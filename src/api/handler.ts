@@ -17,6 +17,29 @@ if (!process.env.JWT_SECRET) {
   console.warn('WARNING: JWT_SECRET environment variable is not set. Using a random secret. Sessions will not persist across restarts.');
 }
 
+/**
+ * Ensures a value is a string, preventing NoSQL injection via objects.
+ */
+function sanitizeString(val: unknown): string | null {
+  if (typeof val !== 'string') {
+    return null;
+  }
+  return val;
+}
+
+/**
+ * Picks only allowed keys from an object to prevent mass assignment.
+ */
+function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  const result = {} as Pick<T, K>;
+  for (const key of keys) {
+    if (key in obj && obj[key] !== undefined) {
+      result[key] = obj[key];
+    }
+  }
+  return result;
+}
+
 interface ApiRequest {
   url: string;
   method: string;
@@ -66,28 +89,43 @@ async function handleRegister(req: ApiRequest, res: ApiResponse) {
     res.end(JSON.stringify({ error: 'Registration is currently disabled' }));
     return;
   }
-  const { name, email, password } = req.body as { name?: string, email?: string, password?: string };
-  const existingUser = await User.findOne({ email: { $eq: email } });
+  const { name, email, password } = req.body as { name?: unknown, email?: unknown, password?: unknown };
+  const sEmail = sanitizeString(email);
+  const sName = sanitizeString(name);
+  const sPassword = sanitizeString(password);
+
+  if (!sEmail || !sName || !sPassword) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'Name, email and password are required and must be strings' }));
+    return;
+  }
+
+  const existingUser = await User.findOne({ email: { $eq: sEmail } });
   if (existingUser) {
     res.statusCode = 400;
     res.end(JSON.stringify({ error: 'User already exists' }));
     return;
   }
-  if (!password) {
-    res.statusCode = 400;
-    res.end(JSON.stringify({ error: 'Password required' }));
-    return;
-  }
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = await User.create({ name, email, password: hashedPassword });
+
+  const hashedPassword = await bcrypt.hash(sPassword, 10);
+  const user = await User.create({ name: sName, email: sEmail, password: hashedPassword });
   res.statusCode = 201;
   res.end(JSON.stringify({ message: 'User created', userId: user._id }));
 }
 
 async function handleLogin(req: ApiRequest, res: ApiResponse) {
-  const { email, password } = req.body as { email?: string, password?: string };
-  const user = await User.findOne({ email: { $eq: email } });
-  if (!user || !password || !(await bcrypt.compare(password, user.password))) {
+  const { email, password } = req.body as { email?: unknown, password?: unknown };
+  const sEmail = sanitizeString(email);
+  const sPassword = sanitizeString(password);
+
+  if (!sEmail || !sPassword) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'Email and password are required' }));
+    return;
+  }
+
+  const user = await User.findOne({ email: { $eq: sEmail } });
+  if (!user || !(await bcrypt.compare(sPassword, user.password))) {
     res.statusCode = 401;
     res.end(JSON.stringify({ error: 'Invalid credentials' }));
     return;
@@ -99,27 +137,34 @@ async function handleLogin(req: ApiRequest, res: ApiResponse) {
 }
 
 async function handleProfileUpdate(req: ApiRequest, res: ApiResponse, userId: string) {
-  const { name, email, password } = req.body as { name?: string, email?: string, password?: string };
+  const { name, email, password, googleApiKey } = req.body as { name?: unknown, email?: unknown, password?: unknown, googleApiKey?: unknown };
   const updateData: Record<string, unknown> = {};
 
-  if (name) { updateData.name = name; }
-  if (email) {
-    const existing = await User.findOne({ email: { $eq: email }, _id: { $ne: userId } });
+  const sName = sanitizeString(name);
+  if (sName) { updateData.name = sName; }
+
+  const sEmail = sanitizeString(email);
+  if (sEmail) {
+    const existing = await User.findOne({ email: { $eq: sEmail }, _id: { $ne: userId } });
     if (existing) {
       res.statusCode = 400;
       res.end(JSON.stringify({ error: 'Email already in use' }));
       return;
     }
-    updateData.email = email;
-  }
-  if (password) {
-    updateData.password = await bcrypt.hash(password, 10);
-  }
-  if (req.body.googleApiKey !== undefined) {
-    updateData.googleApiKey = encrypt(req.body.googleApiKey as string);
+    updateData.email = sEmail;
   }
 
-  const updated = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password').lean();
+  const sPassword = sanitizeString(password);
+  if (sPassword) {
+    updateData.password = await bcrypt.hash(sPassword, 10);
+  }
+
+  if (googleApiKey !== undefined) {
+    const sGoogleApiKey = sanitizeString(googleApiKey);
+    updateData.googleApiKey = encrypt(sGoogleApiKey || '');
+  }
+
+  const updated = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true }).select('-password').lean();
   if (updated && updated.googleApiKey) {
     updated.googleApiKey = decrypt(updated.googleApiKey);
   }
@@ -128,14 +173,15 @@ async function handleProfileUpdate(req: ApiRequest, res: ApiResponse, userId: st
 
 async function handleMeters({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
-    const id = url.searchParams.get('id');
+    const id = sanitizeString(url.searchParams.get('id'));
     const query = id ? { _id: { $eq: id } } : {};
     const meters = await Meter.find(query).setOptions({ userId });
     res.end(JSON.stringify(meters));
     return;
   }
   if (req.method === 'POST') {
-    const meter = await Meter.create({ ...req.body, userId });
+    const allowed = pick(req.body, ['name', 'meterNumber', 'type', 'unit']);
+    const meter = await Meter.create({ ...allowed, userId });
     res.statusCode = 201;
     res.end(JSON.stringify(meter));
     return;
@@ -143,7 +189,13 @@ async function handleMeters({ req, res, userId, url }: RouteParams) {
 }
 
 async function handleMeterItem({ req, res, userId, path }: RouteParams) {
-  const id = path.split('/').pop()!;
+  const id = sanitizeString(path.split('/').pop());
+  if (!id) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'Invalid ID' }));
+    return;
+  }
+
   if (req.method === 'DELETE') {
     await Promise.all([
       Reading.deleteMany({ meterId: { $eq: id } }).setOptions({ userId }),
@@ -154,7 +206,8 @@ async function handleMeterItem({ req, res, userId, path }: RouteParams) {
     return;
   }
   if (req.method === 'PATCH' || req.method === 'PUT') {
-    const updated = await Meter.findOneAndUpdate({ _id: { $eq: id } }, { $set: req.body }, { new: true }).setOptions({ userId });
+    const allowed = pick(req.body, ['name', 'meterNumber', 'type', 'unit']);
+    const updated = await Meter.findOneAndUpdate({ _id: { $eq: id } }, { $set: allowed }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
     return;
   }
@@ -267,14 +320,15 @@ async function handleOcrScan({ req, res, userId }: RouteParams) {
 
 async function handleReadings({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
-    const meterId = url.searchParams.get('meterId');
+    const meterId = sanitizeString(url.searchParams.get('meterId'));
     const query = meterId ? { meterId: { $eq: meterId } } : {};
     const readings = await Reading.find(query).setOptions({ userId }).sort({ date: -1 });
     res.end(JSON.stringify(readings));
     return;
   }
   if (req.method === 'POST') {
-    const reading = await Reading.create({ ...req.body, userId });
+    const allowed = pick(req.body, ['meterId', 'value', 'date']);
+    const reading = await Reading.create({ ...allowed, userId });
     res.statusCode = 201;
     res.end(JSON.stringify(reading));
     return;
@@ -282,14 +336,21 @@ async function handleReadings({ req, res, userId, url }: RouteParams) {
 }
 
 async function handleReadingItem({ req, res, userId, path }: RouteParams) {
-  const id = path.split('/').pop()!;
+  const id = sanitizeString(path.split('/').pop());
+  if (!id) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'Invalid ID' }));
+    return;
+  }
+
   if (req.method === 'DELETE') {
     await Reading.deleteOne({ _id: { $eq: id } }).setOptions({ userId });
     res.end(JSON.stringify({ message: 'Deleted' }));
     return;
   }
   if (req.method === 'PATCH' || req.method === 'PUT') {
-    const updated = await Reading.findOneAndUpdate({ _id: { $eq: id } }, { $set: req.body }, { new: true }).setOptions({ userId });
+    const allowed = pick(req.body, ['value', 'date']);
+    const updated = await Reading.findOneAndUpdate({ _id: { $eq: id } }, { $set: allowed }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
     return;
   }
@@ -297,15 +358,16 @@ async function handleReadingItem({ req, res, userId, path }: RouteParams) {
 
 async function handleContracts({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
-    const meterId = url.searchParams.get('meterId');
-    const id = url.searchParams.get('id');
+    const meterId = sanitizeString(url.searchParams.get('meterId'));
+    const id = sanitizeString(url.searchParams.get('id'));
     const query = id ? { _id: { $eq: id } } : (meterId ? { meterId: { $eq: meterId } } : {});
     const contracts = await Contract.find(query).populate('meterId').setOptions({ userId }).sort({ startDate: -1 });
     res.end(JSON.stringify(contracts));
     return;
   }
   if (req.method === 'POST') {
-    const contract = await Contract.create({ ...req.body, userId });
+    const allowed = pick(req.body, ['meterId', 'name', 'type', 'unitPrice', 'standingCharge', 'startDate', 'endDate', 'estimatedAnnualConsumption']);
+    const contract = await Contract.create({ ...allowed, userId });
     res.statusCode = 201;
     res.end(JSON.stringify(contract));
     return;
@@ -313,14 +375,21 @@ async function handleContracts({ req, res, userId, url }: RouteParams) {
 }
 
 async function handleContractItem({ req, res, userId, path }: RouteParams) {
-  const id = path.split('/').pop()!;
+  const id = sanitizeString(path.split('/').pop());
+  if (!id) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'Invalid ID' }));
+    return;
+  }
+
   if (req.method === 'DELETE') {
     await Contract.deleteOne({ _id: { $eq: id } }).setOptions({ userId });
     res.end(JSON.stringify({ message: 'Deleted' }));
     return;
   }
   if (req.method === 'PATCH' || req.method === 'PUT') {
-    const updated = await Contract.findOneAndUpdate({ _id: { $eq: id } }, { $set: req.body }, { new: true }).setOptions({ userId });
+    const allowed = pick(req.body, ['name', 'type', 'unitPrice', 'standingCharge', 'startDate', 'endDate', 'estimatedAnnualConsumption']);
+    const updated = await Contract.findOneAndUpdate({ _id: { $eq: id } }, { $set: allowed }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
     return;
   }
