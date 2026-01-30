@@ -1,114 +1,112 @@
-# Add Reading Flow Improvements Implementation Plan
+# Unified Quick Add Flow Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Streamline meter management and handle OCR scanning conflicts gracefully in the "Add Reading" page.
+**Goal:** Ensure the "Quick Add" flow (Scan-first choice screen) is the primary entry point for all meter registration and reading entry tasks, especially for new users.
 
 **Architecture:** 
-1. **Dropdown Extension**: Add a special sentinel value to the meter select dropdown that triggers navigation to the "Add Meter" page.
-2. **Conflict State Management**: Introduce a `pendingScan` signal to hold OCR results when a mismatch is detected between the selected meter and the photo.
-3. **Interactive Resolution UI**: Display a clear choice area (within the form) when a mismatch occurs, offering the user explicit actions.
+1. **Unify Entry Points**: Redirect Dashboard and Meters page empty states to `/add-reading` instead of `/meters/add`.
+2. **Refactor UI**: Extract the choice screen into a reusable component (or just keep it clean in `AddReading.tsx`) to ensure consistency.
+3. **Streamline Flow**: Confirm that scanning a new meter automatically creates it and proceeds to the reading form.
 
-**Tech Stack:** Solid.js, DaisyUI.
+**Tech Stack:** Solid.js, Tailwind CSS, DaisyUI.
 
 ---
 
-### Task 1: Add "Register New Meter" to Dropdown
+### Task 1: Redirect Dashboard Empty State
+
+**Files:**
+- Modify: `src/pages/Dashboard.tsx`
+
+**Step 1: Update "Getting Started" card link**
+
+```tsx
+// src/pages/Dashboard.tsx
+// Old: <A href="/meters/add" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20">Add Meter</A>
+// New:
+<A href="/add-reading" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20 font-black">
+  Get Started
+</A>
+```
+
+**Step 2: Commit**
+
+```bash
+git add src/pages/Dashboard.tsx
+git commit -m "feat: redirect dashboard empty state to unified quick add flow"
+```
+
+---
+
+### Task 2: Redirect Meters Page Empty State
+
+**Files:**
+- Modify: `src/pages/Meters.tsx`
+
+**Step 1: Update "No meters found" fallback link**
+
+```tsx
+// src/pages/Meters.tsx
+// Old: <A href="/meters/add" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20">Add Meter</A>
+// New:
+<A href="/add-reading" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20 font-black">
+  Add Your First Meter
+</A>
+```
+
+**Step 2: Commit**
+
+```bash
+git add src/pages/Meters.tsx
+git commit -m "feat: redirect meters list empty state to unified quick add flow"
+```
+
+---
+
+### Task 3: Refine Choice Screen UI
 
 **Files:**
 - Modify: `src/pages/AddReading.tsx`
 
-**Step 1: Update the select element**
+**Step 1: Update Choice Screen icon and labels**
+
+Ensure the choice screen looks like a welcoming "New Data" screen rather than just a "Add Reading" screen.
 
 ```tsx
 // src/pages/AddReading.tsx
-// Update the <select> onChange and options
-<select
-  class="..."
-  value={selectedMeterId()}
-  onChange={(e) => {
-    if (e.currentTarget.value === 'NEW_METER') {
-      navigate('/meters/add');
-    } else {
-      setSelectedMeterId(e.currentTarget.value);
-    }
-  }}
-  required
->
-  <option value="" disabled>Choose a meter...</option>
-  <For each={meters()}>
-    {(meter) => (
-      <option value={meter._id}>
-        {meter.name} ({meter.meterNumber})
-      </option>
-    )}
-  </For>
-  <option value="NEW_METER" class="text-primary font-bold">+ Register New Meter...</option>
-</select>
+// Change the icon from a plus to something more general or scan-oriented
+<div class="bg-primary/10 p-6 rounded-3xl w-24 h-24 flex items-center justify-center mx-auto text-primary">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+</div>
 ```
 
 **Step 2: Commit**
 
 ```bash
 git add src/pages/AddReading.tsx
-git commit -m "feat: add 'Register New Meter' option to reading selection dropdown"
+git commit -m "style: refine choice screen icon for better UX context"
 ```
 
 ---
 
-### Task 2: Implement OCR Mismatch Flow
+### Task 4: Verify and Release
 
-**Files:**
-- Modify: `src/pages/AddReading.tsx`
-
-**Step 1: Add state and update handleScan**
-
-```tsx
-const [pendingScan, setPendingScan] = createSignal<null | { value: number, meterId: string, meterName: string, type: string }>(null);
-
-// Inside handleScan, after receiving result:
-const result = await res.json();
-const currentId = selectedMeterId();
-
-if (currentId && result.meterId && result.meterId !== currentId) {
-  // Mismatch detected - ask user
-  setPendingScan(result);
-  toast.showToast('Photo matches a different meter', 'warning');
-} else {
-  // Normal flow: auto-apply
-  setValue(result.value.toString());
-  if (result.meterId) {
-    setSelectedMeterId(result.meterId);
-    refetch();
-  }
-  toast.showToast('Reading detected!', 'success');
-}
-```
-
-**Step 2: Create resolution component/JSX**
-
-Display a warning box if `pendingScan()` is truthy, with two buttons:
-- "Switch to Detected Meter" (sets `selectedMeterId(pendingScan().meterId)`, applies value, clears pending)
-- "Use Value for Current Meter" (applies value only, clears pending)
-
-**Step 3: Commit**
+**Step 1: Run Lint**
 
 ```bash
-git add src/pages/AddReading.tsx
-git commit -m "feat: implement OCR mismatch resolution flow"
+npm run lint
 ```
 
----
-
-### Task 3: Verify and Release
-
-**Step 1: Run tests**
+**Step 2: Run Tests**
 
 ```bash
 npm run test
 ```
 
-**Step 2: Trigger Release**
+**Step 3: Release**
 
 ```bash
 npm run release:patch
