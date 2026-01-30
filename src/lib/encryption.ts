@@ -53,7 +53,7 @@ export function decrypt(ciphertext: string): string {
         decipher.setAuthTag(tag);
         
         return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
-    } catch (e) {
+    } catch (_e) {
         // Fallback to CryptoJS (old format)
         try {
             const bytes = CryptoJS.AES.decrypt(ciphertext, KEY);
@@ -62,7 +62,7 @@ export function decrypt(ciphertext: string): string {
                 return ciphertext;
             }
             return decrypted;
-        } catch (err) {
+        } catch (_err) {
             return ciphertext;
         }
     }

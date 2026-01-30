@@ -19,22 +19,6 @@ interface PreviewReading extends ImportReading {
   originalValue: string;
 }
 
-interface Meter {
-  _id: string;
-  name: string;
-}
-
-interface ImportReading {
-  meterId: string;
-  date: Date;
-  value: number;
-}
-
-interface PreviewReading extends ImportReading {
-  originalDate: string;
-  originalValue: string;
-}
-
 interface CsvImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -216,7 +200,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
       
       setStep('mapping');
       setError(null);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to parse content');
     }
   };
@@ -256,7 +240,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
     try {
       await props.onSave(getPreviewData());
       props.onClose();
-    } catch (e) {
+    } catch (_e) {
       setError('Import failed');
       setStep('preview');
     }
