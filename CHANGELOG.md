@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.26](https://github.com/dachrisch/energy.consumption/compare/v3.8.25...v3.8.26) (2026-01-30)
+
+
+### Bug Fixes
+
+* enable express trust proxy for production rate limiting ([5ecd306](https://github.com/dachrisch/energy.consumption/commit/5ecd306eade97efa3ff6ba7d5846f008f914deb7))
+
 ### [3.8.25](https://github.com/dachrisch/energy.consumption/compare/v3.8.24...v3.8.25) (2026-01-30)
 
 ### [3.8.24](https://github.com/dachrisch/energy.consumption/compare/v3.8.23...v3.8.24) (2026-01-30)
