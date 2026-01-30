@@ -69,7 +69,7 @@ function getUserId(req: ApiRequest) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     return decoded.userId;
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }
