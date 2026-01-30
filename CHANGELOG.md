@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.28](https://github.com/dachrisch/energy.consumption/compare/v3.8.25...v3.8.28) (2026-01-30)
+
+
+### Bug Fixes
+
+* **deps:** update nextjs monorepo to v16.1.4 ([#279](https://github.com/dachrisch/energy.consumption/issues/279)) ([f34f392](https://github.com/dachrisch/energy.consumption/commit/f34f39221f7d324606f8d77f2ec6b3dc204cc0f3))
+* enable express trust proxy for production rate limiting ([5ecd306](https://github.com/dachrisch/energy.consumption/commit/5ecd306eade97efa3ff6ba7d5846f008f914deb7))
+
 ### [3.8.27](https://github.com/dachrisch/energy.consumption/compare/v3.8.26...v3.8.27) (2026-01-30)
 
 ### [3.8.26](https://github.com/dachrisch/energy.consumption/compare/v3.8.25...v3.8.26) (2026-01-30)
