@@ -11,6 +11,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 80;
 
+// Trust the first proxy (e.g. Nginx) to correctly handle X-Forwarded-For headers
+app.set('trust proxy', 1);
+
 if (!process.env.JWT_SECRET) {
   console.warn('WARNING: JWT_SECRET environment variable is not set. Using a random secret.');
 }
