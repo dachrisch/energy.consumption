@@ -80,4 +80,44 @@ describe('Contract API & Validation', () => {
     expect(res.statusCode).toBe(400);
     expect(responseBody.error).toContain('overlaps');
   });
+
+  it('correctly maps all required fields from the request body', async () => {
+    const contractData = {
+      providerName: 'Test Provider',
+      type: 'power',
+      startDate: '2027-01-01T00:00:00.000Z',
+      endDate: '2027-12-31T00:00:00.000Z',
+      basePrice: 15.50,
+      workingPrice: 0.3221,
+      meterId
+    };
+
+    const req = {
+      url: '/api/contracts',
+      method: 'POST',
+      headers: { 
+        host: 'localhost', 
+        cookie: `token=${jwt.sign({ userId }, process.env.JWT_SECRET || 'secret')}` 
+      },
+      body: contractData
+    };
+
+    let responseBody: any;
+    const res = {
+      statusCode: 200,
+      setHeader: () => {},
+      end: (data: string) => {
+        responseBody = JSON.parse(data);
+      }
+    };
+
+    await apiHandler(req as any, res as any);
+    
+    expect(res.statusCode).toBe(201);
+    expect(responseBody.providerName).toBe(contractData.providerName);
+    expect(responseBody.basePrice).toBe(contractData.basePrice);
+    expect(responseBody.workingPrice).toBe(contractData.workingPrice);
+    expect(responseBody.meterId).toBe(meterId);
+    expect(new Date(responseBody.startDate).toISOString()).toBe(contractData.startDate);
+  });
 });
