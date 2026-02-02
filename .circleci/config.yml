@@ -1,0 +1,128 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@6.0.0
+
+jobs:
+  node_build_and_test:
+    docker:
+      - image: cimg/node:22.13
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          name: Run Lint
+          command: npm run lint
+      - run:
+          name: Build Project
+          command: npm run build
+      - run:
+          name: Run Tests
+          command: |
+            mkdir -p test-results/vitest
+            npm run test -- --reporter=default --reporter=junit --outputFile=test-results/vitest/results.xml
+      - store_test_results:
+          path: test-results
+
+  docker_build:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build Docker Image
+          command: |
+            TAG=${CIRCLE_TAG:-latest}
+            docker build --build-arg VITE_BUILD_VERSION=$TAG -t energy.consumption:latest .
+      - run:
+          name: Save Docker Image
+          command: |
+            mkdir -p /tmp/docker-images
+            docker save -o /tmp/docker-images/energy.consumption.tar energy.consumption:latest
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - docker-images
+
+  docker_test:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - setup_remote_docker
+      - run:
+          name: Load and Test Docker Image
+          command: |
+            docker load --input /tmp/docker-images/energy.consumption.tar
+            docker run --rm --detach --name test_container -e ENCRYPTION_KEY=ci-test-key-123 energy.consumption:latest
+            
+            # Wait for container to be healthy
+            SUCCESS=0
+            for i in {1..10}; do
+              # Try to get health status, fallback to status if healthcheck not defined yet
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' test_container 2>/dev/null || echo "starting")
+              echo "Attempt $i: Health status is $STATUS"
+              if [ "$STATUS" = "healthy" ]; then
+                SUCCESS=1
+                break
+              fi
+              sleep 6
+            done
+            
+            if [ $SUCCESS -ne 1 ]; then
+              echo "Container did not become healthy after 60 seconds."
+              docker logs test_container
+              exit 1
+            fi
+            docker stop test_container
+
+  docker_push:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - setup_remote_docker
+      - run:
+          name: Push to Docker Hub
+          command: |
+            docker load --input /tmp/docker-images/energy.consumption.tar
+            echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
+            REGISTRY="dachrisch/energy.consumption"
+            TAG=${CIRCLE_TAG:-latest}
+            docker tag energy.consumption:latest $REGISTRY:$TAG
+            docker tag energy.consumption:latest $REGISTRY:latest
+            docker push $REGISTRY:$TAG
+            docker push $REGISTRY:latest
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - node_build_and_test:
+          filters:
+            tags:
+              only: /.*/
+      - docker_build:
+          requires:
+            - node_build_and_test
+          filters:
+            tags:
+              only: /.*/
+      - docker_test:
+          requires:
+            - docker_build
+          filters:
+            tags:
+              only: /.*/
+      - docker_push:
+          requires:
+            - docker_test
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/

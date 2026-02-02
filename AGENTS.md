@@ -13,10 +13,12 @@ This document serves as the primary technical reference for agentic coding agent
 | `npm test` | Run all unit tests using Vitest. |
 | `npm run test:e2e` | Run Playwright E2E tests. |
 
-### Specialized Testing
-- **Run specific test file:** `npx vitest <path-to-file>`
-- **Run tests in watch mode:** `npx vitest`
-- **Coverage report:** `npx vitest --coverage`
+## 🚀 CI/CD Pipelines
+
+The project uses **CircleCI** for continuous integration and deployment.
+- **Workflow:** `build_test_deploy`
+- **Configuration:** `.circleci/config.yml`
+- **Secrets required:** `DOCKER_USER`, `DOCKER_TOKEN` (for pushing images).
 
 ## 📏 Code Style & Guidelines
 

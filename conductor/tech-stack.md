@@ -22,6 +22,6 @@
 - **Package Manager:** npm
 - **Testing:** Vitest, Solid Testing Library
 - **Time Series Ops:** Pond.js
-- **CI/CD:** GitHub Actions
+- **CI/CD:** CircleCI (Migrated from GitHub Actions)
 - **Containerization:** Docker
 - **AI/ML Integration:** Hugging Face Inference API (OCR)
