@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.29](https://github.com/dachrisch/energy.consumption/compare/v3.8.28...v3.8.29) (2026-02-02)
+
+
+### Features
+
+* **ui:** add mobile upload from storage button and healthcheck endpoint ([bc7adf0](https://github.com/dachrisch/energy.consumption/commit/bc7adf0648a544d5d20706544e9ad5c5296f6bdd))
+
 ### [3.8.28](https://github.com/dachrisch/energy.consumption/compare/v3.8.25...v3.8.28) (2026-01-30)
 
 
