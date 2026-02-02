@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.2](https://github.com/dachrisch/energy.consumption/compare/v3.9.1...v3.9.2) (2026-02-02)
+
+
+### Bug Fixes
+
+* **ocr:** validate lastMeterId to prevent false mismatch ([fb4513d](https://github.com/dachrisch/energy.consumption/commit/fb4513d4f106ab9174a3c2d2284fa2946a3f70ba))
+
 ### [3.9.1](https://github.com/dachrisch/energy.consumption/compare/v3.9.0...v3.9.1) (2026-02-02)
 
 ## [3.9.0](https://github.com/dachrisch/energy.consumption/compare/v3.8.40...v3.9.0) (2026-02-02)
