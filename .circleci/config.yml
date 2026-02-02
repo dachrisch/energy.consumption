@@ -5,6 +5,7 @@ orbs:
 
 jobs:
   node_build_and_test:
+    resource_class: medium
     docker:
       - image: cimg/node:22.13
     steps:
@@ -25,6 +26,7 @@ jobs:
           path: test-results
 
   docker_build:
+    resource_class: medium
     docker:
       - image: cimg/base:stable
     steps:
@@ -47,6 +49,7 @@ jobs:
             - docker-images
 
   docker_test:
+    resource_class: medium
     docker:
       - image: cimg/base:stable
     steps:
@@ -80,6 +83,7 @@ jobs:
             docker stop test_container
 
   docker_push:
+    resource_class: medium
     docker:
       - image: cimg/base:stable
     steps:
