@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.5](https://github.com/dachrisch/energy.consumption/compare/v3.9.4...v3.9.5) (2026-02-02)
+
+
+### Bug Fixes
+
+* **api:** refactor contract overlap validation to fix lint errors ([d68a8c7](https://github.com/dachrisch/energy.consumption/commit/d68a8c778ebdc94db57aab7c8a067b71539ee62a))
+
 ### [3.9.4](https://github.com/dachrisch/energy.consumption/compare/v3.9.3...v3.9.4) (2026-02-02)
 
 
