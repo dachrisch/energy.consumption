@@ -3,9 +3,10 @@ import User from '../models/User';
 import Meter from '../models/Meter';
 import Reading from '../models/Reading';
 import Contract from '../models/Contract';
+import OcrCache from '../models/OcrCache';
 import { calculateAggregates } from '../lib/aggregates';
 import { processBulkReadings } from '../lib/readingService';
-import { scanImageWithGemini } from '../lib/geminiOcrv2';
+import { processOcrScan } from '../lib/ocrService';
 import { encrypt, decrypt } from '../lib/encryption';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -296,28 +297,14 @@ async function handleOcrScan({ req, res, userId }: RouteParams) {
   }
 
   try {
-    const base64Data = image.split(',')[1] || image;
-    const blob = new Blob([Buffer.from(base64Data, 'base64')], { type: 'image/jpeg' });
-
-    const ocrResultText = await scanImageWithGemini(blob, apiKey);
-    const result = parseGeminiResult(ocrResultText);
-    const meter = await findOrCreateMeter(result, userId);
-
-    res.end(JSON.stringify({
-      value: result.value,
-      meterId: meter._id,
-      meterName: meter.name,
-      unit: meter.unit,
-      type: meter.type
-    }));
+    const result = await processOcrScan(image, userId, apiKey, { Meter, OcrCache });
+    res.end(JSON.stringify(result));
   } catch (e) {
     console.error('Gemini OCR Error:', e);
     res.statusCode = 502;
     res.end(JSON.stringify({ error: e instanceof Error ? e.message : 'OCR failed' }));
   }
 }
-
-
 
 async function handleReadings({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
