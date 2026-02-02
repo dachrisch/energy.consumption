@@ -19,7 +19,7 @@ export function applyPreFilter(schema: Schema) {
 
   // Aggregate
   schema.pre('aggregate', function (this: Aggregate<unknown>) {
-    const userId = (this as any).options?.userId;
+    const userId = (this as Aggregate<unknown> & { options?: { userId?: string } }).options?.userId;
     if (userId) {
       this.pipeline().unshift({ $match: { userId } });
     }

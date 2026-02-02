@@ -1,6 +1,7 @@
 import { Model } from 'mongoose';
 import crypto from 'crypto';
 import { scanImageWithGemini } from './geminiOcrv2';
+import { IMeter } from '../types/models';
 
 interface GeminiOcrResult {
   value: number;
@@ -18,6 +19,11 @@ interface ScanResult {
   type: string;
 }
 
+interface IOcrCache {
+  hash: string;
+  resultText: string;
+}
+
 // Simple in-memory lock to prevent concurrent Gemini API calls for the same image hash
 const pendingScans = new Map<string, Promise<string>>();
 
@@ -26,8 +32,8 @@ export async function processOcrScan(
   userId: string,
   apiKey: string,
   models: {
-    Meter: Model<any>;
-    OcrCache: Model<any>;
+    Meter: Model<IMeter>;
+    OcrCache: Model<IOcrCache>;
   }
 ): Promise<ScanResult> {
   const { Meter, OcrCache } = models;
@@ -42,8 +48,9 @@ export async function processOcrScan(
     ocrResultText = cached.resultText;
   } else {
     // 2. Check for in-flight requests (Race condition protection)
-    if (pendingScans.has(hash)) {
-      ocrResultText = await pendingScans.get(hash)!;
+    const inFlight = pendingScans.get(hash);
+    if (inFlight) {
+      ocrResultText = await inFlight;
     } else {
       // 3. Perform scan and handle locking
       const scanPromise = (async () => {
@@ -91,7 +98,7 @@ function parseGeminiResult(ocrResultText: string): GeminiOcrResult {
   return result;
 }
 
-async function findOrCreateMeter(result: GeminiOcrResult, userId: string, Meter: Model<any>) {
+async function findOrCreateMeter(result: GeminiOcrResult, userId: string, Meter: Model<IMeter>) {
   const { meter_number: meterNumber, type, unit } = result;
   let meter = await Meter.findOne({ meterNumber: { $eq: meterNumber } }).setOptions({ userId });
 

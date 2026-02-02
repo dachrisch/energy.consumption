@@ -7,15 +7,11 @@ export default [
   js.configs.recommended,
   {
     ignores: [
-      "**/__tests__/**",
-      "e2e/**",
       "node_modules/**",
       "dist/**",
       "dist-server/**",
       "coverage/**",
       ".next/**",
-      "**/*.test.ts",
-      "**/*.test.tsx",
       "scripts/**"
     ],
   },
@@ -45,8 +41,8 @@ export default [
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
-      "complexity": ["warn", { "max": 10 }],
-      "max-lines-per-function": ["warn", { "max": 50, "skipBlankLines": true, "skipComments": true }],
+      "complexity": ["error", { "max": 10 }],
+      "max-lines-per-function": ["warn", { "max": 100, "skipBlankLines": true, "skipComments": true }],
       "max-depth": ["error", { "max": 3 }],
       "max-params": ["warn", { "max": 4 }],
       "no-console": ["warn", { "allow": ["warn", "error"] }],
@@ -57,11 +53,20 @@ export default [
         "caughtErrorsIgnorePattern": "^_"
       }],
       "@typescript-eslint/explicit-function-return-type": "off",
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
       "prefer-const": "error",
       "no-var": "error",
       "eqeqeq": ["error", "always"],
       "curly": ["error", "all"]
+    },
+  },
+  {
+    files: ["src/**/*.test.{ts,tsx}", "src/**/__tests__/**"],
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ];

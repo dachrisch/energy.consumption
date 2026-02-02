@@ -172,7 +172,7 @@ const AddContract: Component = () => {
                   <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Linked Meter</span></label>
                   <select class="select select-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={meterId()} onChange={(e) => setMeterId(e.currentTarget.value)} required>
                     <option value="" disabled>Select a meter</option>
-                    <For each={meters()?.filter((m: any) => m.type === type())}>
+                    <For each={meters()?.filter((m: Meter) => m.type === type())}>
                       {(m) => <option value={m._id}>{m.name} ({m.meterNumber})</option>}
                     </For>
                   </select>

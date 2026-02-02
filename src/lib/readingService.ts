@@ -1,4 +1,4 @@
-import { IReading } from '../types/models';
+import { IReading, IMeter } from '../types/models';
 import { Model } from 'mongoose';
 
 interface BulkImportResult {
@@ -10,8 +10,8 @@ interface BulkImportResult {
 export async function processBulkReadings(
   readings: Partial<IReading>[], 
   userId: string, 
-  MeterModel: Model<any>, 
-  ReadingModel: Model<any>
+  MeterModel: Model<IMeter>, 
+  ReadingModel: Model<IReading>
 ): Promise<BulkImportResult> {
   const result: BulkImportResult = {
     successCount: 0,
@@ -21,11 +21,8 @@ export async function processBulkReadings(
 
   const validReadingsToInsert: Partial<IReading>[] = [];
   
-  // Cache owned meter IDs for fast lookup
-  // In a real DB scenario, we might want to batch this or just check inclusion if list is small.
-  // Assuming user doesn't have thousands of meters.
   const ownedMeters = await MeterModel.find({ userId: { $eq: userId } });
-  const ownedMeterIds = new Set(ownedMeters.map((m: any) => m._id.toString()));
+  const ownedMeterIds = new Set(ownedMeters.map((m) => m._id.toString()));
 
   for (let i = 0; i < readings.length; i++) {
     const reading = readings[i];

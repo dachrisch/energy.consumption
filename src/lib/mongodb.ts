@@ -6,7 +6,6 @@ interface MongooseCache {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var mongoose: MongooseCache | undefined;
 }
 
@@ -16,31 +15,28 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
+async function createConnPromise(uri: string) {
+  const opts = {
+    bufferCommands: false,
+  };
+  return mongoose.connect(uri, opts);
+}
+
 async function connectDB() {
   const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/energy_consumption_solid';
   
-  if (cached && cached.conn) {
+  if (cached?.conn) {
     return cached.conn;
   }
 
-  if (cached && !cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
-      return m;
-    });
+  if (!cached?.promise) {
+    cached!.promise = createConnPromise(MONGODB_URI);
   }
 
   try {
-    if (cached && cached.promise) {
-      cached.conn = await cached.promise;
-    }
+    cached!.conn = await cached!.promise;
   } catch (e) {
-    if (cached) {
-      cached.promise = null;
-    }
+    cached!.promise = null;
     throw e;
   }
 

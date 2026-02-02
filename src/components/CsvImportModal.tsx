@@ -26,7 +26,7 @@ interface CsvImportModalProps {
   meters: Meter[];
 }
 
-const StepUpload: Component<{ onPasteClick: () => void, onManualPaste: (e: any) => void }> = (props) => (
+const StepUpload: Component<{ onPasteClick: () => void, onManualPaste: (e: { target: HTMLTextAreaElement }) => void }> = (props) => (
   <div class="flex flex-col gap-6">
     <button 
       class="btn btn-outline btn-lg border-2 border-dashed h-32 flex flex-col gap-1 hover:bg-base-200 normal-case w-full"
