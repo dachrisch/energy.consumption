@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.30](https://github.com/dachrisch/energy.consumption/compare/v3.8.29...v3.8.30) (2026-02-02)
+
+
+### Features
+
+* **ocr:** integrate AI OCR optimization service with caching and deduplication ([c48b5d2](https://github.com/dachrisch/energy.consumption/commit/c48b5d22e62bc6e17d14d2eaa55179226b12b2f6))
+
 ### [3.8.29](https://github.com/dachrisch/energy.consumption/compare/v3.8.28...v3.8.29) (2026-02-02)
 
 
