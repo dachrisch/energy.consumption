@@ -1,4 +1,4 @@
-import { createContext, useContext, createSignal, For, Show, JSX } from 'solid-js';
+import { createContext, useContext, createSignal, For, Show, JSX, Component } from 'solid-js';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -81,7 +81,7 @@ export const ToastProvider = (props: { children: JSX.Element }) => {
     }}>
       {props.children}
       
-      <div class="toast toast-end toast-bottom z-[1000] p-6">
+      <div class="toast toast-end toast-top z-[1000] p-6 mt-20">
         <For each={toasts()}>{(toast) => (
           <ToastItem 
             toast={toast} 
