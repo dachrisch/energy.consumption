@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.9.0](https://github.com/dachrisch/energy.consumption/compare/v3.8.40...v3.9.0) (2026-02-02)
+
+
+### Features
+
+* hide scan and album buttons when a picture is previewed in AddReading ([b07a30f](https://github.com/dachrisch/energy.consumption/commit/b07a30f54835c0508a1ee831c211a333d47eb18c))
+
 ### [3.8.40](https://github.com/dachrisch/energy.consumption/compare/v3.8.39...v3.8.40) (2026-02-02)
 
 ### [3.8.39](https://github.com/dachrisch/energy.consumption/compare/v3.8.38...v3.8.39) (2026-02-02)
