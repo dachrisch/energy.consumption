@@ -10,6 +10,19 @@ jobs:
       - image: cimg/node:22.13
     steps:
       - checkout
+      - run:
+          name: Check for duplicate tag build
+          command: |
+            if [ "$CIRCLE_BRANCH" = "main" ] && [ -z "$CIRCLE_TAG" ]; then
+              if git log -1 --pretty=%B | grep -q "chore(release):"; then
+                echo "Release commit detected on main. Checking for tags..."
+                git fetch --tags --force
+                if [ -n "$(git tag --points-at HEAD)" ]; then
+                  echo "Tag found for this commit. Halting branch build to avoid duplication with tag workflow."
+                  circleci-agent step halt
+                fi
+              fi
+            fi
       - node/install-packages
       - run:
           name: Run Lint
@@ -108,24 +121,18 @@ workflows:
     jobs:
       - node_build_and_test:
           filters:
-            branches:
-              ignore: main
             tags:
               only: /.*/
       - docker_build:
           requires:
             - node_build_and_test
           filters:
-            branches:
-              ignore: main
             tags:
               only: /.*/
       - docker_test:
           requires:
             - docker_build
           filters:
-            branches:
-              ignore: main
             tags:
               only: /.*/
       - docker_push:
