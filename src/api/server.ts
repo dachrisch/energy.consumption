@@ -14,6 +14,11 @@ const PORT = process.env.PORT || 80;
 // Trust the first proxy (e.g. Nginx) to correctly handle X-Forwarded-For headers
 app.set('trust proxy', 1);
 
+// Healthcheck endpoint (must be BEFORE rate limiters)
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 if (!process.env.JWT_SECRET) {
   console.warn('WARNING: JWT_SECRET environment variable is not set. Using a random secret.');
 }
