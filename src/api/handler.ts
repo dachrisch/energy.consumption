@@ -243,42 +243,6 @@ async function getGeminiApiKey(userId: string): Promise<string | undefined> {
   return key || process.env.GOOGLE_API_KEY;
 }
 
-function parseGeminiResult(ocrResultText: string) {
-  const jsonMatch = ocrResultText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('Gemini failed to return structured JSON');
-  }
-
-  const result = JSON.parse(jsonMatch[0]);
-  if (!result.value || !result.meter_number) {
-    throw new Error('Gemini missed critical fields in JSON');
-  }
-  return result;
-}
-
-interface GeminiOcrResult {
-  value: number;
-  meter_number: string;
-  type: 'power' | 'gas';
-  unit: 'kWh' | 'm³';
-}
-
-async function findOrCreateMeter(result: GeminiOcrResult, userId: string) {
-  const { meter_number: meterNumber, type, unit } = result;
-  let meter = await Meter.findOne({ meterNumber: { $eq: meterNumber } }).setOptions({ userId });
-
-  if (!meter) {
-    meter = await Meter.create({
-      name: `Meter ${meterNumber}`,
-      meterNumber,
-      type: type || 'power',
-      unit: unit || 'kWh',
-      userId
-    });
-  }
-  return meter;
-}
-
 async function handleOcrScan({ req, res, userId }: RouteParams) {
   if (req.method !== 'POST') {return;}
 
