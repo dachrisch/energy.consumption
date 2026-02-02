@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.4](https://github.com/dachrisch/energy.consumption/compare/v3.9.3...v3.9.4) (2026-02-02)
+
+
+### Bug Fixes
+
+* **api:** fix contract creation/update field mapping and add overlap validation ([ccb9dd4](https://github.com/dachrisch/energy.consumption/commit/ccb9dd4ae11c0ceea6425ff54cb22c4501f2aa37))
+
 ### [3.9.3](https://github.com/dachrisch/energy.consumption/compare/v3.9.2...v3.9.3) (2026-02-02)
 
 
