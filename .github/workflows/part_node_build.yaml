@@ -1,14 +1,16 @@
+# DISABLED: Switched to CircleCI due to GitHub Packages pricing concerns.
+# See: https://docs.github.com/en/billing/concepts/product-billing/github-packages
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 name: 🟢🏗️🧪📊 Build & run node tests
 
-on:
-  workflow_call:
-    inputs:
-      project:
-        required: true
-        description: The project to build
-        type: string
+# on:
+#   workflow_call:
+#     inputs:
+#       project:
+#         required: true
+#         description: The project to build
+#         type: string
 
 permissions:
   checks: write

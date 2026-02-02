@@ -1,31 +1,33 @@
+# DISABLED: Switched to CircleCI due to GitHub Packages pricing concerns.
+# See: https://docs.github.com/en/billing/concepts/product-billing/github-packages
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 name: 🐳🚀 Push Docker Image to Registry
 
-on:
-  workflow_call:
-    inputs:
-      artifact_name:
-        required: true
-        description: The name of the artifact containing the Docker image
-        type: string
-      image_name:
-        required: true
-        description: The name/path of the Docker image in the registry (e.g., dachrisch/energy.consumption)
-        type: string
-      local_image_name:
-        required: true
-        description: The local name of the Docker image (used when loading from tar)
-        type: string
-      version:
-        required: false
-        default: latest
-        description: The version tag to use when pushing
-        type: string
-    secrets:
-      DOCKER_TOKEN:
-        required: true
-        description: Docker Hub token for authentication
+# on:
+#   workflow_call:
+#     inputs:
+#       artifact_name:
+#         required: true
+#         description: The name of the artifact containing the Docker image
+#         type: string
+#       image_name:
+#         required: true
+#         description: The name/path of the Docker image in the registry (e.g., dachrisch/energy.consumption)
+#         type: string
+#       local_image_name:
+#         required: true
+#         description: The local name of the Docker image (used when loading from tar)
+#         type: string
+#       version:
+#         required: false
+#         default: latest
+#         description: The version tag to use when pushing
+#         type: string
+#     secrets:
+#       DOCKER_TOKEN:
+#         required: true
+#         description: Docker Hub token for authentication
 
 permissions:
   contents: read

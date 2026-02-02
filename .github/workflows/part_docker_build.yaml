@@ -1,28 +1,30 @@
+# DISABLED: Switched to CircleCI due to GitHub Packages pricing concerns.
+# See: https://docs.github.com/en/billing/concepts/product-billing/github-packages
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 name: 🐳🏗️ Build Docker Image
 
-on:
-  workflow_call:
-    inputs:
-      dockerfile:
-        required: false
-        description: The Dockerfile used to build the image
-        type: string
-        default: Dockerfile
-      image_name:
-        required: true
-        description: The local name to use for the image
-        type: string
-      version:
-        required: false
-        description: Version string to embed in the build
-        type: string
-        default: "dev"
-    outputs:
-      artifact_name:
-        description: "Name of the uploaded artifact containing the Docker image"
-        value: ${{ jobs.build.outputs.artifact_name }}
+# on:
+#   workflow_call:
+#     inputs:
+#       dockerfile:
+#         required: false
+#         description: The Dockerfile used to build the image
+#         type: string
+#         default: Dockerfile
+#       image_name:
+#         required: true
+#         description: The local name to use for the image
+#         type: string
+#       version:
+#         required: false
+#         description: Version string to embed in the build
+#         type: string
+#         default: "dev"
+#     outputs:
+#       artifact_name:
+#         description: "Name of the uploaded artifact containing the Docker image"
+#         value: ${{ jobs.build.outputs.artifact_name }}
 
 permissions:
   contents: read

@@ -1,18 +1,20 @@
+# DISABLED: Switched to CircleCI due to GitHub Packages pricing concerns.
+# See: https://docs.github.com/en/billing/concepts/product-billing/github-packages
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 name: 🐳🧪 Test Docker Image
 
-on:
-  workflow_call:
-    inputs:
-      artifact_name:
-        required: true
-        description: The name of the artifact containing the Docker image
-        type: string
-      image_name:
-        required: true
-        description: The local name of the Docker image
-        type: string
+# on:
+#   workflow_call:
+#     inputs:
+#       artifact_name:
+#         required: true
+#         description: The name of the artifact containing the Docker image
+#         type: string
+#       image_name:
+#         required: true
+#         description: The local name of the Docker image
+#         type: string
 
 permissions:
   contents: read

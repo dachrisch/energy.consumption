@@ -1,9 +1,11 @@
+# DISABLED: Switched to CircleCI due to GitHub Packages pricing concerns.
+# See: https://docs.github.com/en/billing/concepts/product-billing/github-packages
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 name: auto-merge
 
-on:
-  pull_request:
+# on:
+#   pull_request:
 
 permissions:
   pull-requests: write
