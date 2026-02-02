@@ -108,18 +108,24 @@ workflows:
     jobs:
       - node_build_and_test:
           filters:
+            branches:
+              ignore: main
             tags:
               only: /.*/
       - docker_build:
           requires:
             - node_build_and_test
           filters:
+            branches:
+              ignore: main
             tags:
               only: /.*/
       - docker_test:
           requires:
             - docker_build
           filters:
+            branches:
+              ignore: main
             tags:
               only: /.*/
       - docker_push:
