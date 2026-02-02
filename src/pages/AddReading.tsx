@@ -63,6 +63,8 @@ const AddReading: Component = () => {
     const lastId = localStorage.getItem('lastMeterId');
     if (lastId && list.find((m: Meter) => m._id === lastId)) {
       setSelectedMeterId(lastId);
+    } else {
+      setSelectedMeterId('');
     }
   });
 
@@ -76,10 +78,10 @@ const AddReading: Component = () => {
   };
 
   const processScanResult = (result: ScanResult) => {
-    const currentId = selectedMeterId();
+    const meter = selectedMeter();
     setShowForm(true);
     
-    if (currentId && result.meterId && result.meterId !== currentId) {
+    if (meter && result.meterId && result.meterId !== meter._id) {
       setPendingScan(result);
       toast.showToast('Photo matches a different meter', 'warning');
       return;
