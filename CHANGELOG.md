@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.8.32](https://github.com/dachrisch/energy.consumption/compare/v3.8.31...v3.8.32) (2026-02-02)
+
+
+### Bug Fixes
+
+* **lint:** remove unused OCR helper functions in handler.ts ([052c152](https://github.com/dachrisch/energy.consumption/commit/052c1521c49de1eb51433f6f2f37903eaa4699ce))
+
 ### [3.8.31](https://github.com/dachrisch/energy.consumption/compare/v3.8.30...v3.8.31) (2026-02-02)
 
 ### [3.8.30](https://github.com/dachrisch/energy.consumption/compare/v3.8.29...v3.8.30) (2026-02-02)
