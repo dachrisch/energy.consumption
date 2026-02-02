@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.3](https://github.com/dachrisch/energy.consumption/compare/v3.9.2...v3.9.3) (2026-02-02)
+
+
+### Features
+
+* **ui:** move toast notifications to top right below navigation ([f4469ef](https://github.com/dachrisch/energy.consumption/commit/f4469efcd84476e96660766dc958e296c04baeda))
+
 ### [3.9.2](https://github.com/dachrisch/energy.consumption/compare/v3.9.1...v3.9.2) (2026-02-02)
 
 
