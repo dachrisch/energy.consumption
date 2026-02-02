@@ -4,6 +4,8 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import Contract from '../../models/Contract';
 import Meter from '../../models/Meter';
 import User from '../../models/User';
+import { apiHandler } from '../handler';
+import jwt from 'jsonwebtoken';
 
 describe('Contract API & Validation', () => {
   let mongoServer: MongoMemoryServer;
@@ -12,7 +14,9 @@ describe('Contract API & Validation', () => {
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
-    await mongoose.connect(mongoServer.getUri());
+    const uri = mongoServer.getUri();
+    process.env.MONGODB_URI = uri;
+    await mongoose.connect(uri);
     
     const user = await User.create({ name: 'Test', email: 'test@test.com', password: '123' });
     userId = user._id.toString();
@@ -44,10 +48,13 @@ describe('Contract API & Validation', () => {
     });
 
     // Try to create overlapping contract: March to Dec
-    const _req = {
+    const req = {
       url: '/api/contracts',
       method: 'POST',
-      headers: { host: 'localhost', cookie: 'token=dummy' },
+      headers: { 
+        host: 'localhost', 
+        cookie: `token=${jwt.sign({ userId }, process.env.JWT_SECRET || 'secret')}` 
+      },
       body: {
         providerName: 'Provider B',
         type: 'power',
@@ -59,17 +66,18 @@ describe('Contract API & Validation', () => {
       }
     };
 
+    let responseBody: any;
     const res = {
       statusCode: 200,
+      setHeader: () => {},
       end: (data: string) => {
-        const body = JSON.parse(data);
-        expect(res.statusCode).toBe(400);
-        expect(body.error).toContain('overlaps');
+        responseBody = JSON.parse(data);
       }
     };
 
-    // Mock JWT verification by bypassing handler's getUserId or providing a valid token
-    // For unit testing the logic inside the handler directly
-    // (Simplification: We are testing the overlap query logic here)
+    await apiHandler(req as any, res as any);
+    
+    expect(res.statusCode).toBe(400);
+    expect(responseBody.error).toContain('overlaps');
   });
 });

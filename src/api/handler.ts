@@ -318,7 +318,36 @@ async function handleContracts({ req, res, userId, url }: RouteParams) {
     return;
   }
   if (req.method === 'POST') {
-    const allowed = pick(req.body, ['meterId', 'name', 'type', 'unitPrice', 'standingCharge', 'startDate', 'endDate', 'estimatedAnnualConsumption']);
+    const allowed = pick(req.body, ['meterId', 'providerName', 'type', 'basePrice', 'workingPrice', 'startDate', 'endDate']);
+    
+    // Validate overlaps
+    const start = new Date(allowed.startDate as string);
+    const end = allowed.endDate ? new Date(allowed.endDate as string) : null;
+    
+    const overlapQuery: any = {
+      meterId: allowed.meterId,
+      $or: [
+        { startDate: { $lte: end || new Date('9999-12-31') }, endDate: { $gte: start } },
+        { startDate: { $lte: end || new Date('9999-12-31') }, endDate: null },
+        { startDate: { $gte: start }, endDate: null }
+      ]
+    };
+
+    if (!end) {
+      // If new contract has no end date, it overlaps with anything that ends after its start
+      overlapQuery.$or = [
+        { endDate: { $gte: start } },
+        { endDate: null }
+      ];
+    }
+
+    const overlapping = await Contract.findOne(overlapQuery).setOptions({ userId });
+    if (overlapping) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: 'Contract period overlaps with an existing contract for this meter' }));
+      return;
+    }
+
     const contract = await Contract.create({ ...allowed, userId });
     res.statusCode = 201;
     res.end(JSON.stringify(contract));
@@ -340,7 +369,39 @@ async function handleContractItem({ req, res, userId, path }: RouteParams) {
     return;
   }
   if (req.method === 'PATCH' || req.method === 'PUT') {
-    const allowed = pick(req.body, ['name', 'type', 'unitPrice', 'standingCharge', 'startDate', 'endDate', 'estimatedAnnualConsumption']);
+    const allowed = pick(req.body, ['providerName', 'type', 'basePrice', 'workingPrice', 'startDate', 'endDate']);
+    
+    if (allowed.startDate) {
+      const start = new Date(allowed.startDate as string);
+      const end = allowed.endDate ? new Date(allowed.endDate as string) : null;
+      const current = await Contract.findById(id).setOptions({ userId });
+      const mId = current?.meterId;
+
+      const overlapQuery: any = {
+        _id: { $ne: id },
+        meterId: mId,
+        $or: [
+          { startDate: { $lte: end || new Date('9999-12-31') }, endDate: { $gte: start } },
+          { startDate: { $lte: end || new Date('9999-12-31') }, endDate: null },
+          { startDate: { $gte: start }, endDate: null }
+        ]
+      };
+
+      if (!end) {
+        overlapQuery.$or = [
+          { endDate: { $gte: start } },
+          { endDate: null }
+        ];
+      }
+
+      const overlapping = await Contract.findOne(overlapQuery).setOptions({ userId });
+      if (overlapping) {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ error: 'Contract period overlaps with an existing contract' }));
+        return;
+      }
+    }
+
     const updated = await Contract.findOneAndUpdate({ _id: { $eq: id } }, { $set: allowed }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
     return;
