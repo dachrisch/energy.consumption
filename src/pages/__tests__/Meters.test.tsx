@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@solidjs/testing-library';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@solidjs/testing-library';
 import Meters from '../Meters';
 import { Router, Route } from '@solidjs/router';
 import { ToastProvider } from '../../context/ToastContext';
@@ -8,6 +8,10 @@ import { ToastProvider } from '../../context/ToastContext';
 global.fetch = vi.fn();
 
 describe('Meters Page', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('uses a 2-column grid layout on medium screens', async () => {
     (fetch as any).mockResolvedValue({
       ok: true,

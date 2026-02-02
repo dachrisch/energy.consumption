@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@solidjs/testing-library';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@solidjs/testing-library';
 import '@testing-library/jest-dom';
 import CsvImportModal from '../CsvImportModal';
 
@@ -12,6 +12,10 @@ vi.mock('../../lib/csvParser', () => ({
 }));
 
 describe('CsvImportModal', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('renders closed by default', () => {
     render(() => <CsvImportModal isOpen={false} onClose={() => {}} onSave={async () => {}} meters={[]} />);
     expect(screen.queryByText('Import Readings from CSV')).not.toBeInTheDocument();

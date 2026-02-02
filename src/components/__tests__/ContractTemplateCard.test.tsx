@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@solidjs/testing-library';
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@solidjs/testing-library';
 import '@testing-library/jest-dom';
 import ContractTemplateCard from '../ContractTemplateCard';
 import { Router, Route } from '@solidjs/router';
@@ -10,6 +10,10 @@ describe('ContractTemplateCard', () => {
     endDate: new Date(2023, 0, 31)
   };
   const meter = { _id: 'meter-123', name: 'Main Meter' };
+
+  afterEach(() => {
+    cleanup();
+  });
 
   it('displays the correct missing date range', () => {
     render(() => (
