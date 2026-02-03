@@ -29,7 +29,8 @@ RUN npm install --omit=dev
 ENV PORT=80
 EXPOSE 80
 
-HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
-  CMD wget -qO- http://127.0.0.1:80/health || exit 1
+# Health check using node and built-in http module
+HEALTHCHECK --interval=5s --timeout=3s --start-period=20s --retries=5 \
+  CMD node -e "require('http').get('http://localhost:80/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
 CMD ["npm", "run", "start:prod"]

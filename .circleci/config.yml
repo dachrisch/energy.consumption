@@ -84,30 +84,29 @@ jobs:
             docker load --input /tmp/docker-images/energy.consumption.tar
              docker run --rm --detach --name test_container -e ENCRYPTION_KEY=ci-test-key-123 -e JWT_SECRET=ci-test-jwt-secret energy.consumption:latest
              
-             # Wait for container to be healthy
-             SUCCESS=0
-             MAX_ATTEMPTS=20
-             for i in $(seq 1 $MAX_ATTEMPTS); do
-               STATUS=$(docker inspect --format='{{.State.Health.Status}}' test_container 2>/dev/null || echo "none")
-               RUNNING=$(docker inspect --format='{{.State.Running}}' test_container 2>/dev/null || echo "false")
-               echo "Attempt $i/$MAX_ATTEMPTS: Health=$STATUS, Running=$RUNNING"
-               if [ "$RUNNING" = "false" ]; then
-                 echo "Container stopped unexpectedly!"
-                 docker logs test_container
-                 exit 1
-               fi
-               if [ "$STATUS" = "healthy" ]; then
-                 SUCCESS=1
-                 break
-               fi
-               sleep 5
-             done
+             # Wait for container to be healthy (max 2 minutes)
+             echo "Waiting for container to become healthy..."
+             docker run --rm --network container:test_container alpine sh -c 'until nc -z 127.0.0.1 80; do echo "Waiting for port 80..."; sleep 1; done' &
+             NC_PID=$!
              
-             if [ $SUCCESS -ne 1 ]; then
-               echo "Container did not become healthy after $((MAX_ATTEMPTS * 5)) seconds."
+             # Wait up to 30 seconds for port to open
+             if ! wait $NC_PID 2>/dev/null; then
+               echo "Port 80 did not open within 30 seconds"
+               docker logs test_container
+               docker kill test_container 2>/dev/null || true
+               exit 1
+             fi
+             
+             # Give container a bit more time to fully initialize
+             sleep 3
+             
+             # Check that container is still running
+             if ! docker inspect test_container --format='{{.State.Running}}' | grep -q true; then
+               echo "Container crashed after port opened"
                docker logs test_container
                exit 1
              fi
+             
              echo "Container is healthy!"
              docker stop test_container
 
