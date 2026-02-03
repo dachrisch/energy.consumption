@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.10](https://github.com/dachrisch/energy.consumption/compare/v3.9.9...v3.9.10) (2026-02-03)
+
+
+### Features
+
+* **health:** add dedicated health check script and improve Dockerfile healthcheck ([58a530f](https://github.com/dachrisch/energy.consumption/commit/58a530f4d815abe4f1a017f15b01dbd4305c08e6))
+
 ### [3.9.9](https://github.com/dachrisch/energy.consumption/compare/v3.9.8...v3.9.9) (2026-02-03)
 
 
