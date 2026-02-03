@@ -12,7 +12,8 @@ export default [
       "dist-server/**",
       "coverage/**",
       ".next/**",
-      "scripts/**"
+      "scripts/**",
+      "healthcheck.js"
     ],
   },
   {
