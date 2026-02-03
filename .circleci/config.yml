@@ -82,27 +82,34 @@ jobs:
           name: Load and Test Docker Image
           command: |
             docker load --input /tmp/docker-images/energy.consumption.tar
-            docker run --rm --detach --name test_container -e ENCRYPTION_KEY=ci-test-key-123 energy.consumption:latest
-            
-            # Wait for container to be healthy
-            SUCCESS=0
-            for i in {1..10}; do
-              # Try to get health status, fallback to status if healthcheck not defined yet
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' test_container 2>/dev/null || echo "starting")
-              echo "Attempt $i: Health status is $STATUS"
-              if [ "$STATUS" = "healthy" ]; then
-                SUCCESS=1
-                break
-              fi
-              sleep 6
-            done
-            
-            if [ $SUCCESS -ne 1 ]; then
-              echo "Container did not become healthy after 60 seconds."
-              docker logs test_container
-              exit 1
-            fi
-            docker stop test_container
+             docker run --rm --detach --name test_container -e ENCRYPTION_KEY=ci-test-key-123 -e JWT_SECRET=ci-test-jwt-secret energy.consumption:latest
+             
+             # Wait for container to be healthy
+             SUCCESS=0
+             MAX_ATTEMPTS=20
+             for i in $(seq 1 $MAX_ATTEMPTS); do
+               STATUS=$(docker inspect --format='{{.State.Health.Status}}' test_container 2>/dev/null || echo "none")
+               RUNNING=$(docker inspect --format='{{.State.Running}}' test_container 2>/dev/null || echo "false")
+               echo "Attempt $i/$MAX_ATTEMPTS: Health=$STATUS, Running=$RUNNING"
+               if [ "$RUNNING" = "false" ]; then
+                 echo "Container stopped unexpectedly!"
+                 docker logs test_container
+                 exit 1
+               fi
+               if [ "$STATUS" = "healthy" ]; then
+                 SUCCESS=1
+                 break
+               fi
+               sleep 5
+             done
+             
+             if [ $SUCCESS -ne 1 ]; then
+               echo "Container did not become healthy after $((MAX_ATTEMPTS * 5)) seconds."
+               docker logs test_container
+               exit 1
+             fi
+             echo "Container is healthy!"
+             docker stop test_container
 
   docker_push:
     resource_class: medium
