@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.12](https://github.com/dachrisch/energy.consumption/compare/v3.9.11...v3.9.12) (2026-02-03)
+
+
+### Bug Fixes
+
+* **healthcheck:** use ES module syntax to match package.json type ([bdd3f1f](https://github.com/dachrisch/energy.consumption/commit/bdd3f1f91b4d5abbee42d05792bc6e8dfeba2943))
+
 ### [3.9.11](https://github.com/dachrisch/energy.consumption/compare/v3.9.10...v3.9.11) (2026-02-03)
 
 
