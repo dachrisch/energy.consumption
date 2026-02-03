@@ -22,6 +22,7 @@ WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server ./dist-server
 COPY --from=build /app/package*.json ./
+COPY healthcheck.js ./healthcheck.js
 
 # Install production dependencies only
 RUN npm install --omit=dev
@@ -29,8 +30,8 @@ RUN npm install --omit=dev
 ENV PORT=80
 EXPOSE 80
 
-# Simple TCP health check - just verify port is open and responding
+# Health check using dedicated Node.js script
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-  CMD nc -z 127.0.0.1 80 || exit 1
+  CMD node healthcheck.js
 
 CMD ["npm", "run", "start:prod"]
