@@ -84,25 +84,29 @@ jobs:
             docker load --input /tmp/docker-images/energy.consumption.tar
              docker run --rm --detach --name test_container -e ENCRYPTION_KEY=ci-test-key-123 -e JWT_SECRET=ci-test-jwt-secret energy.consumption:latest
              
-             # Wait for container to be healthy (max 2 minutes)
+             # Wait for container to be healthy
              echo "Waiting for container to become healthy..."
-             docker run --rm --network container:test_container alpine sh -c 'until nc -z 127.0.0.1 80; do echo "Waiting for port 80..."; sleep 1; done' &
-             NC_PID=$!
+             SUCCESS=0
+             for i in {1..30}; do
+               HEALTH=$(docker inspect --format='{{.State.Health.Status}}' test_container 2>/dev/null || echo "none")
+               RUNNING=$(docker inspect --format='{{.State.Running}}' test_container 2>/dev/null || echo "false")
+               echo "Attempt $i/30: Health=$HEALTH, Running=$RUNNING"
+               
+               if [ "$RUNNING" = "false" ]; then
+                 echo "Container stopped unexpectedly!"
+                 docker logs test_container
+                 exit 1
+               fi
+               
+               if [ "$HEALTH" = "healthy" ]; then
+                 SUCCESS=1
+                 break
+               fi
+               sleep 2
+             done
              
-             # Wait up to 30 seconds for port to open
-             if ! wait $NC_PID 2>/dev/null; then
-               echo "Port 80 did not open within 30 seconds"
-               docker logs test_container
-               docker kill test_container 2>/dev/null || true
-               exit 1
-             fi
-             
-             # Give container a bit more time to fully initialize
-             sleep 3
-             
-             # Check that container is still running
-             if ! docker inspect test_container --format='{{.State.Running}}' | grep -q true; then
-               echo "Container crashed after port opened"
+             if [ $SUCCESS -ne 1 ]; then
+               echo "Container did not become healthy within 60 seconds"
                docker logs test_container
                exit 1
              fi
