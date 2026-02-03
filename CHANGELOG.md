@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.11](https://github.com/dachrisch/energy.consumption/compare/v3.9.10...v3.9.11) (2026-02-03)
+
+
+### Bug Fixes
+
+* exclude healthcheck.js from eslint and remove console disable comment ([85466fe](https://github.com/dachrisch/energy.consumption/commit/85466fe922b290d4a347d32dd5c66df6312229e2))
+
 ### [3.9.10](https://github.com/dachrisch/energy.consumption/compare/v3.9.9...v3.9.10) (2026-02-03)
 
 
