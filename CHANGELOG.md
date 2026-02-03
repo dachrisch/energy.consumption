@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.9](https://github.com/dachrisch/energy.consumption/compare/v3.9.8...v3.9.9) (2026-02-03)
+
+
+### Bug Fixes
+
+* **docker:** simplify health check to TCP port check instead of HTTP endpoint ([30081c1](https://github.com/dachrisch/energy.consumption/commit/30081c13c4cfe39835a6045f411060721a51f4f7))
+
 ### [3.9.8](https://github.com/dachrisch/energy.consumption/compare/v3.9.7...v3.9.8) (2026-02-03)
 
 ### [3.9.7](https://github.com/dachrisch/energy.consumption/compare/v3.9.6...v3.9.7) (2026-02-03)
