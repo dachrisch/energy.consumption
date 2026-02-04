@@ -3,6 +3,7 @@ import { A } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import ContractTemplateCard from '../components/ContractTemplateCard';
+import EmptyState from '../components/EmptyState';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -30,16 +31,19 @@ const Contracts: Component = () => {
   const [data, { refetch }] = createResource(fetchDashboardData);
   const toast = useToast();
 
-  const gaps = () => {
-    const d = data();
-    if (!d) {return [];}
-    
-    return d.meters.flatMap((meter: Meter) => {
-      const meterReadings = d.readings.filter((r: { meterId: string }) => r.meterId === meter._id);
-      const meterContracts = d.contracts.filter((c: Contract) => c.meterId === meter._id || c.meterId?._id === meter._id);
-      return findContractGaps(meterReadings, meterContracts).map(gap => ({ gap, meter }));
-    });
-  };
+   const gaps = () => {
+     const d = data();
+     if (!d || !d.meters.length) {return [];}
+     
+      return d.meters.flatMap((meter: Meter) => {
+        const meterReadings = d.readings.filter((r: { meterId: string }) => r.meterId === meter._id);
+        const meterContracts = d.contracts.filter((c: Contract) => {
+          const cMeterId = typeof c.meterId === 'string' ? c.meterId : (c.meterId as unknown as { _id: string })?._id;
+          return cMeterId === meter._id;
+        });
+        return findContractGaps(meterReadings, meterContracts).map(gap => ({ gap, meter }));
+      });
+   };
 
   const sortedItems = () => {
     const d = data();
@@ -90,23 +94,30 @@ const Contracts: Component = () => {
         </A>
       </div>
 
-      <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <For each={sortedItems()} fallback={
-            <div class="col-span-full card bg-warning/5 border-2 border-dashed border-warning/20 py-20 text-center group hover:border-warning/40 transition-all">
-              <div class="card-body items-center text-center">
-                <div class="bg-warning/10 p-6 rounded-full mb-4 text-warning">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                </div>
-                <h3 class="text-xl font-black text-warning uppercase tracking-widest">No contracts defined</h3>
-                <p class="text-base-content/60 font-bold mb-6 max-w-sm">Enter your contract details to enable precise cost projections and historical analysis.</p>
-                <A href="/contracts/add" class="btn btn-warning btn-wide rounded-2xl shadow-xl shadow-warning/20 font-black">Register First Contract</A>
-              </div>
-            </div>
-          }>
-            {(item: { type: string, data: Contract | { gap: Gap, meter: Meter } }) => (
-              <Show when={item.type === 'contract'} fallback={
-                <ContractTemplateCard gap={item.data.gap} meter={item.data.meter} />
+       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
+         <Show when={data()?.meters?.length} fallback={
+           <EmptyState 
+             title="No meters exist"
+             description="Create a meter first to add contracts and track utility consumption."
+             actionLabel="Add Meter"
+             actionLink="/add-meter"
+             colorScheme="neutral"
+             icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+           />
+         }>
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <For each={sortedItems()} fallback={
+               <EmptyState 
+                 title="No contracts defined"
+                 description="Enter your contract details to enable precise cost projections and historical analysis."
+                 actionLabel="Register First Contract"
+                 actionLink="/contracts/add"
+                 icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+               />
+             }>
+               {(item: { type: string, data: Contract | { gap: Gap, meter: Meter } }) => (
+                 <Show when={item.type === 'contract'} fallback={
+                   <ContractTemplateCard gap={(item.data as { gap: Gap, meter: Meter }).gap} meter={(item.data as { gap: Gap, meter: Meter }).meter} />
               }>
                 {(() => {
                   const contract = item.data as Contract;
@@ -165,10 +176,11 @@ const Contracts: Component = () => {
                 })()}
               </Show>
             )}
-          </For>
-        </div>
-      </Show>
-    </div>
+             </For>
+           </div>
+         </Show>
+       </Show>
+     </div>
   );
 };
 

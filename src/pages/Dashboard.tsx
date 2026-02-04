@@ -2,6 +2,7 @@ import { Component, createResource, Show, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 import CsvImportModal from '../components/CsvImportModal';
+import EmptyState from '../components/EmptyState';
 import { useToast } from '../context/ToastContext';
 import { calculateAggregates } from '../lib/aggregates';
 import { findContractGaps, Gap } from '../lib/gapDetection';
@@ -103,32 +104,30 @@ const DashboardAggregates: Component<{ data: {
 const DashboardWarnings: Component<{ data: {
   hasMissingContracts: boolean;
   hasPartialGaps: boolean;
+  hasMeters: boolean;
 } }> = (props) => (
   <>
-    <Show when={props.data.hasMissingContracts}>
-      <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
-         <div class="bg-warning/20 p-4 rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-         </div>
-         <h3 class="text-lg font-black tracking-tight uppercase">No contract on meter</h3>
-         <p class="text-sm font-bold opacity-80 max-w-xs text-base-content/70">
-           One or more of your meters have no pricing contracts configured. Add one to see cost projections.
-         </p>
-         <A href="/contracts/add" class="btn btn-warning btn-wide rounded-2xl shadow-xl shadow-warning/20 font-black">Add Contract</A>
-      </div>
+    <Show when={props.data.hasMeters && props.data.hasMissingContracts}>
+      <EmptyState 
+        title="No contract on meter"
+        description="One or more of your meters have no pricing contracts configured. Add one to see cost projections."
+        actionLabel="Add Contract"
+        actionLink="/contracts/add"
+        compact={true}
+        colorScheme="warning"
+        icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+      />
     </Show>
 
-    <Show when={props.data.hasPartialGaps}>
-      <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
-         <div class="bg-warning/20 p-4 rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>
-         </div>
-         <h3 class="text-lg font-black tracking-tight uppercase">Partial contracts missing</h3>
-         <p class="text-sm font-bold opacity-80 max-w-xs text-base-content/70">
-           We detected gaps in your contract coverage. Fill them to ensure 100% accurate financial history.
-         </p>
-         <A href="/contracts" class="btn btn-warning btn-wide rounded-2xl shadow-xl shadow-warning/20 font-black">Show Contract Page</A>
-      </div>
+    <Show when={props.data.hasMeters && props.data.hasPartialGaps}>
+      <EmptyState 
+        title="Partial contracts missing"
+        description="We detected gaps in your contract coverage. Fill them to ensure 100% accurate financial history."
+        actionLabel="Show Contract Page"
+        actionLink="/contracts"
+        compact={true}
+        icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>}
+      />
     </Show>
   </>
 );
@@ -136,16 +135,14 @@ const DashboardWarnings: Component<{ data: {
 const DashboardEmptyState: Component<{ hasMeters: boolean }> = (props) => (
   <>
     <Show when={!props.hasMeters}>
-      <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
-         <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
-         </div>
-         <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Getting Started</h3>
-         <p class="text-sm font-bold text-base-content/60 max-w-xs">
-           To begin tracking your energy costs, you first need to register a utility meter.
-         </p>
-         <A href="/meters/add" class="btn btn-primary btn-wide rounded-2xl shadow-xl shadow-primary/20">Add Meter</A>
-      </div>
+      <EmptyState 
+        title="Getting Started"
+        description="To begin tracking your energy costs, you first need to register a utility meter."
+        actionLabel="Add Meter"
+        actionLink="/meters/add"
+        colorScheme="primary"
+        icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>}
+      />
     </Show>
 
     <Show when={props.hasMeters}>
@@ -187,11 +184,12 @@ const Dashboard: Component = () => {
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
       <CsvImportModal 
-          isOpen={isImportOpen()} 
-          onClose={() => setImportOpen(false)} 
-          onSave={handleBulkImport}
-          meters={data()?.meters || []}
-      />
+           isOpen={isImportOpen()} 
+           onClose={() => setImportOpen(false)} 
+           onSave={handleBulkImport}
+           meters={data()?.meters || []}
+           onMeterCreated={() => refetch()}
+       />
       
       <DashboardHeader onImportClick={() => setImportOpen(true)} />
 
