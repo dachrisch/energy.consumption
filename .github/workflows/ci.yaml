@@ -4,10 +4,10 @@
 
 name: 🏗️🧪🚀 Build, Test and Deploy everything
 
-# on:
-#   push:
-#     tags:
-#       - "*"
+on:
+  push:
+    tags:
+      - "*"
 
 permissions:
   contents: write

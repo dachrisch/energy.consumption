@@ -4,15 +4,15 @@
 
 name: 🏗️🧪🍂 Build & Test branches
 # https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
-# on:
-#   push:
-#     branches:
-#       - "*"
-#     tags-ignore:
-#       - "*"
-#   pull_request:
-#     branches:
-#       - "*"
+on:
+  push:
+    branches:
+      - "*"
+    tags-ignore:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
 
 permissions:
   contents: write
