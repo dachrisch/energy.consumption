@@ -4,13 +4,13 @@
 
 name: 🟢🏗️🧪📊 Build & run node tests
 
-# on:
-#   workflow_call:
-#     inputs:
-#       project:
-#         required: true
-#         description: The project to build
-#         type: string
+on:
+  workflow_call:
+    inputs:
+      project:
+        required: true
+        description: The project to build
+        type: string
 
 permissions:
   checks: write
