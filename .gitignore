@@ -29,3 +29,4 @@ Thumbs.db
 
 .next
 dist-server/
+coverage/
