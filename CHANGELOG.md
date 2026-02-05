@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.20](https://github.com/dachrisch/energy.consumption/compare/v3.9.19...v3.9.20) (2026-02-05)
+
+
+### Bug Fixes
+
+* resolve unknown meter in contracts and improve UI navigation ([97e73cc](https://github.com/dachrisch/energy.consumption/commit/97e73cc4c0d5f14fae5fe4ade43c6dd7339d7e9b))
+
 ### [3.9.19](https://github.com/dachrisch/energy.consumption/compare/v3.9.18...v3.9.19) (2026-02-05)
 
 ### [3.9.18](https://github.com/dachrisch/energy.consumption/compare/v3.9.17...v3.9.18) (2026-02-05)
