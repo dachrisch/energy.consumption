@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.21](https://github.com/dachrisch/energy.consumption/compare/v3.9.20...v3.9.21) (2026-02-05)
+
+
+### Bug Fixes
+
+* reduce MeterDetail component complexity and fix type errors ([7f6af05](https://github.com/dachrisch/energy.consumption/commit/7f6af053f253c11f13c8bccbd363eb136ab7d45e))
+
 ### [3.9.20](https://github.com/dachrisch/energy.consumption/compare/v3.9.19...v3.9.20) (2026-02-05)
 
 
