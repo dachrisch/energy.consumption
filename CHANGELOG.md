@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.18](https://github.com/dachrisch/energy.consumption/compare/v3.9.17...v3.9.18) (2026-02-05)
+
+
+### Bug Fixes
+
+* increase rate limits and exempt static assets ([c467ca9](https://github.com/dachrisch/energy.consumption/commit/c467ca9bc29b338b7132a6c103a407db78a0a95b))
+
 ### [3.9.17](https://github.com/dachrisch/energy.consumption/compare/v3.9.16...v3.9.17) (2026-02-05)
 
 
