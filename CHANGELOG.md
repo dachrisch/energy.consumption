@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.17](https://github.com/dachrisch/energy.consumption/compare/v3.9.16...v3.9.17) (2026-02-05)
+
+
+### Bug Fixes
+
+* correct mobile chart orientation and data mapping ([f07133e](https://github.com/dachrisch/energy.consumption/commit/f07133e3fb934cc1ef66f6e08963060e6e41f2d7))
+
 ### [3.9.16](https://github.com/dachrisch/energy.consumption/compare/v3.9.15...v3.9.16) (2026-02-05)
 
 
