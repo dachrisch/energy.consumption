@@ -1,6 +1,8 @@
 import { Component, createSignal, createResource, For, Show, createEffect } from 'solid-js';
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
+import FormInput from '../components/FormInput';
+import FormSelect from '../components/FormSelect';
 
 interface Meter {
   _id: string;
@@ -107,7 +109,7 @@ const AddContract: Component = () => {
       if (data.endDate) {setEndDate(new Date(data.endDate).toISOString().split('T')[0]);}
       setBasePrice(data.basePrice.toString());
       setWorkingPrice(data.workingPrice.toString());
-      const mId = typeof data.meterId === 'string' ? data.meterId : data.meterId?._id;
+      const mId = typeof data.meterId === 'string' ? data.meterId : (data.meterId as { _id: string })?._id;
       if (mId) { setMeterId(mId); }
     }
   };
@@ -155,50 +157,76 @@ const AddContract: Component = () => {
         <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
           <div class="card-body p-8 md:p-12">
             <form onSubmit={handleSubmit} class="space-y-8">
-              <div class="form-control w-full flex flex-col gap-2">
-                <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Provider Name</span></label>
-                <input type="text" placeholder="e.g. Vattenfall, E.ON" class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={providerName()} onInput={(e) => setProviderName(e.currentTarget.value)} required />
+              <FormInput 
+                label="Provider Name"
+                placeholder="e.g. Vattenfall, E.ON"
+                value={providerName()}
+                onInput={(e) => setProviderName(e.currentTarget.value)}
+                required
+              />
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormSelect 
+                  label="Utility Type"
+                  value={type()}
+                  onChange={(e) => setType(e.currentTarget.value)}
+                  options={[
+                    { value: 'power', label: 'Power (Electricity)' },
+                    { value: 'gas', label: 'Natural Gas' },
+                    { value: 'water', label: 'Water' }
+                  ]}
+                  required
+                />
+                <FormSelect 
+                  label="Linked Meter"
+                  value={meterId()}
+                  onChange={(e) => setMeterId(e.currentTarget.value)}
+                  options={[
+                    { value: '', label: 'Select a meter' },
+                    ...(meters()?.filter((m: Meter) => m.type === type()) || []).map(m => ({
+                      value: m._id,
+                      label: `${m.name} (${m.meterNumber})`
+                    }))
+                  ]}
+                  required
+                />
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Utility Type</span></label>
-                  <select class="select select-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={type()} onChange={(e) => setType(e.currentTarget.value)}>
-                    <option value="power">Power (Electricity)</option>
-                    <option value="gas">Natural Gas</option>
-                  </select>
-                </div>
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Linked Meter</span></label>
-                  <select class="select select-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={meterId()} onChange={(e) => setMeterId(e.currentTarget.value)} required>
-                    <option value="" disabled>Select a meter</option>
-                    <For each={meters()?.filter((m: Meter) => m.type === type())}>
-                      {(m) => <option value={m._id}>{m.name} ({m.meterNumber})</option>}
-                    </For>
-                  </select>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Start Date</span></label>
-                  <input type="date" class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={startDate()} onInput={(e) => setStartDate(e.currentTarget.value)} required />
-                </div>
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">End Date (Optional)</span></label>
-                  <input type="date" class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={endDate()} onInput={(e) => setEndDate(e.currentTarget.value)} />
-                </div>
+                <FormInput 
+                  label="Start Date"
+                  type="date"
+                  value={startDate()}
+                  onInput={(e) => setStartDate(e.currentTarget.value)}
+                  required
+                />
+                <FormInput 
+                  label="End Date (Optional)"
+                  type="date"
+                  value={endDate()}
+                  onInput={(e) => setEndDate(e.currentTarget.value)}
+                />
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Base Price (€/month)</span></label>
-                  <input type="number" step="0.01" placeholder="10.00" class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={basePrice()} onInput={(e) => setBasePrice(e.currentTarget.value)} required />
-                </div>
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Working Price (€/{type() === 'power' ? 'kWh' : 'm³'})</span></label>
-                  <input type="number" step="0.0001" placeholder="0.3000" class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={workingPrice()} onInput={(e) => setWorkingPrice(e.currentTarget.value)} required />
-                </div>
+                <FormInput 
+                  label="Base Price (€/month)"
+                  type="number"
+                  step="0.01"
+                  placeholder="10.00"
+                  value={basePrice()}
+                  onInput={(e) => setBasePrice(e.currentTarget.value)}
+                  required
+                />
+                <FormInput 
+                  label={`Working Price (€/${type() === 'power' ? 'kWh' : 'm³'})`}
+                  type="number"
+                  step="0.0001"
+                  placeholder="0.3000"
+                  value={workingPrice()}
+                  onInput={(e) => setWorkingPrice(e.currentTarget.value)}
+                  required
+                />
               </div>
 
               <div class="card-actions justify-end pt-6">
