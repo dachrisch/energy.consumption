@@ -9,7 +9,7 @@ export async function handleAggregatedRoutes({ res, userId, path }: RouteParams)
   // The last 100-200 are plenty for accurate current projections.
   const [meters, contracts, readings] = await Promise.all([
     Meter.find({}).setOptions({ userId }),
-    Contract.find({}).setOptions({ userId }),
+    Contract.find({}).setOptions({ userId }).populate('meterId'),
     Reading.find({}).setOptions({ userId }).sort({ date: -1 }).limit(500)
   ]);
   

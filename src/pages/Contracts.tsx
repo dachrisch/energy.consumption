@@ -1,5 +1,5 @@
 import { Component, createResource, For, Show } from 'solid-js';
-import { A } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import ContractTemplateCard from '../components/ContractTemplateCard';
@@ -30,6 +30,7 @@ interface Contract {
 const Contracts: Component = () => {
   const [data, { refetch }] = createResource(fetchDashboardData);
   const toast = useToast();
+  const navigate = useNavigate();
 
    const gaps = () => {
      const d = data();
@@ -105,24 +106,27 @@ const Contracts: Component = () => {
              icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
            />
          }>
-           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <For each={sortedItems()} fallback={
-               <EmptyState 
-                 title="No contracts defined"
-                 description="Enter your contract details to enable precise cost projections and historical analysis."
-                 actionLabel="Register First Contract"
-                 actionLink="/contracts/add"
-                 icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-               />
-             }>
-               {(item: { type: string, data: Contract | { gap: Gap, meter: Meter } }) => (
-                 <Show when={item.type === 'contract'} fallback={
-                   <ContractTemplateCard gap={(item.data as { gap: Gap, meter: Meter }).gap} meter={(item.data as { gap: Gap, meter: Meter }).meter} />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <For each={sortedItems()} fallback={
+                <EmptyState 
+                  title="No contracts defined"
+                  description="Enter your contract details to enable precise cost projections and historical analysis."
+                  actionLabel="Register First Contract"
+                  actionLink="/contracts/add"
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+                />
               }>
+                {(item: { type: string, data: Contract | { gap: Gap, meter: Meter } }) => (
+                  <Show when={item.type === 'contract'} fallback={
+                    <ContractTemplateCard gap={(item.data as { gap: Gap, meter: Meter }).gap} meter={(item.data as { gap: Gap, meter: Meter }).meter} />
+               }>
                 {(() => {
                   const contract = item.data as Contract;
                   return (
-                    <div class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden">
+                    <div 
+                      class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden hover:border-primary/30 transition-all hover:shadow-2xl cursor-pointer"
+                      onClick={() => navigate(`/contracts/${contract._id}/edit`)}
+                    >
                       <div class="card-body p-8">
                         <div class="flex justify-between items-start mb-6">
                           <div class={`p-3 rounded-2xl ${contract.type === 'power' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
@@ -144,7 +148,11 @@ const Contracts: Component = () => {
                         <h3 class="text-2xl font-black tracking-tight mb-1">{contract.providerName}</h3>
                         <div class="mb-6">
                           <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Linked to Meter</p>
-                          <A href={`/meters/${contract.meterId?._id}`} class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-3 h-8 lowercase">
+                          <A 
+                            href={`/meters/${contract.meterId?._id}`} 
+                            class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-3 h-8 lowercase"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {contract.meterId?.name || 'Unknown Meter'}
                           </A>
                         </div>
@@ -161,11 +169,20 @@ const Contracts: Component = () => {
                         </div>
 
                         <div class="flex justify-end gap-1 mt-6 pt-4 border-t border-base-content/5">
-                          <A href={`/contracts/${contract._id}/edit`} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Contract">
+                          <A 
+                            href={`/contracts/${contract._id}/edit`} 
+                            class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" 
+                            title="Edit Contract"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             <span class="text-[10px] uppercase tracking-tighter">Edit</span>
                           </A>
-                          <button onClick={() => handleDeleteContract(contract._id)} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" title="Delete Contract">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteContract(contract._id); }} 
+                            class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" 
+                            title="Delete Contract"
+                          >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             <span class="text-[10px] uppercase tracking-tighter">Delete</span>
                           </button>

@@ -56,7 +56,7 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
   yearlyProjection: number;
   estimatedYearlyCost: number;
   dailyCost: number;
-} }> = (props) => (
+}, hasContracts: boolean }> = (props) => (
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="card bg-base-100 shadow-xl border border-base-content/5">
       <div class="card-body p-8">
@@ -82,10 +82,17 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
         </div>
       </div>
     }>
-      <div class="card bg-primary text-primary-content shadow-2xl shadow-primary/30 border-none">
-        <div class="card-body p-8">
+      <div class="card bg-primary text-primary-content shadow-2xl shadow-primary/30 border-none relative overflow-hidden group">
+        <div class="card-body p-8 z-10">
           <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
           <p class="text-4xl font-black tracking-tighter">€{props.stats.estimatedYearlyCost.toFixed(2)}</p>
+          <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+            <span class="text-[10px] font-black uppercase tracking-widest opacity-60">Active Contract</span>
+            <A href="/contracts" class="btn btn-xs btn-ghost bg-white/10 hover:bg-white/20 text-white rounded-lg border-none px-3 font-black">Manage</A>
+          </div>
+        </div>
+        <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
         </div>
       </div>
     </Show>
@@ -154,11 +161,19 @@ const MeterDetail: Component = () => {
       <ErrorBoundary fallback={(err) => <div class="alert alert-error font-bold">Something went wrong rendering meter details: {err instanceof Error ? err.message : 'Unknown error'}</div>}>
         <Show when={data()?.meter} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
           <MeterDetailHeader meter={data()?.meter} />
-          <MeterStatsGrid meter={data()?.meter} stats={stats()} />
+          <MeterStatsGrid meter={data()?.meter} stats={stats()} hasContracts={(data()?.contracts?.length || 0) > 0} />
 
           <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
             <div class="card-body p-8 md:p-12">
-              <h2 class="text-xl font-black uppercase tracking-widest opacity-20 mb-8">Consumption Trend & Projection</h2>
+              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <h2 class="text-xl font-black uppercase tracking-widest opacity-20">Consumption Trend & Projection</h2>
+                <Show when={(data()?.contracts?.length || 0) > 0}>
+                  <A href={`/contracts?meterId=${data()?.meter._id}`} class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-4 h-8 uppercase tracking-widest text-[10px]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    View Contracts
+                  </A>
+                </Show>
+              </div>
               <ConsumptionChart 
                 readings={data()?.readings || []} 
                 projection={projection()}
