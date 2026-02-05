@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.16](https://github.com/dachrisch/energy.consumption/compare/v3.9.15...v3.9.16) (2026-02-05)
+
+
+### Bug Fixes
+
+* remove unused For import in AddContract.tsx ([20ec13b](https://github.com/dachrisch/energy.consumption/commit/20ec13b4727b259f3cfa1c1dc65056ce85aa9639))
+
 ### [3.9.15](https://github.com/dachrisch/energy.consumption/compare/v3.9.14...v3.9.15) (2026-02-05)
 
 ### [3.9.13](https://github.com/dachrisch/energy.consumption/compare/v3.9.12...v3.9.13) (2026-02-03)
