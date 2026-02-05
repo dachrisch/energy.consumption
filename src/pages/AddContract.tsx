@@ -1,4 +1,4 @@
-import { Component, createSignal, createResource, For, Show, createEffect } from 'solid-js';
+import { Component, createSignal, createResource, Show, createEffect } from 'solid-js';
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 import FormInput from '../components/FormInput';
