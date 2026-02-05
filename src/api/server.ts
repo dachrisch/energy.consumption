@@ -30,14 +30,14 @@ if (!process.env.ENCRYPTION_KEY) {
 
 const apiLimiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 100, // Limit each IP to 100 requests per window
+	max: 500, // Limit each IP to 500 requests per window
 	standardHeaders: true,
 	legacyHeaders: false,
 });
 
 const authLimiter = rateLimit({
 	windowMs: 60 * 60 * 1000, // 1 hour
-	max: 10, // Limit each IP to 10 registration/login attempts per hour
+	max: 20, // Limit each IP to 20 registration/login attempts per hour
 	message: 'Too many requests from this IP, please try again after an hour',
     standardHeaders: true,
 	legacyHeaders: false,
@@ -46,12 +46,12 @@ const authLimiter = rateLimit({
 app.use('/api/register', authLimiter);
 app.use('/api/login', authLimiter);
 
-// Apply general API limiter to all routes (including static and fallback)
-app.use(apiLimiter);
+// Apply general API limiter only to /api/ routes
+app.use('/api/*', apiLimiter);
 
 app.use(bodyParser.json({ limit: '10mb' }));
 
-// Serve static files from the 'dist' directory
+// Serve static files from the 'dist' directory (NOT rate limited by apiLimiter)
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Handle all /api/* routes
