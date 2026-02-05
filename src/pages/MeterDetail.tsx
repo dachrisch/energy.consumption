@@ -99,88 +99,105 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
   </div>
 );
 
+const calculateDailyCost = (readings: Reading[], contracts: Contract[]) => {
+  if (readings.length < 2) {return 0;}
+  const sorted = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const last = sorted[0];
+  const prev = sorted[1];
+  const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
+  
+  if (intervalDays <= 0) {return 0;}
+  const totalIntervalCost = calculateIntervalCost(
+    new Date(prev.date),
+    new Date(last.date),
+    last.value - prev.value,
+    contracts as unknown as PricingContract[] 
+  );
+  return totalIntervalCost / intervalDays;
+};
+
+const calculateYearlyCost = (contracts: Contract[], yearlyProjection: number) => {
+  const activeContract = findContractForDate(contracts as unknown as PricingContract[], new Date());
+  if (!activeContract) {return 0;}
+  return calculateCostForContract({
+    consumption: yearlyProjection,
+    days: 365.25,
+    contract: activeContract
+  });
+};
+
+const calculateMeterStats = (d: { readings: Reading[], contracts: Contract[] } | undefined) => {
+  if (!d?.readings) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };}
+  
+  try {
+    const readings = d.readings;
+    const consumptionStats = calculateStats(readings.map((r: Reading) => ({
+      value: r.value,
+      date: new Date(r.date)
+    })));
+
+    return {
+      ...consumptionStats,
+      estimatedYearlyCost: calculateYearlyCost(d.contracts, consumptionStats.yearlyProjection),
+      dailyCost: calculateDailyCost(readings, d.contracts)
+    };
+  } catch (err) {
+    console.error('[MeterDetail] Stats calculation error:', err);
+    return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
+  }
+};
+
+const calculateMeterProjection = (d: { readings: Reading[] } | undefined) => {
+  const readings = d?.readings;
+  if (!readings) {return [];}
+  return calculateProjection(readings, 365);
+};
+
+const ConsumptionChartCard: Component<{ 
+  meter: Meter, 
+  readings: Reading[], 
+  projection: Array<{ date: string | Date, value: number }>,
+  hasContracts: boolean 
+}> = (props) => (
+  <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
+    <div class="card-body p-8 md:p-12">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <h2 class="text-xl font-black uppercase tracking-widest opacity-20">Consumption Trend & Projection</h2>
+        <Show when={props.hasContracts}>
+          <A href={`/contracts?meterId=${props.meter._id}`} class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-4 h-8 uppercase tracking-widest text-[10px]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            View Contracts
+          </A>
+        </Show>
+      </div>
+      <ConsumptionChart 
+        readings={props.readings} 
+        projection={props.projection}
+        unit={props.meter.unit} 
+      />
+    </div>
+  </div>
+);
+
 const MeterDetail: Component = () => {
   const params = useParams();
   const [data] = createResource(() => params.id, fetchMeterData);
 
-  const calculateDailyCost = (readings: Reading[], contracts: Contract[]) => {
-    if (readings.length < 2) {return 0;}
-    const sorted = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const last = sorted[0];
-    const prev = sorted[1];
-    const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
-    
-    if (intervalDays <= 0) {return 0;}
-    const totalIntervalCost = calculateIntervalCost(
-      new Date(prev.date),
-      new Date(last.date),
-      last.value - prev.value,
-      contracts as unknown as PricingContract[] 
-    );
-    return totalIntervalCost / intervalDays;
-  };
-
-  const calculateYearlyCost = (contracts: Contract[], yearlyProjection: number) => {
-    const activeContract = findContractForDate(contracts as unknown as PricingContract[], new Date());
-    if (!activeContract) {return 0;}
-    return calculateCostForContract({
-      consumption: yearlyProjection,
-      days: 365.25,
-      contract: activeContract
-    });
-  };
-
-  const stats = () => {
-    try {
-      if (!data()?.readings) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };}
-      const readings = data()?.readings;
-      const consumptionStats = calculateStats(readings.map((r: Reading) => ({
-        value: r.value,
-        date: new Date(r.date)
-      })));
-
-      return {
-        ...consumptionStats,
-        estimatedYearlyCost: calculateYearlyCost(data()?.contracts, consumptionStats.yearlyProjection),
-        dailyCost: calculateDailyCost(readings, data()?.contracts)
-      };
-    } catch (err) {
-      console.error('[MeterDetail] Stats calculation error:', err);
-      return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
-    }
-  };
-
-  const projection = () => {
-    const readings = data()?.readings;
-    if (!readings) {return [];}
-    return calculateProjection(readings, 365);
-  };
+  const stats = () => calculateMeterStats(data());
+  const projection = () => calculateMeterProjection(data());
 
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
       <ErrorBoundary fallback={(err) => <div class="alert alert-error font-bold">Something went wrong rendering meter details: {err instanceof Error ? err.message : 'Unknown error'}</div>}>
         <Show when={data()?.meter} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-          <MeterDetailHeader meter={data()?.meter} />
-          <MeterStatsGrid meter={data()?.meter} stats={stats()} hasContracts={(data()?.contracts?.length || 0) > 0} />
-
-          <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
-            <div class="card-body p-8 md:p-12">
-              <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <h2 class="text-xl font-black uppercase tracking-widest opacity-20">Consumption Trend & Projection</h2>
-                <Show when={(data()?.contracts?.length || 0) > 0}>
-                  <A href={`/contracts?meterId=${data()?.meter._id}`} class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-4 h-8 uppercase tracking-widest text-[10px]">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    View Contracts
-                  </A>
-                </Show>
-              </div>
-              <ConsumptionChart 
-                readings={data()?.readings || []} 
-                projection={projection()}
-                unit={data()?.meter.unit} 
-              />
-            </div>
-          </div>
+          <MeterDetailHeader meter={data()!.meter} />
+          <MeterStatsGrid meter={data()!.meter} stats={stats()} hasContracts={(data()?.contracts?.length || 0) > 0} />
+          <ConsumptionChartCard 
+            meter={data()!.meter} 
+            readings={data()?.readings || []} 
+            projection={projection()}
+            hasContracts={(data()?.contracts?.length || 0) > 0}
+          />
         </Show>
       </ErrorBoundary>
     </div>
