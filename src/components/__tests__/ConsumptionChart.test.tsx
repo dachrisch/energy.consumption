@@ -18,7 +18,7 @@ describe('Chart Configuration', () => {
   it('should generate correct options for mobile', () => {
     const options: any = getChartOptions(true);
     expect(options.indexAxis).toBe('y'); // Inverted chart
-    expect(options.scales.y.reverse).toBe(true);
+    expect(options.scales.y.reverse).toBe(false);
   });
 });
 

@@ -36,12 +36,14 @@ interface ConsumptionChartProps {
   unit: string;
 }
 
-const transformData = (props: ConsumptionChartProps): { datasets: ChartDataset[] } => {
+const transformData = (props: ConsumptionChartProps, isMobile: boolean): { datasets: ChartDataset[] } => {
   const sorted = [...props.readings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const actualPoints: ChartPoint[] = sorted.map(r => ({
-    x: new Date(r.date).getTime(),
-    y: r.value
-  }));
+  
+  const actualPoints: ChartPoint[] = sorted.map(r => {
+    const time = new Date(r.date).getTime();
+    const value = r.value;
+    return isMobile ? { x: value, y: time } : { x: time, y: value };
+  });
 
   const datasets: ChartDataset[] = [
     {
@@ -55,10 +57,11 @@ const transformData = (props: ConsumptionChartProps): { datasets: ChartDataset[]
   ];
 
   if (props.projection && props.projection.length > 0) {
-    const projectionPoints: ChartPoint[] = props.projection.map(p => ({
-      x: new Date(p.date).getTime(),
-      y: p.value
-    }));
+    const projectionPoints: ChartPoint[] = props.projection.map(p => {
+      const time = new Date(p.date).getTime();
+      const value = p.value;
+      return isMobile ? { x: value, y: time } : { x: time, y: value };
+    });
 
     datasets.push({
       label: `Projection (365 days)`,
@@ -85,11 +88,11 @@ const ConsumptionChart: Component<ConsumptionChartProps> = (props) => {
     onCleanup(() => window.removeEventListener('resize', handleResize));
   });
 
-  const chartData = createMemo(() => transformData(props));
+  const chartData = createMemo(() => transformData(props, isMobile()));
   const chartOptions = createMemo(() => getChartOptions(isMobile()));
 
   return (
-    <div class="h-64 w-full min-w-0 max-w-full overflow-hidden transition-all duration-300 relative">
+    <div class={`w-full min-w-0 max-w-full overflow-hidden transition-all duration-300 relative ${isMobile() ? 'h-[500px]' : 'h-64'}`}>
        {/* Re-render chart when mode changes to ensure full option re-application */}
        <div class="absolute inset-0">
          <Line data={chartData()} options={chartOptions()} />
