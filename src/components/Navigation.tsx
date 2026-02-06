@@ -60,7 +60,7 @@ const UserDropdown: Component<{ auth: ReturnType<typeof useAuth>, closeDropdown:
            <p class="text-xs opacity-40 font-bold text-base-content">{props.auth.user()?.email || 'N/A'}</p>
          </div>
          <li><A href="/profile" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Profile Settings</A></li>
-         <li><A href="/profile?tab=import-export" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Import / Export</A></li>
+         <li><A href="/import-export" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Import / Export</A></li>
          <li>
            <a
              href={getVersionLink()}
