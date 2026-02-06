@@ -29,6 +29,8 @@ The project uses **CircleCI** for continuous integration and deployment.
 
 Follow the **Google TypeScript Style Guide** as a baseline.
 
+**📖 Comprehensive Style Guide:** See [`STYLEGUIDE.md`](./STYLEGUIDE.md) for detailed patterns, conventions, and architectural decisions used throughout the codebase.
+
 ### 1. Naming Conventions
 - **Files:** 
   - PascalCase for SolidJS components (`MyComponent.tsx`).
