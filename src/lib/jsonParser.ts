@@ -73,9 +73,72 @@ function extractReadingsFromMeter(
 
 /**
  * Parse nested JSON format where meters contain readings
- * Expected format: { meters: [{ id, name, location, readings: [{ date, value }] }] }
+ * Expected formats:
+ * 1. { meters: [{ id, name, location, readings: [{ date, value }] }] }
+ * 2. [{ meter: { id, name, ... }, readings: [{ date, value, ... }] }] (export format)
  */
 export function parseNestedFormat(json: unknown): ParsedResult {
+  // Format 2: Array of { meter, readings }
+  if (Array.isArray(json)) {
+    const meters: Meter[] = [];
+    const readings: Reading[] = [];
+
+    for (const item of json) {
+      if (!item || typeof item !== 'object') {
+        throw new Error('Invalid item structure in nested array');
+      }
+
+      const data = item as Record<string, unknown>;
+      
+      if (!('meter' in data) || !('readings' in data)) {
+        throw new Error('Each item must have "meter" and "readings" properties');
+      }
+
+      const meterData = data.meter as Record<string, unknown>;
+      
+      // Extract meter info - handle both 'id' and '_id' fields
+      const meterId = (meterData.id || meterData._id) as string;
+      if (!meterId) {
+        throw new Error('Meter must have an id or _id');
+      }
+
+      const meterInfo: Meter = {
+        id: meterId,
+        name: (meterData.name as string) || '',
+        location: (meterData.location as string) || ''
+      };
+
+      meters.push(meterInfo);
+
+      // Extract readings
+      if (Array.isArray(data.readings)) {
+        for (const readingData of data.readings) {
+          if (!readingData || typeof readingData !== 'object') {
+            throw new Error('Invalid reading structure');
+          }
+
+          const reading = readingData as Record<string, unknown>;
+          if (!reading.date || typeof reading.date !== 'string') {
+            throw new Error('Reading must have a date');
+          }
+
+          if (typeof reading.value !== 'number') {
+            throw new Error('Reading must have a numeric value');
+          }
+
+          readings.push({
+            meterId,
+            date: reading.date,
+            value: reading.value
+          });
+        }
+      }
+    }
+
+    return { meters, readings };
+  }
+
+  // Format 1: { meters: [...] }
   if (!json || typeof json !== 'object' || !('meters' in json)) {
     throw new Error('Invalid nested JSON structure: missing "meters" array');
   }
@@ -159,6 +222,14 @@ export function validateJsonStructure(json: unknown): 'nested' | 'flat' {
     if (json.length === 0) {
       throw new Error('Unknown JSON format: empty array');
     }
+    
+    // Check if it's the export format: [{ meter, readings }]
+    const firstItem = json[0] as Record<string, unknown>;
+    if (firstItem && typeof firstItem === 'object' && 'meter' in firstItem && 'readings' in firstItem) {
+      return 'nested'; // Export format is also nested
+    }
+    
+    // Otherwise it's flat format: [{ meterId, date, value }]
     return 'flat';
   }
 

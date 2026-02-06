@@ -79,6 +79,56 @@ describe('JSON Parser', () => {
         'Meter must have an id'
       );
     });
+
+    it('should parse export format with array of { meter, readings }', () => {
+      const exportFormat = [
+        {
+          meter: {
+            id: '6986456298e0ac9523b0d7d9',
+            name: 'sdg',
+            meterNumber: 'sdgs',
+            type: 'power',
+            unit: 'kWh'
+          },
+          readings: [
+            { value: 2.852, date: '2021-12-31', createdAt: '2026-02-06T19:47:55.539Z' },
+            { value: 3877.3, date: '2022-11-21', createdAt: '2026-02-06T19:47:55.539Z' },
+            { value: 3883.4, date: '2022-11-23', createdAt: '2026-02-06T19:47:55.539Z' }
+          ]
+        }
+      ];
+
+      const result = parseNestedFormat(exportFormat);
+
+      expect(result.meters).toHaveLength(1);
+      expect(result.meters[0].id).toBe('6986456298e0ac9523b0d7d9');
+      expect(result.meters[0].name).toBe('sdg');
+      expect(result.readings).toHaveLength(3);
+      expect(result.readings[0].meterId).toBe('6986456298e0ac9523b0d7d9');
+      expect(result.readings[0].date).toBe('2021-12-31');
+      expect(result.readings[0].value).toBe(2.852);
+      expect(result.readings[1].value).toBe(3877.3);
+    });
+
+    it('should handle _id field as fallback for id', () => {
+      const mongoFormat = {
+        meter: {
+          _id: 'mongo-id-123',
+          name: 'Test Meter',
+          readings: [
+            { value: 100, date: '2024-01-15' }
+          ]
+        },
+        readings: [
+          { value: 100, date: '2024-01-15' }
+        ]
+      };
+
+      const result = parseNestedFormat([mongoFormat]);
+
+      expect(result.meters[0].id).toBe('mongo-id-123');
+      expect(result.readings[0].meterId).toBe('mongo-id-123');
+    });
   });
 
   describe('parseFlatFormat', () => {
@@ -123,6 +173,19 @@ describe('JSON Parser', () => {
       const format = validateJsonStructure(json);
 
       expect(format).toBe('flat');
+    });
+
+    it('should identify export format as nested', () => {
+      const json = [
+        {
+          meter: { id: 'meter-1', name: 'Test' },
+          readings: [{ value: 100, date: '2024-01-15' }]
+        }
+      ];
+
+      const format = validateJsonStructure(json);
+
+      expect(format).toBe('nested');
     });
 
     it('should throw error for unknown format', () => {
