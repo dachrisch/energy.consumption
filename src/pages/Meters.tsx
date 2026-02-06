@@ -5,6 +5,7 @@ import { findContractForDate, calculateCostForContract, calculateIntervalCost } 
 import { findContractGaps } from '../lib/gapDetection';
 import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
+import { downloadFromUrl } from '../lib/downloadHelper';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -34,39 +35,69 @@ interface Contract {
 }
 
 const Meters: Component = () => {
-  const [data, { refetch }] = createResource(fetchDashboardData);
-  const toast = useToast();
-  const navigate = useNavigate();
+   const [data, { refetch }] = createResource(fetchDashboardData);
+   const toast = useToast();
+   const navigate = useNavigate();
 
-  const handleDeleteMeter = async (id: string) => {
-    const confirmed = await toast.confirm('Are you sure you want to delete this meter? This will also remove all its readings and contracts.');
-    if (!confirmed) {return;}
-    try {
-      const res = await fetch(`/api/meters/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        toast.showToast('Meter deleted successfully', 'success');
-        refetch();
-      } else {
-        toast.showToast('Failed to delete meter', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      toast.showToast('An error occurred while deleting the meter', 'error');
-    }
-  };
+   const handleDeleteMeter = async (id: string) => {
+     const confirmed = await toast.confirm('Are you sure you want to delete this meter? This will also remove all its readings and contracts.');
+     if (!confirmed) {return;}
+     try {
+       const res = await fetch(`/api/meters/${id}`, { method: 'DELETE' });
+       if (res.ok) {
+         toast.showToast('Meter deleted successfully', 'success');
+         refetch();
+       } else {
+         toast.showToast('Failed to delete meter', 'error');
+       }
+     } catch (err) {
+       console.error(err);
+       toast.showToast('An error occurred while deleting the meter', 'error');
+     }
+   };
 
-  return (
-    <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 class="text-4xl font-black tracking-tighter">Your Meters</h1>
-          <p class="text-base-content/60 font-bold">Manage your utility meters and infrastructure.</p>
-        </div>
-        <A href="/meters/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
-          Add Meter
-        </A>
-      </div>
+   const handleExportReadings = async () => {
+     try {
+       await downloadFromUrl('/api/export/readings', `readings-export-${new Date().toISOString().split('T')[0]}.json`);
+       toast.showToast('Readings exported successfully', 'success');
+     } catch (err) {
+       console.error('Export error:', err);
+       toast.showToast('Failed to export readings', 'error');
+     }
+   };
+
+   const handleBackupAll = async () => {
+     try {
+       await downloadFromUrl('/api/export/all', `backup-${new Date().toISOString().split('T')[0]}.json`);
+       toast.showToast('Backup created successfully', 'success');
+     } catch (err) {
+       console.error('Backup error:', err);
+       toast.showToast('Failed to create backup', 'error');
+     }
+   };
+
+   return (
+     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
+       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+         <div>
+           <h1 class="text-4xl font-black tracking-tighter">Your Meters</h1>
+           <p class="text-base-content/60 font-bold">Manage your utility meters and infrastructure.</p>
+         </div>
+         <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+           <button onClick={handleExportReadings} class="btn btn-secondary btn-md rounded-2xl shadow-xl shadow-secondary/20 px-6 text-sm flex-1 md:flex-none" title="Export readings as JSON">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+             Export as JSON
+           </button>
+           <button onClick={handleBackupAll} class="btn btn-accent btn-md rounded-2xl shadow-xl shadow-accent/20 px-6 text-sm flex-1 md:flex-none" title="Create full backup">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+             Backup All
+           </button>
+           <A href="/meters/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+             Add Meter
+           </A>
+         </div>
+       </div>
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <div data-testid="meters-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
