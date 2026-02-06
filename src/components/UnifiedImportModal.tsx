@@ -31,8 +31,16 @@ interface UnifiedImportModalProps {
   onMeterCreated?: (meter: Meter) => void;
 }
 
-const StepUpload: Component<{ onFileSelected: (file: File) => void }> = (props) => (
+const StepUpload: Component<{ onFileSelected: (file: File) => void, onPasteClick: () => void, onManualPaste: (e: { target: HTMLTextAreaElement }) => void }> = (props) => (
   <div class="flex flex-col gap-6">
+    <button 
+      class="btn btn-outline btn-lg border-2 border-dashed h-32 flex flex-col gap-2 hover:bg-base-200/30 hover:border-primary/30 normal-case w-full rounded-2xl transition-all"
+      onClick={props.onPasteClick}
+    >
+        <span class="text-lg font-black">Paste from Clipboard</span>
+        <span class="text-[10px] opacity-60 font-bold uppercase tracking-widest">Click here to auto-fill</span>
+    </button>
+    <div class="divider opacity-20 text-xs font-black uppercase tracking-[0.2em]">OR</div>
     <div class="form-control w-full flex flex-col gap-2">
       <label class="px-1">
         <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">
@@ -50,6 +58,17 @@ const StepUpload: Component<{ onFileSelected: (file: File) => void }> = (props) 
           }
         }}
       />
+    </div>
+    <div class="divider opacity-20 text-xs font-black uppercase tracking-[0.2em]">OR</div>
+    <div class="form-control w-full flex flex-col gap-2">
+      <label class="px-1">
+        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Manual Paste (CSV / JSON)</span>
+      </label>
+      <textarea 
+        class="textarea textarea-bordered w-full h-40 font-mono text-sm bg-base-200/50 border-none focus:ring-2 focus:ring-primary transition-all rounded-xl" 
+        placeholder="01.01.2022	2.852..."
+        onInput={props.onManualPaste}
+      ></textarea>
     </div>
     <div class="text-xs opacity-60 px-1">
       <p class="font-semibold mb-2">Supported formats:</p>
@@ -405,6 +424,43 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
     }
   };
 
+  const handlePasteClick = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      handlePasteContent(text);
+    } catch (_err) {
+      setError('Could not read clipboard. Try manual paste instead.');
+    }
+  };
+
+  const handleManualPaste = (e: { target: HTMLTextAreaElement }) => {
+    const content = e.target.value;
+    handlePasteContent(content);
+  };
+
+  const handlePasteContent = (content: string) => {
+    if (!content.trim()) {
+      setError('Please paste some data');
+      return;
+    }
+
+    try {
+      setError(null);
+      const trimmed = content.trim();
+      
+      // Try to detect if it's JSON or CSV
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        // Likely JSON
+        processJsonFile(content);
+      } else {
+        // Treat as CSV
+        processCsvFile(content);
+      }
+    } catch (err) {
+      setError(`Failed to parse data: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
   return (
     <Show when={props.isOpen}>
       <Portal>
@@ -443,7 +499,11 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
               {error() && <div class="alert alert-error mb-4">{error()}</div>}
 
               <Show when={step() === 'upload'}>
-                <StepUpload onFileSelected={handleFileSelected} />
+                <StepUpload 
+                  onFileSelected={handleFileSelected}
+                  onPasteClick={handlePasteClick}
+                  onManualPaste={handleManualPaste}
+                />
               </Show>
 
               <Show when={step() === 'mapping'}>
