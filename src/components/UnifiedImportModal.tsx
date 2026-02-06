@@ -238,11 +238,21 @@ const StepPreview: Component<{
       return backupMeter.name;
     }
     const existingMeter = props.existingMeters.find((m) => m._id === meterId);
-    if (existingMeter) return existingMeter.name;
+    if (existingMeter) {
+      return existingMeter.name;
+    }
     return 'Unknown Meter';
   };
 
-  const willCreateMeter = (m: any) => {
+  interface MeterData {
+    id: string;
+    name: string;
+    meterNumber: string;
+    type: string;
+    unit: string;
+  }
+
+  const willCreateMeter = (m: MeterData) => {
     return !props.existingMeters.find(em => em.meterNumber === m.meterNumber);
   };
 
@@ -430,69 +440,65 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
     return null;
   };
 
+  const handleUnifiedBackup = (jsonData: ImportData) => {
+    const result = parseUnifiedFormat(jsonData);
+    setBackupData(jsonData);
+    setJsonReadings(
+      result.readings.map((r) => ({
+        meterId: r.meterId,
+        date: r.date,
+        value: r.value
+      }))
+    );
+    setFileFormat('json-nested');
+    setStep('preview');
+  };
+
+  const handleJsonArray = (jsonData: unknown[]) => {
+    const firstItem = jsonData[0] as Record<string, unknown>;
+    const cols = Object.keys(firstItem);
+
+    setCsvData(
+      jsonData.map((row) => {
+        const newRow: Record<string, string> = {};
+        Object.entries(row as Record<string, unknown>).forEach(([k, v]) => {
+          newRow[k] = v === null || v === undefined ? '' : String(v);
+        });
+        return newRow;
+      })
+    );
+    setHeaders(cols);
+
+    setDateColumn(cols.find((h) => /date|datum|time/i.test(h)) || cols[0]);
+    setValueColumn(cols.find((h) => /value|wert|reading|strom|gas|wasser/i.test(h)) || (cols.length > 1 ? cols[1] : ''));
+
+    setFileFormat('csv');
+    setStep('mapping');
+  };
+
    const processJsonFile = (content: string) => {
      try {
        const jsonData = JSON.parse(content);
-       console.log('📋 Parsed JSON data:', jsonData);
-       
-       // 1. Unified backup format (Direct to preview)
+
        if (isUnifiedExportFormat(jsonData)) {
-         console.log('📋 Detected format: unified backup');
-         const result = parseUnifiedFormat(jsonData);
-         
-         setBackupData(jsonData);
-         setJsonReadings(
-           result.readings.map((r) => ({
-             meterId: r.meterId,
-             date: r.date,
-             value: r.value
-           }))
-         );
-
-         setFileFormat('json-nested');
-         setStep('preview');
+         handleUnifiedBackup(jsonData as ImportData);
          return;
        }
 
-       // 2. Simple array of objects (Generic JSON for mapping)
        if (Array.isArray(jsonData) && jsonData.length > 0 && typeof jsonData[0] === 'object' && jsonData[0] !== null) {
-         console.log('📋 Detected as mappable JSON array');
-         const firstItem = jsonData[0] as Record<string, unknown>;
-         const cols = Object.keys(firstItem);
-         
-         // Convert all values to strings for consistent processing by mapping logic
-         setCsvData(jsonData.map(row => {
-           const newRow: Record<string, string> = {};
-           Object.entries(row).forEach(([k, v]) => {
-             newRow[k] = v === null || v === undefined ? '' : String(v);
-           });
-           return newRow;
-         }));
-         setHeaders(cols);
-         
-         // Auto-detect columns
-         setDateColumn(cols.find((h) => /date|datum|time/i.test(h)) || cols[0]);
-         setValueColumn(
-           cols.find((h) => /value|wert|reading|strom|gas|wasser/i.test(h)) ||
-             (cols.length > 1 ? cols[1] : '')
-         );
-
-         setFileFormat('csv'); // Treating as CSV-like source for mapping UI
-         setStep('mapping');
+         handleJsonArray(jsonData);
          return;
        }
 
-       // 3. Specific error for old formats to guide users
        try {
-         const format = validateJsonStructure(jsonData);
-         if (format === 'nested' || format === 'flat') {
-           throw new Error('This file uses an older export format. Please use the new Export feature to create a compatible backup.');
-         }
-       } catch (_e) { /* ignore */ }
+         validateJsonStructure(jsonData);
+       } catch (_e) {
+         /* ignore */
+       }
 
        throw new Error('Unsupported JSON structure. Use a JSON array of objects or the official backup format.');
      } catch (err) {
-       console.error('❌ JSON processing error:', err);
+       console.error('JSON processing error:', err);
        throw err instanceof Error ? err : new Error(`Failed to parse JSON: ${String(err)}`);
      }
    };

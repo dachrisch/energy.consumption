@@ -60,61 +60,70 @@ const InlineIcon = () => (
   </svg>
 );
 
-const EmptyState: Component<EmptyStateProps> = (props) => {
-  const scheme = props.colorScheme || 'warning';
-  const classes = getColorClasses(scheme);
-
-  // Inline mode: compact warning for modals
-  if (props.inline) {
-    return (
-      <div class={`border-2 border-dashed rounded-lg p-3 mb-4 ${classes.container}`}>
-        <div class="flex items-center gap-2">
-          <div class={`flex-shrink-0 p-2 rounded-full ${classes.icon}`}>
-            {props.icon || <InlineIcon />}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class={`text-sm font-bold uppercase tracking-wider ${classes.title}`}>{props.title}</div>
-            {props.description && <div class="text-xs text-base-content/60">{props.description}</div>}
-          </div>
-          {props.actionLabel && (
-            props.actionLink ? (
-              <A href={props.actionLink} class={`btn btn-sm rounded-lg font-bold flex-shrink-0 ${classes.button}`}>
-                {props.actionLabel}
-              </A>
-            ) : (
-              <button onClick={props.onAction} class={`btn btn-sm rounded-lg font-bold flex-shrink-0 ${classes.button}`}>
-                {props.actionLabel}
-              </button>
-            )
-          )}
-        </div>
-      </div>
-    );
+const renderActionLink = (label: string | undefined, link: string | undefined, className: string) => {
+  if (!label) {
+    return null;
   }
+  if (link) {
+    return <A href={link} class={className}>{label}</A>;
+  }
+  return null;
+};
+
+const renderActionButton = (label: string | undefined, onClick: (() => void) | undefined, className: string) => {
+  if (!label) {
+    return null;
+  }
+  if (onClick) {
+    return <button onClick={onClick} class={className}>{label}</button>;
+  }
+  return null;
+};
+
+const EmptyState: Component<EmptyStateProps> = (props) => {
+   const scheme = props.colorScheme || 'warning';
+   const classes = getColorClasses(scheme);
+
+   // Inline mode: compact warning for modals
+   if (props.inline) {
+     const actionClasses = `btn btn-sm rounded-lg font-bold flex-shrink-0 ${classes.button}`;
+     const actionElement = props.actionLink
+       ? renderActionLink(props.actionLabel, props.actionLink, actionClasses)
+       : renderActionButton(props.actionLabel, props.onAction, actionClasses);
+
+     return (
+       <div class={`border-2 border-dashed rounded-lg p-3 mb-4 ${classes.container}`}>
+         <div class="flex items-center gap-2">
+           <div class={`flex-shrink-0 p-2 rounded-full ${classes.icon}`}>
+             {props.icon || <InlineIcon />}
+           </div>
+           <div class="flex-1 min-w-0">
+             <div class={`text-sm font-bold uppercase tracking-wider ${classes.title}`}>{props.title}</div>
+             {props.description && <div class="text-xs text-base-content/60">{props.description}</div>}
+           </div>
+           {actionElement}
+         </div>
+       </div>
+     );
+   }
+
+  const wideActionClasses = `btn btn-wide rounded-2xl font-black ${classes.button}`;
+  const wideActionElement = props.actionLink
+    ? renderActionLink(props.actionLabel, props.actionLink, wideActionClasses)
+    : renderActionButton(props.actionLabel, props.onAction, wideActionClasses);
 
   return (
-    <div class={`col-span-full card border-2 border-dashed text-center group transition-all ${classes.container} ${props.compact ? 'p-8' : 'py-20'}`}>
-      <div class="card-body items-center text-center p-0">
-        <div class={`p-6 rounded-full mb-4 ${classes.icon}`}>
-          {props.icon || <DefaultIcon />}
-        </div>
-        <h3 class={`text-xl font-black uppercase tracking-widest ${classes.title}`}>{props.title}</h3>
-        <p class="text-base-content/60 font-bold mb-6 max-w-sm">{props.description}</p>
-
-        {props.actionLabel && (
-          props.actionLink ? (
-            <A href={props.actionLink} class={`btn btn-wide rounded-2xl font-black ${classes.button}`}>
-              {props.actionLabel}
-            </A>
-          ) : (
-            <button onClick={props.onAction} class={`btn btn-wide rounded-2xl font-black ${classes.button}`}>
-              {props.actionLabel}
-            </button>
-          )
-        )}
-      </div>
-    </div>
-  );
-};
+     <div class={`col-span-full card border-2 border-dashed text-center group transition-all ${classes.container} ${props.compact ? 'p-8' : 'py-20'}`}>
+       <div class="card-body items-center text-center p-0">
+         <div class={`p-6 rounded-full mb-4 ${classes.icon}`}>
+           {props.icon || <DefaultIcon />}
+         </div>
+         <h3 class={`text-xl font-black uppercase tracking-widest ${classes.title}`}>{props.title}</h3>
+         <p class="text-base-content/60 font-bold mb-6 max-w-sm">{props.description}</p>
+         {wideActionElement}
+       </div>
+     </div>
+   );
+ };
 
 export default EmptyState;

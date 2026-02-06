@@ -43,6 +43,49 @@ const formatDateRange = (readings: Reading[]): string => {
   return `${first} → ${last}`;
 };
 
+const fetchModalData = async () => {
+  const [metersRes, readingsRes, contractsRes] = await Promise.all([
+    fetch('/api/meters'),
+    fetch('/api/readings'),
+    fetch('/api/contracts')
+  ]);
+
+  return Promise.all([metersRes.json(), readingsRes.json(), contractsRes.json()]);
+};
+
+const downloadFile = (data: unknown) => {
+  const filename = `energy-export-${new Date().toISOString().split('T')[0]}.json`;
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
+
+  document.body.appendChild(link);
+  link.click();
+
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 100);
+};
+
+const fetchExportData = async (options: { includeMeters: boolean; includeReadings: boolean; includeContracts: boolean }) => {
+  const response = await fetch('/api/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(options)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Export failed: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
 const ExportModal: Component<ExportModalProps> = (props) => {
   const [includeMeters, setIncludeMeters] = createSignal(true);
   const [includeReadings, setIncludeReadings] = createSignal(true);
@@ -55,54 +98,17 @@ const ExportModal: Component<ExportModalProps> = (props) => {
   // Fetch data when modal opens
   createEffect(() => {
     if (props.isOpen) {
-      Promise.all([
-        fetch('/api/meters').then(r => r.ok ? r.json() : []),
-        fetch('/api/readings').then(r => r.ok ? r.json() : []),
-        fetch('/api/contracts').then(r => r.ok ? r.json() : [])
-      ]).then(([m, rd, c]) => {
-        setMeters(m || []);
-        setReadings(rd || []);
-        setContracts(c || []);
-       }).catch((err) => {
-         console.error('Failed to fetch data:', err);
-       });
+      fetchModalData()
+        .then(([m, rd, c]) => {
+          setMeters(m || []);
+          setReadings(rd || []);
+          setContracts(c || []);
+        })
+        .catch((err) => {
+          console.error('Failed to fetch data:', err);
+        });
     }
   });
-
-  const downloadFile = (data: unknown) => {
-    const filename = `energy-export-${new Date().toISOString().split('T')[0]}.json`;
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.style.display = 'none';
-
-    document.body.appendChild(link);
-    link.click();
-
-    setTimeout(() => {
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }, 100);
-  };
-
-  const fetchExportData = async (options: { includeMeters: boolean; includeReadings: boolean; includeContracts: boolean }) => {
-    console.log('📥 Starting export with options:', options);
-
-    const response = await fetch('/api/export', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(options)
-    });
-
-    if (!response.ok) {
-      throw new Error(`Export failed: ${response.statusText}`);
-    }
-
-    return response.json();
-  };
 
   const handleDownload = async () => {
      setIsLoading(true);
@@ -114,12 +120,10 @@ const ExportModal: Component<ExportModalProps> = (props) => {
        };
 
        const data = await fetchExportData(options);
-       console.log('📥 Export data received:', data);
        downloadFile(data);
-       console.log('📥 Export completed successfully');
        props.onClose();
      } catch (error) {
-       console.error('❌ Download error:', error);
+       console.error('Export error:', error);
        alert('Failed to export data. Please try again.');
      } finally {
        setIsLoading(false);
