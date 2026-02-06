@@ -19,21 +19,24 @@ export async function router(params: RouteParams) {
     '/api/meters': async () => handleMeters(params),
     '/api/readings': async () => handleReadings(params),
     '/api/readings/bulk': async () => handleBulkReadings(params),
-     '/api/export/readings': async () => {
-       if (req.method === 'GET') {
-         try {
-           const data = await exportReadingsAsJson(userId);
-           res.setHeader('Content-Type', 'application/json');
-           res.setHeader('Content-Disposition', 'attachment; filename="readings-export.json"');
-           res.statusCode = 200;
-           res.end(JSON.stringify(data));
-         } catch (error) {
-           console.error('Export failed:', error);
-           res.statusCode = 500;
-           res.end(JSON.stringify({ error: 'Export failed' }));
-         }
-       }
-     },
+      '/api/export/readings': async () => {
+        if (req.method === 'GET') {
+          try {
+            const { url: reqUrl } = params;
+            const meterId = reqUrl.searchParams.get('meterId') || undefined;
+            const data = await exportReadingsAsJson(userId, meterId);
+            const filename = meterId ? `readings-${meterId}-export.json` : `all-readings-export.json`;
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.statusCode = 200;
+            res.end(JSON.stringify(data));
+          } catch (error) {
+            console.error('Export failed:', error);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: 'Export failed' }));
+          }
+        }
+      },
      '/api/export/all': async () => {
        if (req.method === 'GET') {
          try {

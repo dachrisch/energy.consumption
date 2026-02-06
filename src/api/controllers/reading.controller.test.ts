@@ -99,33 +99,74 @@ describe('Reading Controller - Export', () => {
   });
 
    it('sorts readings by date', async () => {
-     await Reading.create({
-       meterId,
-       value: 100,
-       date: new Date('2026-01-03'),
-       userId
-     });
+      await Reading.create({
+        meterId,
+        value: 100,
+        date: new Date('2026-01-03'),
+        userId
+      });
 
-     await Reading.create({
-       meterId,
-       value: 150,
-       date: new Date('2026-01-01'),
-       userId
-     });
+      await Reading.create({
+        meterId,
+        value: 150,
+        date: new Date('2026-01-01'),
+        userId
+      });
 
-     await Reading.create({
-       meterId,
-       value: 125,
-       date: new Date('2026-01-02'),
-       userId
-     });
+      await Reading.create({
+        meterId,
+        value: 125,
+        date: new Date('2026-01-02'),
+        userId
+      });
 
-     const data = await exportReadingsAsJson(userId);
+      const data = await exportReadingsAsJson(userId);
 
-     expect(data[0].readings[0].date).toBe('2026-01-01');
-     expect(data[0].readings[1].date).toBe('2026-01-02');
-     expect(data[0].readings[2].date).toBe('2026-01-03');
-   });
+      expect(data[0].readings[0].date).toBe('2026-01-01');
+      expect(data[0].readings[1].date).toBe('2026-01-02');
+      expect(data[0].readings[2].date).toBe('2026-01-03');
+    });
+
+    it('filters by meterId when provided', async () => {
+      const meter2 = await Meter.create({ name: 'Gas', meterNumber: 'G2', type: 'gas', unit: 'm³', userId });
+      const meterId2 = meter2._id.toString();
+
+      await Reading.create({
+        meterId,
+        value: 100,
+        date: new Date('2026-01-01'),
+        userId
+      });
+
+      await Reading.create({
+        meterId: meterId2,
+        value: 50,
+        date: new Date('2026-01-01'),
+        userId
+      });
+
+      const data = await exportReadingsAsJson(userId, meterId);
+
+      expect(data).toHaveLength(1);
+      expect(data[0].meter.id).toBe(meterId);
+      expect(data[0].readings).toHaveLength(1);
+      expect(data[0].readings[0].value).toBe(100);
+    });
+
+    it('returns empty array when filtering by non-existent meterId', async () => {
+      await Reading.create({
+        meterId,
+        value: 100,
+        date: new Date('2026-01-01'),
+        userId
+      });
+
+      const mongoose = await import('mongoose');
+      const fakeMeterId = new mongoose.Types.ObjectId().toString();
+      const data = await exportReadingsAsJson(userId, fakeMeterId);
+
+      expect(data).toHaveLength(0);
+    });
 });
 
 describe('Reading Controller - Full Backup Export', () => {

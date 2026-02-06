@@ -5,8 +5,13 @@ import { processBulkReadings } from '../../lib/readingService';
 import { RouteParams, sanitizeString } from '../utils';
 import { readingSchema, bulkReadingSchema, formatZodError } from '../validation';
 
-export async function exportReadingsAsJson(userId: string) {
-  const meters = await Meter.find({}).setOptions({ userId });
+export async function exportReadingsAsJson(userId: string, meterId?: string) {
+  let meterQuery = {};
+  if (meterId) {
+    meterQuery = { _id: meterId };
+  }
+
+  const meters = await Meter.find(meterQuery).setOptions({ userId });
   const readings = await Reading.find({}).setOptions({ userId });
 
   const exportData = meters.map(meter => ({
