@@ -54,26 +54,27 @@ const UserDropdown: Component<{ auth: ReturnType<typeof useAuth>, closeDropdown:
           </div>
         </div>
       </label>
-      <ul tabindex="0" class="mt-4 z-[100] p-3 shadow-2xl menu menu-sm dropdown-content bg-base-100 rounded-2xl w-64 border border-base-content/10 animate-in fade-in slide-in-from-top-2 opacity-100 visible">
-        <div class="px-4 py-4 mb-2 border-b border-base-content/5 bg-base-200 rounded-xl">
-          <p class="text-sm font-black tracking-tight text-base-content">{props.auth.user()?.name || 'Operator'}</p>
-          <p class="text-xs opacity-40 font-bold text-base-content">{props.auth.user()?.email || 'N/A'}</p>
-        </div>
-        <li><A href="/profile" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Profile Settings</A></li>
-        <li>
-          <a
-            href={getVersionLink()}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={props.closeDropdown}
-            class="rounded-lg font-mono text-[11px] py-3 hover:bg-primary/5 hover:text-primary text-base-content/50"
-          >
-            {getVersion()}
-          </a>
-        </li>
-        <div class="divider my-1 opacity-50"></div>
-        <li><button onClick={() => { props.closeDropdown(); props.auth.logout(); }} class="text-error font-black uppercase text-[10px] tracking-widest py-3 hover:bg-error/10">Logout</button></li>
-      </ul>
+       <ul tabindex="0" class="mt-4 z-[100] p-3 shadow-2xl menu menu-sm dropdown-content bg-base-100 rounded-2xl w-64 border border-base-content/10 animate-in fade-in slide-in-from-top-2 opacity-100 visible">
+         <div class="px-4 py-4 mb-2 border-b border-base-content/5 bg-base-200 rounded-xl">
+           <p class="text-sm font-black tracking-tight text-base-content">{props.auth.user()?.name || 'Operator'}</p>
+           <p class="text-xs opacity-40 font-bold text-base-content">{props.auth.user()?.email || 'N/A'}</p>
+         </div>
+         <li><A href="/profile" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Profile Settings</A></li>
+         <li><A href="/profile?tab=import-export" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Import / Export</A></li>
+         <li>
+           <a
+             href={getVersionLink()}
+             target="_blank"
+             rel="noopener noreferrer"
+             onClick={props.closeDropdown}
+             class="rounded-lg font-mono text-[11px] py-3 hover:bg-primary/5 hover:text-primary text-base-content/50"
+           >
+             {getVersion()}
+           </a>
+         </li>
+         <div class="divider my-1 opacity-50"></div>
+         <li><button onClick={() => { props.closeDropdown(); props.auth.logout(); }} class="text-error font-black uppercase text-[10px] tracking-widest py-3 hover:bg-error/10">Logout</button></li>
+       </ul>
     </div>
   </div>
 );

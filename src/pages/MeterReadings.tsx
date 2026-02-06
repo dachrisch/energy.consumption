@@ -2,7 +2,6 @@ import { Component, createResource, For, Show, createSignal } from 'solid-js';
 import { useParams, A } from '@solidjs/router';
 import { calculateDeltas } from '../lib/consumption';
 import { useToast } from '../context/ToastContext';
-import { downloadFromUrl } from '../lib/downloadHelper';
 import EmptyState from '../components/EmptyState';
 
 interface Meter {
@@ -44,11 +43,10 @@ const fetchMeterReadings = async (id: string) => {
 
 const MeterReadings: Component = () => {
    const params = useParams();
-   const [data, { refetch }] = createResource(() => params.id, fetchMeterReadings);
-   const [deleting, setDeleting] = createSignal<string | null>(null);
-   const [pendingDeletions, setPendingDeletions] = createSignal<Set<string>>(new Set());
-   const [exporting, setExporting] = createSignal(false);
-   const toast = useToast();
+    const [data, { refetch }] = createResource(() => params.id, fetchMeterReadings);
+    const [deleting, setDeleting] = createSignal<string | null>(null);
+    const [pendingDeletions, setPendingDeletions] = createSignal<Set<string>>(new Set());
+    const toast = useToast();
 
   const filteredReadings = () => {
     const d = data();
@@ -107,23 +105,7 @@ const MeterReadings: Component = () => {
      }, 5000);
    };
 
-   const handleExport = async () => {
-     const meterId = params.id;
-     const meterName = data()?.meter.name || 'readings';
-     setExporting(true);
-     try {
-       await downloadFromUrl(
-         `/api/export/readings?meterId=${meterId}`,
-         `readings-${meterName}-${new Date().toISOString().split('T')[0]}.json`
-       );
-       toast.showToast('Readings exported successfully', 'success');
-     } catch (err) {
-       console.error('Export failed:', err);
-       toast.showToast('Failed to export readings', 'error');
-     } finally {
-       setExporting(false);
-     }
-   };
+
 
   return (
     <div class="p-6 md:p-10 lg:p-12 max-w-5xl mx-auto space-y-10 flex-1">
@@ -138,18 +120,11 @@ const MeterReadings: Component = () => {
              <h1 class="text-5xl font-black tracking-tighter">Reading History</h1>
            </div>
            
-           <div class="flex gap-3 flex-wrap">
-             <button 
-               onClick={handleExport}
-               disabled={exporting()}
-               class="btn btn-outline btn-md rounded-2xl px-8"
-             >
-               {exporting() ? <span class="loading loading-spinner loading-sm"></span> : 'Export'}
-             </button>
-             <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">
-               Add New Entry
-             </A>
-           </div>
+            <div class="flex gap-3 flex-wrap">
+              <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">
+                Add New Entry
+              </A>
+            </div>
          </div>
 
         <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
