@@ -106,3 +106,32 @@ Follow the **Google TypeScript Style Guide** as a baseline.
 - **Self-Correction:** If a linting error or test failure is introduced, fix it immediately.
 - **Conventional Commits:** Use clear, descriptive commit messages.
 - **Documentation:** Update this file or other relevant docs if project conventions evolve.
+
+## 📋 Recent Updates & Known Issues (v3.10.1)
+
+### Unified Import/Export System
+- **Feature:** Added comprehensive backup/restore functionality via new unified export format.
+- **Endpoints:**
+  - `POST /api/export` - Export data in unified JSON format (meters, readings, contracts).
+  - `POST /api/import/unified` - Import complete backup files including meters, readings, and contracts.
+  - `POST /api/readings/bulk` - Legacy bulk readings import (still supported).
+- **Format:** Unified exports use `exportDate`, `version: '1.0'`, and nested `data` object.
+- **Implementation:**
+  - `src/lib/readingService.ts` - `processUnifiedImport()` handles multi-entity backup restoration.
+  - `src/api/controllers/reading.controller.ts` - Export and import handlers.
+  - `src/api/validation.ts` - `unifiedExportSchema` for request validation.
+  - `src/components/UnifiedImportModal.tsx` - Enhanced UI with backup format detection.
+  - `src/lib/jsonParser.ts` - `isUnifiedExportFormat()` and `parseUnifiedFormat()` utilities.
+
+### AddContract Pre-fill Race Condition Fix
+- **Issue:** When navigating to `/contracts/add?meterId=<id>` from the Meters page, the meter dropdown was not pre-selecting the linked meter.
+- **Root Cause:** `createEffect` in `AddContract.tsx` was setting `meterId` signal before the `meters` resource had finished loading, causing a mismatch between the signal value and available DOM options.
+- **Solution:** Modified the effect to depend on both `searchParams.meterId` and the `meters()` resource, ensuring selection occurs after options are rendered.
+- **File:** `src/pages/AddContract.tsx` (lines 64-70).
+- **Test Verification:** Confirmed via Chrome MCP test that the meter is now correctly selected when clicking "Add Contract" from the Meters page.
+
+### Import/Export UI Updates
+- **CsvImportModal.tsx** - Renamed UI labels from "Import Readings" to "Import Data" for clarity.
+- **UnifiedImportModal.tsx** - Enhanced with drag-and-drop file upload, backup metadata preview, and automatic format detection.
+- **EmptyState.tsx** - Added inline mode for compact modal warnings.
+- **Dashboard.tsx** - Updated import handler to support both unified backups and legacy bulk readings.
