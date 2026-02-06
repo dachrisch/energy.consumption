@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.1](https://github.com/dachrisch/energy.consumption/compare/v3.10.0...v3.10.1) (2026-02-06)
+
+
+### Features
+
+* unified import/export system and fix AddContract pre-fill race condition ([ead449d](https://github.com/dachrisch/energy.consumption/commit/ead449d91dc3ad6ad01dbdd3d9582e57861ae61b))
+
+
+### Bug Fixes
+
+* restore clipboard paste functionality to UnifiedImportModal ([3a9c892](https://github.com/dachrisch/energy.consumption/commit/3a9c8923eb23c830ee8c9caf288b7d2e629afc2d))
+* support export format in JSON parser for re-import ([959e014](https://github.com/dachrisch/energy.consumption/commit/959e014f7b1b69f74d0bcc40053add055d1aaabe))
+
 ## [3.10.0](https://github.com/dachrisch/energy.consumption/compare/v3.9.21...v3.10.0) (2026-02-06)
 
 
