@@ -1,7 +1,7 @@
 import { Component, createResource, Show, createSignal } from 'solid-js';
 import { A } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
-import CsvImportModal from '../components/CsvImportModal';
+import UnifiedImportModal from '../components/UnifiedImportModal';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../context/ToastContext';
 import { calculateAggregates } from '../lib/aggregates';
@@ -183,13 +183,13 @@ const Dashboard: Component = () => {
 
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
-      <CsvImportModal 
-           isOpen={isImportOpen()} 
-           onClose={() => setImportOpen(false)} 
-           onSave={handleBulkImport}
-           meters={data()?.meters || []}
-           onMeterCreated={() => refetch()}
-       />
+       <UnifiedImportModal 
+            isOpen={isImportOpen()} 
+            onClose={() => setImportOpen(false)} 
+            onSave={handleBulkImport}
+            meters={data()?.meters || []}
+            onMeterCreated={() => refetch()}
+        />
       
       <DashboardHeader onImportClick={() => setImportOpen(true)} />
 
