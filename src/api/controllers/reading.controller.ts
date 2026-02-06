@@ -4,6 +4,31 @@ import { processBulkReadings } from '../../lib/readingService';
 import { RouteParams, sanitizeString } from '../utils';
 import { readingSchema, bulkReadingSchema, formatZodError } from '../validation';
 
+export async function exportReadingsAsJson(userId: string) {
+  const meters = await Meter.find({}).setOptions({ userId });
+  const readings = await Reading.find({}).setOptions({ userId });
+
+  const exportData = meters.map(meter => ({
+    meter: {
+      id: meter._id.toString(),
+      name: meter.name,
+      meterNumber: meter.meterNumber,
+      type: meter.type,
+      unit: meter.unit
+    },
+    readings: readings
+      .filter(r => r.meterId.toString() === meter._id.toString())
+      .map(r => ({
+        value: r.value,
+        date: r.date.toISOString().split('T')[0], // YYYY-MM-DD
+        createdAt: r.createdAt
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  }));
+
+  return exportData;
+}
+
 export async function handleBulkReadings({ req, res, userId }: RouteParams) {
   if (req.method === 'POST') {
     const result = bulkReadingSchema.safeParse(req.body);

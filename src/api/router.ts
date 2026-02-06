@@ -1,7 +1,7 @@
 import { RouteParams } from './utils';
 import { handleSession, handleProfileUpdate } from './controllers/auth.controller';
 import { handleMeters, handleMeterItem } from './controllers/meter.controller';
-import { handleReadings, handleBulkReadings, handleReadingItem } from './controllers/reading.controller';
+import { handleReadings, handleBulkReadings, handleReadingItem, exportReadingsAsJson } from './controllers/reading.controller';
 import { handleContracts, handleContractItem } from './controllers/contract.controller';
 import { handleOcrScan } from './controllers/ocr.controller';
 import { handleAggregatedRoutes } from './controllers/dashboard.controller';
@@ -19,6 +19,21 @@ export async function router(params: RouteParams) {
     '/api/meters': async () => handleMeters(params),
     '/api/readings': async () => handleReadings(params),
     '/api/readings/bulk': async () => handleBulkReadings(params),
+    '/api/export/readings': async () => {
+      if (req.method === 'GET') {
+        try {
+          const data = await exportReadingsAsJson(userId);
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Content-Disposition', 'attachment; filename="readings-export.json"');
+          res.statusCode = 200;
+          res.end(JSON.stringify(data));
+        } catch (error) {
+          console.error('Export failed:', error);
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: 'Export failed' }));
+        }
+      }
+    },
     '/api/contracts': async () => handleContracts(params),
   };
 
