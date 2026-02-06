@@ -63,7 +63,11 @@ const AddContract: Component = () => {
   // Handle pre-fill from search params
   createEffect(() => {
     if (isEdit()) { return; }
-    if (typeof searchParams.meterId === 'string') { setMeterId(searchParams.meterId); }
+    const mId = searchParams.meterId;
+    const list = meters();
+    if (typeof mId === 'string' && list) { 
+      setMeterId(mId); 
+    }
     if (typeof searchParams.startDate === 'string') { setStartDate(searchParams.startDate); }
     if (typeof searchParams.endDate === 'string') { setEndDate(searchParams.endDate); }
   });
@@ -183,7 +187,7 @@ const AddContract: Component = () => {
                   onChange={(e) => setMeterId(e.currentTarget.value)}
                   options={[
                     { value: '', label: 'Select a meter' },
-                    ...(meters()?.filter((m: Meter) => m.type === type()) || []).map(m => ({
+                    ...(meters()?.filter((m: Meter) => m.type === type() || m._id === meterId()) || []).map(m => ({
                       value: m._id,
                       label: `${m.name} (${m.meterNumber})`
                     }))

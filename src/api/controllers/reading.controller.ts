@@ -1,9 +1,9 @@
 import Reading from '../../models/Reading';
 import Meter from '../../models/Meter';
 import Contract from '../../models/Contract';
-import { processBulkReadings } from '../../lib/readingService';
+import { processBulkReadings, processUnifiedImport } from '../../lib/readingService';
 import { RouteParams, sanitizeString } from '../utils';
-import { readingSchema, bulkReadingSchema, formatZodError } from '../validation';
+import { readingSchema, bulkReadingSchema, unifiedExportSchema, formatZodError } from '../validation';
 
 export async function exportReadingsAsJson(userId: string, meterId?: string) {
   let meterQuery = {};
@@ -39,6 +39,42 @@ export async function exportFullBackup(userId: string) {
   const meters = await Meter.find({}).setOptions({ userId });
   const readings = await Reading.find({}).setOptions({ userId });
   const contracts = await Contract.find({}).setOptions({ userId });
+
+  return {
+    exportDate: new Date().toISOString(),
+    version: '1.0',
+    data: {
+      meters: meters.map(m => ({
+        id: m._id.toString(),
+        name: m.name,
+        meterNumber: m.meterNumber,
+        type: m.type,
+        unit: m.unit
+      })),
+      readings: readings.map(r => ({
+        id: r._id.toString(),
+        meterId: r.meterId.toString(),
+        value: r.value,
+        date: r.date.toISOString().split('T')[0]
+      })),
+      contracts: contracts.map(c => ({
+        id: c._id.toString(),
+        providerName: c.providerName,
+        type: c.type,
+        startDate: c.startDate.toISOString().split('T')[0],
+        endDate: c.endDate ? c.endDate.toISOString().split('T')[0] : null,
+        basePrice: c.basePrice,
+        workingPrice: c.workingPrice,
+        meterId: c.meterId.toString()
+      }))
+    }
+  };
+}
+
+export async function exportUnifiedFormat(userId: string, options: { includeMeters: boolean; includeReadings: boolean; includeContracts: boolean }) {
+  const meters = options.includeMeters ? await Meter.find({}).setOptions({ userId }) : [];
+  const readings = options.includeReadings ? await Reading.find({}).setOptions({ userId }) : [];
+  const contracts = options.includeContracts ? await Contract.find({}).setOptions({ userId }) : [];
 
   return {
     exportDate: new Date().toISOString(),
@@ -141,6 +177,23 @@ export async function handleReadingItem({ req, res, userId, path }: RouteParams)
     }
     const updated = await Reading.findOneAndUpdate({ _id: { $eq: id } }, { $set: result.data }, { new: true }).setOptions({ userId });
     res.end(JSON.stringify(updated));
+    return;
+  }
+}
+
+export async function handleUnifiedImport({ req, res, userId }: RouteParams) {
+  if (req.method === 'POST') {
+    const result = unifiedExportSchema.safeParse(req.body);
+    if (!result.success) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: formatZodError(result.error) }));
+      return;
+    }
+
+    const importResult = await processUnifiedImport(result.data, userId, Meter, Reading, Contract);
+
+    res.statusCode = 200;
+    res.end(JSON.stringify(importResult));
     return;
   }
 }

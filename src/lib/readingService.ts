@@ -1,10 +1,139 @@
-import { IReading, IMeter } from '../types/models';
+import { IReading, IMeter, IContract } from '../types/models';
 import { Model } from 'mongoose';
 
 interface BulkImportResult {
   successCount: number;
   skippedCount: number;
   errors: Array<{ index: number, message: string }>;
+}
+
+/**
+ * Processes a full unified import including meters, readings, and contracts.
+ */
+export async function processUnifiedImport(
+  backupData: any,
+  userId: string,
+  MeterModel: Model<IMeter>,
+  ReadingModel: Model<IReading>,
+  ContractModel: Model<IContract>
+): Promise<BulkImportResult & { metersCreated: number; contractsCreated: number }> {
+  const { data } = backupData;
+  const result = {
+    successCount: 0,
+    skippedCount: 0,
+    metersCreated: 0,
+    contractsCreated: 0,
+    errors: [] as Array<{ index: number, message: string }>
+  };
+
+  const meterIdMap = new Map<string, string>();
+
+  // 1. Import Meters
+  if (Array.isArray(data.meters)) {
+    for (let i = 0; i < data.meters.length; i++) {
+      const mData = data.meters[i];
+      try {
+        let meter = await MeterModel.findOne({ 
+          meterNumber: { $eq: mData.meterNumber },
+          userId: { $eq: userId }
+        });
+
+        if (!meter) {
+          meter = await MeterModel.create({
+            name: mData.name,
+            meterNumber: mData.meterNumber,
+            type: mData.type,
+            unit: mData.unit,
+            userId
+          });
+          result.metersCreated++;
+        }
+        meterIdMap.set(mData.id, meter._id.toString());
+      } catch (err) {
+        result.errors.push({ index: i, message: `Failed to import meter ${mData.name}: ${err instanceof Error ? err.message : 'Unknown error'}` });
+      }
+    }
+  }
+
+  // 2. Import Readings
+  if (Array.isArray(data.readings)) {
+    const readingsToInsert: Partial<IReading>[] = [];
+    for (let i = 0; i < data.readings.length; i++) {
+      const rData = data.readings[i];
+      const newMeterId = meterIdMap.get(rData.meterId);
+      
+      if (!newMeterId) continue;
+
+      try {
+        const existing = await ReadingModel.findOne({
+          meterId: { $eq: newMeterId },
+          date: { $eq: new Date(rData.date) },
+          userId: { $eq: userId }
+        });
+
+        if (existing) {
+          result.skippedCount++;
+          continue;
+        }
+
+        readingsToInsert.push({
+          meterId: newMeterId,
+          value: rData.value,
+          date: new Date(rData.date),
+          userId
+        });
+      } catch (err) {
+        result.errors.push({ index: i, message: `Failed to process reading at ${rData.date}: ${err instanceof Error ? err.message : 'Unknown error'}` });
+      }
+    }
+
+    if (readingsToInsert.length > 0) {
+      await ReadingModel.insertMany(readingsToInsert);
+      result.successCount = readingsToInsert.length;
+    }
+  }
+
+  // 3. Import Contracts
+  if (Array.isArray(data.contracts)) {
+    const contractsToInsert: Partial<IContract>[] = [];
+    for (let i = 0; i < data.contracts.length; i++) {
+      const cData = data.contracts[i];
+      const newMeterId = meterIdMap.get(cData.meterId);
+      
+      if (!newMeterId) continue;
+
+      try {
+        const existing = await ContractModel.findOne({
+          meterId: { $eq: newMeterId },
+          providerName: { $eq: cData.providerName },
+          startDate: { $eq: new Date(cData.startDate) },
+          userId: { $eq: userId }
+        });
+
+        if (existing) continue;
+
+        contractsToInsert.push({
+          meterId: newMeterId,
+          providerName: cData.providerName,
+          type: cData.type,
+          startDate: new Date(cData.startDate),
+          endDate: cData.endDate ? new Date(cData.endDate) : undefined,
+          basePrice: cData.basePrice,
+          workingPrice: cData.workingPrice,
+          userId
+        });
+        result.contractsCreated++;
+      } catch (err) {
+        result.errors.push({ index: i, message: `Failed to process contract for ${cData.providerName}: ${err instanceof Error ? err.message : 'Unknown error'}` });
+      }
+    }
+
+    if (contractsToInsert.length > 0) {
+      await ContractModel.insertMany(contractsToInsert);
+    }
+  }
+
+  return result;
 }
 
 export async function processBulkReadings(

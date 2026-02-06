@@ -315,7 +315,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
       <Portal>
         <div class="modal modal-open">
           <div class="modal-box w-11/12 max-w-2xl">
-            <h3 class="font-bold text-lg">Import Readings</h3>
+            <h3 class="font-bold text-lg">Import Data</h3>
             <div class="py-4">
                <Show when={props.meters.length === 0 && step() === 'upload'}>
                   <div class="mb-6 col-span-full">
@@ -385,7 +385,7 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
                 </Show>
                <Show when={step() === 'preview'}>
                    <button class="btn" onClick={() => setStep('mapping')}>Back</button>
-                   <button class="btn btn-primary" onClick={handleImport}>Import Readings</button>
+                    <button class="btn btn-primary" onClick={handleImport}>Import Data</button>
                </Show>
              </div>
           </div>

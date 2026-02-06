@@ -4,6 +4,7 @@ import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../
 import ConsumptionChart from '../components/ConsumptionChart';
 import { calculateStats } from '../lib/consumption';
 import { findContractForDate, calculateCostForContract, calculateIntervalCost, Contract as PricingContract } from '../lib/pricing';
+import { findContractGaps, Gap } from '../lib/gapDetection';
 import { calculateProjection } from '../lib/projectionUtils';
 
 const fetchMeterData = async (id: string) => {
@@ -56,6 +57,7 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
   yearlyProjection: number;
   estimatedYearlyCost: number;
   dailyCost: number;
+  gaps?: Gap[];
 }, hasContracts: boolean }> = (props) => (
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <div class="card bg-base-100 shadow-xl border border-base-content/5">
@@ -77,8 +79,15 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
       <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl shadow-warning/5">
         <div class="card-body p-8">
           <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Estimated Yearly Cost</p>
-          <p class="text-xs font-bold mb-4">No contract configured for this meter.</p>
-          <A href={`/contracts/add?meterId=${props.meter._id}`} class="btn btn-warning btn-sm rounded-xl font-black w-full">Configure Pricing</A>
+          <p class="text-xs font-bold mb-4">
+            {props.stats.gaps && props.stats.gaps.length > 0 ? 'Coverage gaps detected.' : 'No contract configured for this meter.'}
+          </p>
+          <A 
+            href={`/contracts/add?meterId=${props.meter._id}${props.stats.gaps && props.stats.gaps.length > 0 ? `&startDate=${props.stats.gaps[0].startDate.toISOString().split('T')[0]}&endDate=${props.stats.gaps[0].endDate.toISOString().split('T')[0]}` : ''}`} 
+            class="btn btn-warning btn-sm rounded-xl font-black w-full"
+          >
+            {props.stats.gaps && props.stats.gaps.length > 0 ? 'Fill Coverage Gap' : 'Configure Pricing'}
+          </A>
         </div>
       </div>
     }>
@@ -139,7 +148,8 @@ const calculateMeterStats = (d: { readings: Reading[], contracts: Contract[] } |
     return {
       ...consumptionStats,
       estimatedYearlyCost: calculateYearlyCost(d.contracts, consumptionStats.yearlyProjection),
-      dailyCost: calculateDailyCost(readings, d.contracts)
+      dailyCost: calculateDailyCost(readings, d.contracts),
+      gaps: findContractGaps(readings, d.contracts)
     };
   } catch (err) {
     console.error('[MeterDetail] Stats calculation error:', err);

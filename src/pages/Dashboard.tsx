@@ -59,9 +59,9 @@ const DashboardHeader: Component<{ onImportClick: () => void }> = (props) => (
       <p class="text-base-content/60 font-bold">Aggregated insights across all your energy sources.</p>
     </div>
     <div class="flex gap-2">
-       <button class="btn btn-ghost btn-md rounded-2xl" onClick={props.onImportClick}>
-         Import CSV
-       </button>
+        <button class="btn btn-ghost btn-md rounded-2xl" onClick={props.onImportClick}>
+          Import
+        </button>
        <A href="/add-reading" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
         Quick Add Reading
@@ -165,16 +165,23 @@ const Dashboard: Component = () => {
   const [isImportOpen, setImportOpen] = createSignal(false);
   const { showToast } = useToast();
 
-  const handleBulkImport = async (readings: { meterId: string, date: Date, value: number }[]) => {
-    const res = await fetch('/api/readings/bulk', {
+  const handleBulkImport = async (data: any) => {
+    const isUnified = !Array.isArray(data) && data.version === '1.0' && data.data;
+    const endpoint = isUnified ? '/api/import/unified' : '/api/readings/bulk';
+
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(readings)
+      body: JSON.stringify(data)
     });
     
     const result = await res.json();
     if (res.ok) {
-        showToast(`Imported ${result.successCount} readings. Skipped ${result.skippedCount}.`, 'success');
+        if (isUnified) {
+          showToast(`Backup restored: ${result.metersCreated} meters, ${result.successCount} readings, ${result.contractsCreated} contracts.`, 'success');
+        } else {
+          showToast(`Imported ${result.successCount} readings. Skipped ${result.skippedCount}.`, 'success');
+        }
         refetch();
     } else {
         showToast('Failed to import readings', 'error');
@@ -187,7 +194,7 @@ const Dashboard: Component = () => {
             isOpen={isImportOpen()} 
             onClose={() => setImportOpen(false)} 
             onSave={handleBulkImport}
-            meters={data()?.meters || []}
+            meters={data.latest?.meters || []}
             onMeterCreated={() => refetch()}
         />
       

@@ -83,6 +83,11 @@ export function parseNestedFormat(json: unknown): ParsedResult {
     const meters: Meter[] = [];
     const readings: Reading[] = [];
 
+    // Handle empty array (valid export with no data)
+    if (json.length === 0) {
+      return { meters, readings };
+    }
+
     for (const item of json) {
       if (!item || typeof item !== 'object') {
         throw new Error('Invalid item structure in nested array');
@@ -211,16 +216,82 @@ export function parseFlatFormat(json: unknown): ParsedResult {
 }
 
 /**
+ * Check if data is unified export format
+ */
+export function isUnifiedExportFormat(json: unknown): boolean {
+  if (!json || typeof json !== 'object') {
+    return false;
+  }
+  
+  const data = json as Record<string, unknown>;
+  return (
+    'exportDate' in data &&
+    'version' in data &&
+    data.version === '1.0' &&
+    'data' in data &&
+    typeof data.data === 'object'
+  );
+}
+
+/**
+ * Extract readings from unified export format
+ */
+export function parseUnifiedFormat(json: unknown): ParsedResult {
+  const data = json as Record<string, unknown>;
+  const exportData = data.data as Record<string, unknown>;
+  
+  const meters: Meter[] = [];
+  const readings: Reading[] = [];
+
+  // Parse meters
+  if (Array.isArray(exportData.meters)) {
+    for (const m of exportData.meters) {
+      if (m && typeof m === 'object') {
+        const meter = m as Record<string, unknown>;
+        meters.push({
+          id: meter.id as string,
+          name: meter.name as string,
+          location: (meter.location as string) || ''
+        });
+      }
+    }
+  }
+
+  // Parse readings
+  if (Array.isArray(exportData.readings)) {
+    for (const r of exportData.readings) {
+      if (r && typeof r === 'object') {
+        const reading = r as Record<string, unknown>;
+        readings.push({
+          meterId: reading.meterId as string,
+          date: reading.date as string,
+          value: reading.value as number
+        });
+      }
+    }
+  }
+
+  return { meters, readings };
+}
+
+/**
  * Validate JSON structure and determine format
  */
-export function validateJsonStructure(json: unknown): 'nested' | 'flat' {
+export function validateJsonStructure(json: unknown): 'nested' | 'flat' | 'unified' {
   if (!json) {
     throw new Error('Unknown JSON format: null or undefined');
   }
 
+  // Check for unified export format first
+  if (isUnifiedExportFormat(json)) {
+    return 'unified';
+  }
+
   if (Array.isArray(json)) {
+    // Empty array is valid - it represents an export with no data
     if (json.length === 0) {
-      throw new Error('Unknown JSON format: empty array');
+      // Return 'nested' as the default format for empty arrays (export format)
+      return 'nested';
     }
     
     // Check if it's the export format: [{ meter, readings }]

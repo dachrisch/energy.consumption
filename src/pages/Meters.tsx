@@ -182,15 +182,27 @@ const Meters: Component = () => {
                       </div>
                     </div>
 
-                    <Show when={!hasContract()}>
-                      <div class="bg-warning/5 border border-dashed border-warning/20 p-5 rounded-2xl mb-6 flex flex-col items-center text-center gap-2 group hover:border-warning/40 transition-all">
-                        <div class="bg-warning/10 p-2 rounded-xl text-warning">
+                    <Show when={!hasContract() || hasGaps()}>
+                      <div 
+                        class={`border border-dashed p-5 rounded-2xl mb-6 flex flex-col items-center text-center gap-2 group transition-all cursor-default ${!hasContract() ? 'bg-warning/5 border-warning/20 hover:border-warning/40' : 'bg-base-200/30 border-base-content/10 hover:border-primary/30'}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div class={`p-2 rounded-xl ${!hasContract() ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary'}`}>
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                         </div>
                         <div>
-                          <p class="text-[10px] font-black text-warning uppercase tracking-widest leading-none mb-1">No Contract</p>
-                          <p class="text-[10px] font-bold text-base-content/60 mb-2">Configure pricing to see costs</p>
-                          <A href={`/contracts/add?meterId=${meter._id}`} class="btn btn-warning btn-xs rounded-lg font-black px-4 shadow-lg shadow-warning/20">Add Contract</A>
+                          <p class={`text-[10px] font-black uppercase tracking-widest leading-none mb-1 ${!hasContract() ? 'text-warning' : 'text-primary'}`}>
+                            {!hasContract() ? 'No Contract' : 'Coverage Gaps'}
+                          </p>
+                          <p class="text-[10px] font-bold text-base-content/60 mb-2">
+                            {!hasContract() ? 'Configure pricing to see costs' : `${gaps().length} period${gaps().length > 1 ? 's' : ''} missing pricing`}
+                          </p>
+                          <A 
+                            href={`/contracts/add?meterId=${meter._id}${hasGaps() ? `&startDate=${gaps()[0].startDate.toISOString().split('T')[0]}&endDate=${gaps()[0].endDate.toISOString().split('T')[0]}` : ''}`} 
+                            class={`btn btn-xs rounded-lg font-black px-4 shadow-lg ${!hasContract() ? 'btn-warning shadow-warning/20' : 'btn-primary shadow-primary/20'}`}
+                          >
+                            {!hasContract() ? 'Add Contract' : 'Fill First Gap'}
+                          </A>
                         </div>
                       </div>
                     </Show>

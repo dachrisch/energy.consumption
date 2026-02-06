@@ -56,6 +56,37 @@ export const contractSchema = z.object({
 
 export const contractUpdateSchema = contractSchema.omit({ meterId: true }).partial().strict();
 
+// Unified Export Schema
+export const unifiedExportSchema = z.object({
+  exportDate: z.string().datetime(),
+  version: z.literal('1.0'),
+  data: z.object({
+    meters: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      meterNumber: z.string(),
+      type: z.enum(['power', 'gas', 'water']),
+      unit: z.string()
+    })),
+    readings: z.array(z.object({
+      id: z.string(),
+      meterId: z.string(),
+      value: z.number(),
+      date: z.string()
+    })),
+    contracts: z.array(z.object({
+      id: z.string(),
+      providerName: z.string(),
+      type: z.enum(['power', 'gas', 'water']),
+      startDate: z.string(),
+      endDate: z.string().nullable().optional(),
+      basePrice: z.number(),
+      workingPrice: z.number(),
+      meterId: z.string()
+    }))
+  })
+});
+
 // Helper to handle Zod errors consistently
 export function formatZodError(error: z.ZodError): string {
   return error.issues.map((e: z.ZodIssue) => `${e.path.join('.')}: ${e.message}`).join(', ');

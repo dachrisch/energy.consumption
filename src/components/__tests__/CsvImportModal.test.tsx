@@ -23,7 +23,7 @@ describe('CsvImportModal', () => {
 
   it('renders paste area when open', () => {
     render(() => <CsvImportModal isOpen={true} onClose={() => {}} onSave={async () => {}} meters={[]} />);
-    expect(screen.getByText('Import Readings')).toBeInTheDocument();
+    expect(screen.getByText('Import Data')).toBeInTheDocument();
     expect(screen.getByText('Paste from Clipboard')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/01\.01\.2022.*2\.852\.\.\./)).toBeInTheDocument();
   });

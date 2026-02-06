@@ -2,64 +2,68 @@ import { Component, createSignal, Show, onMount } from 'solid-js';
 import { useToast } from '../context/ToastContext';
 import { downloadFromUrl } from '../lib/downloadHelper';
 import UnifiedImportModal from '../components/UnifiedImportModal';
+import ExportModal from '../components/ExportModal';
 
 const ImportExport: Component = () => {
   const toast = useToast();
   const [showImportModal, setShowImportModal] = createSignal(false);
+  const [showExportModal, setShowExportModal] = createSignal(false);
   const [meters, setMeters] = createSignal<any[]>([]);
+  const [readings, setReadings] = createSignal<any[]>([]);
+  const [contracts, setContracts] = createSignal<any[]>([]);
   const [loading, setLoading] = createSignal(false);
 
-  onMount(() => {
-    const fetchMeters = async () => {
-      try {
-        const res = await fetch('/api/meters');
-        if (res.ok) {
-          setMeters(await res.json());
-        }
-      } catch (err) {
-        console.error('Failed to fetch meters:', err);
+  const fetchData = async () => {
+    try {
+      const [metersRes, readingsRes, contractsRes] = await Promise.all([
+        fetch('/api/meters'),
+        fetch('/api/readings'),
+        fetch('/api/contracts')
+      ]);
+      
+      if (metersRes.ok) {
+        setMeters(await metersRes.json());
       }
-    };
-    fetchMeters();
+      if (readingsRes.ok) {
+        setReadings(await readingsRes.json());
+      }
+      if (contractsRes.ok) {
+        setContracts(await contractsRes.json());
+      }
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+    }
+  };
+
+  onMount(() => {
+    fetchData();
   });
 
-  const handleExportReadings = async () => {
-    setLoading(true);
-    try {
-      await downloadFromUrl('/api/export/readings', `readings-export-${new Date().toISOString().split('T')[0]}.json`);
-      toast.showToast('Readings exported successfully', 'success');
-    } catch (err) {
-      console.error('Export error:', err);
-      toast.showToast('Failed to export readings', 'error');
-    } finally {
-      setLoading(false);
-    }
+  const handleExportSuccess = () => {
+    toast.showToast('Data exported successfully', 'success');
   };
 
-  const handleBackupAll = async () => {
-    setLoading(true);
+  const handleImportReadings = async (data: any) => {
     try {
-      await downloadFromUrl('/api/export/all', `backup-${new Date().toISOString().split('T')[0]}.json`);
-      toast.showToast('Backup created successfully', 'success');
-    } catch (err) {
-      console.error('Backup error:', err);
-      toast.showToast('Failed to create backup', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleImportReadings = async (readings: any[]) => {
-    try {
-      const res = await fetch('/api/readings/bulk', {
+      // Determine if it's a unified backup or just readings array
+      const isUnified = !Array.isArray(data) && data.version === '1.0' && data.data;
+      const endpoint = isUnified ? '/api/import/unified' : '/api/readings/bulk';
+      
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(readings)
+        body: JSON.stringify(data)
       });
       const result = await res.json();
       if (res.ok) {
-        toast.showToast(`Imported ${result.successCount} readings successfully`, 'success');
+        if (isUnified) {
+          toast.showToast(`Backup restored: ${result.metersCreated} meters, ${result.successCount} readings, ${result.contractsCreated} contracts.`, 'success');
+        } else {
+          toast.showToast(`Imported ${result.successCount} readings successfully`, 'success');
+        }
         setShowImportModal(false);
+        // Refresh all data counts after import
+        fetchData();
       } else {
         toast.showToast(result.error || 'Import failed', 'error');
       }
@@ -137,42 +141,25 @@ const ImportExport: Component = () => {
             <div class="divider opacity-20 my-4"></div>
             
             <p class="text-sm opacity-70 mb-6">
-              Export your readings and data. Choose between exporting all readings or creating a complete backup with meters and contracts.
+              Choose what to export: meters, readings, and/or contracts. Always includes metadata for easy import.
             </p>
 
-            <div class="space-y-3">
-              <button
-                onClick={handleExportReadings}
-                disabled={loading()}
-                class="btn btn-secondary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-secondary/20 w-full"
-              >
-                <Show when={!loading()} fallback={<span class="loading loading-spinner loading-sm"></span>}>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Export Readings
-                </Show>
-              </button>
-
-              <button
-                onClick={handleBackupAll}
-                disabled={loading()}
-                class="btn btn-accent btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-accent/20 w-full"
-              >
-                <Show when={!loading()} fallback={<span class="loading loading-spinner loading-sm"></span>}>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  Backup All
-                </Show>
-              </button>
-            </div>
+            <button
+              onClick={() => setShowExportModal(true)}
+              class="btn btn-secondary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-secondary/20 w-full"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export Data
+            </button>
 
             <div class="text-xs opacity-50 mt-6 p-4 bg-base-200/50 rounded-lg">
-              <p class="font-semibold mb-2">Export includes:</p>
+              <p class="font-semibold mb-2">Export format:</p>
               <ul class="space-y-1">
-                <li>📥 <strong>Readings:</strong> All meter readings</li>
-                <li>💾 <strong>Backup:</strong> Meters, readings + contracts</li>
+                <li>✓ Unified JSON with metadata</li>
+                <li>✓ Compatible with import function</li>
+                <li>✓ Includes export date and version</li>
               </ul>
             </div>
           </div>
@@ -198,9 +185,9 @@ const ImportExport: Component = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l6-6" />
                 </svg>
-                Flexible
+                Unified Format
               </h4>
-              <p class="text-sm opacity-70">Support for multiple formats: JSON nested, flat, and CSV.</p>
+              <p class="text-sm opacity-70">All exports use a consistent JSON format for seamless imports.</p>
             </div>
             <div>
               <h4 class="font-bold mb-2 flex items-center gap-2">
@@ -221,6 +208,19 @@ const ImportExport: Component = () => {
         onClose={() => setShowImportModal(false)}
         onSave={handleImportReadings}
         meters={meters()}
+        onMeterCreated={(m) => setMeters([...meters(), m])}
+      />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal()}
+        onClose={() => setShowExportModal(false)}
+        meterCount={meters().length}
+        readingCount={readings().length}
+        contractCount={contracts().length}
+        meters={meters()}
+        readings={readings()}
+        contracts={contracts()}
       />
     </div>
   );

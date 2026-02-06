@@ -18,7 +18,7 @@ describe('UnifiedImportModal', () => {
         />
       ));
 
-      expect(screen.queryByText(/Import Readings/i)).toBeTruthy();
+      expect(screen.queryByText(/Import Data/i)).toBeTruthy();
     });
   });
 

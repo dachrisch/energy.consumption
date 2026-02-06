@@ -157,6 +157,11 @@ describe('JSON Parser', () => {
   });
 
   describe('validateJsonStructure', () => {
+    it('should handle empty export array', () => {
+      const emptyArray: unknown[] = [];
+      const format = validateJsonStructure(emptyArray);
+      expect(format).toBe('nested');
+    });
     it('should identify nested format correctly', () => {
       const json = {
         meters: [{ id: 'meter-1', name: 'Test', readings: [] }]

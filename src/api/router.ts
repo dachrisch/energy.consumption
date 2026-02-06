@@ -1,7 +1,7 @@
 import { RouteParams } from './utils';
 import { handleSession, handleProfileUpdate } from './controllers/auth.controller';
 import { handleMeters, handleMeterItem } from './controllers/meter.controller';
-import { handleReadings, handleBulkReadings, handleReadingItem, exportReadingsAsJson, exportFullBackup } from './controllers/reading.controller';
+import { handleReadings, handleBulkReadings, handleReadingItem, exportReadingsAsJson, exportFullBackup, exportUnifiedFormat, handleUnifiedImport } from './controllers/reading.controller';
 import { handleContracts, handleContractItem } from './controllers/contract.controller';
 import { handleOcrScan } from './controllers/ocr.controller';
 import { handleAggregatedRoutes } from './controllers/dashboard.controller';
@@ -19,6 +19,7 @@ export async function router(params: RouteParams) {
     '/api/meters': async () => handleMeters(params),
     '/api/readings': async () => handleReadings(params),
     '/api/readings/bulk': async () => handleBulkReadings(params),
+    '/api/import/unified': async () => handleUnifiedImport(params),
       '/api/export/readings': async () => {
         if (req.method === 'GET') {
           try {
@@ -37,23 +38,42 @@ export async function router(params: RouteParams) {
           }
         }
       },
-     '/api/export/all': async () => {
-       if (req.method === 'GET') {
-         try {
-           const data = await exportFullBackup(userId);
-           const filename = `backup-${new Date().toISOString().split('T')[0]}.json`;
-           res.setHeader('Content-Type', 'application/json');
-           res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-           res.statusCode = 200;
-           res.end(JSON.stringify(data));
-         } catch (error) {
-           console.error('Backup export failed:', error);
-           res.statusCode = 500;
-           res.end(JSON.stringify({ error: 'Backup export failed' }));
+      '/api/export/all': async () => {
+        if (req.method === 'GET') {
+          try {
+            const data = await exportFullBackup(userId);
+            const filename = `backup-${new Date().toISOString().split('T')[0]}.json`;
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            res.statusCode = 200;
+            res.end(JSON.stringify(data));
+          } catch (error) {
+            console.error('Backup export failed:', error);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: 'Backup export failed' }));
+          }
+        }
+      },
+       '/api/export': async () => {
+         if (req.method === 'POST') {
+           try {
+             const options = req.body as { includeMeters: boolean; includeReadings: boolean; includeContracts: boolean };
+             const data = await exportUnifiedFormat(userId, options);
+             
+             res.setHeader('Content-Type', 'application/json');
+             res.statusCode = 200;
+             res.end(JSON.stringify(data));
+           } catch (error) {
+             console.error('Export failed:', error);
+             res.statusCode = 500;
+             res.end(JSON.stringify({ error: 'Export failed' }));
+           }
+         } else {
+           res.statusCode = 405;
+           res.end(JSON.stringify({ error: 'Method not allowed' }));
          }
-       }
-     },
-     '/api/contracts': async () => handleContracts(params),
+       },
+      '/api/contracts': async () => handleContracts(params),
   };
 
   if (routes[path]) {
