@@ -55,7 +55,7 @@ describe('Import with Meter Creation', () => {
     ];
 
     // Simulate bulk import
-    const readings = await Reading.create(
+    await Reading.create(
       importReadings.map((r: any) => ({
         ...r,
         date: new Date(r.date),
@@ -198,7 +198,7 @@ describe('Import with Meter Creation', () => {
     expect(reading.meterId.toString()).toBe(meterId);
 
     // Verify meter exists
-    let foundMeter = await Meter.findById(meterId).setOptions({ userId });
+     const foundMeter = await Meter.findById(meterId).setOptions({ userId });
     expect(foundMeter).toBeDefined();
     expect(foundMeter?.name).toBe('Deletion Test Meter');
 

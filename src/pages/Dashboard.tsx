@@ -165,8 +165,15 @@ const Dashboard: Component = () => {
   const [isImportOpen, setImportOpen] = createSignal(false);
   const { showToast } = useToast();
 
-  const handleBulkImport = async (data: any) => {
-    const isUnified = !Array.isArray(data) && data.version === '1.0' && data.data;
+  const handleBulkImport = async (data: unknown) => {
+    const isUnified = (
+      typeof data === 'object' &&
+      data !== null &&
+      !Array.isArray(data) &&
+      'version' in data &&
+      data.version === '1.0' &&
+      'data' in data
+    );
     const endpoint = isUnified ? '/api/import/unified' : '/api/readings/bulk';
 
     const res = await fetch(endpoint, {

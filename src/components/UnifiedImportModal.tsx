@@ -1,7 +1,7 @@
 import { Component, Show, createSignal, For, createEffect, on, untrack } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { parseCsv } from '../lib/csvParser';
-import { parseNestedFormat, parseFlatFormat, validateJsonStructure, isUnifiedExportFormat, parseUnifiedFormat } from '../lib/jsonParser';
+import { validateJsonStructure, isUnifiedExportFormat, parseUnifiedFormat } from '../lib/jsonParser';
 import { detectFileType } from '../lib/fileTypeDetector';
 import { parseLocaleNumber } from '../lib/numberUtils';
 import MeterForm from './MeterForm';
@@ -26,10 +26,20 @@ interface PreviewReading extends ImportReading {
   originalValue: string;
 }
 
+interface ImportData {
+  exportDate?: string;
+  version?: string;
+  data?: {
+    meters?: Array<{ id: string; name: string; meterNumber: string; type: string; unit: string }>;
+    readings?: Array<{ meterId: string; date: string; value: number }>;
+    contracts?: Array<{ meterId: string; providerName: string; startDate: string }>;
+  };
+}
+
 interface UnifiedImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => Promise<void>;
+  onSave: (data: ImportData | ImportReading[]) => Promise<void>;
   meters: Meter[];
   onMeterCreated?: (meter: Meter) => void;
 }
@@ -219,13 +229,15 @@ const StepMapping: Component<{
 
 const StepPreview: Component<{ 
   data: PreviewReading[]; 
-  backupInfo?: any;
+  backupInfo?: ImportData;
   existingMeters: Meter[];
 }> = (props) => {
   const getMeterName = (meterId: string) => {
-    const backupMeter = props.backupInfo?.data.meters?.find((m: any) => m.id === meterId);
-    if (backupMeter) return backupMeter.name;
-    const existingMeter = props.existingMeters.find((m: any) => m._id === meterId);
+    const backupMeter = props.backupInfo?.data?.meters?.find((m) => m.id === meterId);
+    if (backupMeter) {
+      return backupMeter.name;
+    }
+    const existingMeter = props.existingMeters.find((m) => m._id === meterId);
     if (existingMeter) return existingMeter.name;
     return 'Unknown Meter';
   };
@@ -236,12 +248,12 @@ const StepPreview: Component<{
 
   return (
     <div class="space-y-6">
-      <Show when={props.backupInfo}>
-        <div class="space-y-4">
-          <div>
-            <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Meters to Sync</p>
-            <div class="grid grid-cols-1 gap-2">
-              <For each={props.backupInfo.data.meters}>
+      <Show when={props.backupInfo?.data?.meters && props.backupInfo.data.meters.length > 0}>
+         <div class="space-y-4">
+           <div>
+             <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Meters to Sync</p>
+             <div class="grid grid-cols-1 gap-2">
+               <For each={props.backupInfo!.data!.meters!}>
                 {(m) => {
                   const creating = willCreateMeter(m);
                   return (
@@ -260,11 +272,11 @@ const StepPreview: Component<{
             </div>
           </div>
 
-          <Show when={props.backupInfo.data.contracts?.length > 0}>
-            <div>
-              <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Contracts to Import</p>
-              <div class="grid grid-cols-1 gap-2">
-                <For each={props.backupInfo.data.contracts}>
+           <Show when={props.backupInfo?.data?.contracts && props.backupInfo.data.contracts.length > 0}>
+             <div>
+               <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Contracts to Import</p>
+               <div class="grid grid-cols-1 gap-2">
+                 <For each={props.backupInfo!.data!.contracts!}>
                   {(c) => (
                     <div class="flex items-center justify-between p-3 bg-base-200/50 rounded-xl border border-base-content/5">
                       <div class="flex flex-col">
@@ -322,7 +334,7 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
   const [jsonReadings, setJsonReadings] = createSignal<
     Array<{ meterId: string; date: string; value: number }>
   >([]);
-  const [backupData, setBackupData] = createSignal<any | null>(null);
+  const [backupData, setBackupData] = createSignal<ImportData | null>(null);
   const [headers, setHeaders] = createSignal<string[]>([]);
 
   const [targetMeterId, setTargetMeterId] = createSignal<string>('');
@@ -565,19 +577,20 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
   };
 
   const handleImport = async () => {
-    setStep('importing');
-    try {
-      if (backupData()) {
-        await props.onSave(backupData());
-      } else {
-        await props.onSave(getPreviewData());
-      }
-      props.onClose();
-    } catch (_e) {
-      setError('Import failed');
-      setStep('preview');
-    }
-  };
+     setStep('importing');
+     try {
+       const data = backupData();
+       if (data) {
+         await props.onSave(data);
+       } else {
+         await props.onSave(getPreviewData());
+       }
+       props.onClose();
+     } catch (_e) {
+       setError('Import failed');
+       setStep('preview');
+     }
+   };
 
   const handlePasteClick = async () => {
     try {
@@ -673,7 +686,7 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
               <Show when={step() === 'preview'}>
                 <StepPreview 
                   data={getPreviewData()} 
-                  backupInfo={backupData()} 
+                  backupInfo={backupData() ?? undefined} 
                   existingMeters={props.meters}
                 />
               </Show>

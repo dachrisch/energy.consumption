@@ -27,18 +27,71 @@ interface Reading {
 }
 
 interface Contract {
-  _id: string;
-  meterId: string;
-  startDate: string | Date;
-  endDate?: string | Date;
+   _id: string;
+   meterId: string;
+   startDate: string | Date;
+   endDate?: string | Date;
+   basePrice: number;
+   workingPrice: number;
+   type: 'power' | 'gas';
+   providerName: string;
 }
 
-const Meters: Component = () => {
-   const [data, { refetch }] = createResource(fetchDashboardData);
-   const toast = useToast();
-   const navigate = useNavigate();
+const calculateMeterStats = (readings: Reading[], contracts: Contract[]) => {
+  if (readings.length < 2) {
+    return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
+  }
 
-   const handleDeleteMeter = async (id: string) => {
+  const consumptionStats = calculateStats(readings.map((r: Reading) => ({
+    value: r.value,
+    date: new Date(r.date)
+  })));
+
+  const sortedReadings = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const last = sortedReadings[0];
+  const prev = sortedReadings[1];
+  const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
+
+  let dailyCost = 0;
+  if (intervalDays > 0) {
+    const normalizedContracts = contracts.map((c) => ({
+      ...c,
+      startDate: new Date(c.startDate),
+      endDate: c.endDate ? new Date(c.endDate) : null
+    }));
+    const totalIntervalCost = calculateIntervalCost(
+      new Date(prev.date),
+      new Date(last.date),
+      last.value - prev.value,
+      normalizedContracts
+    );
+    dailyCost = totalIntervalCost / intervalDays;
+  }
+
+  const normalizedContracts = contracts.map((c) => ({
+    ...c,
+    startDate: new Date(c.startDate),
+    endDate: c.endDate ? new Date(c.endDate) : null
+  }));
+  const activeContract = findContractForDate(normalizedContracts, new Date());
+  let estimatedYearlyCost = 0;
+  if (activeContract) {
+    estimatedYearlyCost = calculateCostForContract({
+      consumption: consumptionStats.yearlyProjection,
+      days: 365.25,
+      contract: activeContract
+    });
+  }
+
+  return { ...consumptionStats, estimatedYearlyCost, dailyCost };
+};
+
+const Meters: Component = () => {
+    const [data, { refetch }] = createResource(fetchDashboardData);
+    const toast = useToast();
+    const navigate = useNavigate();
+ 
+    const handleDeleteMeter = async (id: string) => {
      const confirmed = await toast.confirm('Are you sure you want to delete this meter? This will also remove all its readings and contracts.');
      if (!confirmed) {return;}
      try {
@@ -83,48 +136,11 @@ const Meters: Component = () => {
               icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
             />
           }>
-            {(meter: Meter) => {
-              const meterReadings = () => data()?.readings?.filter((r: Reading) => r.meterId === meter._id) || [];
-              const meterContracts = () => data()?.contracts?.filter((c: Contract) => c.meterId === meter._id) || [];
-              
-              const stats = () => {
-                const readings = meterReadings();
-                if (readings.length < 2) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };}
-                
-                const consumptionStats = calculateStats(readings.map((r: Reading) => ({
-                  value: r.value,
-                  date: new Date(r.date)
-                })));
+             {(meter: Meter) => {
+               const meterReadings = () => data()?.readings?.filter((r: Reading) => r.meterId === meter._id) || [];
+               const meterContracts = () => data()?.contracts?.filter((c: Contract) => c.meterId === meter._id) || [];
 
-                // Calculate cost for the most recent interval
-                const sortedReadings = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-                const last = sortedReadings[0];
-                const prev = sortedReadings[1];
-                const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
-                
-                let dailyCost = 0;
-                if (intervalDays > 0) {
-                  const totalIntervalCost = calculateIntervalCost(
-                    new Date(prev.date),
-                    new Date(last.date),
-                    last.value - prev.value,
-                    meterContracts()
-                  );
-                  dailyCost = totalIntervalCost / intervalDays;
-                }
-
-                const activeContract = findContractForDate(meterContracts(), new Date());
-                let estimatedYearlyCost = 0;
-                if (activeContract) {
-                  estimatedYearlyCost = calculateCostForContract({
-                    consumption: consumptionStats.yearlyProjection,
-                    days: 365.25,
-                    contract: activeContract
-                  });
-                }
-
-                return { ...consumptionStats, estimatedYearlyCost, dailyCost };
-              };
+               const stats = () => calculateMeterStats(meterReadings(), meterContracts());
 
               const gaps = () => {
                 const readings = meterReadings();

@@ -1,6 +1,5 @@
-import { Component, createSignal, Show, onMount } from 'solid-js';
+import { Component, createSignal, onMount } from 'solid-js';
 import { useToast } from '../context/ToastContext';
-import { downloadFromUrl } from '../lib/downloadHelper';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import ExportModal from '../components/ExportModal';
 
@@ -8,10 +7,23 @@ const ImportExport: Component = () => {
   const toast = useToast();
   const [showImportModal, setShowImportModal] = createSignal(false);
   const [showExportModal, setShowExportModal] = createSignal(false);
-  const [meters, setMeters] = createSignal<any[]>([]);
-  const [readings, setReadings] = createSignal<any[]>([]);
-  const [contracts, setContracts] = createSignal<any[]>([]);
-  const [loading, setLoading] = createSignal(false);
+  interface Meter {
+    _id: string;
+    name: string;
+  }
+
+  interface Reading {
+    date: string;
+  }
+
+  interface Contract {
+    _id: string;
+    providerName: string;
+  }
+
+  const [meters, setMeters] = createSignal<Meter[]>([]);
+  const [readings, setReadings] = createSignal<Reading[]>([]);
+  const [contracts, setContracts] = createSignal<Contract[]>([]);
 
   const fetchData = async () => {
     try {
@@ -39,15 +51,18 @@ const ImportExport: Component = () => {
     fetchData();
   });
 
-  const handleExportSuccess = () => {
-    toast.showToast('Data exported successfully', 'success');
-  };
-
-  const handleImportReadings = async (data: any) => {
-    try {
-      // Determine if it's a unified backup or just readings array
-      const isUnified = !Array.isArray(data) && data.version === '1.0' && data.data;
-      const endpoint = isUnified ? '/api/import/unified' : '/api/readings/bulk';
+  const handleImportReadings = async (data: unknown) => {
+     try {
+       // Determine if it's a unified backup or just readings array
+       const isUnified = (
+         typeof data === 'object' &&
+         data !== null &&
+         !Array.isArray(data) &&
+         'version' in data &&
+         data.version === '1.0' &&
+         'data' in data
+       );
+       const endpoint = isUnified ? '/api/import/unified' : '/api/readings/bulk';
       
       const res = await fetch(endpoint, {
         method: 'POST',

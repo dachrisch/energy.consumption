@@ -27,8 +27,12 @@ interface ExportModalProps {
 }
 
 const formatDateRange = (readings: Reading[]): string => {
-  if (readings.length === 0) return 'No data';
-  if (readings.length === 1) return new Date(readings[0].date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+   if (readings.length === 0) {
+     return 'No data';
+   }
+   if (readings.length === 1) {
+     return new Date(readings[0].date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+   }
   
   const firstDate = new Date(readings[0].date);
   const lastDate = new Date(readings[readings.length - 1].date);
@@ -59,61 +63,68 @@ const ExportModal: Component<ExportModalProps> = (props) => {
         setMeters(m || []);
         setReadings(rd || []);
         setContracts(c || []);
-      }).catch(err => console.error('Failed to fetch data:', err));
+       }).catch((err) => {
+         console.error('Failed to fetch data:', err);
+       });
     }
   });
 
-  const handleDownload = async () => {
-    setIsLoading(true);
-    try {
-      const options = {
-        includeMeters: includeMeters(),
-        includeReadings: includeReadings(),
-        includeContracts: includeContracts()
-      };
+  const downloadFile = (data: unknown) => {
+    const filename = `energy-export-${new Date().toISOString().split('T')[0]}.json`;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
 
-      console.log('📥 Starting export with options:', options);
-      
-      const response = await fetch('/api/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(options)
-      });
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
 
-      if (!response.ok) {
-        throw new Error(`Export failed: ${response.statusText}`);
-      }
+    document.body.appendChild(link);
+    link.click();
 
-      const data = await response.json();
-      console.log('📥 Export data received:', data);
-      
-      const filename = `energy-export-${new Date().toISOString().split('T')[0]}.json`;
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up after download
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-
-      console.log('📥 Export completed successfully');
-      props.onClose();
-    } catch (error) {
-      console.error('❌ Download error:', error);
-      alert('Failed to export data. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
   };
+
+  const fetchExportData = async (options: { includeMeters: boolean; includeReadings: boolean; includeContracts: boolean }) => {
+    console.log('📥 Starting export with options:', options);
+
+    const response = await fetch('/api/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Export failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  const handleDownload = async () => {
+     setIsLoading(true);
+     try {
+       const options = {
+         includeMeters: includeMeters(),
+         includeReadings: includeReadings(),
+         includeContracts: includeContracts()
+       };
+
+       const data = await fetchExportData(options);
+       console.log('📥 Export data received:', data);
+       downloadFile(data);
+       console.log('📥 Export completed successfully');
+       props.onClose();
+     } catch (error) {
+       console.error('❌ Download error:', error);
+       alert('Failed to export data. Please try again.');
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
   return (
     <Show when={props.isOpen}>

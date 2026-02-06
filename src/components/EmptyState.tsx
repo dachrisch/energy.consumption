@@ -15,48 +15,62 @@ interface EmptyStateProps {
   inline?: boolean;
 }
 
+interface ClassesObj {
+  container: string;
+  icon: string;
+  title: string;
+  button: string;
+}
+
+const getColorClasses = (scheme: ColorScheme): ClassesObj => {
+  if (scheme === 'neutral') {
+    return {
+      container: 'bg-base-200/20 border-base-content/20 hover:border-base-content/30',
+      icon: 'bg-base-200 text-base-content/40',
+      title: 'text-base-content/60',
+      button: 'btn-ghost bg-base-200 hover:bg-base-300 text-base-content shadow-none'
+    };
+  }
+  if (scheme === 'primary') {
+    return {
+      container: 'bg-primary/5 border-primary/20 hover:border-primary/40',
+      icon: 'bg-primary/10 text-primary',
+      title: 'text-primary',
+      button: 'btn-primary shadow-xl shadow-primary/20'
+    };
+  }
+  // default warning
+  return {
+    container: 'bg-warning/5 border-warning/20 hover:border-warning/40',
+    icon: 'bg-warning/10 text-warning',
+    title: 'text-warning',
+    button: 'btn-warning shadow-xl shadow-warning/20'
+  };
+};
+
+const DefaultIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+  </svg>
+);
+
+const InlineIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+  </svg>
+);
+
 const EmptyState: Component<EmptyStateProps> = (props) => {
   const scheme = props.colorScheme || 'warning';
-  
-  const getClasses = () => {
-    if (scheme === 'neutral') {
-      return {
-        container: 'bg-base-200/20 border-base-content/20 hover:border-base-content/30',
-        icon: 'bg-base-200 text-base-content/40',
-        title: 'text-base-content/60',
-        button: 'btn-ghost bg-base-200 hover:bg-base-300 text-base-content shadow-none'
-      };
-    }
-    if (scheme === 'primary') {
-      return {
-        container: 'bg-primary/5 border-primary/20 hover:border-primary/40',
-        icon: 'bg-primary/10 text-primary',
-        title: 'text-primary',
-        button: 'btn-primary shadow-xl shadow-primary/20'
-      };
-    }
-    // default warning
-    return {
-      container: 'bg-warning/5 border-warning/20 hover:border-warning/40',
-      icon: 'bg-warning/10 text-warning',
-      title: 'text-warning',
-      button: 'btn-warning shadow-xl shadow-warning/20'
-    };
-  };
-  
-  const classes = getClasses();
+  const classes = getColorClasses(scheme);
 
-  // Inline mode: compact warning for modals (~3 lines)
+  // Inline mode: compact warning for modals
   if (props.inline) {
     return (
       <div class={`border-2 border-dashed rounded-lg p-3 mb-4 ${classes.container}`}>
         <div class="flex items-center gap-2">
           <div class={`flex-shrink-0 p-2 rounded-full ${classes.icon}`}>
-            {props.icon || (
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            )}
+            {props.icon || <InlineIcon />}
           </div>
           <div class="flex-1 min-w-0">
             <div class={`text-sm font-bold uppercase tracking-wider ${classes.title}`}>{props.title}</div>
@@ -82,15 +96,11 @@ const EmptyState: Component<EmptyStateProps> = (props) => {
     <div class={`col-span-full card border-2 border-dashed text-center group transition-all ${classes.container} ${props.compact ? 'p-8' : 'py-20'}`}>
       <div class="card-body items-center text-center p-0">
         <div class={`p-6 rounded-full mb-4 ${classes.icon}`}>
-          {props.icon || (
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          )}
+          {props.icon || <DefaultIcon />}
         </div>
         <h3 class={`text-xl font-black uppercase tracking-widest ${classes.title}`}>{props.title}</h3>
         <p class="text-base-content/60 font-bold mb-6 max-w-sm">{props.description}</p>
-        
+
         {props.actionLabel && (
           props.actionLink ? (
             <A href={props.actionLink} class={`btn btn-wide rounded-2xl font-black ${classes.button}`}>
