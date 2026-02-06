@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.10.0](https://github.com/dachrisch/energy.consumption/compare/v3.9.21...v3.10.0) (2026-02-06)
+
+
+### Features
+
+* add download helper and export buttons to Meters page ([36ad51a](https://github.com/dachrisch/energy.consumption/commit/36ad51a312255727d6cc2a0a82f720dbcf1482b6))
+* add export button to MeterReadings with meter filtering support ([b8f5c86](https://github.com/dachrisch/energy.consumption/commit/b8f5c86495a0adad93a999a52319957baec317ba))
+* add file type detection utility for JSON/CSV auto-detection ([97d5798](https://github.com/dachrisch/energy.consumption/commit/97d579879db1b53641fe0f7e5125a9e1633b2f54))
+* add full data backup export endpoint with version metadata ([97f224f](https://github.com/dachrisch/energy.consumption/commit/97f224f1564712b04f152a65bee7b60e72a20812))
+* add JSON export endpoint for readings with nested format ([5af5d03](https://github.com/dachrisch/energy.consumption/commit/5af5d0305b535b367bae435a765c2873ffc0fd9b))
+* add JSON parser for nested and flat format support ([d44b5f7](https://github.com/dachrisch/energy.consumption/commit/d44b5f76ffa2fd5e47b27f84d821fa230b2e2458))
+* add unified import modal supporting JSON and CSV with format auto-detection ([65d7f2a](https://github.com/dachrisch/energy.consumption/commit/65d7f2a1d9f284dd296cc89c8d855a0d957a7749))
+* integrate UnifiedImportModal replacing CsvImportModal for all import needs ([49a54e7](https://github.com/dachrisch/energy.consumption/commit/49a54e791eb138e28adf9b32aa9f043aa8b78b5d))
+
 ### [3.9.21](https://github.com/dachrisch/energy.consumption/compare/v3.9.20...v3.9.21) (2026-02-05)
 
 
