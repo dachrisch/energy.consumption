@@ -1,5 +1,6 @@
 import Reading from '../../models/Reading';
 import Meter from '../../models/Meter';
+import Contract from '../../models/Contract';
 import { processBulkReadings } from '../../lib/readingService';
 import { RouteParams, sanitizeString } from '../utils';
 import { readingSchema, bulkReadingSchema, formatZodError } from '../validation';
@@ -27,6 +28,42 @@ export async function exportReadingsAsJson(userId: string) {
   }));
 
   return exportData;
+}
+
+export async function exportFullBackup(userId: string) {
+  const meters = await Meter.find({}).setOptions({ userId });
+  const readings = await Reading.find({}).setOptions({ userId });
+  const contracts = await Contract.find({}).setOptions({ userId });
+
+  return {
+    exportDate: new Date().toISOString(),
+    version: '1.0',
+    data: {
+      meters: meters.map(m => ({
+        id: m._id.toString(),
+        name: m.name,
+        meterNumber: m.meterNumber,
+        type: m.type,
+        unit: m.unit
+      })),
+      readings: readings.map(r => ({
+        id: r._id.toString(),
+        meterId: r.meterId.toString(),
+        value: r.value,
+        date: r.date.toISOString().split('T')[0]
+      })),
+      contracts: contracts.map(c => ({
+        id: c._id.toString(),
+        providerName: c.providerName,
+        type: c.type,
+        startDate: c.startDate.toISOString().split('T')[0],
+        endDate: c.endDate ? c.endDate.toISOString().split('T')[0] : null,
+        basePrice: c.basePrice,
+        workingPrice: c.workingPrice,
+        meterId: c.meterId.toString()
+      }))
+    }
+  };
 }
 
 export async function handleBulkReadings({ req, res, userId }: RouteParams) {
