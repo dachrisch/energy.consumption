@@ -1,5 +1,5 @@
 import { Component, createResource, Show, createSignal, For } from 'solid-js';
-import { A } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import EmptyState from '../components/EmptyState';
