@@ -7,6 +7,8 @@
   --color-primary-content: #ffffff;
   --color-meter-power: #facc15; /* Golden */
   --color-meter-gas: #9311fb;   /* Brand Secondary */
+  --color-meter-power-chart: #fbbf24; /* Amber 400 - Muted Golden */
+  --color-meter-gas-chart: #818cf8;   /* Indigo 400 - Clean Blue-Purple */
 }
 
 *, ::before, ::after {

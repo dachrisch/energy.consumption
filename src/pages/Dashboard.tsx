@@ -97,12 +97,10 @@ const getThemeColor = (varName: string) => {
 };
 
 const getDashboardChartData = (aggregates: Aggregates, _isMobile: boolean) => {
-    const powerColor = getThemeColor('--color-meter-power');
-    const gasColor = getThemeColor('--color-meter-gas');
-    
-    // Add opacity to make them less bright on dark background
-    const powerColorSoft = `color-mix(in srgb, ${powerColor}, transparent 40%)`;
-    const gasColorSoft = `color-mix(in srgb, ${gasColor}, transparent 40%)`;
+    const powerColor = getThemeColor('--color-meter-power-chart');
+    const gasColor = getThemeColor('--color-meter-gas-chart');
+    const powerHover = getThemeColor('--color-meter-power');
+    const gasHover = getThemeColor('--color-meter-gas');
     
     return {
         labels: aggregates.yearlyHistory.map(h => h.year.toString()),
@@ -110,8 +108,8 @@ const getDashboardChartData = (aggregates: Aggregates, _isMobile: boolean) => {
             {
                 label: 'Power (€)',
                 data: aggregates.yearlyHistory.map(h => h.powerCost),
-                backgroundColor: powerColorSoft,
-                hoverBackgroundColor: powerColor,
+                backgroundColor: powerColor,
+                hoverBackgroundColor: powerHover,
                 borderRadius: 4,
                 borderSkipped: false,
                 barPercentage: 0.6,
@@ -120,8 +118,8 @@ const getDashboardChartData = (aggregates: Aggregates, _isMobile: boolean) => {
             {
                 label: 'Gas (€)',
                 data: aggregates.yearlyHistory.map(h => h.gasCost),
-                backgroundColor: gasColorSoft,
-                hoverBackgroundColor: gasColor,
+                backgroundColor: gasColor,
+                hoverBackgroundColor: gasHover,
                 borderRadius: 4,
                 borderSkipped: false,
                 barPercentage: 0.6,
