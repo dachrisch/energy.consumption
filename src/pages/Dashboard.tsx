@@ -179,24 +179,24 @@ const DashboardAggregates: Component<{ data: {
 
     return (
         <Show when={props.data.hasMeters}>
-            <div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group">
+            <div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group w-full min-w-0">
                 <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-                <div class="flex flex-col md:flex-row h-full">
-                    <div class="p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10">
-                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2">Total Projected Yearly Cost</p>
-                        <h2 class="text-6xl font-black tracking-tighter mb-1">€{Math.round(props.data.aggregates.totalYearlyCost || 0)}</h2>
+                <div class="flex flex-col md:flex-row h-full min-w-0">
+                    <div class="p-6 md:p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10 min-w-0">
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2 truncate">Total Projected Yearly Cost</p>
+                        <h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-1">€{Math.round(props.data.aggregates.totalYearlyCost || 0)}</h2>
                         <TrendValue current={props.data.aggregates.ytdCostCurrent} previous={props.data.aggregates.ytdCostPrevious} />
                         
-                        <div class="flex gap-8 mt-8">
+                        <div class="flex gap-6 md:gap-8 mt-8">
                             <Show when={props.data.hasPower}>
-                                <div>
+                                <div class="min-w-0">
                                     <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p>
                                     <p class="text-xl font-black">€{Math.round(props.data.aggregates.powerYearlyCost || 0)}</p>
                                     <TrendValue current={props.data.aggregates.ytdPowerCurrent} previous={props.data.aggregates.ytdPowerPrevious} />
                                 </div>
                             </Show>
                             <Show when={props.data.hasGas}>
-                                <div>
+                                <div class="min-w-0">
                                     <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p>
                                     <p class="text-xl font-black">€{Math.round(props.data.aggregates.gasYearlyCost || 0)}</p>
                                     <TrendValue current={props.data.aggregates.ytdGasCurrent} previous={props.data.aggregates.ytdGasPrevious} />
@@ -204,8 +204,8 @@ const DashboardAggregates: Component<{ data: {
                             </Show>
                         </div>
                     </div>
-                    <div class={`p-6 flex-1 bg-white/5 relative ${isMobile() ? 'h-[300px]' : 'h-48 md:h-auto'}`}>
-                        <div class="h-full w-full">
+                    <div class={`p-4 md:p-6 flex-1 bg-white/5 relative ${isMobile() ? 'h-[250px]' : 'h-48 md:h-auto'} overflow-hidden min-w-0`}>
+                        <div class="h-full w-full relative">
                              <Bar data={chartData()} options={chartOptions()} />
                         </div>
                     </div>
