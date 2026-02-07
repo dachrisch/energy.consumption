@@ -79,9 +79,9 @@ const TrendValue: Component<{ current: number, previous: number, showValue?: boo
     
     return (
         <Show when={props.previous > 0}>
-            <div class={`text-[10px] font-black flex items-center gap-1 mt-1 ${isUp() ? 'text-error/80' : 'text-success/90'}`}>
-                <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class={`h-3 w-3 ${isUp() ? '' : 'rotate-180'}`} />
-                <span>
+            <div class={`text-[10px] font-black flex items-center gap-1 mt-1 ${isUp() ? 'text-error/80' : 'text-success/90'} overflow-hidden whitespace-nowrap`}>
+                <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class={`h-3 w-3 flex-shrink-0 ${isUp() ? '' : 'rotate-180'}`} />
+                <span class="truncate">
                     {isUp() ? '+' : '-'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(percent()).toFixed(1)}%)
                 </span>
             </div>
@@ -310,7 +310,7 @@ const Dashboard: Component = () => {
   };
 
   return (
-    <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
+    <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0 w-full overflow-x-hidden">
        <UnifiedImportModal 
             isOpen={isImportOpen()} 
             onClose={() => setImportOpen(false)} 
