@@ -12,9 +12,16 @@ interface Toast {
   };
 }
 
+interface ConfirmOptions {
+  title?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  confirmClass?: string;
+}
+
 interface ToastContextType {
   showToast: (message: string, type?: ToastType, action?: { label: string; onClick: () => void }) => void;
-  confirm: (message: string) => Promise<boolean>;
+  confirm: (message: string, options?: ConfirmOptions) => Promise<boolean>;
 }
 
 const ToastContext = createContext<ToastContextType>();
@@ -41,14 +48,16 @@ const ToastItem: Component<{ toast: Toast, onAction: () => void }> = (props) => 
   </div>
 );
 
-const ConfirmModal: Component<{ message?: string, onConfirm: (v: boolean) => void }> = (props) => (
+const ConfirmModal: Component<{ message?: string, options?: ConfirmOptions, onConfirm: (v: boolean) => void }> = (props) => (
   <div class="modal modal-open modal-bottom sm:modal-middle backdrop-blur-sm transition-all duration-300">
     <div class="modal-box bg-base-100 rounded-3xl border border-base-content/5 shadow-2xl p-8 animate-in zoom-in-95 duration-200">
-      <h3 class="text-2xl font-black tracking-tighter mb-4">Are you sure?</h3>
+      <h3 class="text-2xl font-black tracking-tighter mb-4">{props.options?.title || 'Are you sure?'}</h3>
       <p class="text-base-content/60 font-bold mb-8 text-lg leading-relaxed">{props.message}</p>
       <div class="modal-action flex gap-3">
-        <button class="btn btn-ghost flex-1 rounded-2xl font-bold" onClick={() => props.onConfirm(false)}>Cancel</button>
-        <button class="btn btn-error flex-[2] rounded-2xl font-black shadow-xl shadow-error/20" onClick={() => props.onConfirm(true)}>Confirm</button>
+        <button class="btn btn-ghost flex-1 rounded-2xl font-bold" onClick={() => props.onConfirm(false)}>{props.options?.cancelLabel || 'Cancel'}</button>
+        <button class={`btn ${props.options?.confirmClass || 'btn-error'} flex-[2] rounded-2xl font-black shadow-xl`} onClick={() => props.onConfirm(true)}>
+            {props.options?.confirmLabel || 'Confirm'}
+        </button>
       </div>
     </div>
     <div class="modal-backdrop bg-base-content/20" onClick={() => props.onConfirm(false)}></div>
@@ -57,7 +66,7 @@ const ConfirmModal: Component<{ message?: string, onConfirm: (v: boolean) => voi
 
 export const ToastProvider = (props: { children: JSX.Element }) => {
   const [toasts, setToasts] = createSignal<Toast[]>([]);
-  const [confirmState, setConfirmState] = createSignal<{ message: string; resolve: (val: boolean) => void } | null>(null);
+  const [confirmState, setConfirmState] = createSignal<{ message: string; options?: ConfirmOptions; resolve: (val: boolean) => void } | null>(null);
   let nextId = 0;
 
   const showToast = (message: string, type: ToastType = 'info', action?: { label: string; onClick: () => void }) => {
@@ -77,7 +86,7 @@ export const ToastProvider = (props: { children: JSX.Element }) => {
   return (
     <ToastContext.Provider value={{ 
       showToast, 
-      confirm: (message: string) => new Promise(resolve => setConfirmState({ message, resolve })) 
+      confirm: (message: string, options?: ConfirmOptions) => new Promise(resolve => setConfirmState({ message, options, resolve })) 
     }}>
       {props.children}
       
@@ -90,7 +99,7 @@ export const ToastProvider = (props: { children: JSX.Element }) => {
         )}</For>
       </div>
 
-      <Show when={confirmState()}><ConfirmModal message={confirmState()?.message} onConfirm={handleConfirm} /></Show>
+      <Show when={confirmState()}><ConfirmModal message={confirmState()?.message} options={confirmState()?.options} onConfirm={handleConfirm} /></Show>
     </ToastContext.Provider>
   );
 };

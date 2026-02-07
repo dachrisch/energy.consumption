@@ -2,7 +2,8 @@
 @plugin "daisyui";
 
 @theme {
-  --color-primary: #9311fb;
+  --color-brand-violet: #6b21a8;
+  --color-primary: var(--color-brand-violet);
   --color-primary-content: #ffffff;
 }
 

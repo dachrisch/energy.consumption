@@ -13,7 +13,13 @@ interface ContractTemplateCardProps {
 }
 
 const ContractTemplateCard: Component<ContractTemplateCardProps> = (props) => {
-  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+  const formatDateForURL = (d: Date) => {
+    // Create a local date string YYYY-MM-DD to avoid TZ shifts
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   return (
     <div class="card bg-warning/5 border-2 border-dashed border-warning/20 hover:border-warning/40 transition-all group">
@@ -27,13 +33,22 @@ const ContractTemplateCard: Component<ContractTemplateCardProps> = (props) => {
 
         <div class="space-y-1 mb-6">
           <p class="text-xs font-bold opacity-40">Period for {props.meter.name}:</p>
-          <p class="text-sm font-black">
-            {props.gap.startDate.toLocaleDateString()} — {props.gap.endDate.toLocaleDateString()}
-          </p>
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-black">
+              {props.gap.startDate.toLocaleDateString()} — {props.gap.endDate.toLocaleDateString()}
+            </p>
+            <div class={`p-1 rounded-lg ${props.meter.type === 'power' ? 'bg-warning/10 text-warning' : 'bg-secondary/10 text-secondary'}`}>
+              {props.meter.type === 'power' ? (
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
+              )}
+            </div>
+          </div>
         </div>
 
         <A 
-          href={`/contracts/add?meterId=${props.meter._id}&startDate=${formatDate(props.gap.startDate)}&endDate=${formatDate(props.gap.endDate)}`} 
+          href={`/contracts/add?meterId=${props.meter._id}&startDate=${formatDateForURL(props.gap.startDate)}&endDate=${formatDateForURL(props.gap.endDate)}`} 
           class="btn btn-warning btn-sm rounded-xl font-black"
         >
           Add Missing Contract

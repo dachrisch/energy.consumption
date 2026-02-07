@@ -5,8 +5,8 @@ import { getVersion, getVersionLink } from '../lib/version';
 
 const NavBrand: Component = () => (
   <div class="navbar-start">
-    <A href="/dashboard" class="flex items-center gap-3 group active:scale-95 transition-all">
-      <div class="bg-primary p-2.5 rounded-2xl text-primary-content shadow-lg shadow-primary/20 group-hover:rotate-12 transition-all duration-300">
+    <A href="/dashboard" class="flex items-center gap-3 group active:scale-95 transition-all !bg-transparent !border-none !shadow-none !p-0 no-underline">
+      <div class="bg-primary p-2 rounded-xl text-primary-content shadow-lg shadow-primary/20 group-hover:rotate-12 transition-all duration-300">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>

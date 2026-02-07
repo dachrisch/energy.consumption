@@ -188,6 +188,17 @@ const MyForm: Component = () => {
 - **DaisyUI 5** for component themes
 - Use semantic class names (not color values)
 - Mobile-first responsive design
+- **Card Design Language**:
+  - Use `card bg-base-100 shadow-xl border border-base-content/5` for primary cards.
+  - Large titles (`text-2xl font-black`) with utility badges.
+  - Consistent padding (`p-8`).
+  - Sections separated by `border-t border-base-content/5` with `pt-6`.
+  - **Entity Distinction**:
+    - Meter cards use the **Meter** icon (`M9 19v-6...`) in the top-left status area.
+    - Contract cards use the **Document/Contract** icon (`M9 12h6...`) in the top-left status area.
+    - Utility type (Power/Gas) is shown as a smaller icon next to the entity name or linked meter.
+  - Interactive states with `hover:border-primary/30 transition-all hover:shadow-2xl`.
+  - Action areas at the bottom with specific button styles (`btn-primary rounded-xl font-black`).
 
 ```typescript
 // ✅ Good: Semantic and mobile-first

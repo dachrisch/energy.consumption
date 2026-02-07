@@ -34,10 +34,13 @@ export function findContractGaps(readings: IReading[], contracts: IContract[]): 
 
     if (cStart > currentPointer) {
       // Gap found!
-      gaps.push({
-        startDate: new Date(currentPointer),
-        endDate: new Date(cStart.getTime() - 24 * 60 * 60 * 1000)
-      });
+      const gapEnd = new Date(cStart.getTime() - 24 * 60 * 60 * 1000);
+      if (gapEnd >= currentPointer) {
+        gaps.push({
+          startDate: new Date(currentPointer),
+          endDate: gapEnd
+        });
+      }
     }
     
     currentPointer = new Date(Math.max(currentPointer.getTime(), cEnd.getTime() + 24 * 60 * 60 * 1000));

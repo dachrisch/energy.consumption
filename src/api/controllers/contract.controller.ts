@@ -12,12 +12,17 @@ interface OverlapParams {
 
 async function checkContractOverlap(params: OverlapParams): Promise<string | null> {
   const { meterId, userId, start, end, excludeId } = params;
+  
+  // A and B overlap if (StartA <= EndB) and (EndA >= StartB)
+  // Our new contract is [start, end]
+  // Existing contract is [startDate, endDate]
+  
   const overlapQuery: Record<string, unknown> = {
     meterId,
+    startDate: { $lte: end || new Date('9999-12-31') },
     $or: [
-      { startDate: { $lte: end || new Date('9999-12-31') }, endDate: { $gte: start } },
-      { startDate: { $lte: end || new Date('9999-12-31') }, endDate: null },
-      { startDate: { $gte: start }, endDate: null }
+      { endDate: { $gte: start } },
+      { endDate: null }
     ]
   };
 
@@ -25,16 +30,10 @@ async function checkContractOverlap(params: OverlapParams): Promise<string | nul
     overlapQuery._id = { $ne: excludeId };
   }
 
-  if (!end) {
-    overlapQuery.$or = [
-      { endDate: { $gte: start } },
-      { endDate: null }
-    ];
-  }
-
   const overlapping = await Contract.findOne(overlapQuery).setOptions({ userId });
   if (overlapping) {
-    return 'Contract period overlaps with an existing contract for this meter';
+    const periodStr = `${new Date(overlapping.startDate).toLocaleDateString()} — ${overlapping.endDate ? new Date(overlapping.endDate).toLocaleDateString() : 'Present'}`;
+    return `Overlaps with existing contract (${overlapping.providerName}) for period: ${periodStr}. Please adjust the dates to avoid overlap.`;
   }
   return null;
 }

@@ -68,8 +68,12 @@ const AddContract: Component = () => {
     if (typeof mId === 'string' && list) { 
       setMeterId(mId); 
     }
-    if (typeof searchParams.startDate === 'string') { setStartDate(searchParams.startDate); }
-    if (typeof searchParams.endDate === 'string') { setEndDate(searchParams.endDate); }
+    if (typeof searchParams.startDate === 'string') { 
+        setStartDate(searchParams.startDate); 
+    }
+    if (typeof searchParams.endDate === 'string') { 
+        setEndDate(searchParams.endDate); 
+    }
   });
 
   // Smart default for startDate based on last contract
@@ -142,7 +146,16 @@ const AddContract: Component = () => {
         toast.showToast(`Contract ${isEdit() ? 'updated' : 'saved'} successfully`, 'success');
         navigate('/contracts');
       } else {
-        toast.showToast(data.error || 'Failed to save contract', 'error');
+        if (data.error?.includes('Overlap')) {
+            await toast.confirm(data.error, { 
+                title: 'Contract Overlap Detected',
+                confirmLabel: 'I will fix it',
+                cancelLabel: 'Close',
+                confirmClass: 'btn-primary'
+            });
+        } else {
+            toast.showToast(data.error || 'Failed to save contract', 'error');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -187,10 +200,10 @@ const AddContract: Component = () => {
                   onChange={(e) => setMeterId(e.currentTarget.value)}
                   options={[
                     { value: '', label: 'Select a meter' },
-                    ...(meters()?.filter((m: Meter) => m.type === type() || m._id === meterId()) || []).map(m => ({
+                    ...(meters()?.map(m => ({
                       value: m._id,
                       label: `${m.name} (${m.meterNumber})`
-                    }))
+                    })) || [])
                   ]}
                   required
                 />

@@ -146,7 +146,7 @@ const DashboardEmptyState: Component<{ hasMeters: boolean }> = (props) => (
     </Show>
 
     <Show when={props.hasMeters}>
-      <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4">
+      <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4 h-full">
          <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
          </div>
@@ -208,10 +208,16 @@ const Dashboard: Component = () => {
       <DashboardHeader onImportClick={() => setImportOpen(true)} />
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <DashboardAggregates data={data()} />
-          <DashboardWarnings data={data()} />
-          <DashboardEmptyState hasMeters={data()?.hasMeters} />
+        <div class="flex flex-col gap-6">
+          <div class="w-full">
+            <DashboardAggregates data={data()} />
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <DashboardEmptyState hasMeters={data()?.hasMeters} />
+            <div class="flex flex-col gap-6">
+              <DashboardWarnings data={data()} />
+            </div>
+          </div>
         </div>
       </Show>
     </div>

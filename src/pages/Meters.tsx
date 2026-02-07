@@ -158,41 +158,55 @@ const Meters: Component = () => {
               const hasContract = () => meterContracts().length > 0;
               const hasGaps = () => gaps().length > 0;
               
+              const formatDateForURL = (d: Date) => {
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+              };
+              
               return (
                 <div 
-                  class="card bg-base-100 shadow-xl border border-base-content/5 hover:border-primary/30 transition-all group overflow-visible relative hover:shadow-2xl cursor-pointer"
+                  class="card bg-base-100 shadow-xl border border-base-content/5 hover:border-primary/30 transition-all group overflow-hidden hover:shadow-2xl cursor-pointer"
                   onClick={() => navigate(`/meters/${meter._id}`)}
                 >
                   <div class="card-body p-8">
                     
-                    <Show when={hasGaps()}>
-                      <div class="absolute top-4 right-4 z-20">
-                        <div class="tooltip tooltip-left before:text-xs before:max-w-[150px] before:whitespace-normal" data-tip="Coverage gaps detected in reading history">
-                          <div class="bg-warning/20 text-warning p-2 rounded-xl border border-warning/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                          </div>
-                        </div>
+                    <div class="flex justify-between items-start mb-6">
+                      <div class="p-3 rounded-2xl bg-primary/10 text-primary">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                       </div>
-                    </Show>
-
-                    <div class="flex items-center gap-4 mb-6">
-                      <div class={`p-3 rounded-2xl ${meter.type === 'power' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
-                        {meter.type === 'power' ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
-                        )}
-                      </div>
-                      <div>
-                        <h3 class="text-xl font-black tracking-tight">{meter.name}</h3>
-                        <p class="text-xs font-mono opacity-40">{meter.meterNumber}</p>
+                      <div class="text-right">
+                        <p class="text-xs font-black uppercase tracking-widest opacity-40">Meter Number</p>
+                        <p class="font-mono text-sm font-bold">{meter.meterNumber}</p>
                       </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-base-content/5">
+                    <h3 class="text-2xl font-black tracking-tight mb-1">{meter.name}</h3>
+                    <div class="mb-6 flex gap-2 items-center">
+                        <div class={`p-1.5 rounded-lg ${meter.type === 'power' ? 'bg-warning/10 text-warning' : 'bg-secondary/10 text-secondary'}`}>
+                          {meter.type === 'power' ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
+                          )}
+                        </div>
+                        <A 
+                            href={`/contracts?meterId=${meter._id}`}
+                            class="badge badge-sm badge-ghost font-black uppercase tracking-tighter hover:bg-primary/10 hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            View Contracts
+                        </A>
+                        <Show when={hasGaps()}>
+                            <span class="badge badge-sm badge-warning font-black uppercase tracking-tighter animate-pulse">Coverage Gaps</span>
+                        </Show>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
                       <div>
                         <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Consumption</p>
-                        <p class="text-lg font-black">{stats().dailyAverage.toFixed(2)}<span class="text-[10px] font-bold opacity-40 ml-1">{meter.unit}/day</span></p>
+                        <p class="text-xl font-black">{stats().dailyAverage.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">{meter.unit}/day</span></p>
                         <Show when={stats().dailyCost > 0}>
                           <p class="text-[10px] font-bold text-success mt-0.5">€{stats().dailyCost.toFixed(2)}/day</p>
                         </Show>
@@ -200,50 +214,41 @@ const Meters: Component = () => {
                       <div>
                         <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Yearly Cost</p>
                         <Show when={stats().estimatedYearlyCost > 0} fallback={<p class="text-xs font-bold opacity-20 mt-1">N/A</p>}>
-                          <p class="text-lg font-black text-primary">€{Math.round(stats().estimatedYearlyCost)}</p>
+                          <p class="text-xl font-black text-primary">€{Math.round(stats().estimatedYearlyCost)}</p>
                         </Show>
                       </div>
                     </div>
 
                     <Show when={!hasContract() || hasGaps()}>
                       <div 
-                        class={`border border-dashed p-5 rounded-2xl mb-6 flex flex-col items-center text-center gap-2 group transition-all cursor-default ${!hasContract() ? 'bg-warning/5 border-warning/20 hover:border-warning/40' : 'bg-base-200/30 border-base-content/10 hover:border-primary/30'}`}
+                        class={`border-2 border-dashed p-4 rounded-2xl mt-6 flex flex-col items-center text-center gap-2 group transition-all cursor-default ${!hasContract() ? 'bg-warning/5 border-warning/20 hover:border-warning/40' : 'bg-base-200/30 border-base-content/10 hover:border-primary/30'}`}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div class={`p-2 rounded-xl ${!hasContract() ? 'bg-warning/10 text-warning' : 'bg-primary/10 text-primary'}`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        </div>
-                        <div>
-                          <p class={`text-[10px] font-black uppercase tracking-widest leading-none mb-1 ${!hasContract() ? 'text-warning' : 'text-primary'}`}>
-                            {!hasContract() ? 'No Contract' : 'Coverage Gaps'}
-                          </p>
-                          <p class="text-[10px] font-bold text-base-content/60 mb-2">
-                            {!hasContract() ? 'Configure pricing to see costs' : `${gaps().length} period${gaps().length > 1 ? 's' : ''} missing pricing`}
+                         <p class={`text-[10px] font-black uppercase tracking-widest leading-none ${!hasContract() ? 'text-warning' : 'text-primary'}`}>
+                            {!hasContract() ? 'Pricing Missing' : `${gaps().length} Coverage Gap${gaps().length > 1 ? 's' : ''}`}
                           </p>
                           <A 
-                            href={`/contracts/add?meterId=${meter._id}${hasGaps() ? `&startDate=${gaps()[0].startDate.toISOString().split('T')[0]}&endDate=${gaps()[0].endDate.toISOString().split('T')[0]}` : ''}`} 
+                            href={`/contracts/add?meterId=${meter._id}${hasGaps() ? `&startDate=${formatDateForURL(gaps()[0].startDate)}&endDate=${formatDateForURL(gaps()[0].endDate)}` : ''}`} 
                             class={`btn btn-xs rounded-lg font-black px-4 shadow-lg ${!hasContract() ? 'btn-warning shadow-warning/20' : 'btn-primary shadow-primary/20'}`}
                           >
                             {!hasContract() ? 'Add Contract' : 'Fill First Gap'}
                           </A>
-                        </div>
                       </div>
                     </Show>
                     
-                    <div class="card-actions justify-center items-center mt-auto pt-4 border-t border-base-content/5">
-                      <A href={`/meters/${meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-6 text-xs h-10 flex-1" onClick={(e) => e.stopPropagation()}>Add Reading</A>
+                    <div class="flex justify-between items-center mt-6 pt-4 border-t border-base-content/5">
+                        <div class="flex gap-1">
+                            <A href={`/meters/${meter._id}/edit`} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Meter" onClick={(e) => e.stopPropagation()}>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                <span class="text-[10px] uppercase tracking-tighter">Edit</span>
+                            </A>
+                            <button onClick={(e) => {e.stopPropagation(); handleDeleteMeter(meter._id);}} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" title="Delete Meter">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                <span class="text-[10px] uppercase tracking-tighter">Delete</span>
+                            </button>
+                        </div>
+                        <A href={`/meters/${meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Add Reading</A>
                     </div>
-
-                    <div class="flex justify-end gap-1 mt-2">
-                      <A href={`/meters/${meter._id}/edit`} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Meter" onClick={(e) => e.stopPropagation()}>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        <span class="text-[10px] uppercase tracking-tighter">Edit</span>
-                      </A>
-                      <button onClick={(e) => {e.stopPropagation(); handleDeleteMeter(meter._id);}} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" title="Delete Meter">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        <span class="text-[10px] uppercase tracking-tighter">Delete</span>
-                      </button>
-                     </div>
                    </div>
                  </div>
                );

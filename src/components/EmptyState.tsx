@@ -113,8 +113,8 @@ const EmptyState: Component<EmptyStateProps> = (props) => {
     : renderActionButton(props.actionLabel, props.onAction, wideActionClasses);
 
   return (
-     <div class={`col-span-full card border-2 border-dashed text-center group transition-all ${classes.container} ${props.compact ? 'p-8' : 'py-20'}`}>
-       <div class="card-body items-center text-center p-0">
+     <div class={`card border-2 border-dashed text-center group transition-all ${classes.container} ${props.compact ? 'p-8' : 'py-20'} h-full flex flex-col justify-center`}>
+       <div class="card-body items-center text-center p-0 flex-grow-0">
          <div class={`p-6 rounded-full mb-4 ${classes.icon}`}>
            {props.icon || <DefaultIcon />}
          </div>
