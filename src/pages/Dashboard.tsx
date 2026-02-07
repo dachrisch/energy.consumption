@@ -98,7 +98,8 @@ const DashboardAggregates: Component<{ data: {
         datasets: [{
             label: 'Cost (€)',
             data: props.data.aggregates.yearlyHistory.map(h => h.cost),
-            backgroundColor: '#ffffffdd',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            hoverBackgroundColor: 'rgba(255, 255, 255, 1)',
             borderRadius: 8,
             borderSkipped: false,
         }]
