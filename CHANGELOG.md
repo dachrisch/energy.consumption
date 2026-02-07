@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.13](https://github.com/dachrisch/energy.consumption/compare/v3.10.12...v3.10.13) (2026-02-07)
+
+
+### Bug Fixes
+
+* resolve contract edit reset loop and improve meter action layout ([a8fcc42](https://github.com/dachrisch/energy.consumption/commit/a8fcc4249e082a136f4227560c8bd9b7af71d7e7))
+
 ### [3.10.12](https://github.com/dachrisch/energy.consumption/compare/v3.10.11...v3.10.12) (2026-02-07)
 
 ### [3.10.11](https://github.com/dachrisch/energy.consumption/compare/v3.10.10...v3.10.11) (2026-02-07)
