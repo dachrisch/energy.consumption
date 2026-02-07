@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.3](https://github.com/dachrisch/energy.consumption/compare/v3.10.2...v3.10.3) (2026-02-07)
+
+
+### Bug Fixes
+
+* handle populated meterId references in contract matching ([1a2d787](https://github.com/dachrisch/energy.consumption/commit/1a2d78773e2cfe28fabecc2e3c449127d8d48eda))
+
 ### [3.10.1](https://github.com/dachrisch/energy.consumption/compare/v3.10.0...v3.10.1) (2026-02-06)
 
 
