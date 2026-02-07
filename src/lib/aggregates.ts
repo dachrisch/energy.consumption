@@ -107,8 +107,8 @@ export function calculateAggregates(
         
         const existing = yearlyStatsMap.get(year) || { cost: 0, consumption: 0 };
         yearlyStatsMap.set(year, {
-            cost: existing.cost + yearCost,
-            consumption: existing.consumption + yearConsumption
+            cost: existing.cost + Math.max(0, yearCost),
+            consumption: existing.consumption + Math.max(0, yearConsumption)
         });
     }
   }
