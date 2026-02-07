@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.11.0](https://github.com/dachrisch/energy.consumption/compare/v3.10.13...v3.11.0) (2026-02-07)
+
+
+### Features
+
+* add interpolateValueAtDate utility ([6a82f45](https://github.com/dachrisch/energy.consumption/commit/6a82f45cd28f38808a07527c995e559b112129b7))
+* implement YTD and type-specific aggregate calculations ([1dc7b62](https://github.com/dachrisch/energy.consumption/commit/1dc7b62ccb3a50ecbba8ce3ee0fcdefdaad7bab2))
+
+
+### Bug Fixes
+
+* restore missing 'found' in 'No meters found' title to fix failing test ([0ca9173](https://github.com/dachrisch/energy.consumption/commit/0ca9173dc43417c11b36fdc659e4b77d99293e86))
+
 ### [3.10.13](https://github.com/dachrisch/energy.consumption/compare/v3.10.12...v3.10.13) (2026-02-07)
 
 
