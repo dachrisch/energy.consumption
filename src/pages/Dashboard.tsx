@@ -1,17 +1,17 @@
-import { Component, createResource, Show, createSignal } from 'solid-js';
+import { Component, createResource, Show, createSignal, For } from 'solid-js';
 import { A } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../context/ToastContext';
-import { calculateAggregates } from '../lib/aggregates';
+import { calculateAggregates, DetailedAggregates } from '../lib/aggregates';
 import { findContractGaps, Gap } from '../lib/gapDetection';
+import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import { Bar } from 'solid-chartjs';
 
-interface Aggregates {
-  totalYearlyCost: number;
-  powerYearlyCost: number;
-  gasYearlyCost: number;
-}
+Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
+
+interface Aggregates extends DetailedAggregates {}
 
 const getMeterContracts = (m: Meter, contracts: Contract[]) => {
   return contracts.filter((c) => {
@@ -70,36 +70,94 @@ const DashboardHeader: Component<{ onImportClick: () => void }> = (props) => (
   </div>
 );
 
+const TrendValue: Component<{ current: number, previous: number }> = (props) => {
+    const diff = () => props.current - props.previous;
+    const percent = () => props.previous > 0 ? (diff() / props.previous) * 100 : 0;
+    const isUp = () => diff() > 0;
+    
+    return (
+        <Show when={props.previous > 0}>
+            <div class={`text-[10px] font-black flex items-center gap-0.5 mt-1 ${isUp() ? 'text-error/80' : 'text-success/80'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" class={`h-3 w-3 ${isUp() ? '' : 'rotate-180'}`} viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>{Math.abs(percent()).toFixed(1)}%</span>
+            </div>
+        </Show>
+    );
+};
+
 const DashboardAggregates: Component<{ data: {
   hasMeters: boolean;
   hasPower: boolean;
   hasGas: boolean;
   aggregates: Aggregates;
-} }> = (props) => (
-  <Show when={props.data.hasMeters}>
-    <div class="card bg-primary text-primary-content shadow-2xl p-8 rounded-3xl relative overflow-hidden group">
-      <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-      <div class="relative z-10">
-        <p class="text-xs font-black uppercase tracking-[0.2em] opacity-70 mb-2">Total Projected Yearly Cost</p>
-        <h2 class="text-6xl font-black tracking-tighter mb-6">€{Math.round(props.data.aggregates.totalYearlyCost || 0)}</h2>
-        <div class="flex gap-10 pt-6 border-t border-white/10">
-          <Show when={props.data.hasPower}>
-            <div>
-              <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p>
-              <p class="text-xl font-black">€{Math.round(props.data.aggregates.powerYearlyCost || 0)}</p>
+} }> = (props) => {
+    const chartData = () => ({
+        labels: props.data.aggregates.yearlyHistory.map(h => h.year.toString()),
+        datasets: [{
+            label: 'Cost (€)',
+            data: props.data.aggregates.yearlyHistory.map(h => h.cost),
+            backgroundColor: '#ffffff33',
+            borderRadius: 8,
+            borderSkipped: false,
+        }]
+    });
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#2b2d42',
+                titleFont: { weight: 'bold' },
+                padding: 12,
+                cornerRadius: 12,
+                displayColors: false
+            }
+        },
+        scales: {
+            x: { display: false },
+            y: { display: false }
+        }
+    };
+
+    return (
+        <Show when={props.data.hasMeters}>
+            <div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+                <div class="flex flex-col md:flex-row h-full">
+                    <div class="p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10">
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2">Total Projected Yearly Cost</p>
+                        <h2 class="text-6xl font-black tracking-tighter mb-1">€{Math.round(props.data.aggregates.totalYearlyCost || 0)}</h2>
+                        <TrendValue current={props.data.aggregates.totalYearlyCost} previous={props.data.aggregates.previousYearTotal} />
+                        
+                        <div class="flex gap-8 mt-8">
+                            <Show when={props.data.hasPower}>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p>
+                                    <p class="text-xl font-black">€{Math.round(props.data.aggregates.powerYearlyCost || 0)}</p>
+                                </div>
+                            </Show>
+                            <Show when={props.data.hasGas}>
+                                <div>
+                                    <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p>
+                                    <p class="text-xl font-black">€{Math.round(props.data.aggregates.gasYearlyCost || 0)}</p>
+                                </div>
+                            </Show>
+                        </div>
+                    </div>
+                    <div class="p-6 flex-1 bg-white/5 relative h-48 md:h-auto">
+                        <div class="h-full w-full">
+                             <Bar data={chartData()} options={chartOptions} />
+                        </div>
+                    </div>
+                </div>
             </div>
-          </Show>
-          <Show when={props.data.hasGas}>
-            <div>
-              <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p>
-              <p class="text-xl font-black">€{Math.round(props.data.aggregates.gasYearlyCost || 0)}</p>
-            </div>
-          </Show>
-        </div>
-      </div>
-    </div>
-  </Show>
-);
+        </Show>
+    );
+};
 
 const DashboardWarnings: Component<{ data: {
   hasMissingContracts: boolean;
@@ -107,27 +165,56 @@ const DashboardWarnings: Component<{ data: {
   hasMeters: boolean;
 } }> = (props) => (
   <>
-    <Show when={props.data.hasMeters && props.data.hasMissingContracts}>
-      <EmptyState 
-        title="No contract on meter"
-        description="One or more of your meters have no pricing contracts configured. Add one to see cost projections."
-        actionLabel="Add Contract"
-        actionLink="/contracts/add"
-        compact={true}
-        colorScheme="warning"
-        icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-      />
-    </Show>
+    <Show when={props.data.hasMeters && (props.data.hasMissingContracts || props.data.hasPartialGaps)}>
+        <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl h-full">
+            <div class="flex items-center gap-3 mb-6">
+                 <div class="p-3 rounded-2xl bg-primary/10 text-primary">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                 </div>
+                 <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Contract Management</h3>
+            </div>
 
-    <Show when={props.data.hasMeters && props.data.hasPartialGaps}>
-      <EmptyState 
-        title="Partial contracts missing"
-        description="We detected gaps in your contract coverage. Fill them to ensure 100% accurate financial history."
-        actionLabel="Show Contract Page"
-        actionLink="/contracts"
-        compact={true}
-        icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>}
-      />
+            <div class="space-y-4">
+                <Show when={props.data.hasMissingContracts}>
+                  <div class="flex items-center gap-4 bg-warning/5 border border-warning/10 p-4 rounded-2xl group hover:border-warning/30 transition-all">
+                     <div class="bg-warning/10 text-warning p-2 rounded-xl">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                     </div>
+                     <div class="flex-1">
+                        <p class="text-xs font-black uppercase tracking-wider text-warning">Contracts Missing</p>
+                        <p class="text-[11px] font-bold opacity-40">Some meters have no pricing.</p>
+                     </div>
+                     <A href="/contracts/add" class="btn btn-warning btn-xs rounded-lg font-black">Add</A>
+                  </div>
+                </Show>
+
+                <Show when={props.data.hasPartialGaps}>
+                  <div class="flex items-center gap-4 bg-primary/5 border border-primary/10 p-4 rounded-2xl group hover:border-primary/30 transition-all">
+                     <div class="bg-primary/10 text-primary p-2 rounded-xl">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>
+                     </div>
+                     <div class="flex-1">
+                        <p class="text-xs font-black uppercase tracking-wider text-primary">Coverage Gaps</p>
+                        <p class="text-[11px] font-bold opacity-40">Incomplete pricing history.</p>
+                     </div>
+                     <A href="/contracts" class="btn btn-primary btn-xs rounded-lg font-black">Resolve</A>
+                  </div>
+                </Show>
+
+                <Show when={!props.data.hasMissingContracts && !props.data.hasPartialGaps}>
+                    <div class="py-10 text-center">
+                        <div class="bg-success/10 text-success p-4 rounded-full w-fit mx-auto mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <p class="text-sm font-black uppercase opacity-20">All contracts valid</p>
+                    </div>
+                </Show>
+            </div>
+            
+            <div class="mt-auto pt-6">
+                <A href="/contracts" class="btn btn-outline btn-block rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest">Manage All Contracts</A>
+            </div>
+        </div>
     </Show>
   </>
 );
@@ -147,14 +234,14 @@ const DashboardEmptyState: Component<{ hasMeters: boolean }> = (props) => (
 
     <Show when={props.hasMeters}>
       <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4 h-full">
-         <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
+         <div class="bg-primary/10 p-4 rounded-2xl text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
          </div>
          <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Meter Management</h3>
          <p class="text-sm font-bold text-base-content/60 max-w-xs">
-           Manage your individual meters, history and contracts in the new section.
+           Manage your individual meters, history and infrastructure.
          </p>
-         <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2">Go to Meters</A>
+         <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest">Go to Meters</A>
       </div>
     </Show>
   </>
@@ -214,9 +301,7 @@ const Dashboard: Component = () => {
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             <DashboardEmptyState hasMeters={data()?.hasMeters} />
-            <div class="flex flex-col gap-6">
-              <DashboardWarnings data={data()} />
-            </div>
+            <DashboardWarnings data={data()} />
           </div>
         </div>
       </Show>
