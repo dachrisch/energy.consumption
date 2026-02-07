@@ -1,5 +1,5 @@
-import { Component, createResource, Show, createSignal, For } from 'solid-js';
-import { A, useNavigate } from '@solidjs/router';
+import { Component, createResource, Show, createSignal } from 'solid-js';
+import { A } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import EmptyState from '../components/EmptyState';
@@ -11,7 +11,7 @@ import { Bar } from 'solid-chartjs';
 
 Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
 
-interface Aggregates extends DetailedAggregates {}
+type Aggregates = DetailedAggregates;
 
 const getMeterContracts = (m: Meter, contracts: Contract[]) => {
   return contracts.filter((c) => {

@@ -60,7 +60,7 @@ const Contracts: Component = () => {
 
     const contractItems = (d.contracts || [])
       .filter((c: Contract) => {
-        if (!filterMeterId) return true;
+        if (!filterMeterId) {return true;}
         const cMeterId = typeof c.meterId === 'string' ? c.meterId : (c.meterId as unknown as { _id: string })?._id;
         return cMeterId === filterMeterId;
       })

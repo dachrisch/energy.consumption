@@ -17,6 +17,14 @@ export default [
     ],
   },
   {
+    files: ["*.js", "scripts/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
       parser: tsParser,
