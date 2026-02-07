@@ -95,16 +95,28 @@ const DashboardAggregates: Component<{ data: {
 } }> = (props) => {
     const chartData = () => ({
         labels: props.data.aggregates.yearlyHistory.map(h => h.year.toString()),
-        datasets: [{
-            label: 'Cost (€)',
-            data: props.data.aggregates.yearlyHistory.map(h => h.cost),
-            backgroundColor: '#ffffff',
-            hoverBackgroundColor: '#ffffff',
-            borderRadius: 8,
-            borderSkipped: false,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-        }]
+        datasets: [
+            {
+                label: 'Power (€)',
+                data: props.data.aggregates.yearlyHistory.map(h => h.powerCost),
+                backgroundColor: '#facc15', // Golden
+                hoverBackgroundColor: '#facc15',
+                borderRadius: 4,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.8
+            },
+            {
+                label: 'Gas (€)',
+                data: props.data.aggregates.yearlyHistory.map(h => h.gasCost),
+                backgroundColor: '#9311fb', // Using brand primary for gas/secondary
+                hoverBackgroundColor: '#9311fb',
+                borderRadius: 4,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.8
+            }
+        ]
     });
 
     const chartOptions = {
@@ -118,17 +130,31 @@ const DashboardAggregates: Component<{ data: {
                 titleFont: { weight: 'bold' },
                 padding: 12,
                 cornerRadius: 12,
-                displayColors: false
+                displayColors: true,
+                callbacks: {
+                    label: (context: any) => {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+                        }
+                        return label;
+                    }
+                }
             }
         },
         scales: {
             x: { 
+                stacked: true,
                 display: true,
                 grid: { display: false },
                 border: { display: false },
                 ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
             },
             y: { 
+                stacked: true,
                 display: false
             }
         }
