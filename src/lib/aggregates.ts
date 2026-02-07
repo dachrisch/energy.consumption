@@ -27,9 +27,13 @@ export function calculateAggregates(
     if (meterReadings.length < 2) {continue;}
 
     const stats = calculateStats(meterReadings);
-    const meterContracts = (contracts as unknown as Contract[]).filter(
-      (c) => (c as unknown as { meterId: string }).meterId.toString() === meter._id.toString()
-    );
+    const meterContracts = (contracts as unknown as Contract[]).filter((c) => {
+      const contract = c as unknown as { meterId: string | { _id: string } };
+      const cId = typeof contract.meterId === 'string' 
+        ? contract.meterId 
+        : (contract.meterId as unknown as { _id: string })?._id;
+      return cId === meter._id.toString();
+    });
     const activeContract = findContractForDate(meterContracts, new Date());
 
     if (activeContract) {

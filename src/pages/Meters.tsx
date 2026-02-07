@@ -137,9 +137,15 @@ const Meters: Component = () => {
             />
            }>
               {/* eslint-disable-next-line complexity */}
-              {(meter: Meter) => {
-               const meterReadings = () => data()?.readings?.filter((r: Reading) => r.meterId === meter._id) || [];
-               const meterContracts = () => data()?.contracts?.filter((c: Contract) => c.meterId === meter._id) || [];
+               {(meter: Meter) => {
+               const meterReadings = () => data()?.readings?.filter((r: Reading) => {
+                 const rId = typeof r.meterId === 'string' ? r.meterId : (r.meterId as unknown as { _id: string })?._id;
+                 return rId === meter._id;
+               }) || [];
+               const meterContracts = () => data()?.contracts?.filter((c: Contract) => {
+                 const cId = typeof c.meterId === 'string' ? c.meterId : (c.meterId as unknown as { _id: string })?._id;
+                 return cId === meter._id;
+               }) || [];
 
                const stats = () => calculateMeterStats(meterReadings(), meterContracts());
 
