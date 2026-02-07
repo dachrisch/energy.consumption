@@ -77,8 +77,9 @@ function extractReadingsFromMeter(
  * 1. { meters: [{ id, name, location, readings: [{ date, value }] }] }
  * 2. [{ meter: { id, name, ... }, readings: [{ date, value, ... }] }] (export format)
  */
+// eslint-disable-next-line complexity
 export function parseNestedFormat(json: unknown): ParsedResult {
-  // Format 2: Array of { meter, readings }
+   // Format 2: Array of { meter, readings }
   if (Array.isArray(json)) {
     const meters: Meter[] = [];
     const readings: Reading[] = [];
@@ -89,56 +90,33 @@ export function parseNestedFormat(json: unknown): ParsedResult {
     }
 
     for (const item of json) {
-      if (!item || typeof item !== 'object') {
-        throw new Error('Invalid item structure in nested array');
-      }
+       if (!item || typeof item !== 'object') {
+         throw new Error('Invalid item structure in nested array');
+       }
 
-      const data = item as Record<string, unknown>;
-      
-      if (!('meter' in data) || !('readings' in data)) {
-        throw new Error('Each item must have "meter" and "readings" properties');
-      }
+       const data = item as Record<string, unknown>;
+       
+       if (!('meter' in data) || !('readings' in data)) {
+         throw new Error('Each item must have "meter" and "readings" properties');
+       }
 
-      const meterData = data.meter as Record<string, unknown>;
-      
-      // Extract meter info - handle both 'id' and '_id' fields
-      const meterId = (meterData.id || meterData._id) as string;
-      if (!meterId) {
-        throw new Error('Meter must have an id or _id');
-      }
+       const meterData = data.meter as Record<string, unknown>;
+       
+       // Extract meter info - handle both 'id' and '_id' fields
+       const meterId = (meterData.id || meterData._id) as string;
+       if (!meterId) {
+         throw new Error('Meter must have an id or _id');
+       }
 
-      const meterInfo: Meter = {
-        id: meterId,
-        name: (meterData.name as string) || '',
-        location: (meterData.location as string) || ''
-      };
+       const meterInfo: Meter = {
+         id: meterId,
+         name: (meterData.name as string) || '',
+         location: (meterData.location as string) || ''
+       };
 
-      meters.push(meterInfo);
-
-      // Extract readings
-      if (Array.isArray(data.readings)) {
-        for (const readingData of data.readings) {
-          if (!readingData || typeof readingData !== 'object') {
-            throw new Error('Invalid reading structure');
-          }
-
-          const reading = readingData as Record<string, unknown>;
-          if (!reading.date || typeof reading.date !== 'string') {
-            throw new Error('Reading must have a date');
-          }
-
-          if (typeof reading.value !== 'number') {
-            throw new Error('Reading must have a numeric value');
-          }
-
-          readings.push({
-            meterId,
-            date: reading.date,
-            value: reading.value
-          });
-        }
-      }
-    }
+       meters.push(meterInfo);
+       readings.push(...parseReadingsFromItem(meterId, data.readings));
+     }
 
     return { meters, readings };
   }
@@ -215,14 +193,45 @@ export function parseFlatFormat(json: unknown): ParsedResult {
   return { meters: [], readings };
 }
 
+const parseReadingsFromItem = (meterId: string, readingsData: unknown): Reading[] => {
+   const readings: Reading[] = [];
+   
+   if (!Array.isArray(readingsData)) {
+     return readings;
+   }
+
+   for (const readingData of readingsData) {
+     if (!readingData || typeof readingData !== 'object') {
+       throw new Error('Invalid reading structure');
+     }
+
+     const reading = readingData as Record<string, unknown>;
+     if (!reading.date || typeof reading.date !== 'string') {
+       throw new Error('Reading must have a date');
+     }
+
+     if (typeof reading.value !== 'number') {
+       throw new Error('Reading must have a numeric value');
+     }
+
+     readings.push({
+       meterId,
+       date: reading.date,
+       value: reading.value
+     });
+   }
+
+   return readings;
+};
+
 /**
- * Check if data is unified export format
+ * Check if JSON matches unified export format
  */
 export function isUnifiedExportFormat(json: unknown): boolean {
   if (!json || typeof json !== 'object') {
     return false;
   }
-  
+
   const data = json as Record<string, unknown>;
   return (
     'exportDate' in data &&
@@ -232,6 +241,8 @@ export function isUnifiedExportFormat(json: unknown): boolean {
     typeof data.data === 'object'
   );
 }
+
+
 
 /**
  * Extract readings from unified export format
@@ -277,6 +288,7 @@ export function parseUnifiedFormat(json: unknown): ParsedResult {
 /**
  * Validate JSON structure and determine format
  */
+// eslint-disable-next-line complexity
 export function validateJsonStructure(json: unknown): 'nested' | 'flat' | 'unified' {
   if (!json) {
     throw new Error('Unknown JSON format: null or undefined');

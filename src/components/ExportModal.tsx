@@ -86,6 +86,7 @@ const fetchExportData = async (options: { includeMeters: boolean; includeReading
   return response.json();
 };
 
+// eslint-disable-next-line complexity
 const ExportModal: Component<ExportModalProps> = (props) => {
   const [includeMeters, setIncludeMeters] = createSignal(true);
   const [includeReadings, setIncludeReadings] = createSignal(true);
