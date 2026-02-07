@@ -77,11 +77,13 @@ const TrendValue: Component<{ current: number, previous: number }> = (props) => 
     
     return (
         <Show when={props.previous > 0}>
-            <div class={`text-[10px] font-black flex items-center gap-0.5 mt-1 ${isUp() ? 'text-error/80' : 'text-success/80'}`}>
+            <div class={`text-[10px] font-black flex items-center gap-1 mt-1 ${isUp() ? 'text-error/80' : 'text-success-content/80'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" class={`h-3 w-3 ${isUp() ? '' : 'rotate-180'}`} viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                 </svg>
-                <span>{Math.abs(percent()).toFixed(1)}%</span>
+                <span>
+                    {isUp() ? '+' : '-'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(percent()).toFixed(1)}%) vs last year YTD
+                </span>
             </div>
         </Show>
     );
@@ -168,7 +170,7 @@ const DashboardAggregates: Component<{ data: {
                     <div class="p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10">
                         <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2">Total Projected Yearly Cost</p>
                         <h2 class="text-6xl font-black tracking-tighter mb-1">€{Math.round(props.data.aggregates.totalYearlyCost || 0)}</h2>
-                        <TrendValue current={props.data.aggregates.totalYearlyCost} previous={props.data.aggregates.previousYearTotal} />
+                        <TrendValue current={props.data.aggregates.ytdCostCurrent} previous={props.data.aggregates.ytdCostPrevious} />
                         
                         <div class="flex gap-8 mt-8">
                             <Show when={props.data.hasPower}>
