@@ -98,7 +98,7 @@ const DashboardAggregates: Component<{ data: {
         datasets: [{
             label: 'Cost (€)',
             data: props.data.aggregates.yearlyHistory.map(h => h.cost),
-            backgroundColor: '#ffffff33',
+            backgroundColor: '#ffffffdd',
             borderRadius: 8,
             borderSkipped: false,
         }]
@@ -165,57 +165,55 @@ const DashboardWarnings: Component<{ data: {
   hasMeters: boolean;
 } }> = (props) => (
   <>
-    <Show when={props.data.hasMeters && (props.data.hasMissingContracts || props.data.hasPartialGaps)}>
-        <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl h-full">
-            <div class="flex items-center gap-3 mb-6">
-                 <div class="p-3 rounded-2xl bg-primary/10 text-primary">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                 </div>
-                 <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Contract Management</h3>
-            </div>
-
-            <div class="space-y-4">
-                <Show when={props.data.hasMissingContracts}>
-                  <div class="flex items-center gap-4 bg-warning/5 border border-warning/10 p-4 rounded-2xl group hover:border-warning/30 transition-all">
-                     <div class="bg-warning/10 text-warning p-2 rounded-xl">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                     </div>
-                     <div class="flex-1">
-                        <p class="text-xs font-black uppercase tracking-wider text-warning">Contracts Missing</p>
-                        <p class="text-[11px] font-bold opacity-40">Some meters have no pricing.</p>
-                     </div>
-                     <A href="/contracts/add" class="btn btn-warning btn-xs rounded-lg font-black">Add</A>
-                  </div>
-                </Show>
-
-                <Show when={props.data.hasPartialGaps}>
-                  <div class="flex items-center gap-4 bg-primary/5 border border-primary/10 p-4 rounded-2xl group hover:border-primary/30 transition-all">
-                     <div class="bg-primary/10 text-primary p-2 rounded-xl">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>
-                     </div>
-                     <div class="flex-1">
-                        <p class="text-xs font-black uppercase tracking-wider text-primary">Coverage Gaps</p>
-                        <p class="text-[11px] font-bold opacity-40">Incomplete pricing history.</p>
-                     </div>
-                     <A href="/contracts" class="btn btn-primary btn-xs rounded-lg font-black">Resolve</A>
-                  </div>
-                </Show>
-
-                <Show when={!props.data.hasMissingContracts && !props.data.hasPartialGaps}>
-                    <div class="py-10 text-center">
-                        <div class="bg-success/10 text-success p-4 rounded-full w-fit mx-auto mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                        <p class="text-sm font-black uppercase opacity-20">All contracts valid</p>
-                    </div>
-                </Show>
-            </div>
-            
-            <div class="mt-auto pt-6">
-                <A href="/contracts" class="btn btn-outline btn-block rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest">Manage All Contracts</A>
-            </div>
+    <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl h-full">
+        <div class="flex items-center gap-3 mb-6">
+             <div class="p-3 rounded-2xl bg-primary/10 text-primary">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+             </div>
+             <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Contract Management</h3>
         </div>
-    </Show>
+
+        <div class="space-y-4">
+            <Show when={props.data.hasMeters && props.data.hasMissingContracts}>
+              <div class="flex items-center gap-4 bg-warning/5 border border-warning/10 p-4 rounded-2xl group hover:border-warning/30 transition-all">
+                 <div class="bg-warning/10 text-warning p-2 rounded-xl">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                 </div>
+                 <div class="flex-1">
+                    <p class="text-xs font-black uppercase tracking-wider text-warning">Contracts Missing</p>
+                    <p class="text-[11px] font-bold opacity-40">Some meters have no pricing.</p>
+                 </div>
+                 <A href="/contracts/add" class="btn btn-warning btn-xs rounded-lg font-black">Add</A>
+              </div>
+            </Show>
+
+            <Show when={props.data.hasMeters && props.data.hasPartialGaps}>
+              <div class="flex items-center gap-4 bg-primary/5 border border-primary/10 p-4 rounded-2xl group hover:border-primary/30 transition-all">
+                 <div class="bg-primary/10 text-primary p-2 rounded-xl">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>
+                 </div>
+                 <div class="flex-1">
+                    <p class="text-xs font-black uppercase tracking-wider text-primary">Coverage Gaps</p>
+                    <p class="text-[11px] font-bold opacity-40">Incomplete pricing history.</p>
+                 </div>
+                 <A href="/contracts" class="btn btn-primary btn-xs rounded-lg font-black">Resolve</A>
+              </div>
+            </Show>
+
+            <Show when={!props.data.hasMissingContracts && !props.data.hasPartialGaps}>
+                <div class="py-10 text-center">
+                    <div class="bg-success/10 text-success p-4 rounded-full w-fit mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <p class="text-sm font-black uppercase opacity-20">All contracts valid</p>
+                </div>
+            </Show>
+        </div>
+        
+        <div class="mt-auto pt-6">
+            <A href="/contracts" class="btn btn-outline btn-block rounded-2xl border-2 font-black uppercase text-[10px] tracking-widest">Manage All Contracts</A>
+        </div>
+    </div>
   </>
 );
 
