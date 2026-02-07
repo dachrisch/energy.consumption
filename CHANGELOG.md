@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.10](https://github.com/dachrisch/energy.consumption/compare/v3.10.9...v3.10.10) (2026-02-07)
+
+
+### Bug Fixes
+
+* ensure chart bar visibility with rgba colors ([589b117](https://github.com/dachrisch/energy.consumption/commit/589b11741eb85ee4581cbaa1a8117e981fb6d1c8))
+
 ### [3.10.9](https://github.com/dachrisch/energy.consumption/compare/v3.10.8...v3.10.9) (2026-02-07)
 
 ### [3.10.8](https://github.com/dachrisch/energy.consumption/compare/v3.10.7...v3.10.8) (2026-02-07)
