@@ -1,4 +1,4 @@
-import { calculateDailyAverage } from './consumption';
+import { calculateDailyAverage, interpolateValueAtDate } from './consumption';
 import { calculateIntervalCost, Contract } from './pricing';
 import { IMeter, IReading, IContract } from '../types/models';
 
@@ -6,12 +6,16 @@ export interface YearStats {
   year: number;
   cost: number;
   consumption: number;
+  powerCost: number;
+  gasCost: number;
 }
 
 export interface DetailedAggregates extends AggregateResult {
   previousYearTotal: number;
   previousYearPower: number;
   previousYearGas: number;
+  ytdCostCurrent: number;
+  ytdCostPrevious: number;
   yearlyHistory: YearStats[];
 }
 
@@ -24,8 +28,9 @@ export interface AggregateResult {
 function calculateHistoricalYearlyStats(
   meterReadings: { value: number; date: Date }[],
   meterContracts: Contract[],
+  meterType: 'power' | 'gas',
   currentYear: number,
-  yearlyStatsMap: Map<number, { cost: number; consumption: number }>
+  yearlyStatsMap: Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>
 ) {
   const firstReadingDate = meterReadings[0].date;
   const firstYear = firstReadingDate.getFullYear();
@@ -47,10 +52,12 @@ function calculateHistoricalYearlyStats(
     const yearConsumption = endRef.value - startRef.value;
     const yearCost = calculateIntervalCost(startRef.date, endRef.date, yearConsumption, meterContracts);
     
-    const existing = yearlyStatsMap.get(year) || { cost: 0, consumption: 0 };
+    const existing = yearlyStatsMap.get(year) || { cost: 0, consumption: 0, powerCost: 0, gasCost: 0 };
     yearlyStatsMap.set(year, {
       cost: existing.cost + Math.max(0, yearCost),
-      consumption: existing.consumption + Math.max(0, yearConsumption)
+      consumption: existing.consumption + Math.max(0, yearConsumption),
+      powerCost: existing.powerCost + (meterType === 'power' ? Math.max(0, yearCost) : 0),
+      gasCost: existing.gasCost + (meterType === 'gas' ? Math.max(0, yearCost) : 0)
     });
   }
 }
@@ -62,11 +69,18 @@ export function calculateAggregates(
 ): AggregateResult | DetailedAggregates {
   let powerYearlyCost = 0;
   let gasYearlyCost = 0;
+  let ytdCostCurrent = 0;
+  let ytdCostPrevious = 0;
 
   const now = new Date();
   const currentYear = now.getFullYear();
   const lastYear = currentYear - 1;
-  const yearlyStatsMap = new Map<number, { cost: number; consumption: number }>();
+  const yearlyStatsMap = new Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>();
+
+  // Dates for YTD calculation
+  const jan1Current = new Date(currentYear, 0, 1);
+  const jan1Prev = new Date(lastYear, 0, 1);
+  const todayPrevYear = new Date(lastYear, now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
 
   for (const meter of meters) {
     const meterReadings = readings
@@ -88,6 +102,19 @@ export function calculateAggregates(
         endDate: c.endDate ? new Date(c.endDate) : null
     }));
 
+    // YTD Logic
+    const valJan1Current = interpolateValueAtDate(jan1Current, meterReadings);
+    const valToday = interpolateValueAtDate(now, meterReadings) || meterReadings[meterReadings.length - 1].value;
+    const valJan1Prev = interpolateValueAtDate(jan1Prev, meterReadings);
+    const valTodayPrev = interpolateValueAtDate(todayPrevYear, meterReadings);
+
+    if (valJan1Current !== null && valToday !== null) {
+        ytdCostCurrent += calculateIntervalCost(jan1Current, now, valToday - valJan1Current, meterContracts);
+    }
+    if (valJan1Prev !== null && valTodayPrev !== null) {
+        ytdCostPrevious += calculateIntervalCost(jan1Prev, todayPrevYear, valTodayPrev - valJan1Prev, meterContracts);
+    }
+
     const dailyAverage = calculateDailyAverage(meterReadings);
     const yearlyProjection = dailyAverage * 365.25;
     
@@ -103,7 +130,7 @@ export function calculateAggregates(
       else if (meter.type === 'gas') { gasYearlyCost += estimatedYearlyCost; }
     }
 
-    calculateHistoricalYearlyStats(meterReadings, meterContracts, currentYear, yearlyStatsMap);
+    calculateHistoricalYearlyStats(meterReadings, meterContracts, meter.type as 'power' | 'gas', currentYear, yearlyStatsMap);
   }
 
   const yearlyHistory: YearStats[] = Array.from(yearlyStatsMap.entries())
@@ -117,8 +144,10 @@ export function calculateAggregates(
     powerYearlyCost,
     gasYearlyCost,
     previousYearTotal: prevYearStats?.cost || 0,
-    previousYearPower: 0,
-    previousYearGas: 0,
+    previousYearPower: prevYearStats?.powerCost || 0,
+    previousYearGas: prevYearStats?.gasCost || 0,
+    ytdCostCurrent,
+    ytdCostPrevious,
     yearlyHistory
   };
 }
