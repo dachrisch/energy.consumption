@@ -1,4 +1,4 @@
-import { Component, createResource, Show, createSignal } from 'solid-js';
+import { Component, createResource, Show, createSignal, onMount, onCleanup, createMemo } from 'solid-js';
 import { A } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 import UnifiedImportModal from '../components/UnifiedImportModal';
@@ -89,7 +89,7 @@ const TrendValue: Component<{ current: number, previous: number, showValue?: boo
     );
 };
 
-const getDashboardChartData = (aggregates: Aggregates) => ({
+const getDashboardChartData = (aggregates: Aggregates, isMobile: boolean) => ({
     labels: aggregates.yearlyHistory.map(h => h.year.toString()),
     datasets: [
         {
@@ -115,7 +115,8 @@ const getDashboardChartData = (aggregates: Aggregates) => ({
     ]
 });
 
-const dashboardChartOptions = {
+const getDashboardChartOptions = (isMobile: boolean) => ({
+    indexAxis: isMobile ? 'y' as const : 'x' as const,
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 0 },
@@ -133,8 +134,8 @@ const dashboardChartOptions = {
                     if (label) {
                         label += ': ';
                     }
-                    if (context.parsed.y !== null) {
-                        label += new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+                    if (context.parsed[isMobile ? 'x' : 'y'] !== null) {
+                        label += new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(context.parsed[isMobile ? 'x' : 'y']);
                     }
                     return label;
                 }
@@ -144,17 +145,20 @@ const dashboardChartOptions = {
     scales: {
         x: { 
             stacked: true,
-            display: true,
+            display: !isMobile,
             grid: { display: false },
             border: { display: false },
             ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
         },
         y: { 
             stacked: true,
-            display: false
+            display: isMobile,
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
         }
     }
-};
+});
 
 const DashboardAggregates: Component<{ data: {
   hasMeters: boolean;
@@ -162,7 +166,16 @@ const DashboardAggregates: Component<{ data: {
   hasGas: boolean;
   aggregates: Aggregates;
 } }> = (props) => {
-    const chartData = () => getDashboardChartData(props.data.aggregates);
+    const [isMobile, setIsMobile] = createSignal(window.innerWidth < 600);
+    
+    onMount(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 600);
+        window.addEventListener('resize', handleResize);
+        onCleanup(() => window.removeEventListener('resize', handleResize));
+    });
+
+    const chartData = createMemo(() => getDashboardChartData(props.data.aggregates, isMobile()));
+    const chartOptions = createMemo(() => getDashboardChartOptions(isMobile()));
 
     return (
         <Show when={props.data.hasMeters}>
@@ -191,9 +204,9 @@ const DashboardAggregates: Component<{ data: {
                             </Show>
                         </div>
                     </div>
-                    <div class="p-6 flex-1 bg-white/5 relative h-48 md:h-auto">
+                    <div class={`p-6 flex-1 bg-white/5 relative ${isMobile() ? 'h-[300px]' : 'h-48 md:h-auto'}`}>
                         <div class="h-full w-full">
-                             <Bar data={chartData()} options={dashboardChartOptions} />
+                             <Bar data={chartData()} options={chartOptions()} />
                         </div>
                     </div>
                 </div>
