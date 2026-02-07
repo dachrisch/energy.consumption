@@ -1,0 +1,52 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - link "EnergyMonitor" [ref=e7] [cursor=pointer]:
+      - /url: /dashboard
+      - img [ref=e9]
+      - generic [ref=e11]: EnergyMonitor
+    - list [ref=e13]:
+      - listitem [ref=e14]:
+        - link "Dashboard" [ref=e15] [cursor=pointer]:
+          - /url: /dashboard
+      - listitem [ref=e16]:
+        - link "Meters" [ref=e17] [cursor=pointer]:
+          - /url: /meters
+      - listitem [ref=e18]:
+        - link "Contracts" [ref=e19] [cursor=pointer]:
+          - /url: /contracts
+    - generic [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]:
+        - paragraph [ref=e25]: Test User
+        - paragraph [ref=e26]: Operator
+      - generic [ref=e27]: TE
+  - main [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - heading "Add Meter" [level=1] [ref=e31]
+        - paragraph [ref=e32]: Add a new utility meter to track.
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]: Meter Name
+              - textbox "e.g. Main Electricity" [ref=e40]
+            - generic [ref=e41]:
+              - generic [ref=e42]: Meter Number
+              - textbox "F012345" [ref=e43]
+          - generic [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: Utility Type
+              - combobox [ref=e47]:
+                - option "Power (Electricity)" [selected]
+                - option "Natural Gas"
+                - option "Water"
+            - generic [ref=e48]:
+              - generic [ref=e49]: Reporting Unit
+              - textbox "kWh" [ref=e50]
+        - generic [ref=e51]:
+          - button "Cancel" [ref=e52] [cursor=pointer]
+          - button "Save Meter" [ref=e53] [cursor=pointer]
+```

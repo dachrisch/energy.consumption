@@ -2,14 +2,13 @@ import { Component, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 import { getVersion, getVersionLink } from '../lib/version';
+import Icon from './Icon';
 
 const NavBrand: Component = () => (
   <div class="navbar-start">
     <A href="/dashboard" class="flex items-center gap-3 group active:scale-95 transition-all !bg-transparent !border-none !shadow-none !p-0 no-underline">
       <div class="bg-primary p-2 rounded-xl text-primary-content shadow-lg shadow-primary/20 group-hover:rotate-12 transition-all duration-300">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
+        <Icon name="power" class="h-6 w-6" />
       </div>
       <span class="text-2xl font-black tracking-tighter hidden sm:block text-base-content">EnergyMonitor</span>
     </A>

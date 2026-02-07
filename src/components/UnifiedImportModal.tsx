@@ -6,6 +6,7 @@ import { detectFileType } from '../lib/fileTypeDetector';
 import { parseLocaleNumber } from '../lib/numberUtils';
 import MeterForm from './MeterForm';
 import EmptyState from './EmptyState';
+import Icon from './Icon';
 
 interface Meter {
   _id: string;
@@ -76,9 +77,7 @@ const StepUpload: Component<{ onFileSelected: (file: File) => void, onPasteClick
         class="btn btn-outline btn-lg border-2 border-dashed h-32 flex flex-col gap-2 hover:bg-base-200/30 hover:border-primary/30 normal-case w-full rounded-2xl transition-all"
         onClick={props.onPasteClick}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
+        <Icon name="history" class="w-6 h-6 opacity-60" />
         <span class="text-lg font-black">Paste from Clipboard</span>
         <span class="text-[10px] opacity-60 font-bold uppercase tracking-widest">Click to auto-fill</span>
       </button>
@@ -92,9 +91,7 @@ const StepUpload: Component<{ onFileSelected: (file: File) => void, onPasteClick
         onDrop={handleDrop}
         onClick={() => fileInputRef?.click()}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-        </svg>
+        <Icon name="import" class="w-6 h-6 opacity-60" />
         <span class="font-bold text-sm">Drop file here or click</span>
         <span class="text-xs opacity-60">JSON or CSV files supported</span>
         <input

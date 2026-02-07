@@ -5,6 +5,8 @@
   --color-brand-violet: #6b21a8;
   --color-primary: var(--color-brand-violet);
   --color-primary-content: #ffffff;
+  --color-meter-power: #facc15; /* Golden */
+  --color-meter-gas: #9311fb;   /* Brand Secondary */
 }
 
 :root {

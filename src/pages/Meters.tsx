@@ -5,6 +5,7 @@ import { findContractForDate, calculateCostForContract, calculateIntervalCost } 
 import { findContractGaps } from '../lib/gapDetection';
 import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
+import Icon from '../components/Icon';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -119,7 +120,7 @@ const Meters: Component = () => {
          </div>
           <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <A href="/meters/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+              <Icon name="add" class="h-5 w-5" />
               Add Meter
             </A>
           </div>
@@ -133,7 +134,7 @@ const Meters: Component = () => {
               description="Start by adding your first utility meter before logging readings."
               actionLabel="Add Meter"
               actionLink="/meters/add"
-              icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
+              icon={<Icon name="meter" class="h-12 w-12" />}
             />
            }>
               {/* eslint-disable-next-line complexity */}
@@ -165,6 +166,8 @@ const Meters: Component = () => {
                 return `${year}-${month}-${day}`;
               };
               
+              const meterColor = () => meter.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
+              
               return (
                 <div 
                   class="card bg-base-100 shadow-xl border border-base-content/5 hover:border-primary/30 transition-all group overflow-hidden hover:shadow-2xl cursor-pointer"
@@ -174,7 +177,7 @@ const Meters: Component = () => {
                     
                     <div class="flex justify-between items-start mb-6">
                       <div class="p-3 rounded-2xl bg-primary/10 text-primary">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                         <Icon name="meter" class="h-6 w-6" />
                       </div>
                       <div class="text-right">
                         <p class="text-xs font-black uppercase tracking-widest opacity-40">Meter Number</p>
@@ -184,12 +187,11 @@ const Meters: Component = () => {
 
                     <h3 class="text-2xl font-black tracking-tight mb-1">{meter.name}</h3>
                     <div class="mb-6 flex gap-2 items-center">
-                        <div class={`p-1.5 rounded-lg ${meter.type === 'power' ? 'bg-warning/10 text-warning' : 'bg-secondary/10 text-secondary'}`}>
-                          {meter.type === 'power' ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
-                          )}
+                        <div 
+                          class="p-1.5 rounded-lg"
+                          style={{ "background-color": `color-mix(in srgb, ${meterColor()}, transparent 90%)`, "color": meterColor() }}
+                        >
+                          <Icon name={meter.type as 'power' | 'gas'} class="h-4 w-4" />
                         </div>
                         <A 
                             href={`/contracts?meterId=${meter._id}`}
@@ -240,11 +242,11 @@ const Meters: Component = () => {
                         <A href={`/meters/${meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Log Reading</A>
                         <div class="flex gap-1">
                             <A href={`/meters/${meter._id}/edit`} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Meter" onClick={(e) => e.stopPropagation()}>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                <Icon name="edit" class="h-4 w-4" />
                                 <span class="text-[10px] uppercase tracking-tighter">Edit</span>
                             </A>
                             <button onClick={(e) => {e.stopPropagation(); handleDeleteMeter(meter._id);}} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" title="Delete Meter">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                <Icon name="delete" class="h-4 w-4" />
                                 <span class="text-[10px] uppercase tracking-tighter">Delete</span>
                             </button>
                         </div>

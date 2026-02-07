@@ -3,6 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getVersion, getVersionLink, isDevVersion } from '../lib/version';
+import Icon from '../components/Icon';
 
 const Profile: Component = () => {
   const auth = useAuth();
@@ -137,9 +138,7 @@ const Profile: Component = () => {
                      >
                        <Show when={!isDevVersion()} fallback={<span>dev</span>}>
                          <span>{getVersion()}</span>
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                         </svg>
+                         <Icon name="external-link" class="h-3 w-3" />
                        </Show>
                      </a>
                    </div>

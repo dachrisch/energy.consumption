@@ -6,6 +6,7 @@ import { calculateStats } from '../lib/consumption';
 import { findContractForDate, calculateCostForContract, calculateIntervalCost, Contract as PricingContract } from '../lib/pricing';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import { calculateProjection } from '../lib/projectionUtils';
+import Icon from '../components/Icon';
 
 const fetchMeterData = async (id: string) => {
   const [meterRes, readingsRes, contractsRes] = await Promise.all([
@@ -25,32 +26,31 @@ const fetchMeterData = async (id: string) => {
   };
 };
 
-const MeterDetailHeader: Component<{ meter: Meter }> = (props) => (
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-    <div class="min-w-0 w-full">
-      <div class="flex items-center gap-3 mb-2">
-        <div class={`p-2 rounded-lg ${props.meter.type === 'power' ? 'bg-primary/10 text-primary' : 'bg-secondary/10 text-secondary'}`}>
-          {props.meter.type === 'power' ? (
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" />
-            </svg>
-          )}
+const MeterDetailHeader: Component<{ meter: Meter }> = (props) => {
+  const meterColor = () => props.meter.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
+  
+  return (
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div class="min-w-0 w-full">
+        <div class="flex items-center gap-3 mb-2">
+          <div 
+            class="p-2 rounded-lg"
+            style={{ "background-color": `color-mix(in srgb, ${meterColor()}, transparent 90%)`, "color": meterColor() }}
+          >
+            <Icon name={props.meter.type as 'power' | 'gas'} class="h-5 w-5" />
+          </div>
+          <span class="font-black text-xs uppercase tracking-[0.2em] opacity-40">{props.meter.meterNumber}</span>
         </div>
-        <span class="font-black text-xs uppercase tracking-[0.2em] opacity-40">{props.meter.meterNumber}</span>
+        <h1 class="text-3xl md:text-5xl font-black tracking-tighter break-words">{props.meter.name}</h1>
       </div>
-      <h1 class="text-3xl md:text-5xl font-black tracking-tighter break-words">{props.meter.name}</h1>
+      
+      <div class="flex gap-3">
+        <A href={`/meters/${props.meter._id}/readings`} class="btn btn-ghost btn-md rounded-2xl border border-base-content/10 font-bold px-8">View History</A>
+        <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">Log Reading</A>
+      </div>
     </div>
-    
-    <div class="flex gap-3">
-      <A href={`/meters/${props.meter._id}/readings`} class="btn btn-ghost btn-md rounded-2xl border border-base-content/10 font-bold px-8">View History</A>
-      <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">Log Reading</A>
-    </div>
-  </div>
-);
+  );
+};
 
 const MeterStatsGrid: Component<{ meter: Meter, stats: {
   dailyAverage: number;
@@ -101,7 +101,7 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
           </div>
         </div>
         <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          <Icon name="reading" class="h-32 w-32" />
         </div>
       </div>
     </Show>
@@ -175,7 +175,7 @@ const ConsumptionChartCard: Component<{
         <h2 class="text-xl font-black uppercase tracking-widest opacity-20">Consumption Trend & Projection</h2>
         <Show when={props.hasContracts}>
           <A href={`/contracts?meterId=${props.meter._id}`} class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-4 h-8 uppercase tracking-widest text-[10px]">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <Icon name="reading" class="h-4 w-4 mr-1" />
             View Contracts
           </A>
         </Show>

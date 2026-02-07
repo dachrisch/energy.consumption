@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import ContractTemplateCard from '../components/ContractTemplateCard';
 import EmptyState from '../components/EmptyState';
+import Icon from '../components/Icon';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -129,7 +130,7 @@ const Contracts: Component = () => {
             </select>
           </Show>
           <A href="/contracts/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm h-12">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+            <Icon name="add" class="h-5 w-5" />
             Add Contract
           </A>
         </div>
@@ -143,7 +144,7 @@ const Contracts: Component = () => {
              actionLabel="Add Meter"
              actionLink="/add-meter"
              colorScheme="neutral"
-             icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+             icon={<Icon name="contract" class="h-12 w-12" />}
            />
          }>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -153,7 +154,7 @@ const Contracts: Component = () => {
                   description="Enter your contract details to enable precise cost projections and historical analysis."
                   actionLabel="Register First Contract"
                   actionLink="/contracts/add"
-                  icon={<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+                  icon={<Icon name="contract" class="h-12 w-12" />}
                 />
               }>
                 {(item: { type: string, data: Contract | { gap: Gap, meter: { _id: string, name: string, type: string } } }) => (
@@ -162,6 +163,7 @@ const Contracts: Component = () => {
                }>
                 {(() => {
                   const contract = item.data as Contract;
+                  const contractColor = () => contract.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
                   return (
                     <div 
                       class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden hover:border-primary/30 transition-all hover:shadow-2xl"
@@ -169,7 +171,7 @@ const Contracts: Component = () => {
                       <div class="card-body p-8">
                         <div class="flex justify-between items-start mb-6">
                           <div class="p-3 rounded-2xl bg-primary/10 text-primary">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                             <Icon name="contract" class="h-6 w-6" />
                           </div>
                           <div class="text-right">
                             <p class="text-xs font-black uppercase tracking-widest opacity-40">Validity Period</p>
@@ -191,12 +193,11 @@ const Contracts: Component = () => {
                                 >
                                   {contract.meterId?.name || 'Unknown Meter'}
                                 </A>
-                                <div class={`p-1.5 rounded-lg ${contract.type === 'power' ? 'bg-warning/10 text-warning' : 'bg-secondary/10 text-secondary'}`}>
-                                  {contract.type === 'power' ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                  ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.98 7.99 0 01-2.343 5.657z" /></svg>
-                                  )}
+                                <div 
+                                  class="p-1.5 rounded-lg"
+                                  style={{ "background-color": `color-mix(in srgb, ${contractColor()}, transparent 90%)`, "color": contractColor() }}
+                                >
+                                  <Icon name={contract.type} class="h-4 w-4" />
                                 </div>
                             </div>
                           </div>
@@ -219,7 +220,7 @@ const Contracts: Component = () => {
                             class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" 
                             title="Edit Contract"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            <Icon name="edit" class="h-4 w-4" />
                             <span class="text-[10px] uppercase tracking-tighter">Edit</span>
                           </A>
                           <button 
@@ -227,7 +228,7 @@ const Contracts: Component = () => {
                             class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" 
                             title="Delete Contract"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <Icon name="delete" class="h-4 w-4" />
                             <span class="text-[10px] uppercase tracking-tighter">Delete</span>
                           </button>
                         </div>

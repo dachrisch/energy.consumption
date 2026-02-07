@@ -16,6 +16,10 @@ export interface DetailedAggregates extends AggregateResult {
   previousYearGas: number;
   ytdCostCurrent: number;
   ytdCostPrevious: number;
+  ytdPowerCurrent: number;
+  ytdPowerPrevious: number;
+  ytdGasCurrent: number;
+  ytdGasPrevious: number;
   yearlyHistory: YearStats[];
 }
 
@@ -136,7 +140,7 @@ function processMeter(params: {
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     if (meterReadings.length < 2) {
-        return { powerYearlyCost: 0, gasYearlyCost: 0, ytdCostCurrent: 0, ytdCostPrevious: 0 };
+        return { powerYearlyCost: 0, gasYearlyCost: 0, ytdCostCurrent: 0, ytdCostPrevious: 0, ytdPowerCurrent: 0, ytdPowerPrevious: 0, ytdGasCurrent: 0, ytdGasPrevious: 0 };
     }
 
     const meterContracts = getMeterContractsList(meter._id.toString(), contracts);
@@ -149,7 +153,11 @@ function processMeter(params: {
         powerYearlyCost: meter.type === 'power' ? estimatedYearlyCost : 0,
         gasYearlyCost: meter.type === 'gas' ? estimatedYearlyCost : 0,
         ytdCostCurrent: ytd.current,
-        ytdCostPrevious: ytd.previous
+        ytdCostPrevious: ytd.previous,
+        ytdPowerCurrent: meter.type === 'power' ? ytd.current : 0,
+        ytdPowerPrevious: meter.type === 'power' ? ytd.previous : 0,
+        ytdGasCurrent: meter.type === 'gas' ? ytd.current : 0,
+        ytdGasPrevious: meter.type === 'gas' ? ytd.previous : 0
     };
 }
 
@@ -162,6 +170,10 @@ export function calculateAggregates(
   let gasYearlyCost = 0;
   let ytdCostCurrent = 0;
   let ytdCostPrevious = 0;
+  let ytdPowerCurrent = 0;
+  let ytdPowerPrevious = 0;
+  let ytdGasCurrent = 0;
+  let ytdGasPrevious = 0;
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -178,6 +190,10 @@ export function calculateAggregates(
     gasYearlyCost += result.gasYearlyCost;
     ytdCostCurrent += result.ytdCostCurrent;
     ytdCostPrevious += result.ytdCostPrevious;
+    ytdPowerCurrent += result.ytdPowerCurrent;
+    ytdPowerPrevious += result.ytdPowerPrevious;
+    ytdGasCurrent += result.ytdGasCurrent;
+    ytdGasPrevious += result.ytdGasPrevious;
   }
 
   const yearlyHistory: YearStats[] = Array.from(yearlyStatsMap.entries())
@@ -195,6 +211,10 @@ export function calculateAggregates(
     previousYearGas: prevYearStats?.gasCost || 0,
     ytdCostCurrent,
     ytdCostPrevious,
+    ytdPowerCurrent,
+    ytdPowerPrevious,
+    ytdGasCurrent,
+    ytdGasPrevious,
     yearlyHistory
   };
 }

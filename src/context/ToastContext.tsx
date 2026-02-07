@@ -1,4 +1,5 @@
 import { createContext, useContext, createSignal, For, Show, JSX, Component } from 'solid-js';
+import Icon from '../components/Icon';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -30,10 +31,10 @@ const ToastItem: Component<{ toast: Toast, onAction: () => void }> = (props) => 
   <div class={`alert alert-${props.toast.type} shadow-2xl rounded-2xl border-none font-black text-sm animate-in slide-in-from-right-10 duration-300 flex justify-between gap-4`}>
     <div class="flex items-center gap-3">
       <Show when={props.toast.type === 'success'}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
+        <Icon name="success" class="stroke-current shrink-0 h-5 w-5" />
       </Show>
       <Show when={props.toast.type === 'error'}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0112 0z" /></svg>
+        <Icon name="error" class="stroke-current shrink-0 h-5 w-5" />
       </Show>
       <span>{props.toast.message}</span>
     </div>
