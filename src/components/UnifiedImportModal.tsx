@@ -317,7 +317,7 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
   return (
     <Show when={props.isOpen}><Portal><div class="modal modal-open"><div class="modal-box w-11/12 max-w-2xl"><h3 class="font-bold text-lg">Import Data</h3>
       <div class="py-4">
-        <Show when={props.meters.length === 0 && step() === 'upload'}><EmptyState title="No meters" description="Create one first." inline={true} onAction={() => setStep('new-meter')} actionLabel="Create Meter" colorScheme="warning" /></Show>
+        <Show when={props.meters.length === 0 && step() === 'upload'}><EmptyState title="No meters found" description="Create one first." inline={true} onAction={() => setStep('new-meter')} actionLabel="Create Meter" colorScheme="warning" /></Show>
         {error() && <div class="alert alert-error mb-4">{error()}</div>}
         <Show when={step() === 'upload'}><StepUpload onFileSelected={handleFileSelected} onPasteClick={async () => handleFileSelected(new File([await navigator.clipboard.readText()], 'paste.csv'))} /></Show>
         <Show when={step() === 'mapping'}><StepMapping meters={props.meters} targetMeterId={targetMeterId()} setTargetMeterId={setTargetMeterId} headers={headers()} dateColumn={dateColumn()} setDateColumn={setDateColumn} valueColumn={valueColumn()} setValueColumn={setValueColumn} onCreateNewMeter={() => setStep('new-meter')} /></Show>
