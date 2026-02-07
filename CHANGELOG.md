@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.6](https://github.com/dachrisch/energy.consumption/compare/v3.10.5...v3.10.6) (2026-02-07)
+
+
+### Bug Fixes
+
+* ensure contract management card visibility and improve dashboard chart clarity ([6c62d51](https://github.com/dachrisch/energy.consumption/commit/6c62d51b098925d505fde9a2820292c410aec592))
+
 ### [3.10.5](https://github.com/dachrisch/energy.consumption/compare/v3.10.4...v3.10.5) (2026-02-07)
 
 
