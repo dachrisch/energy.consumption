@@ -51,33 +51,36 @@ const ImportExport: Component = () => {
     fetchData();
   });
 
+  const isUnifiedBackup = (data: unknown): boolean => {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      !Array.isArray(data) &&
+      'version' in data &&
+      data.version === '1.0' &&
+      'data' in data
+    );
+  };
+
   const handleImportReadings = async (data: unknown) => {
      try {
-       // Determine if it's a unified backup or just readings array
-       const isUnified = (
-         typeof data === 'object' &&
-         data !== null &&
-         !Array.isArray(data) &&
-         'version' in data &&
-         data.version === '1.0' &&
-         'data' in data
-       );
+       const isUnified = isUnifiedBackup(data);
        const endpoint = isUnified ? '/api/import/unified' : '/api/readings/bulk';
-      
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const result = await res.json();
-      if (res.ok) {
-        if (isUnified) {
-          toast.showToast(`Backup restored: ${result.metersCreated} meters, ${result.successCount} readings, ${result.contractsCreated} contracts.`, 'success');
-        } else {
-          toast.showToast(`Imported ${result.successCount} readings successfully`, 'success');
-        }
-        setShowImportModal(false);
-        // Refresh all data counts after import
+
+       const res = await fetch(endpoint, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(data)
+       });
+       const result = await res.json();
+       if (res.ok) {
+         if (isUnified) {
+           toast.showToast(`Backup restored: ${result.metersCreated} meters, ${result.successCount} readings, ${result.contractsCreated} contracts.`, 'success');
+         } else {
+           toast.showToast(`Imported ${result.successCount} readings successfully`, 'success');
+         }
+         setShowImportModal(false);
+         // Refresh all data counts after import
         fetchData();
       } else {
         toast.showToast(result.error || 'Import failed', 'error');
