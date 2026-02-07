@@ -25,13 +25,16 @@ export interface AggregateResult {
   gasYearlyCost: number;
 }
 
-function calculateHistoricalYearlyStats(
-  meterReadings: { value: number; date: Date }[],
-  meterContracts: Contract[],
-  meterType: 'power' | 'gas',
-  currentYear: number,
-  yearlyStatsMap: Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>
-) {
+interface HistoryOptions {
+  meterReadings: { value: number; date: Date }[];
+  meterContracts: Contract[];
+  meterType: 'power' | 'gas';
+  currentYear: number;
+  yearlyStatsMap: Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>;
+}
+
+function calculateHistoricalYearlyStats(options: HistoryOptions) {
+  const { meterReadings, meterContracts, meterType, currentYear, yearlyStatsMap } = options;
   const firstReadingDate = meterReadings[0].date;
   const firstYear = firstReadingDate.getFullYear();
   
@@ -62,6 +65,94 @@ function calculateHistoricalYearlyStats(
   }
 }
 
+function calculateYtdCosts(params: {
+  now: Date;
+  jan1Current: Date;
+  jan1Prev: Date;
+  todayPrevYear: Date;
+  meterReadings: { value: number; date: Date }[];
+  meterContracts: Contract[];
+}) {
+    const { now, jan1Current, jan1Prev, todayPrevYear, meterReadings, meterContracts } = params;
+    const valJan1Current = interpolateValueAtDate(jan1Current, meterReadings);
+    const valToday = interpolateValueAtDate(now, meterReadings) || meterReadings[meterReadings.length - 1].value;
+    const valJan1Prev = interpolateValueAtDate(jan1Prev, meterReadings);
+    const valTodayPrev = interpolateValueAtDate(todayPrevYear, meterReadings);
+
+    let current = 0;
+    let previous = 0;
+
+    if (valJan1Current !== null && valToday !== null) {
+        current = calculateIntervalCost(jan1Current, now, valToday - valJan1Current, meterContracts);
+    }
+    if (valJan1Prev !== null && valTodayPrev !== null) {
+        previous = calculateIntervalCost(jan1Prev, todayPrevYear, valTodayPrev - valJan1Prev, meterContracts);
+    }
+    return { current, previous };
+}
+
+function getMeterContractsList(meterId: string, contracts: IContract[]): Contract[] {
+    return (contracts as unknown as Contract[]).filter((c) => {
+        const contract = c as unknown as { meterId: string | { _id: string } };
+        const cId = typeof contract.meterId === 'string' ? contract.meterId : (contract.meterId as unknown as { _id: string })?._id;
+        return cId === meterId;
+    }).map(c => ({
+        ...c,
+        startDate: new Date(c.startDate),
+        endDate: c.endDate ? new Date(c.endDate) : null
+    }));
+}
+
+function calculateActiveYearlyCost(meter: IMeter, readings: { value: number; date: Date }[], meterContracts: Contract[], now: Date): number {
+    const activeContract = meterContracts.find(c => {
+        const start = c.startDate;
+        const end = c.endDate || new Date('2099-12-31');
+        return now >= start && now <= end;
+    });
+
+    if (!activeContract) {
+        return 0;
+    }
+
+    const dailyAverage = calculateDailyAverage(readings);
+    return (activeContract.basePrice * (365.25 / 30.44)) + (activeContract.workingPrice * (dailyAverage * 365.25));
+}
+
+function processMeter(params: {
+    meter: IMeter;
+    readings: IReading[];
+    contracts: IContract[];
+    now: Date;
+    jan1Current: Date;
+    jan1Prev: Date;
+    todayPrevYear: Date;
+    yearlyStatsMap: Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>;
+    currentYear: number;
+}) {
+    const { meter, readings, contracts, now, jan1Current, jan1Prev, todayPrevYear, yearlyStatsMap, currentYear } = params;
+    const meterReadings = readings
+      .filter((r) => r.meterId.toString() === meter._id.toString())
+      .map((r) => ({ value: r.value, date: new Date(r.date) }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    if (meterReadings.length < 2) {
+        return { powerYearlyCost: 0, gasYearlyCost: 0, ytdCostCurrent: 0, ytdCostPrevious: 0 };
+    }
+
+    const meterContracts = getMeterContractsList(meter._id.toString(), contracts);
+    const ytd = calculateYtdCosts({ now, jan1Current, jan1Prev, todayPrevYear, meterReadings, meterContracts });
+    const estimatedYearlyCost = calculateActiveYearlyCost(meter, meterReadings, meterContracts, now);
+
+    calculateHistoricalYearlyStats({ meterReadings, meterContracts, meterType: meter.type as 'power' | 'gas', currentYear, yearlyStatsMap });
+
+    return {
+        powerYearlyCost: meter.type === 'power' ? estimatedYearlyCost : 0,
+        gasYearlyCost: meter.type === 'gas' ? estimatedYearlyCost : 0,
+        ytdCostCurrent: ytd.current,
+        ytdCostPrevious: ytd.previous
+    };
+}
+
 export function calculateAggregates(
   meters: IMeter[],
   readings: IReading[],
@@ -77,60 +168,16 @@ export function calculateAggregates(
   const lastYear = currentYear - 1;
   const yearlyStatsMap = new Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>();
 
-  // Dates for YTD calculation
   const jan1Current = new Date(currentYear, 0, 1);
   const jan1Prev = new Date(lastYear, 0, 1);
   const todayPrevYear = new Date(lastYear, now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
 
   for (const meter of meters) {
-    const meterReadings = readings
-      .filter((r) => r.meterId.toString() === meter._id.toString())
-      .map((r) => ({ value: r.value, date: new Date(r.date) }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    if (meterReadings.length < 2) { continue; }
-
-    const meterContracts = (contracts as unknown as Contract[]).filter((c) => {
-      const contract = c as unknown as { meterId: string | { _id: string } };
-      const cId = typeof contract.meterId === 'string'
-        ? contract.meterId
-        : (contract.meterId as unknown as { _id: string })?._id;
-      return cId === meter._id.toString();
-    }).map(c => ({
-        ...c,
-        startDate: new Date(c.startDate),
-        endDate: c.endDate ? new Date(c.endDate) : null
-    }));
-
-    // YTD Logic
-    const valJan1Current = interpolateValueAtDate(jan1Current, meterReadings);
-    const valToday = interpolateValueAtDate(now, meterReadings) || meterReadings[meterReadings.length - 1].value;
-    const valJan1Prev = interpolateValueAtDate(jan1Prev, meterReadings);
-    const valTodayPrev = interpolateValueAtDate(todayPrevYear, meterReadings);
-
-    if (valJan1Current !== null && valToday !== null) {
-        ytdCostCurrent += calculateIntervalCost(jan1Current, now, valToday - valJan1Current, meterContracts);
-    }
-    if (valJan1Prev !== null && valTodayPrev !== null) {
-        ytdCostPrevious += calculateIntervalCost(jan1Prev, todayPrevYear, valTodayPrev - valJan1Prev, meterContracts);
-    }
-
-    const dailyAverage = calculateDailyAverage(meterReadings);
-    const yearlyProjection = dailyAverage * 365.25;
-    
-    const activeContract = meterContracts.find(c => {
-        const start = c.startDate;
-        const end = c.endDate || new Date('2099-12-31');
-        return now >= start && now <= end;
-    });
-
-    if (activeContract) {
-      const estimatedYearlyCost = (activeContract.basePrice * (365.25 / 30.44)) + (activeContract.workingPrice * yearlyProjection);
-      if (meter.type === 'power') { powerYearlyCost += estimatedYearlyCost; }
-      else if (meter.type === 'gas') { gasYearlyCost += estimatedYearlyCost; }
-    }
-
-    calculateHistoricalYearlyStats(meterReadings, meterContracts, meter.type as 'power' | 'gas', currentYear, yearlyStatsMap);
+    const result = processMeter({ meter, readings, contracts, now, jan1Current, jan1Prev, todayPrevYear, yearlyStatsMap, currentYear });
+    powerYearlyCost += result.powerYearlyCost;
+    gasYearlyCost += result.gasYearlyCost;
+    ytdCostCurrent += result.ytdCostCurrent;
+    ytdCostPrevious += result.ytdCostPrevious;
   }
 
   const yearlyHistory: YearStats[] = Array.from(yearlyStatsMap.entries())

@@ -8,6 +8,7 @@ import { calculateAggregates, DetailedAggregates } from '../lib/aggregates';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale } from 'chart.js';
 import { Bar } from 'solid-chartjs';
+import { TooltipItem } from 'chart.js';
 
 Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
 
@@ -134,7 +135,7 @@ const DashboardAggregates: Component<{ data: {
                 cornerRadius: 12,
                 displayColors: true,
                 callbacks: {
-                    label: (context: any) => {
+                    label: (context: TooltipItem<'bar'>) => {
                         let label = context.dataset.label || '';
                         if (label) {
                             label += ': ';
