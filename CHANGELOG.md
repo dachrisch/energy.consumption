@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.4](https://github.com/dachrisch/energy.consumption/compare/v3.10.3...v3.10.4) (2026-02-07)
+
+
+### Features
+
+* improve dashboard layout, refine card design language, fix contract gaps/overlaps, and add meter filtering ([60ee34b](https://github.com/dachrisch/energy.consumption/commit/60ee34bc4f4a279d48491489bf822bc46b24ca3c))
+
 ### [3.10.3](https://github.com/dachrisch/energy.consumption/compare/v3.10.2...v3.10.3) (2026-02-07)
 
 
