@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateDeltas } from '../consumption';
+import { calculateDeltas, interpolateValueAtDate } from '../consumption';
 
 describe('Consumption Logic', () => {
   it('calculates deltas correctly between readings', () => {
@@ -39,4 +39,33 @@ describe('Consumption Logic', () => {
     // 2025-07-03
     expect(result[2].delta).toBe(0);
   });
+});
+
+describe('interpolateValueAtDate', () => {
+    it('interpolates correctly between two readings', () => {
+        const readings = [
+            { date: new Date('2025-01-01'), value: 100 },
+            { date: new Date('2025-01-11'), value: 200 }
+        ];
+        const result = interpolateValueAtDate(new Date('2025-01-06'), readings);
+        expect(result).toBe(150);
+    });
+
+    it('returns exact value if date matches reading', () => {
+        const readings = [
+            { date: new Date('2025-01-01'), value: 100 },
+            { date: new Date('2025-01-11'), value: 200 }
+        ];
+        const result = interpolateValueAtDate(new Date('2025-01-11'), readings);
+        expect(result).toBe(200);
+    });
+
+    it('returns null if date is out of range', () => {
+        const readings = [
+            { date: new Date('2025-01-01'), value: 100 },
+            { date: new Date('2025-01-11'), value: 200 }
+        ];
+        const result = interpolateValueAtDate(new Date('2024-12-31'), readings);
+        expect(result).toBeNull();
+    });
 });

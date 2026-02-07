@@ -57,6 +57,66 @@ export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
     };
   });
   
-  // Return descending (newest first) for UI
-  return result.sort((a, b) => b.date.getTime() - a.date.getTime());
-}
+    
+  
+    // Return descending (newest first) for UI
+  
+    return result.sort((a, b) => b.date.getTime() - a.date.getTime());
+  
+  }
+  
+  
+  
+  export function interpolateValueAtDate(targetDate: Date, readings: { date: Date; value: number }[]): number | null {
+  
+    if (readings.length < 2) return null;
+  
+    const targetTime = targetDate.getTime();
+  
+    
+  
+    // Find surrounding readings
+  
+    let before: { date: Date; value: number } | null = null;
+  
+    let after: { date: Date; value: number } | null = null;
+  
+    
+  
+    for (const r of readings) {
+  
+      const time = r.date.getTime();
+  
+      if (time === targetTime) return r.value;
+  
+      if (time < targetTime) {
+  
+        if (!before || time > before.date.getTime()) before = r;
+  
+      } else {
+  
+        if (!after || time < after.date.getTime()) after = r;
+  
+      }
+  
+    }
+  
+    
+  
+    if (!before || !after) return null;
+  
+    
+  
+    const timeDiff = after.date.getTime() - before.date.getTime();
+  
+    const valueDiff = after.value - before.value;
+  
+    const targetOffset = targetTime - before.date.getTime();
+  
+    
+  
+    return before.value + (valueDiff * (targetOffset / timeDiff));
+  
+  }
+  
+  
