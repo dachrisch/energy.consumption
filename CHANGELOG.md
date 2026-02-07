@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.8](https://github.com/dachrisch/energy.consumption/compare/v3.10.7...v3.10.8) (2026-02-07)
+
+
+### Bug Fixes
+
+* resolve ReferenceError for useNavigate and harmonize management card layouts ([b57ce72](https://github.com/dachrisch/energy.consumption/commit/b57ce72d91f2dc6071a45534066bba2520c56a89))
+
 ### [3.10.7](https://github.com/dachrisch/energy.consumption/compare/v3.10.6...v3.10.7) (2026-02-07)
 
 
