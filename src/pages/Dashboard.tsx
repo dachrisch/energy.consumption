@@ -89,31 +89,47 @@ const TrendValue: Component<{ current: number, previous: number, showValue?: boo
     );
 };
 
-const getDashboardChartData = (aggregates: Aggregates, isMobile: boolean) => ({
-    labels: aggregates.yearlyHistory.map(h => h.year.toString()),
-    datasets: [
-        {
-            label: 'Power (€)',
-            data: aggregates.yearlyHistory.map(h => h.powerCost),
-            backgroundColor: '#facc15', // Golden
-            hoverBackgroundColor: '#facc15',
-            borderRadius: 4,
-            borderSkipped: false,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-        },
-        {
-            label: 'Gas (€)',
-            data: aggregates.yearlyHistory.map(h => h.gasCost),
-            backgroundColor: '#9311fb', // Using brand primary for gas/secondary
-            hoverBackgroundColor: '#9311fb',
-            borderRadius: 4,
-            borderSkipped: false,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-        }
-    ]
-});
+const getThemeColor = (varName: string) => {
+    if (typeof window === 'undefined') {
+        return '#000000';
+    }
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#000000';
+};
+
+const getDashboardChartData = (aggregates: Aggregates, _isMobile: boolean) => {
+    const powerColor = getThemeColor('--color-meter-power');
+    const gasColor = getThemeColor('--color-meter-gas');
+    
+    // Add opacity to make them less bright on dark background
+    const powerColorSoft = `color-mix(in srgb, ${powerColor}, transparent 40%)`;
+    const gasColorSoft = `color-mix(in srgb, ${gasColor}, transparent 40%)`;
+    
+    return {
+        labels: aggregates.yearlyHistory.map(h => h.year.toString()),
+        datasets: [
+            {
+                label: 'Power (€)',
+                data: aggregates.yearlyHistory.map(h => h.powerCost),
+                backgroundColor: powerColorSoft,
+                hoverBackgroundColor: powerColor,
+                borderRadius: 4,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.8
+            },
+            {
+                label: 'Gas (€)',
+                data: aggregates.yearlyHistory.map(h => h.gasCost),
+                backgroundColor: gasColorSoft,
+                hoverBackgroundColor: gasColor,
+                borderRadius: 4,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.8
+            }
+        ]
+    };
+};
 
 const getDashboardChartOptions = (isMobile: boolean) => ({
     indexAxis: isMobile ? 'y' as const : 'x' as const,
