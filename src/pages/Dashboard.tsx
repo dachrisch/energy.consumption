@@ -98,16 +98,19 @@ const DashboardAggregates: Component<{ data: {
         datasets: [{
             label: 'Cost (€)',
             data: props.data.aggregates.yearlyHistory.map(h => h.cost),
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            hoverBackgroundColor: 'rgba(255, 255, 255, 1)',
+            backgroundColor: '#ffffff',
+            hoverBackgroundColor: '#ffffff',
             borderRadius: 8,
             borderSkipped: false,
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
         }]
     });
 
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
+        animation: { duration: 0 },
         plugins: {
             legend: { display: false },
             tooltip: {
@@ -119,8 +122,15 @@ const DashboardAggregates: Component<{ data: {
             }
         },
         scales: {
-            x: { display: false },
-            y: { display: false }
+            x: { 
+                display: true,
+                grid: { display: false },
+                border: { display: false },
+                ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
+            },
+            y: { 
+                display: false
+            }
         }
     };
 
