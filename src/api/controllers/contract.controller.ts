@@ -77,6 +77,30 @@ export async function handleContracts({ req, res, userId, url }: RouteParams) {
   }
 }
 
+async function validateContractUpdate(
+  id: string, 
+  userId: string, 
+  data: { startDate?: Date; endDate?: Date | null; meterId?: string }
+): Promise<string | null> {
+  const { startDate, endDate, meterId } = data;
+  if (startDate === undefined && endDate === undefined && meterId === undefined) {
+    return null;
+  }
+
+  const current = await Contract.findById(id).setOptions({ userId });
+  if (!current) {
+    return null;
+  }
+
+  return checkContractOverlap({
+    meterId: meterId || (current.meterId as string), 
+    userId, 
+    start: startDate || current.startDate, 
+    end: endDate === undefined ? current.endDate : (endDate ?? null), 
+    excludeId: id
+  });
+}
+
 export async function handleContractItem({ req, res, userId, path }: RouteParams) {
   const id = sanitizeString(path.split('/').pop());
   if (!id) {
@@ -102,25 +126,11 @@ export async function handleContractItem({ req, res, userId, path }: RouteParams
     return;
   }
 
-  const { startDate, endDate, meterId } = result.data;
-  
-  if (startDate !== undefined || endDate !== undefined || meterId !== undefined) {
-    const current = await Contract.findById(id).setOptions({ userId });
-    
-    if (current) {
-      const overlapError = await checkContractOverlap({
-        meterId: meterId || (current.meterId as string), 
-        userId, 
-        start: startDate || current.startDate, 
-        end: endDate === undefined ? current.endDate : endDate, 
-        excludeId: id
-      });
-      if (overlapError) {
-        res.statusCode = 400;
-        res.end(JSON.stringify({ error: overlapError }));
-        return;
-      }
-    }
+  const overlapError = await validateContractUpdate(id, userId, result.data);
+  if (overlapError) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: overlapError }));
+    return;
   }
 
   const updated = await Contract.findOneAndUpdate({ _id: { $eq: id } }, { $set: result.data }, { new: true }).setOptions({ userId });
