@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.7](https://github.com/dachrisch/energy.consumption/compare/v3.10.6...v3.10.7) (2026-02-07)
+
+
+### Bug Fixes
+
+* restore dashboard layout and chart visibility, align management card designs ([f1890c0](https://github.com/dachrisch/energy.consumption/commit/f1890c0883193ce606e475e511afb19aa6d579fe))
+
 ### [3.10.6](https://github.com/dachrisch/energy.consumption/compare/v3.10.5...v3.10.6) (2026-02-07)
 
 
