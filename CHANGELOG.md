@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.10.9](https://github.com/dachrisch/energy.consumption/compare/v3.10.8...v3.10.9) (2026-02-07)
+
 ### [3.10.8](https://github.com/dachrisch/energy.consumption/compare/v3.10.7...v3.10.8) (2026-02-07)
 
 
