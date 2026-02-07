@@ -237,6 +237,7 @@ const Meters: Component = () => {
                     </Show>
                     
                     <div class="flex justify-between items-center mt-6 pt-4 border-t border-base-content/5">
+                        <A href={`/meters/${meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Log Reading</A>
                         <div class="flex gap-1">
                             <A href={`/meters/${meter._id}/edit`} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Meter" onClick={(e) => e.stopPropagation()}>
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
@@ -247,7 +248,6 @@ const Meters: Component = () => {
                                 <span class="text-[10px] uppercase tracking-tighter">Delete</span>
                             </button>
                         </div>
-                        <A href={`/meters/${meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Add Reading</A>
                     </div>
                    </div>
                  </div>

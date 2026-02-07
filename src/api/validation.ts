@@ -54,7 +54,7 @@ export const contractSchema = z.object({
   endDate: z.string().pipe(z.coerce.date()).nullable().optional(),
 }).strict();
 
-export const contractUpdateSchema = contractSchema.omit({ meterId: true }).partial().strict();
+export const contractUpdateSchema = contractSchema.partial().strict();
 
 // Unified Export Schema
 export const unifiedExportSchema = z.object({

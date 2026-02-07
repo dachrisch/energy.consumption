@@ -102,17 +102,17 @@ export async function handleContractItem({ req, res, userId, path }: RouteParams
     return;
   }
 
-  const { startDate, endDate } = result.data;
+  const { startDate, endDate, meterId } = result.data;
   
-  if (startDate) {
+  if (startDate !== undefined || endDate !== undefined || meterId !== undefined) {
     const current = await Contract.findById(id).setOptions({ userId });
     
     if (current) {
       const overlapError = await checkContractOverlap({
-        meterId: current.meterId as string, 
+        meterId: meterId || (current.meterId as string), 
         userId, 
-        start: startDate, 
-        end: endDate ?? null, 
+        start: startDate || current.startDate, 
+        end: endDate === undefined ? current.endDate : endDate, 
         excludeId: id
       });
       if (overlapError) {

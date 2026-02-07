@@ -164,8 +164,7 @@ const Contracts: Component = () => {
                   const contract = item.data as Contract;
                   return (
                     <div 
-                      class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden hover:border-primary/30 transition-all hover:shadow-2xl cursor-pointer"
-                      onClick={() => navigate(`/contracts/${contract._id}/edit`)}
+                      class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden hover:border-primary/30 transition-all hover:shadow-2xl"
                     >
                       <div class="card-body p-8">
                         <div class="flex justify-between items-start mb-6">
@@ -189,7 +188,6 @@ const Contracts: Component = () => {
                                 <A 
                                   href={`/meters/${contract.meterId?._id}`} 
                                   class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-3 h-8 lowercase"
-                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {contract.meterId?.name || 'Unknown Meter'}
                                 </A>
@@ -220,13 +218,12 @@ const Contracts: Component = () => {
                             href={`/contracts/${contract._id}/edit`} 
                             class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" 
                             title="Edit Contract"
-                            onClick={(e) => e.stopPropagation()}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             <span class="text-[10px] uppercase tracking-tighter">Edit</span>
                           </A>
                           <button 
-                            onClick={(e) => { e.stopPropagation(); handleDeleteContract(contract._id); }} 
+                            onClick={() => handleDeleteContract(contract._id)} 
                             class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" 
                             title="Delete Contract"
                           >

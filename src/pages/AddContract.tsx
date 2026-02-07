@@ -1,4 +1,5 @@
-import { Component, createSignal, createResource, Show, createEffect } from 'solid-js';
+import { Component, createSignal, createResource, Show, createEffect, batch, untrack } from 'solid-js';
+
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 import FormInput from '../components/FormInput';
@@ -28,6 +29,8 @@ const fetchContract = async (id: string) => {
   return Array.isArray(data) ? data.find((c: Contract) => c._id === id) : data;
 };
 
+
+
 const fetchMeters = async () => {
   const res = await fetch('/api/meters');
   return res.json();
@@ -53,12 +56,17 @@ const AddContract: Component = () => {
   const navigate = useNavigate();
 
   // Sync data when editing
+  let lastSyncedId: string | null = null;
   createEffect(() => {
     const c = contract();
-    if (isEdit() && c) {
-      _syncData(c);
+    if (isEdit() && c && c._id !== lastSyncedId) {
+      lastSyncedId = c._id;
+      untrack(() => _syncData(c));
     }
   });
+
+
+
 
   // Handle pre-fill from search params
   createEffect(() => {
@@ -111,16 +119,19 @@ const AddContract: Component = () => {
 
   const _syncData = (data: Contract) => {
     if (data) {
-      setProviderName(data.providerName);
-      setType(data.type);
-      setStartDate(new Date(data.startDate).toISOString().split('T')[0]);
-      if (data.endDate) {setEndDate(new Date(data.endDate).toISOString().split('T')[0]);}
-      setBasePrice(data.basePrice.toString());
-      setWorkingPrice(data.workingPrice.toString());
-      const mId = typeof data.meterId === 'string' ? data.meterId : (data.meterId as { _id: string })?._id;
-      if (mId) { setMeterId(mId); }
+      batch(() => {
+        setProviderName(data.providerName);
+        setType(data.type);
+        setStartDate(new Date(data.startDate).toISOString().split('T')[0]);
+        if (data.endDate) {setEndDate(new Date(data.endDate).toISOString().split('T')[0]);}
+        setBasePrice(data.basePrice.toString());
+        setWorkingPrice(data.workingPrice.toString());
+        const mId = typeof data.meterId === 'string' ? data.meterId : (data.meterId as { _id: string })?._id;
+        if (mId) { setMeterId(mId); }
+      });
     }
   };
+
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -244,6 +255,8 @@ const AddContract: Component = () => {
                   onInput={(e) => setWorkingPrice(e.currentTarget.value)}
                   required
                 />
+
+
               </div>
 
               <div class="card-actions justify-end pt-6">
