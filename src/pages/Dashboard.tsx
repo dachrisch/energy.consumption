@@ -164,76 +164,31 @@ const DashboardWarnings: Component<{ data: {
   hasPartialGaps: boolean;
   hasMeters: boolean;
 } }> = (props) => {
-  const navigate = useNavigate();
   return (
-    <div class="card bg-base-100 shadow-xl border border-base-content/5 hover:border-primary/30 transition-all group overflow-hidden hover:shadow-2xl cursor-pointer"
-         onClick={() => navigate('/contracts')}>
-        <div class="card-body p-8">
-            <div class="flex justify-between items-start mb-6">
-                <div class="p-3 rounded-2xl bg-primary/10 text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs font-black uppercase tracking-widest opacity-40">Contract Health</p>
-                    <p class="font-bold text-sm text-primary">Active</p>
+    <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4 h-full relative group">
+        <Show when={props.data.hasMissingContracts || props.data.hasPartialGaps}>
+            <div class="absolute top-4 right-4">
+                <div class="tooltip tooltip-left before:text-xs" data-tip="Coverage gaps detected">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-warning"></span>
+                    </span>
                 </div>
             </div>
-
-            <h3 class="text-2xl font-black tracking-tight mb-1">Contract Management</h3>
-            <div class="mb-6 flex gap-2 items-center">
-                <Show when={props.data.hasMissingContracts || props.data.hasPartialGaps} fallback={<span class="badge badge-sm badge-success font-black uppercase tracking-tighter">Fully Covered</span>}>
-                    <span class="badge badge-sm badge-warning font-black uppercase tracking-tighter animate-pulse">Attention Required</span>
-                </Show>
-            </div>
-
-            <div class="space-y-4 pt-6 border-t border-base-content/5">
-                <Show when={props.data.hasMissingContracts}>
-                  <div class="flex items-center gap-4 bg-warning/5 border border-warning/10 p-4 rounded-2xl">
-                     <div class="bg-warning/10 text-warning p-2 rounded-xl">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                     </div>
-                     <div class="flex-1">
-                        <p class="text-xs font-black uppercase tracking-wider text-warning">Pricing Missing</p>
-                        <p class="text-[11px] font-bold opacity-40">Meters without contracts.</p>
-                     </div>
-                     <A href="/contracts/add" class="btn btn-warning btn-xs rounded-lg font-black" onClick={(e) => e.stopPropagation()}>Add</A>
-                  </div>
-                </Show>
-
-                <Show when={props.data.hasPartialGaps}>
-                  <div class="flex items-center gap-4 bg-primary/5 border border-primary/10 p-4 rounded-2xl">
-                     <div class="bg-primary/10 text-primary p-2 rounded-xl">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-12 0 9 9 0 0112 0z" /></svg>
-                     </div>
-                     <div class="flex-1">
-                        <p class="text-xs font-black uppercase tracking-wider text-primary">Coverage Gaps</p>
-                        <p class="text-[11px] font-bold opacity-40">Incomplete periods.</p>
-                     </div>
-                     <A href="/contracts" class="btn btn-primary btn-xs rounded-lg font-black" onClick={(e) => e.stopPropagation()}>Fix</A>
-                  </div>
-                </Show>
-
-                <Show when={!props.data.hasMissingContracts && !props.data.hasPartialGaps}>
-                    <div class="py-4 text-center">
-                        <div class="bg-success/10 text-success p-4 rounded-full w-fit mx-auto mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                        </div>
-                        <p class="text-xs font-black uppercase opacity-40">All contracts up to date</p>
-                    </div>
-                </Show>
-            </div>
-            
-            <div class="flex justify-between items-center mt-auto pt-4 border-t border-base-content/5">
-                <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Quick Actions</p>
-                <A href="/contracts" class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>View All</A>
-            </div>
+        </Show>
+        <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
         </div>
+        <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Contract Management</h3>
+        <p class="text-sm font-bold text-base-content/60 max-w-xs">
+            Manage your energy provider pricing, active contracts and historical gaps.
+        </p>
+        <A href="/contracts" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Contracts</A>
     </div>
   );
 };
 
 const DashboardEmptyState: Component<{ hasMeters: boolean }> = (props) => {
-  const navigate = useNavigate();
   return (
   <>
     <Show when={!props.hasMeters}>
@@ -248,33 +203,15 @@ const DashboardEmptyState: Component<{ hasMeters: boolean }> = (props) => {
     </Show>
 
     <Show when={props.hasMeters}>
-      <div class="card bg-base-100 shadow-xl border border-base-content/5 hover:border-primary/30 transition-all group overflow-hidden hover:shadow-2xl cursor-pointer"
-           onClick={() => navigate('/meters')}>
-        <div class="card-body p-8">
-            <div class="flex justify-between items-start mb-6">
-                <div class="p-3 rounded-2xl bg-primary/10 text-primary">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs font-black uppercase tracking-widest opacity-40">Infrastructure</p>
-                    <p class="font-bold text-sm text-primary">Active</p>
-                </div>
-            </div>
-
-            <h3 class="text-2xl font-black tracking-tight mb-1">Meter Management</h3>
-            <div class="mb-6">
-                <span class="badge badge-sm badge-ghost font-black uppercase tracking-tighter">Utility Nodes</span>
-            </div>
-
-            <p class="text-sm font-bold text-base-content/60 pt-6 border-t border-base-content/5">
-                Manage your individual meters, history and recorded infrastructure.
-            </p>
-            
-            <div class="flex justify-between items-center mt-auto pt-4 border-t border-base-content/5">
-                <p class="text-[10px] font-black uppercase tracking-widest opacity-40">System Access</p>
-                <A href="/meters" class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Go to Meters</A>
-            </div>
-        </div>
+      <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4 h-full">
+         <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+         </div>
+         <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Meter Management</h3>
+         <p class="text-sm font-bold text-base-content/60 max-w-xs">
+           Manage your individual meters, history and infrastructure in the new section.
+         </p>
+         <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Meters</A>
       </div>
     </Show>
   </>
