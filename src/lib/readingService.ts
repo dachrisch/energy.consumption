@@ -13,13 +13,16 @@ interface UnifiedImportData {
   contracts?: Array<{ meterId: string; providerName: string; startDate: string; endDate?: string; basePrice: number; workingPrice: number; type: 'power' | 'gas' }>;
 }
 
+interface MeterImportOptions {
+  data: UnifiedImportData;
+  userId: string;
+  MeterModel: Model<IMeter>;
+  result: { metersCreated: number; errors: Array<{ index: number; message: string }> };
+}
+
 // Helper: Import meters and build ID map
-async function importMeters(
-  data: UnifiedImportData,
-  userId: string,
-  MeterModel: Model<IMeter>,
-  result: { metersCreated: number; errors: Array<{ index: number; message: string }> }
-): Promise<Map<string, string>> {
+async function importMeters(options: MeterImportOptions): Promise<Map<string, string>> {
+  const { data, userId, MeterModel, result } = options;
   const meterIdMap = new Map<string, string>();
 
   if (!Array.isArray(data.meters)) {
@@ -57,14 +60,17 @@ async function importMeters(
   return meterIdMap;
 }
 
+interface ReadingImportOptions {
+  data: UnifiedImportData;
+  userId: string;
+  meterIdMap: Map<string, string>;
+  ReadingModel: Model<IReading>;
+  result: { successCount: number; skippedCount: number; errors: Array<{ index: number; message: string }> };
+}
+
 // Helper: Import readings
-async function importReadings(
-  data: UnifiedImportData,
-  userId: string,
-  meterIdMap: Map<string, string>,
-  ReadingModel: Model<IReading>,
-  result: { successCount: number; skippedCount: number; errors: Array<{ index: number; message: string }> }
-): Promise<void> {
+async function importReadings(options: ReadingImportOptions): Promise<void> {
+  const { data, userId, meterIdMap, ReadingModel, result } = options;
   if (!Array.isArray(data.readings)) {
     return;
   }
@@ -109,14 +115,17 @@ async function importReadings(
   }
 }
 
+interface ContractImportOptions {
+  data: UnifiedImportData;
+  userId: string;
+  meterIdMap: Map<string, string>;
+  ContractModel: Model<IContract>;
+  result: { contractsCreated: number; errors: Array<{ index: number; message: string }> };
+}
+
 // Helper: Import contracts
-async function importContracts(
-  data: UnifiedImportData,
-  userId: string,
-  meterIdMap: Map<string, string>,
-  ContractModel: Model<IContract>,
-  result: { contractsCreated: number; errors: Array<{ index: number; message: string }> }
-): Promise<void> {
+async function importContracts(options: ContractImportOptions): Promise<void> {
+  const { data, userId, meterIdMap, ContractModel, result } = options;
   if (!Array.isArray(data.contracts)) {
     return;
   }
@@ -165,16 +174,21 @@ async function importContracts(
   }
 }
 
+interface UnifiedImportOptions {
+  backupData: unknown;
+  userId: string;
+  MeterModel: Model<IMeter>;
+  ReadingModel: Model<IReading>;
+  ContractModel: Model<IContract>;
+}
+
 /**
  * Processes a full unified import including meters, readings, and contracts.
  */
 export async function processUnifiedImport(
-  backupData: unknown,
-  userId: string,
-  MeterModel: Model<IMeter>,
-  ReadingModel: Model<IReading>,
-  ContractModel: Model<IContract>
+  options: UnifiedImportOptions
 ): Promise<BulkImportResult & { metersCreated: number; contractsCreated: number }> {
+  const { backupData, userId, MeterModel, ReadingModel, ContractModel } = options;
   if (typeof backupData !== 'object' || backupData === null || !('data' in backupData)) {
     throw new Error('Invalid backup data structure');
   }
@@ -191,13 +205,13 @@ export async function processUnifiedImport(
   };
 
   // 1. Import Meters
-  const meterIdMap = await importMeters(data, userId, MeterModel, result);
+  const meterIdMap = await importMeters({ data, userId, MeterModel, result });
 
   // 2. Import Readings
-  await importReadings(data, userId, meterIdMap, ReadingModel, result);
+  await importReadings({ data, userId, meterIdMap, ReadingModel, result });
 
   // 3. Import Contracts
-  await importContracts(data, userId, meterIdMap, ContractModel, result);
+  await importContracts({ data, userId, meterIdMap, ContractModel, result });
 
   return result;
 }

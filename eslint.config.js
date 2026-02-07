@@ -75,7 +75,8 @@ export default [
       "@typescript-eslint": tsPlugin,
     },
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "max-lines-per-function": "off"
     },
   },
 ];

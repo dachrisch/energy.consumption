@@ -2,6 +2,65 @@ import { Component, createSignal, Show } from 'solid-js';
 import { useNavigate, A } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 
+interface RegisterFormProps {
+  name: string;
+  setName: (v: string) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  password: string;
+  setPassword: (v: string) => void;
+  onSubmit: (e: Event) => void;
+}
+
+const RegisterForm: Component<RegisterFormProps> = (props) => (
+  <form onSubmit={props.onSubmit} class="space-y-8 w-full">
+    <div class="form-control w-full flex flex-col gap-2">
+      <label class="px-1">
+        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Full Name</span>
+      </label>
+      <input
+        type="text"
+        placeholder="John Doe"
+        class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+        value={props.name}
+        onInput={(e) => props.setName(e.currentTarget.value)}
+        required
+      />
+    </div>
+    <div class="form-control w-full flex flex-col gap-2">
+      <label class="px-1">
+        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Email Address</span>
+      </label>
+      <input
+        type="email"
+        placeholder="email@example.com"
+        class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+        value={props.email}
+        onInput={(e) => props.setEmail(e.currentTarget.value)}
+        required
+      />
+    </div>
+    <div class="form-control w-full flex flex-col gap-2">
+      <label class="px-1">
+        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Password</span>
+      </label>
+      <input
+        type="password"
+        placeholder="••••••••"
+        class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+        value={props.password}
+        onInput={(e) => props.setPassword(e.currentTarget.value)}
+        required
+      />
+    </div>
+    <div class="form-control mt-6 w-full">
+      <button type="submit" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full">
+        Create Account
+      </button>
+    </div>
+  </form>
+);
+
 const Register: Component = () => {
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
@@ -57,52 +116,12 @@ const Register: Component = () => {
                 </div>
               }
             >
-              <form onSubmit={handleRegister} class="space-y-8 w-full">
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1">
-                    <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Full Name</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
-                    value={name()}
-                    onInput={(e) => setName(e.currentTarget.value)}
-                    required
-                  />
-                </div>
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1">
-                    <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Email Address</span>
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="email@example.com"
-                    class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
-                    value={email()}
-                    onInput={(e) => setEmail(e.currentTarget.value)}
-                    required
-                  />
-                </div>
-                <div class="form-control w-full flex flex-col gap-2">
-                  <label class="px-1">
-                    <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Password</span>
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
-                    value={password()}
-                    onInput={(e) => setPassword(e.currentTarget.value)}
-                    required
-                  />
-                </div>
-                <div class="form-control mt-6 w-full">
-                  <button type="submit" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full">
-                    Create Account
-                  </button>
-                </div>
-              </form>
+              <RegisterForm 
+                name={name()} setName={setName}
+                email={email()} setEmail={setEmail}
+                password={password()} setPassword={setPassword}
+                onSubmit={handleRegister}
+              />
               
               <div class="divider my-8 opacity-20 w-full">OR</div>
               

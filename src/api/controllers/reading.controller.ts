@@ -190,7 +190,13 @@ export async function handleUnifiedImport({ req, res, userId }: RouteParams) {
       return;
     }
 
-    const importResult = await processUnifiedImport(result.data, userId, Meter, Reading, Contract);
+    const importResult = await processUnifiedImport({
+      backupData: result.data, 
+      userId, 
+      MeterModel: Meter, 
+      ReadingModel: Reading, 
+      ContractModel: Contract
+    });
 
     res.statusCode = 200;
     res.end(JSON.stringify(importResult));

@@ -89,78 +89,80 @@ const TrendValue: Component<{ current: number, previous: number, showValue?: boo
     );
 };
 
+const getDashboardChartData = (aggregates: Aggregates) => ({
+    labels: aggregates.yearlyHistory.map(h => h.year.toString()),
+    datasets: [
+        {
+            label: 'Power (€)',
+            data: aggregates.yearlyHistory.map(h => h.powerCost),
+            backgroundColor: '#facc15', // Golden
+            hoverBackgroundColor: '#facc15',
+            borderRadius: 4,
+            borderSkipped: false,
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
+        },
+        {
+            label: 'Gas (€)',
+            data: aggregates.yearlyHistory.map(h => h.gasCost),
+            backgroundColor: '#9311fb', // Using brand primary for gas/secondary
+            hoverBackgroundColor: '#9311fb',
+            borderRadius: 4,
+            borderSkipped: false,
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
+        }
+    ]
+});
+
+const dashboardChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 0 },
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            backgroundColor: '#2b2d42',
+            titleFont: { weight: 'bold' },
+            padding: 12,
+            cornerRadius: 12,
+            displayColors: true,
+            callbacks: {
+                label: (context: TooltipItem<'bar'>) => {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                        label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                        label += new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+                    }
+                    return label;
+                }
+            }
+        }
+    },
+    scales: {
+        x: { 
+            stacked: true,
+            display: true,
+            grid: { display: false },
+            border: { display: false },
+            ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
+        },
+        y: { 
+            stacked: true,
+            display: false
+        }
+    }
+};
+
 const DashboardAggregates: Component<{ data: {
   hasMeters: boolean;
   hasPower: boolean;
   hasGas: boolean;
   aggregates: Aggregates;
 } }> = (props) => {
-    const chartData = () => ({
-        labels: props.data.aggregates.yearlyHistory.map(h => h.year.toString()),
-        datasets: [
-            {
-                label: 'Power (€)',
-                data: props.data.aggregates.yearlyHistory.map(h => h.powerCost),
-                backgroundColor: '#facc15', // Golden
-                hoverBackgroundColor: '#facc15',
-                borderRadius: 4,
-                borderSkipped: false,
-                barPercentage: 0.6,
-                categoryPercentage: 0.8
-            },
-            {
-                label: 'Gas (€)',
-                data: props.data.aggregates.yearlyHistory.map(h => h.gasCost),
-                backgroundColor: '#9311fb', // Using brand primary for gas/secondary
-                hoverBackgroundColor: '#9311fb',
-                borderRadius: 4,
-                borderSkipped: false,
-                barPercentage: 0.6,
-                categoryPercentage: 0.8
-            }
-        ]
-    });
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 0 },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: '#2b2d42',
-                titleFont: { weight: 'bold' },
-                padding: 12,
-                cornerRadius: 12,
-                displayColors: true,
-                callbacks: {
-                    label: (context: TooltipItem<'bar'>) => {
-                        let label = context.dataset.label || '';
-                        if (label) {
-                            label += ': ';
-                        }
-                        if (context.parsed.y !== null) {
-                            label += new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
-                        }
-                        return label;
-                    }
-                }
-            }
-        },
-        scales: {
-            x: { 
-                stacked: true,
-                display: true,
-                grid: { display: false },
-                border: { display: false },
-                ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
-            },
-            y: { 
-                stacked: true,
-                display: false
-            }
-        }
-    };
+    const chartData = () => getDashboardChartData(props.data.aggregates);
 
     return (
         <Show when={props.data.hasMeters}>
@@ -191,7 +193,7 @@ const DashboardAggregates: Component<{ data: {
                     </div>
                     <div class="p-6 flex-1 bg-white/5 relative h-48 md:h-auto">
                         <div class="h-full w-full">
-                             <Bar data={chartData()} options={chartOptions} />
+                             <Bar data={chartData()} options={dashboardChartOptions} />
                         </div>
                     </div>
                 </div>

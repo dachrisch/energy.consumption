@@ -86,7 +86,126 @@ const fetchExportData = async (options: { includeMeters: boolean; includeReading
   return response.json();
 };
 
-// eslint-disable-next-line complexity
+const ExportCheckbox: Component<{
+  label: string;
+  count: number;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  countLabel: string;
+}> = (props) => (
+  <label class="flex items-center gap-3 p-4 rounded-lg border-2 border-base-content/10 cursor-pointer hover:bg-base-200/30 hover:border-base-content/20 transition-all">
+    <input
+      type="checkbox"
+      checked={props.checked}
+      onChange={(e) => props.onChange(e.currentTarget.checked)}
+      class="checkbox checkbox-primary checkbox-lg"
+    />
+    <div class="flex-1 min-w-0">
+      <div class="font-bold text-base">{props.label}</div>
+      <div class="text-xs opacity-60">{props.count} {props.countLabel}{props.count !== 1 ? 's' : ''}</div>
+    </div>
+  </label>
+);
+
+const ExportPreview: Component<{
+  includeMeters: boolean;
+  includeReadings: boolean;
+  includeContracts: boolean;
+  meters: Meter[];
+  readings: Reading[];
+  contracts: Contract[];
+}> = (props) => (
+  <div class="bg-base-200/50 p-5 rounded-xl mb-6 border border-base-content/10">
+    <p class="text-xs font-bold uppercase tracking-widest opacity-60 mb-4">Export Preview</p>
+    <div class="space-y-3">
+      {/* Meters Preview */}
+      <Show when={props.includeMeters}>
+        <div class="text-sm space-y-1">
+          <p class="font-semibold flex items-center gap-2">
+            <span class="text-primary">✓</span>
+            Meters ({props.meters.length})
+          </p>
+          <Show when={props.meters.length > 0}>
+            <ul class="ml-6 space-y-1 opacity-70 text-xs">
+              <For each={props.meters.slice(0, 3)}>
+                {(meter) => <li>• {meter.name}</li>}
+              </For>
+              <Show when={props.meters.length > 3}>
+                <li class="italic">+ {props.meters.length - 3} more...</li>
+              </Show>
+            </ul>
+          </Show>
+        </div>
+      </Show>
+
+      {/* Readings Preview */}
+      <Show when={props.includeReadings}>
+        <div class="text-sm space-y-1">
+          <p class="font-semibold flex items-center gap-2">
+            <span class="text-primary">✓</span>
+            Readings ({props.readings.length})
+          </p>
+          <Show when={props.readings.length > 0}>
+            <div class="ml-6 opacity-70 text-xs">
+              {formatDateRange(props.readings)}
+            </div>
+          </Show>
+        </div>
+      </Show>
+
+      {/* Contracts Preview */}
+      <Show when={props.includeContracts}>
+        <div class="text-sm space-y-1">
+          <p class="font-semibold flex items-center gap-2">
+            <span class="text-primary">✓</span>
+            Contracts ({props.contracts.length})
+          </p>
+          <Show when={props.contracts.length > 0}>
+            <ul class="ml-6 space-y-1 opacity-70 text-xs">
+              <For each={props.contracts.slice(0, 3)}>
+                {(contract) => <li>• {contract.providerName}</li>}
+              </For>
+              <Show when={props.contracts.length > 3}>
+                <li class="italic">+ {props.contracts.length - 3} more...</li>
+              </Show>
+            </ul>
+          </Show>
+        </div>
+      </Show>
+
+      {/* Empty State */}
+      <Show when={!props.includeMeters && !props.includeReadings && !props.includeContracts}>
+        <p class="text-sm opacity-60 text-center py-2 italic">No data selected for export</p>
+      </Show>
+
+      {/* Format Info */}
+      <Show when={props.includeMeters || props.includeReadings || props.includeContracts}>
+        <div class="pt-2 border-t border-base-content/10 text-xs opacity-60">
+          Format: Unified JSON with metadata
+        </div>
+      </Show>
+    </div>
+  </div>
+);
+
+const handleExportDownload = async (
+  options: { includeMeters: boolean; includeReadings: boolean; includeContracts: boolean },
+  setIsLoading: (v: boolean) => void,
+  onClose: () => void
+) => {
+  setIsLoading(true);
+  try {
+    const data = await fetchExportData(options);
+    downloadFile(data);
+    onClose();
+  } catch (error) {
+    console.error('Export error:', error);
+    alert('Failed to export data. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 const ExportModal: Component<ExportModalProps> = (props) => {
   const [includeMeters, setIncludeMeters] = createSignal(true);
   const [includeReadings, setIncludeReadings] = createSignal(true);
@@ -105,31 +224,15 @@ const ExportModal: Component<ExportModalProps> = (props) => {
           setReadings(rd || []);
           setContracts(c || []);
         })
-        .catch((err) => {
-          console.error('Failed to fetch data:', err);
-        });
+        .catch((err) => console.error('Failed to fetch data:', err));
     }
   });
 
-  const handleDownload = async () => {
-     setIsLoading(true);
-     try {
-       const options = {
-         includeMeters: includeMeters(),
-         includeReadings: includeReadings(),
-         includeContracts: includeContracts()
-       };
-
-       const data = await fetchExportData(options);
-       downloadFile(data);
-       props.onClose();
-     } catch (error) {
-       console.error('Export error:', error);
-       alert('Failed to export data. Please try again.');
-     } finally {
-       setIsLoading(false);
-     }
-   };
+  const onDownload = () => handleExportDownload(
+    { includeMeters: includeMeters(), includeReadings: includeReadings(), includeContracts: includeContracts() },
+    setIsLoading,
+    props.onClose
+  );
 
   return (
     <Show when={props.isOpen}>
@@ -138,141 +241,25 @@ const ExportModal: Component<ExportModalProps> = (props) => {
           <div class="modal-box w-11/12 max-w-md">
             <h3 class="font-bold text-lg mb-6">Export Data</h3>
 
-            {/* Checkboxes Section */}
             <div class="space-y-2 mb-8">
-              {/* Meters Checkbox */}
-              <label class="flex items-center gap-3 p-4 rounded-lg border-2 border-base-content/10 cursor-pointer hover:bg-base-200/30 hover:border-base-content/20 transition-all">
-                <input
-                  type="checkbox"
-                  checked={includeMeters()}
-                  onChange={(e) => setIncludeMeters(e.currentTarget.checked)}
-                  class="checkbox checkbox-primary checkbox-lg"
-                />
-                <div class="flex-1 min-w-0">
-                  <div class="font-bold text-base">Meters</div>
-                  <div class="text-xs opacity-60">{props.meterCount} meter{props.meterCount !== 1 ? 's' : ''}</div>
-                </div>
-              </label>
-
-              {/* Readings Checkbox */}
-              <label class="flex items-center gap-3 p-4 rounded-lg border-2 border-base-content/10 cursor-pointer hover:bg-base-200/30 hover:border-base-content/20 transition-all">
-                <input
-                  type="checkbox"
-                  checked={includeReadings()}
-                  onChange={(e) => setIncludeReadings(e.currentTarget.checked)}
-                  class="checkbox checkbox-primary checkbox-lg"
-                />
-                <div class="flex-1 min-w-0">
-                  <div class="font-bold text-base">Readings</div>
-                  <div class="text-xs opacity-60">{props.readingCount} reading{props.readingCount !== 1 ? 's' : ''}</div>
-                </div>
-              </label>
-
-              {/* Contracts Checkbox */}
-              <label class="flex items-center gap-3 p-4 rounded-lg border-2 border-base-content/10 cursor-pointer hover:bg-base-200/30 hover:border-base-content/20 transition-all">
-                <input
-                  type="checkbox"
-                  checked={includeContracts()}
-                  onChange={(e) => setIncludeContracts(e.currentTarget.checked)}
-                  class="checkbox checkbox-primary checkbox-lg"
-                />
-                <div class="flex-1 min-w-0">
-                  <div class="font-bold text-base">Contracts</div>
-                  <div class="text-xs opacity-60">{props.contractCount} contract{props.contractCount !== 1 ? 's' : ''}</div>
-                </div>
-              </label>
+              <ExportCheckbox label="Meters" count={props.meterCount} checked={includeMeters()} onChange={setIncludeMeters} countLabel="meter" />
+              <ExportCheckbox label="Readings" count={props.readingCount} checked={includeReadings()} onChange={setIncludeReadings} countLabel="reading" />
+              <ExportCheckbox label="Contracts" count={props.contractCount} checked={includeContracts()} onChange={setIncludeContracts} countLabel="contract" />
             </div>
 
-            {/* Preview Section */}
-            <div class="bg-base-200/50 p-5 rounded-xl mb-6 border border-base-content/10">
-              <p class="text-xs font-bold uppercase tracking-widest opacity-60 mb-4">Export Preview</p>
-              <div class="space-y-3">
-                {/* Meters Preview */}
-                <Show when={includeMeters()}>
-                  <div class="text-sm space-y-1">
-                    <p class="font-semibold flex items-center gap-2">
-                      <span class="text-primary">✓</span>
-                      Meters ({meters().length})
-                    </p>
-                    <Show when={meters().length > 0}>
-                      <ul class="ml-6 space-y-1 opacity-70 text-xs">
-                        <For each={meters().slice(0, 3)}>
-                          {(meter) => <li>• {meter.name}</li>}
-                        </For>
-                        <Show when={meters().length > 3}>
-                          <li class="italic">+ {meters().length - 3} more...</li>
-                        </Show>
-                      </ul>
-                    </Show>
-                  </div>
-                </Show>
+            <ExportPreview 
+              includeMeters={includeMeters()} includeReadings={includeReadings()} includeContracts={includeContracts()}
+              meters={meters()} readings={readings()} contracts={contracts()}
+            />
 
-                {/* Readings Preview */}
-                <Show when={includeReadings()}>
-                  <div class="text-sm space-y-1">
-                    <p class="font-semibold flex items-center gap-2">
-                      <span class="text-primary">✓</span>
-                      Readings ({readings().length})
-                    </p>
-                    <Show when={readings().length > 0}>
-                      <div class="ml-6 opacity-70 text-xs">
-                        {formatDateRange(readings())}
-                      </div>
-                    </Show>
-                  </div>
-                </Show>
-
-                {/* Contracts Preview */}
-                <Show when={includeContracts()}>
-                  <div class="text-sm space-y-1">
-                    <p class="font-semibold flex items-center gap-2">
-                      <span class="text-primary">✓</span>
-                      Contracts ({contracts().length})
-                    </p>
-                    <Show when={contracts().length > 0}>
-                      <ul class="ml-6 space-y-1 opacity-70 text-xs">
-                        <For each={contracts().slice(0, 3)}>
-                          {(contract) => <li>• {contract.providerName}</li>}
-                        </For>
-                        <Show when={contracts().length > 3}>
-                          <li class="italic">+ {contracts().length - 3} more...</li>
-                        </Show>
-                      </ul>
-                    </Show>
-                  </div>
-                </Show>
-
-                {/* Empty State */}
-                <Show when={!includeMeters() && !includeReadings() && !includeContracts()}>
-                  <p class="text-sm opacity-60 text-center py-2 italic">No data selected for export</p>
-                </Show>
-
-                {/* Format Info */}
-                <Show when={includeMeters() || includeReadings() || includeContracts()}>
-                  <div class="pt-2 border-t border-base-content/10 text-xs opacity-60">
-                    Format: Unified JSON with metadata
-                  </div>
-                </Show>
-              </div>
-            </div>
-
-            {/* Actions */}
             <div class="modal-action">
+              <button onClick={props.onClose} class="btn" disabled={isLoading()}>Cancel</button>
               <button
-                onClick={props.onClose}
-                class="btn"
-                disabled={isLoading()}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDownload}
+                onClick={onDownload}
                 disabled={isLoading() || (!includeMeters() && !includeReadings() && !includeContracts())}
                 class="btn btn-primary"
               >
-                <Show when={!isLoading()} fallback={<span class="loading loading-spinner loading-sm"></span>}>
-                  Download
-                </Show>
+                <Show when={!isLoading()} fallback={<span class="loading loading-spinner loading-sm"></span>}>Download</Show>
               </button>
             </div>
           </div>
