@@ -52,6 +52,9 @@ const TrendValue: Component<{ current: number, previous: number }> = (p) => {
 const getThemeColor = (name: string) => (typeof window === 'undefined') ? '#000' : (getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#000');
 
 const getChartData = (agg: Aggregates) => {
+  if (!agg || !agg.yearlyHistory) {
+    return { labels: [], datasets: [] };
+  }
   const pc = getThemeColor('--color-meter-power-chart'); const gc = getThemeColor('--color-meter-gas-chart');
   return {
     labels: agg.yearlyHistory.map(h => h.year.toString()),
