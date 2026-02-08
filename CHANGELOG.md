@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.1](https://github.com/dachrisch/energy.consumption/compare/v3.11.0...v3.11.1) (2026-02-08)
+
+
+### Bug Fixes
+
+* eliminate horizontal scrollbar on mobile by improving layout flexibility ([f93cb14](https://github.com/dachrisch/energy.consumption/commit/f93cb1471d9b4b893d9b69d15df80750508cf077))
+* eliminate horizontal scrollbar on mobile with global overflow prevention and component refinements ([977d199](https://github.com/dachrisch/energy.consumption/commit/977d199eb661b77ab4af91f2b659bc3c85a67ad2))
+* make dashboard cost charts responsive below 600px ([879f9d9](https://github.com/dachrisch/energy.consumption/commit/879f9d990a865f4290e459016259c1636a463b9e))
+
 ## [3.11.0](https://github.com/dachrisch/energy.consumption/compare/v3.10.13...v3.11.0) (2026-02-07)
 
 
