@@ -8,7 +8,7 @@ const App: ParentComponent = (props) => {
   const auth = useAuth();
 
   return (
-    <div class="min-h-screen bg-base-300 flex items-center justify-center p-0 md:p-4 lg:p-8">
+    <div class="min-h-screen bg-base-300 flex items-start justify-center p-0 md:p-4 lg:p-8">
       <div class="w-full min-h-screen md:min-h-0 md:h-full max-w-[1400px] bg-base-200 md:rounded-3xl md:shadow-2xl overflow-hidden flex flex-col border border-base-content/5 relative">
         <Show when={auth.user()}>
           <Navigation />

@@ -5,10 +5,10 @@
   --color-brand-violet: #6b21a8;
   --color-primary: var(--color-brand-violet);
   --color-primary-content: #ffffff;
-  --color-meter-power: #facc15; /* Golden */
-  --color-meter-gas: #9311fb;   /* Brand Secondary */
-  --color-meter-power-chart: #fbbf24; /* Amber 400 - Muted Golden */
-  --color-meter-gas-chart: #818cf8;   /* Indigo 400 - Clean Blue-Purple */
+  --color-meter-power: #FFAA00;
+  --color-meter-gas: #6000FB;
+  --color-meter-power-chart: #FFB733; /* Slightly lighter/cleaner hue shift */
+  --color-meter-gas-chart: #7A33FF;   /* Slightly lighter/cleaner hue shift */
 }
 
 *, ::before, ::after {
