@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.2](https://github.com/dachrisch/energy.consumption/compare/v3.11.1...v3.11.2) (2026-02-08)
+
+
+### Bug Fixes
+
+* ensure dashboard charts and finance sections are visible by correcting Show component usage ([f89edfd](https://github.com/dachrisch/energy.consumption/commit/f89edfdfdc8e70b8515c90e573cda5b42c94032b))
+* ensure dashboard charts update after import by refactoring data processing to be reactive ([22fc28e](https://github.com/dachrisch/energy.consumption/commit/22fc28ec0a9a35ad608663a724529e3d5f349962))
+* ensure dashboard finance section visibility by adding explicit empty state and improving resource handling ([32e1672](https://github.com/dachrisch/energy.consumption/commit/32e16729926bf2679f90cdac96fc3c1a0cbd5487))
+* prevent dashboard crash by adding guard for missing aggregate data in chart ([e26fb56](https://github.com/dachrisch/energy.consumption/commit/e26fb56e66aa3dcfa7553feabf6e3da04b92d141))
+* restore dashboard visibility by refactoring components and improving data processing robustness ([a67357c](https://github.com/dachrisch/energy.consumption/commit/a67357c3d597f2e7817274ca7acd5e1a5e4aa40f))
+
 ### [3.11.1](https://github.com/dachrisch/energy.consumption/compare/v3.11.0...v3.11.1) (2026-02-08)
 
 
