@@ -119,7 +119,7 @@ const Dashboard: Component = () => {
     <DashboardHeader onImport={() => setImportOpen(true)} />
     <Show when={!rawData.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
       <div class="flex flex-col gap-6"><div class="w-full"><Show when={data()}>{(d) => <DashboardAggregates data={d} />}</Show></div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch"><Show when={data()}>{( _ ) => <><EmptyState title="Meters" description="Manage infrastructure." actionLabel="Meters" actionLink="/meters" icon={<Icon name="meter" class="h-10 w-10" />} />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch"><Show when={data()}>{(_d) => <><EmptyState title="Meters" description="Manage infrastructure." actionLabel="Meters" actionLink="/meters" icon={<Icon name="meter" class="h-10 w-10" />} />
           <div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative"><div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="contract" class="h-10 w-10" /></div><h3 class="text-lg font-black uppercase opacity-40">Contracts</h3><p class="text-sm font-bold opacity-60">Manage pricing.</p><A href="/contracts" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Contracts</A></div></>}</Show></div>
       </div></Show></div>);
 };
