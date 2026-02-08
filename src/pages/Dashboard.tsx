@@ -8,6 +8,7 @@ import { findContractGaps, Gap } from '../lib/gapDetection';
 import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale, TooltipItem } from 'chart.js';
 import { Bar } from 'solid-chartjs';
 import Icon from '../components/Icon';
+import EmptyState from '../components/EmptyState';
 
 Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
 
@@ -116,12 +117,15 @@ interface ProcessedDashboardData {
 
 const processDashboardData = (d: { meters: Meter[], readings: Reading[], contracts: Contract[] } | undefined): ProcessedDashboardData | null => {
   if (!d) { return null; }
-  const { meters, readings, contracts } = d;
+  const meters = d.meters || [];
+  const readings = d.readings || [];
+  const contracts = d.contracts || [];
+  
   const agg = calculateAggregates(meters, readings, contracts) as Aggregates;
   const noC = meters.filter((m: Meter) => !getMeterContracts(m, contracts).length);
   const gaps = getMetersWithGaps(meters, readings, contracts, noC);
   return { 
-    ...d, 
+    meters, readings, contracts,
     aggregates: agg, 
     hasPower: meters.some((m: Meter) => m.type === 'power'), 
     hasGas: meters.some((m: Meter) => m.type === 'gas'), 
@@ -140,18 +144,16 @@ const DashboardAggregates: Component<{ data: ProcessedDashboardData }> = (p) => 
   const cOpts = createMemo(() => getChartOpts(isMob()));
   
   return (
-    <Show when={p.data?.hasMeters}>
-      <div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group w-full min-w-0">
-        <div class="flex flex-col md:flex-row h-full min-w-0">
-          <SummaryPanel agg={p.data.aggregates} hasPower={p.data.hasPower} hasGas={p.data.hasGas} />
-          <div class={`p-4 md:p-6 flex-1 bg-white/5 relative ${isMob() ? 'h-[250px]' : 'h-48 md:h-auto'} overflow-hidden min-w-0`}>
-            <div class="h-full w-full relative">
-              <Bar data={cData()} options={cOpts()} />
-            </div>
+    <div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group w-full min-w-0">
+      <div class="flex flex-col md:flex-row h-full min-w-0">
+        <SummaryPanel agg={p.data.aggregates} hasPower={p.data.hasPower} hasGas={p.data.hasGas} />
+        <div class={`p-4 md:p-6 flex-1 bg-white/5 relative ${isMob() ? 'h-[250px]' : 'h-48 md:h-auto'} overflow-hidden min-w-0`}>
+          <div class="h-full w-full relative">
+            <Bar data={cData()} options={cOpts()} />
           </div>
         </div>
       </div>
-    </Show>
+    </div>
   );
 };
 
@@ -159,7 +161,9 @@ const Dashboard: Component = () => {
   const [rawData, { refetch }] = createResource(fetchDashboardData);
   const [isImportOpen, setImportOpen] = createSignal(false);
   const { showToast } = useToast();
-  const data = createMemo(() => processDashboardData(rawData()));
+  
+  const data = createMemo(() => processDashboardData(rawData.latest));
+
   const handleImport = async (iData: { version?: string }) => {
     const isU = typeof iData === 'object' && iData !== null && !Array.isArray(iData) && iData.version === '1.0';
     const res = await fetch(isU ? '/api/import/unified' : '/api/readings/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(iData) });
@@ -171,14 +175,26 @@ const Dashboard: Component = () => {
       showToast('Failed', 'error');
     }
   };
+
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0 w-full overflow-x-hidden">
-      <UnifiedImportModal isOpen={isImportOpen()} onClose={() => setImportOpen(false)} onSave={handleImport} meters={rawData()?.meters || []} onMeterCreated={() => refetch()} />
+      <UnifiedImportModal isOpen={isImportOpen()} onClose={() => setImportOpen(false)} onSave={handleImport} meters={rawData.latest?.meters || []} onMeterCreated={() => refetch()} />
       <DashboardHeader onImport={() => setImportOpen(true)} />
-      <Show when={!rawData.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
+      <Show when={!rawData.loading || rawData.latest} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <div class="flex flex-col gap-6">
           <div class="w-full">
-            <Show when={data()}>{(d) => <DashboardAggregates data={d} />}</Show>
+            <Show when={data() && data()!.hasMeters} fallback={
+              <EmptyState 
+                title="Getting Started" 
+                description="To begin tracking your energy costs, you first need to register a utility meter." 
+                actionLabel="Add First Meter" 
+                actionLink="/meters/add" 
+                colorScheme="primary"
+                icon={<Icon name="warning" class="h-10 w-10" />}
+              />
+            }>
+              <DashboardAggregates data={data()!} />
+            </Show>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             <Show when={data()}>{(_d) => <>
