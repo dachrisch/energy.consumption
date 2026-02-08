@@ -70,57 +70,136 @@ const getChartOpts = (isMob: boolean) => ({
   scales: { x: { stacked: true, display: !isMob, grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } }, y: { stacked: true, display: isMob, grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } } }
 });
 
-const DashboardAggregates: Component<{ data: { aggregates: Aggregates, hasPower: boolean, hasGas: boolean } }> = (p) => {
+const UtilityStats: Component<{ label: string, cost: number, current: number, previous: number }> = (p) => (
+  <div class="min-w-0">
+    <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{p.label}</p>
+    <p class="text-xl font-black">€{Math.round(p.cost || 0)}</p>
+    <TrendValue current={p.current} previous={p.previous} />
+  </div>
+);
+
+const SummaryHeader: Component<{ total: number, current: number, previous: number }> = (p) => (
+  <>
+    <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2 truncate">Projected Yearly Cost</p>
+    <h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-1">€{Math.round(p.total || 0)}</h2>
+    <TrendValue current={p.current} previous={p.previous} />
+  </>
+);
+
+const SummaryPanel: Component<{ agg: Aggregates, hasPower: boolean, hasGas: boolean }> = (p) => (
+  <div class="p-6 md:p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10 min-w-0">
+    <SummaryHeader total={p.agg?.totalYearlyCost} current={p.agg?.ytdCostCurrent} previous={p.agg?.ytdCostPrevious} />
+    <div class="flex gap-6 md:gap-8 mt-8">
+      <Show when={p.hasPower}>
+        <UtilityStats label="Power" cost={p.agg?.powerYearlyCost} current={p.agg?.ytdPowerCurrent} previous={p.agg?.ytdPowerPrevious} />
+      </Show>
+      <Show when={p.hasGas}>
+        <UtilityStats label="Gas" cost={p.agg?.gasYearlyCost} current={p.agg?.ytdGasCurrent} previous={p.agg?.ytdGasPrevious} />
+      </Show>
+    </div>
+  </div>
+);
+
+interface ProcessedDashboardData {
+  meters: Meter[];
+  readings: Reading[];
+  contracts: Contract[];
+  aggregates: Aggregates;
+  hasPower: boolean;
+  hasGas: boolean;
+  hasMeters: boolean;
+  hasMissingContracts: boolean;
+  hasPartialGaps: boolean;
+  metersWithNoContracts: Meter[];
+  metersWithPartialGaps: (Meter & { gaps: Gap[] })[];
+}
+
+const processDashboardData = (d: { meters: Meter[], readings: Reading[], contracts: Contract[] } | undefined): ProcessedDashboardData | null => {
+  if (!d) { return null; }
+  const { meters, readings, contracts } = d;
+  const agg = calculateAggregates(meters, readings, contracts) as Aggregates;
+  const noC = meters.filter((m: Meter) => !getMeterContracts(m, contracts).length);
+  const gaps = getMetersWithGaps(meters, readings, contracts, noC);
+  return { 
+    ...d, 
+    aggregates: agg, 
+    hasPower: meters.some((m: Meter) => m.type === 'power'), 
+    hasGas: meters.some((m: Meter) => m.type === 'gas'), 
+    hasMeters: meters.length > 0, 
+    hasMissingContracts: noC.length > 0, 
+    hasPartialGaps: gaps.length > 0, 
+    metersWithNoContracts: noC, 
+    metersWithPartialGaps: gaps 
+  };
+};
+
+const DashboardAggregates: Component<{ data: ProcessedDashboardData }> = (p) => {
   const [isMob, setIsMob] = createSignal(window.innerWidth < 600);
   onMount(() => { const h = () => setIsMob(window.innerWidth < 600); window.addEventListener('resize', h); onCleanup(() => window.removeEventListener('resize', h)); });
-  const cData = createMemo(() => getChartData(p.data.aggregates));
+  const cData = createMemo(() => getChartData(p.data?.aggregates));
   const cOpts = createMemo(() => getChartOpts(isMob()));
-  return (<Show when={p.data.aggregates}><div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group w-full min-w-0">
-    <div class="flex flex-col md:flex-row h-full min-w-0"><div class="p-6 md:p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10 min-w-0">
-      <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2 truncate">Projected Yearly Cost</p>
-      <h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-1">€{Math.round(p.data.aggregates.totalYearlyCost || 0)}</h2>
-      <TrendValue current={p.data.aggregates.ytdCostCurrent} previous={p.data.aggregates.ytdCostPrevious} />
-      <div class="flex gap-6 md:gap-8 mt-8">
-        <Show when={p.data.hasPower}><div class="min-w-0"><p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p><p class="text-xl font-black">€{Math.round(p.data.aggregates.powerYearlyCost || 0)}</p><TrendValue current={p.data.aggregates.ytdPowerCurrent} previous={p.data.aggregates.ytdPowerPrevious} /></div></Show>
-        <Show when={p.data.hasGas}><div class="min-w-0"><p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p><p class="text-xl font-black">€{Math.round(p.data.aggregates.gasYearlyCost || 0)}</p><TrendValue current={p.data.aggregates.ytdGasCurrent} previous={p.data.aggregates.ytdGasPrevious} /></div></Show>
-      </div></div>
-      <div class={`p-4 md:p-6 flex-1 bg-white/5 relative ${isMob() ? 'h-[250px]' : 'h-48 md:h-auto'} overflow-hidden min-w-0`}><div class="h-full w-full relative"><Bar data={cData()} options={cOpts()} /></div></div>
-    </div></div></Show>);
+  
+  return (
+    <Show when={p.data?.hasMeters}>
+      <div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group w-full min-w-0">
+        <div class="flex flex-col md:flex-row h-full min-w-0">
+          <SummaryPanel agg={p.data.aggregates} hasPower={p.data.hasPower} hasGas={p.data.hasGas} />
+          <div class={`p-4 md:p-6 flex-1 bg-white/5 relative ${isMob() ? 'h-[250px]' : 'h-48 md:h-auto'} overflow-hidden min-w-0`}>
+            <div class="h-full w-full relative">
+              <Bar data={cData()} options={cOpts()} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Show>
+  );
 };
 
 const Dashboard: Component = () => {
   const [rawData, { refetch }] = createResource(fetchDashboardData);
   const [isImportOpen, setImportOpen] = createSignal(false);
   const { showToast } = useToast();
-    const data = createMemo(() => {
-      const d = rawData(); 
-      if (!d) {
-        return null;
-      }
-      const { meters, readings, contracts } = d;
-   const agg = calculateAggregates(meters, readings, contracts) as Aggregates;
-    const noC = meters.filter((m: Meter) => !getMeterContracts(m, contracts).length);
-    const gaps = getMetersWithGaps(meters, readings, contracts, noC);
-    return { ...d, aggregates: agg, hasPower: meters.some((m: Meter) => m.type === 'power'), hasGas: meters.some((m: Meter) => m.type === 'gas'), hasMeters: meters.length > 0, hasMissingContracts: noC.length > 0, hasPartialGaps: gaps.length > 0, metersWithNoContracts: noC, metersWithPartialGaps: gaps };
-  });
+  const data = createMemo(() => processDashboardData(rawData()));
   const handleImport = async (iData: { version?: string }) => {
     const isU = typeof iData === 'object' && iData !== null && !Array.isArray(iData) && iData.version === '1.0';
     const res = await fetch(isU ? '/api/import/unified' : '/api/readings/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(iData) });
     const r = await res.json();
     if (res.ok) {
-      showToast(isU ? 'Backup restored' : `Imported ${r.successCount}`, 'success'); refetch();
+      showToast(isU ? 'Backup restored' : `Imported ${r.successCount}`, 'success'); 
+      refetch();
     } else {
       showToast('Failed', 'error');
     }
   };
-  return (<div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0 w-full overflow-x-hidden">
-    <UnifiedImportModal isOpen={isImportOpen()} onClose={() => setImportOpen(false)} onSave={handleImport} meters={rawData()?.meters || []} onMeterCreated={() => refetch()} />
-    <DashboardHeader onImport={() => setImportOpen(true)} />
-    <Show when={!rawData.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-      <div class="flex flex-col gap-6"><div class="w-full"><Show when={data()}>{(d) => <DashboardAggregates data={d} />}</Show></div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch"><Show when={data()}>{(_d) => <><div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative"><div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="meter" class="h-10 w-10" /></div><h3 class="text-lg font-black uppercase opacity-40">Meter Management</h3><p class="text-sm font-bold opacity-60">Manage your individual meters, history and infrastructure in the new section.</p><A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Meters</A></div>
-          <div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative"><div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="contract" class="h-10 w-10" /></div><h3 class="text-lg font-black uppercase opacity-40">Contract Management</h3><p class="text-sm font-bold opacity-60">Manage your energy provider pricing, active contracts and historical gaps.</p><A href="/contracts" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Contracts</A></div></>}</Show></div>
-      </div></Show></div>);
+  return (
+    <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0 w-full overflow-x-hidden">
+      <UnifiedImportModal isOpen={isImportOpen()} onClose={() => setImportOpen(false)} onSave={handleImport} meters={rawData()?.meters || []} onMeterCreated={() => refetch()} />
+      <DashboardHeader onImport={() => setImportOpen(true)} />
+      <Show when={!rawData.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
+        <div class="flex flex-col gap-6">
+          <div class="w-full">
+            <Show when={data()}>{(d) => <DashboardAggregates data={d} />}</Show>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <Show when={data()}>{(_d) => <>
+              <div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
+                <div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="meter" class="h-10 w-10" /></div>
+                <h3 class="text-lg font-black uppercase opacity-40">Meter Management</h3>
+                <p class="text-sm font-bold opacity-60">Manage your individual meters, history and infrastructure in the new section.</p>
+                <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Meters</A>
+              </div>
+              <div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
+                <div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="contract" class="h-10 w-10" /></div>
+                <h3 class="text-lg font-black uppercase opacity-40">Contract Management</h3>
+                <p class="text-sm font-bold opacity-60">Manage your energy provider pricing, active contracts and historical gaps.</p>
+                <A href="/contracts" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Contracts</A>
+              </div>
+            </>}</Show>
+          </div>
+        </div>
+      </Show>
+    </div>
+  );
 };
 
 export default Dashboard;
