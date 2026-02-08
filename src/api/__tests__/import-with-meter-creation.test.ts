@@ -64,7 +64,7 @@ describe('Import with Meter Creation', () => {
     );
 
     // Verify readings were created
-    const storedReadings = await Reading.find({ meterId }).setOptions({ userId });
+    const storedReadings = await Reading.find({ meterId }).setOptions({ userId }).sort({ date: 1 });
     expect(storedReadings).toHaveLength(3);
     expect(storedReadings[0].value).toBe(100);
     expect(storedReadings[1].value).toBe(105);
