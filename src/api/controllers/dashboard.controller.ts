@@ -10,7 +10,7 @@ export async function handleAggregatedRoutes({ res, userId, path }: RouteParams)
   const [meters, contracts, readings] = await Promise.all([
     Meter.find({}).setOptions({ userId }),
     Contract.find({}).setOptions({ userId }).populate('meterId'),
-    Reading.find({}).setOptions({ userId }).sort({ date: -1 }).limit(500)
+    Reading.find({}).setOptions({ userId }).sort({ date: -1 }).limit(2000)
   ]);
   
   const data = path === '/api/dashboard' 

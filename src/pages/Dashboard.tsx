@@ -6,348 +6,119 @@ import EmptyState from '../components/EmptyState';
 import { useToast } from '../context/ToastContext';
 import { calculateAggregates, DetailedAggregates } from '../lib/aggregates';
 import { findContractGaps, Gap } from '../lib/gapDetection';
-import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale, TooltipItem } from 'chart.js';
 import { Bar } from 'solid-chartjs';
-import { TooltipItem } from 'chart.js';
 import Icon from '../components/Icon';
 
 Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
 
 type Aggregates = DetailedAggregates;
 
-const getMeterContracts = (m: Meter, contracts: Contract[]) => {
-  return contracts.filter((c) => {
-    const cId = typeof c.meterId === 'string' ? c.meterId : (c.meterId as unknown as { _id: string })?._id;
-    return cId === m._id;
-  });
-};
+const getMeterContracts = (m: Meter, contracts: Contract[]) => contracts.filter(c => (typeof c.meterId === 'string' ? c.meterId : (c.meterId as { _id: string })?._id) === m._id);
 
-const getMetersWithGaps = (meters: Meter[], readings: Reading[], contracts: Contract[], metersWithNoContracts: Meter[]) => {
-  return meters.map((m) => {
-    if (metersWithNoContracts.some((nm) => nm._id === m._id)) {return { ...m, gaps: [] as Gap[] };}
-    const meterReadings = readings.filter((r) => r.meterId === m._id);
-    const meterContracts = getMeterContracts(m, contracts);
-    return { ...m, gaps: findContractGaps(meterReadings, meterContracts) };
-  }).filter((m) => m.gaps.length > 0);
-};
+const getMetersWithGaps = (meters: Meter[], readings: Reading[], contracts: Contract[], noContracts: Meter[]) => meters.map(m => {
+  if (noContracts.some(nm => nm._id === m._id)) {
+    return { ...m, gaps: [] as Gap[] };
+  }
+  return { ...m, gaps: findContractGaps(readings.filter(r => r.meterId === m._id), getMeterContracts(m, contracts)) };
+}).filter(m => m.gaps.length > 0);
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
-  if (!res.ok) {throw new Error('Failed to fetch dashboard data');}
-  const data = await res.json();
-  const { meters, readings, contracts } = data;
-  
-  const aggregates = calculateAggregates(meters, readings, contracts) as Aggregates;
-  const metersWithNoContracts = meters.filter((m: Meter) => !getMeterContracts(m, contracts).length);
-  const metersWithPartialGaps = getMetersWithGaps(meters, readings, contracts, metersWithNoContracts);
-
-  return { 
-    ...data, 
-    aggregates, 
-    hasPower: meters.some((m: Meter) => m.type === 'power'), 
-    hasGas: meters.some((m: Meter) => m.type === 'gas'), 
-    hasMeters: meters.length > 0,
-    hasMissingContracts: metersWithNoContracts.length > 0,
-    hasPartialGaps: metersWithPartialGaps.length > 0,
-    metersWithNoContracts,
-    metersWithPartialGaps
-  };
+  if (!res.ok) {
+    throw new Error('Failed to fetch');
+  }
+  return res.json();
 };
 
-const DashboardHeader: Component<{ onImportClick: () => void }> = (props) => (
+const DashboardHeader: Component<{ onImport: () => void }> = (p) => (
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div>
-      <h1 class="text-4xl font-black tracking-tighter">Financial Cockpit</h1>
-      <p class="text-base-content/60 font-bold">Aggregated insights across all your energy sources.</p>
-    </div>
-    <div class="flex gap-2">
-        <button class="btn btn-ghost btn-md rounded-2xl" onClick={props.onImportClick}>
-          Import
-        </button>
-       <A href="/add-reading" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
-        <Icon name="add" class="h-5 w-5" />
-        Quick Add Reading
-      </A>
-    </div>
+    <div><h1 class="text-4xl font-black tracking-tighter">Financial Cockpit</h1><p class="text-base-content/60 font-bold">Aggregated insights.</p></div>
+    <div class="flex gap-2"><button class="btn btn-ghost btn-md rounded-2xl" onClick={p.onImport}>Import</button>
+      <A href="/add-reading" class="btn btn-primary btn-md rounded-2xl shadow-xl px-8 text-sm"><Icon name="add" class="h-5 w-5" />Quick Add</A></div>
   </div>
 );
 
-const TrendValue: Component<{ current: number, previous: number, showValue?: boolean }> = (props) => {
-    const diff = () => props.current - props.previous;
-    const percent = () => props.previous > 0 ? (diff() / props.previous) * 100 : 0;
-    const isUp = () => diff() > 0;
-    
-    return (
-        <Show when={props.previous > 0}>
-            <div class={`text-[10px] font-black flex items-center gap-1 mt-1 ${isUp() ? 'text-error/80' : 'text-success/90'} overflow-hidden whitespace-nowrap`}>
-                <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class={`h-3 w-3 flex-shrink-0 ${isUp() ? '' : 'rotate-180'}`} />
-                <span class="truncate">
-                    {isUp() ? '+' : '-'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(percent()).toFixed(1)}%)
-                </span>
-            </div>
-        </Show>
-    );
+const TrendValue: Component<{ current: number, previous: number }> = (p) => {
+  const diff = () => p.current - p.previous;
+  const pct = () => p.previous > 0 ? (diff() / p.previous) * 100 : 0;
+  const isUp = () => diff() > 0;
+  return (<Show when={p.previous > 0}><div class={`text-[10px] font-black flex items-center gap-1 mt-1 ${isUp() ? 'text-error/80' : 'text-success/90'} overflow-hidden whitespace-nowrap`}>
+    <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class={`h-3 w-3 flex-shrink-0 ${isUp() ? '' : 'rotate-180'}`} />
+    <span class="truncate">{isUp() ? '+' : '-'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(pct()).toFixed(1)}%)</span>
+  </div></Show>);
 };
 
-const getThemeColor = (varName: string) => {
-    if (typeof window === 'undefined') {
-        return '#000000';
-    }
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || '#000000';
+const getThemeColor = (name: string) => (typeof window === 'undefined') ? '#000' : (getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#000');
+
+const getChartData = (agg: Aggregates) => {
+  const pc = getThemeColor('--color-meter-power-chart'); const gc = getThemeColor('--color-meter-gas-chart');
+  return {
+    labels: agg.yearlyHistory.map(h => h.year.toString()),
+    datasets: [
+      { label: 'Power (€)', data: agg.yearlyHistory.map(h => h.powerCost), backgroundColor: pc, hoverBackgroundColor: getThemeColor('--color-meter-power'), borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8 },
+      { label: 'Gas (€)', data: agg.yearlyHistory.map(h => h.gasCost), backgroundColor: gc, hoverBackgroundColor: getThemeColor('--color-meter-gas'), borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8 }
+    ]
+  };
 };
 
-const getDashboardChartData = (aggregates: Aggregates, _isMobile: boolean) => {
-    const powerColor = getThemeColor('--color-meter-power-chart');
-    const gasColor = getThemeColor('--color-meter-gas-chart');
-    const powerHover = getThemeColor('--color-meter-power');
-    const gasHover = getThemeColor('--color-meter-gas');
-    
-    return {
-        labels: aggregates.yearlyHistory.map(h => h.year.toString()),
-        datasets: [
-            {
-                label: 'Power (€)',
-                data: aggregates.yearlyHistory.map(h => h.powerCost),
-                backgroundColor: powerColor,
-                hoverBackgroundColor: powerHover,
-                borderRadius: 4,
-                borderSkipped: false,
-                barPercentage: 0.6,
-                categoryPercentage: 0.8
-            },
-            {
-                label: 'Gas (€)',
-                data: aggregates.yearlyHistory.map(h => h.gasCost),
-                backgroundColor: gasColor,
-                hoverBackgroundColor: gasHover,
-                borderRadius: 4,
-                borderSkipped: false,
-                barPercentage: 0.6,
-                categoryPercentage: 0.8
-            }
-        ]
-    };
-};
-
-const getDashboardChartOptions = (isMobile: boolean) => ({
-    indexAxis: isMobile ? 'y' as const : 'x' as const,
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 0 },
-    plugins: {
-        legend: { display: false },
-        tooltip: {
-            backgroundColor: '#2b2d42',
-            titleFont: { weight: 'bold' },
-            padding: 12,
-            cornerRadius: 12,
-            displayColors: true,
-            callbacks: {
-                label: (context: TooltipItem<'bar'>) => {
-                    let label = context.dataset.label || '';
-                    if (label) {
-                        label += ': ';
-                    }
-                    if (context.parsed[isMobile ? 'x' : 'y'] !== null) {
-                        label += new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(context.parsed[isMobile ? 'x' : 'y']);
-                    }
-                    return label;
-                }
-            }
-        }
-    },
-    scales: {
-        x: { 
-            stacked: true,
-            display: !isMobile,
-            grid: { display: false },
-            border: { display: false },
-            ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
-        },
-        y: { 
-            stacked: true,
-            display: isMobile,
-            grid: { display: false },
-            border: { display: false },
-            ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
-        }
-    }
+const getChartOpts = (isMob: boolean) => ({
+  indexAxis: isMob ? 'y' as const : 'x' as const, responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+  plugins: { legend: { display: false }, tooltip: { backgroundColor: '#2b2d42', padding: 12, cornerRadius: 12, callbacks: { label: (c: TooltipItem<'bar'>) => `${c.dataset.label}: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(c.parsed[isMob ? 'x' : 'y'] || 0)}` } } },
+  scales: { x: { stacked: true, display: !isMob, grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } }, y: { stacked: true, display: isMob, grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } } }
 });
 
-const DashboardAggregates: Component<{ data: {
-  hasMeters: boolean;
-  hasPower: boolean;
-  hasGas: boolean;
-  aggregates: Aggregates;
-} }> = (props) => {
-    const [isMobile, setIsMobile] = createSignal(window.innerWidth < 600);
-    
-    onMount(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 600);
-        window.addEventListener('resize', handleResize);
-        onCleanup(() => window.removeEventListener('resize', handleResize));
-    });
-
-    const chartData = createMemo(() => getDashboardChartData(props.data.aggregates, isMobile()));
-    const chartOptions = createMemo(() => getDashboardChartOptions(isMobile()));
-
-    return (
-        <Show when={props.data.hasMeters}>
-            <div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group w-full min-w-0">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
-                <div class="flex flex-col md:flex-row h-full min-w-0">
-                    <div class="p-6 md:p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10 min-w-0">
-                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2 truncate">Total Projected Yearly Cost</p>
-                        <h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-1">€{Math.round(props.data.aggregates.totalYearlyCost || 0)}</h2>
-                        <TrendValue current={props.data.aggregates.ytdCostCurrent} previous={props.data.aggregates.ytdCostPrevious} />
-                        
-                        <div class="flex gap-6 md:gap-8 mt-8">
-                            <Show when={props.data.hasPower}>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p>
-                                    <p class="text-xl font-black">€{Math.round(props.data.aggregates.powerYearlyCost || 0)}</p>
-                                    <TrendValue current={props.data.aggregates.ytdPowerCurrent} previous={props.data.aggregates.ytdPowerPrevious} />
-                                </div>
-                            </Show>
-                            <Show when={props.data.hasGas}>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p>
-                                    <p class="text-xl font-black">€{Math.round(props.data.aggregates.gasYearlyCost || 0)}</p>
-                                    <TrendValue current={props.data.aggregates.ytdGasCurrent} previous={props.data.aggregates.ytdGasPrevious} />
-                                </div>
-                            </Show>
-                        </div>
-                    </div>
-                    <div class={`p-4 md:p-6 flex-1 bg-white/5 relative ${isMobile() ? 'h-[250px]' : 'h-48 md:h-auto'} overflow-hidden min-w-0`}>
-                        <div class="h-full w-full relative">
-                             <Bar data={chartData()} options={chartOptions()} />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Show>
-    );
-};
-
-const DashboardWarnings: Component<{ data: {
-  hasMissingContracts: boolean;
-  hasPartialGaps: boolean;
-  hasMeters: boolean;
-} }> = (props) => {
-  return (
-    <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4 h-full relative group">
-        <Show when={props.data.hasMissingContracts || props.data.hasPartialGaps}>
-            <div class="absolute top-4 right-4">
-                <div class="tooltip tooltip-left before:text-xs" data-tip="Coverage gaps detected">
-                    <span class="relative flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-warning"></span>
-                    </span>
-                </div>
-            </div>
-        </Show>
-        <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
-            <Icon name="contract" class="h-10 w-10" />
-        </div>
-        <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Contract Management</h3>
-        <p class="text-sm font-bold text-base-content/60 max-w-xs">
-            Manage your energy provider pricing, active contracts and historical gaps.
-        </p>
-        <A href="/contracts" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Contracts</A>
-    </div>
-  );
-};
-
-const DashboardEmptyState: Component<{ hasMeters: boolean }> = (props) => {
-  return (
-  <>
-    <Show when={!props.hasMeters}>
-      <EmptyState 
-        title="Getting Started"
-        description="To begin tracking your energy costs, you first need to register a utility meter."
-        actionLabel="Add Meter"
-        actionLink="/meters/add"
-        colorScheme="primary"
-        icon={<Icon name="warning" class="h-10 w-10" />}
-      />
-    </Show>
-
-    <Show when={props.hasMeters}>
-      <div class="card bg-base-100 shadow-xl border border-base-content/5 p-8 rounded-3xl flex flex-col justify-center items-center text-center space-y-4 h-full">
-         <div class="bg-base-200 p-4 rounded-2xl text-base-content/20">
-            <Icon name="meter" class="h-10 w-10" />
-         </div>
-         <h3 class="text-lg font-black tracking-tight uppercase opacity-40">Meter Management</h3>
-         <p class="text-sm font-bold text-base-content/60 max-w-xs">
-           Manage your individual meters, history and infrastructure in the new section.
-         </p>
-         <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Meters</A>
-      </div>
-    </Show>
-  </>
-  );
+const DashboardAggregates: Component<{ data: { aggregates: Aggregates, hasPower: boolean, hasGas: boolean } }> = (p) => {
+  const [isMob, setIsMob] = createSignal(window.innerWidth < 600);
+  onMount(() => { const h = () => setIsMob(window.innerWidth < 600); window.addEventListener('resize', h); onCleanup(() => window.removeEventListener('resize', h)); });
+  const cData = createMemo(() => getChartData(p.data.aggregates));
+  const cOpts = createMemo(() => getChartOpts(isMob()));
+  return (<Show when={p.data.aggregates}><div class="card bg-primary text-primary-content shadow-2xl p-0 rounded-3xl relative overflow-hidden group w-full min-w-0">
+    <div class="flex flex-col md:flex-row h-full min-w-0"><div class="p-6 md:p-8 md:w-1/3 relative z-10 border-b md:border-b-0 md:border-r border-white/10 min-w-0">
+      <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2 truncate">Projected Yearly Cost</p>
+      <h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-1">€{Math.round(p.data.aggregates.totalYearlyCost || 0)}</h2>
+      <TrendValue current={p.data.aggregates.ytdCostCurrent} previous={p.data.aggregates.ytdCostPrevious} />
+      <div class="flex gap-6 md:gap-8 mt-8">
+        <Show when={p.data.hasPower}><div class="min-w-0"><p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Power</p><p class="text-xl font-black">€{Math.round(p.data.aggregates.powerYearlyCost || 0)}</p><TrendValue current={p.data.aggregates.ytdPowerCurrent} previous={p.data.aggregates.ytdPowerPrevious} /></div></Show>
+        <Show when={p.data.hasGas}><div class="min-w-0"><p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Gas</p><p class="text-xl font-black">€{Math.round(p.data.aggregates.gasYearlyCost || 0)}</p><TrendValue current={p.data.aggregates.ytdGasCurrent} previous={p.data.aggregates.ytdGasPrevious} /></div></Show>
+      </div></div>
+      <div class={`p-4 md:p-6 flex-1 bg-white/5 relative ${isMob() ? 'h-[250px]' : 'h-48 md:h-auto'} overflow-hidden min-w-0`}><div class="h-full w-full relative"><Bar data={cData()} options={cOpts()} /></div></div>
+    </div></div></Show>);
 };
 
 const Dashboard: Component = () => {
-  const [data, { refetch }] = createResource(fetchDashboardData);
+  const [rawData, { refetch }] = createResource(fetchDashboardData);
   const [isImportOpen, setImportOpen] = createSignal(false);
   const { showToast } = useToast();
-
-  const handleBulkImport = async (data: unknown) => {
-    const isUnified = (
-      typeof data === 'object' &&
-      data !== null &&
-      !Array.isArray(data) &&
-      'version' in data &&
-      data.version === '1.0' &&
-      'data' in data
-    );
-    const endpoint = isUnified ? '/api/import/unified' : '/api/readings/bulk';
-
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    const result = await res.json();
+    const data = createMemo(() => {
+      const d = rawData(); 
+      if (!d) {
+        return null;
+      }
+      const { meters, readings, contracts } = d;
+   const agg = calculateAggregates(meters, readings, contracts) as Aggregates;
+    const noC = meters.filter((m: Meter) => !getMeterContracts(m, contracts).length);
+    const gaps = getMetersWithGaps(meters, readings, contracts, noC);
+    return { ...d, aggregates: agg, hasPower: meters.some((m: Meter) => m.type === 'power'), hasGas: meters.some((m: Meter) => m.type === 'gas'), hasMeters: meters.length > 0, hasMissingContracts: noC.length > 0, hasPartialGaps: gaps.length > 0, metersWithNoContracts: noC, metersWithPartialGaps: gaps };
+  });
+  const handleImport = async (iData: { version?: string }) => {
+    const isU = typeof iData === 'object' && iData !== null && !Array.isArray(iData) && iData.version === '1.0';
+    const res = await fetch(isU ? '/api/import/unified' : '/api/readings/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(iData) });
+    const r = await res.json();
     if (res.ok) {
-        if (isUnified) {
-          showToast(`Backup restored: ${result.metersCreated} meters, ${result.successCount} readings, ${result.contractsCreated} contracts.`, 'success');
-        } else {
-          showToast(`Imported ${result.successCount} readings. Skipped ${result.skippedCount}.`, 'success');
-        }
-        refetch();
+      showToast(isU ? 'Backup restored' : `Imported ${r.successCount}`, 'success'); refetch();
     } else {
-        showToast('Failed to import readings', 'error');
+      showToast('Failed', 'error');
     }
   };
-
-  return (
-    <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0 w-full overflow-x-hidden">
-       <UnifiedImportModal 
-            isOpen={isImportOpen()} 
-            onClose={() => setImportOpen(false)} 
-            onSave={handleBulkImport}
-            meters={data.latest?.meters || []}
-            onMeterCreated={() => refetch()}
-        />
-      
-      <DashboardHeader onImportClick={() => setImportOpen(true)} />
-
-      <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-        <div class="flex flex-col gap-6">
-          <div class="w-full">
-            <DashboardAggregates data={data()} />
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-            <DashboardEmptyState hasMeters={data()?.hasMeters} />
-            <DashboardWarnings data={data()} />
-          </div>
-        </div>
-      </Show>
-    </div>
-  );
+  return (<div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0 w-full overflow-x-hidden">
+    <UnifiedImportModal isOpen={isImportOpen()} onClose={() => setImportOpen(false)} onSave={handleImport} meters={rawData()?.meters || []} onMeterCreated={() => refetch()} />
+    <DashboardHeader onImport={() => setImportOpen(true)} />
+    <Show when={!rawData.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
+      <div class="flex flex-col gap-6"><div class="w-full"><Show when={data()}>{(d) => <DashboardAggregates data={d} />}</Show></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch"><Show when={data()}>{( _ ) => <><EmptyState title="Meters" description="Manage infrastructure." actionLabel="Meters" actionLink="/meters" icon={<Icon name="meter" class="h-10 w-10" />} />
+          <div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative"><div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="contract" class="h-10 w-10" /></div><h3 class="text-lg font-black uppercase opacity-40">Contracts</h3><p class="text-sm font-bold opacity-60">Manage pricing.</p><A href="/contracts" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Contracts</A></div></>}</Show></div>
+      </div></Show></div>);
 };
 
 export default Dashboard;
