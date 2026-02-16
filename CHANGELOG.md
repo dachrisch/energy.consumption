@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.4](https://github.com/dachrisch/energy.consumption/compare/v3.11.3...v3.11.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* **dashboard:** display all years in historical cost chart and handle meter resets ([50369a5](https://github.com/dachrisch/energy.consumption/commit/50369a5a3d5c44e6a8a9dc52d8b3c499cdbc03df))
+
 ### [3.11.3](https://github.com/dachrisch/energy.consumption/compare/v3.11.2...v3.11.3) (2026-02-08)
 
 ### [3.11.2](https://github.com/dachrisch/energy.consumption/compare/v3.11.1...v3.11.2) (2026-02-08)
