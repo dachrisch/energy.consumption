@@ -13,9 +13,13 @@ export async function handleAggregatedRoutes({ res, userId, path }: RouteParams)
     Reading.find({}).setOptions({ userId }).sort({ date: -1 }).limit(2000)
   ]);
   
-  const data = path === '/api/dashboard' 
-    ? { meters, contracts, readings } 
-    : calculateAggregates(meters, readings, contracts);
-    
+  // Always calculate aggregates server-side
+  const aggregates = calculateAggregates(meters, readings, contracts);
+
+  // Dashboard needs both raw data and aggregates for UI
+  const data = path === '/api/dashboard'
+    ? { meters, contracts, readings, aggregates }
+    : aggregates;
+
   res.end(JSON.stringify(data));
 }

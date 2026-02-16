@@ -37,35 +37,147 @@ interface HistoryOptions {
   yearlyStatsMap: Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>;
 }
 
+interface ConsumptionSegment {
+  startIndex: number;
+  endIndex: number;
+  readings: { value: number; date: Date }[];
+}
+
+/**
+ * Detects meter resets by finding readings where the value decreases
+ * @returns Array of indices where resets occur (pointing to the last reading before reset)
+ */
+function detectMeterResets(readings: { value: number; date: Date }[]): number[] {
+  const resetIndices: number[] = [];
+  for (let i = 0; i < readings.length - 1; i++) {
+    if (readings[i + 1].value < readings[i].value) {
+      // Significant decrease suggests meter reset/replacement
+      resetIndices.push(i);
+    }
+  }
+  return resetIndices;
+}
+
+/**
+ * Splits readings into continuous consumption segments separated by meter resets
+ * @returns Array of segments, each containing a continuous series of readings
+ */
+function splitReadingsIntoSegments(readings: { value: number; date: Date }[]): ConsumptionSegment[] {
+  const resetIndices = detectMeterResets(readings);
+  const segments: ConsumptionSegment[] = [];
+
+  let startIdx = 0;
+  for (const resetIdx of resetIndices) {
+    if (startIdx <= resetIdx) {
+      segments.push({
+        startIndex: startIdx,
+        endIndex: resetIdx,
+        readings: readings.slice(startIdx, resetIdx + 1)
+      });
+    }
+    startIdx = resetIdx + 1;
+  }
+
+  // Add final segment (from last reset to end, or all readings if no resets)
+  if (startIdx < readings.length) {
+    segments.push({
+      startIndex: startIdx,
+      endIndex: readings.length - 1,
+      readings: readings.slice(startIdx)
+    });
+  }
+
+  // Filter out segments with less than 2 readings (can't calculate consumption)
+  return segments.filter(seg => seg.readings.length >= 2);
+}
+
+/**
+ * Calculates consumption and cost for a segment within a year
+ */
+function calculateSegmentYearContribution(
+  segment: ConsumptionSegment,
+  yearStart: Date,
+  yearEnd: Date,
+  meterContracts: Contract[]
+): { consumption: number; cost: number } | null {
+  const segmentStart = segment.readings[0].date;
+  const segmentEnd = segment.readings[segment.readings.length - 1].date;
+
+  // Skip if segment doesn't overlap with year
+  if (segmentEnd < yearStart || segmentStart > yearEnd) {
+    return null;
+  }
+
+  // Find readings that bracket the year boundaries
+  const readingsBeforeOrAtStart = segment.readings.filter(r => r.date <= yearStart);
+  const readingsInYear = segment.readings.filter(r => r.date >= yearStart && r.date <= yearEnd);
+  const readingsInOrBefore = segment.readings.filter(r => r.date <= yearEnd);
+
+  if (readingsInOrBefore.length < 1) {
+    return null;
+  }
+
+  // Use last reading before year start as reference, or first reading in year
+  const startRef = readingsBeforeOrAtStart.length > 0
+    ? readingsBeforeOrAtStart[readingsBeforeOrAtStart.length - 1]
+    : (readingsInYear.length > 0 ? readingsInYear[0] : null);
+
+  const endRef = readingsInOrBefore[readingsInOrBefore.length - 1];
+
+  if (!startRef || !endRef || startRef === endRef) {
+    return null;
+  }
+
+  const segmentConsumption = endRef.value - startRef.value;
+
+  // Only process positive consumption (within valid segment, no resets)
+  if (segmentConsumption > 0) {
+    const segmentCost = calculateIntervalCost(startRef.date, endRef.date, segmentConsumption, meterContracts);
+    return { consumption: segmentConsumption, cost: segmentCost };
+  }
+
+  return null;
+}
+
 function calculateHistoricalYearlyStats(options: HistoryOptions) {
   const { meterReadings, meterContracts, meterType, currentYear, yearlyStatsMap } = options;
-  const firstReadingDate = meterReadings[0].date;
-  const firstYear = firstReadingDate.getFullYear();
-  
+
+  // Split readings into continuous consumption segments (handles meter resets)
+  const segments = splitReadingsIntoSegments(meterReadings);
+
+  // If no valid segments, skip this meter
+  if (segments.length === 0) {
+    return;
+  }
+
+  const firstYear = meterReadings[0].date.getFullYear();
+
   for (let year = firstYear; year <= currentYear; year++) {
     const yearStart = new Date(year, 0, 1);
     const yearEnd = new Date(year, 11, 31, 23, 59, 59);
-    
-    const readingsInOrBefore = meterReadings.filter(r => r.date <= yearEnd);
-    const readingsInOrAfter = meterReadings.filter(r => r.date >= yearStart);
-    
-    if (readingsInOrBefore.length < 2 || readingsInOrAfter.length === 0) { continue; }
-    
-    const startRef = readingsInOrAfter[0];
-    const endRef = readingsInOrBefore[readingsInOrBefore.length - 1];
-    
-    if (startRef === endRef) { continue; }
 
-    const yearConsumption = endRef.value - startRef.value;
-    const yearCost = calculateIntervalCost(startRef.date, endRef.date, yearConsumption, meterContracts);
-    
-    const existing = yearlyStatsMap.get(year) || { cost: 0, consumption: 0, powerCost: 0, gasCost: 0 };
-    yearlyStatsMap.set(year, {
-      cost: existing.cost + Math.max(0, yearCost),
-      consumption: existing.consumption + Math.max(0, yearConsumption),
-      powerCost: existing.powerCost + (meterType === 'power' ? Math.max(0, yearCost) : 0),
-      gasCost: existing.gasCost + (meterType === 'gas' ? Math.max(0, yearCost) : 0)
-    });
+    let yearTotalConsumption = 0;
+    let yearTotalCost = 0;
+
+    // Process each consumption segment independently
+    for (const segment of segments) {
+      const contribution = calculateSegmentYearContribution(segment, yearStart, yearEnd, meterContracts);
+      if (contribution) {
+        yearTotalConsumption += contribution.consumption;
+        yearTotalCost += contribution.cost;
+      }
+    }
+
+    // Only add to map if we have valid data for this year
+    if (yearTotalConsumption > 0 || yearTotalCost > 0) {
+      const existing = yearlyStatsMap.get(year) || { cost: 0, consumption: 0, powerCost: 0, gasCost: 0 };
+      yearlyStatsMap.set(year, {
+        cost: existing.cost + yearTotalCost,
+        consumption: existing.consumption + yearTotalConsumption,
+        powerCost: existing.powerCost + (meterType === 'power' ? yearTotalCost : 0),
+        gasCost: existing.gasCost + (meterType === 'gas' ? yearTotalCost : 0)
+      });
+    }
   }
 }
 
@@ -99,7 +211,7 @@ function getMeterContractsList(meterId: string, contracts: IContract[]): Contrac
     return (contracts as unknown as Contract[]).filter((c) => {
         const contract = c as unknown as { meterId: string | { _id: string } };
         const cId = typeof contract.meterId === 'string' ? contract.meterId : (contract.meterId as unknown as { _id: string })?._id;
-        return cId === meterId;
+        return cId?.toString() === meterId.toString();
     }).map(c => ({
         ...c,
         startDate: new Date(c.startDate),
@@ -119,7 +231,12 @@ function calculateActiveYearlyCost(meter: IMeter, readings: { value: number; dat
     }
 
     const dailyAverage = calculateDailyAverage(readings);
-    return (activeContract.basePrice * (365.25 / 30.44)) + (activeContract.workingPrice * (dailyAverage * 365.25));
+    const baseCost = (activeContract.basePrice || 0) * (365.25 / 30.44);
+    const workingCost = (activeContract.workingPrice || 0) * (dailyAverage * 365.25);
+    const totalCost = baseCost + workingCost;
+
+    // Ensure we return a valid number (not NaN, Infinity, or negative)
+    return isNaN(totalCost) || !isFinite(totalCost) ? 0 : Math.max(0, totalCost);
 }
 
 function processMeter(params: {

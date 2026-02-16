@@ -3,7 +3,7 @@ import { A } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import { useToast } from '../context/ToastContext';
-import { calculateAggregates, DetailedAggregates } from '../lib/aggregates';
+import { DetailedAggregates } from '../lib/aggregates';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale, TooltipItem } from 'chart.js';
 import { Bar } from 'solid-chartjs';
@@ -115,13 +115,13 @@ interface ProcessedDashboardData {
   metersWithPartialGaps: (Meter & { gaps: Gap[] })[];
 }
 
-const processDashboardData = (d: { meters: Meter[], readings: Reading[], contracts: Contract[] } | undefined): ProcessedDashboardData | null => {
+const processDashboardData = (d: { meters: Meter[], readings: Reading[], contracts: Contract[], aggregates: Aggregates } | undefined): ProcessedDashboardData | null => {
   if (!d) { return null; }
   const meters = d.meters || [];
   const readings = d.readings || [];
   const contracts = d.contracts || [];
-  
-  const agg = calculateAggregates(meters, readings, contracts) as Aggregates;
+
+  const agg = d.aggregates;
   const noC = meters.filter((m: Meter) => !getMeterContracts(m, contracts).length);
   const gaps = getMetersWithGaps(meters, readings, contracts, noC);
   return { 
