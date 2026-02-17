@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.5](https://github.com/dachrisch/energy.consumption/compare/v3.11.4...v3.11.5) (2026-02-17)
+
+
+### Bug Fixes
+
+* show brand title on mobile navigation ([00f96ee](https://github.com/dachrisch/energy.consumption/commit/00f96ee2d3c82e7d8d25ac17310cc045730a3f4d))
+
 ### [3.11.4](https://github.com/dachrisch/energy.consumption/compare/v3.11.3...v3.11.4) (2026-02-16)
 
 
