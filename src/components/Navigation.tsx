@@ -10,7 +10,7 @@ const NavBrand: Component = () => (
       <div class="bg-primary p-2 rounded-xl text-primary-content shadow-lg shadow-primary/20 group-hover:rotate-12 transition-all duration-300">
         <Icon name="power" class="h-6 w-6" />
       </div>
-      <span class="text-2xl font-black tracking-tighter hidden sm:block text-base-content">EnergyMonitor</span>
+      <span class="text-xl sm:text-2xl font-black tracking-tighter block text-base-content">EnergyMonitor</span>
     </A>
   </div>
 );
