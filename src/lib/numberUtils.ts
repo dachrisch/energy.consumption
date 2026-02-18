@@ -11,14 +11,28 @@ export const parseLocaleNumber = (val: string, locale: NumberLocale = 'EU'): num
   let clean = val.replace(/\s/g, '');
 
   if (locale === 'EU') {
-    // Remove all dots (thousands sep), replace last comma with decimal point
     clean = clean.replace(/\./g, '').replace(',', '.');
   } else {
-    // Remove all commas (thousands sep), keep dot as decimal
     clean = clean.replace(/,/g, '');
   }
 
   return parseFloat(clean);
+};
+
+/** Returns +N for EU evidence, -N for US evidence from a single value string. */
+const scoreValue = (val: string): number => {
+  const hasDot = val.includes('.');
+  const hasComma = val.includes(',');
+
+  if (hasDot && hasComma) {
+    return val.lastIndexOf(',') > val.lastIndexOf('.') ? 2 : -2;
+  }
+  if (hasComma) { return 1; } // comma-only decimal: 3877,3 → EU
+  if (hasDot) {
+    const afterDot = val.split('.').pop() ?? '';
+    return afterDot.length === 3 && /^\d+$/.test(afterDot) ? 1 : 0;
+  }
+  return 0;
 };
 
 /**
@@ -36,35 +50,10 @@ export const parseLocaleNumber = (val: string, locale: NumberLocale = 'EU'): num
  * Returns 'EU' as default when evidence is insufficient.
  */
 export const detectLocale = (values: string[]): NumberLocale => {
-  let euVotes = 0;
-  let usVotes = 0;
+  const score = values
+    .map(raw => raw.replace(/\s/g, ''))
+    .filter(Boolean)
+    .reduce((acc, val) => acc + scoreValue(val), 0);
 
-  for (const raw of values) {
-    const val = raw.replace(/\s/g, '');
-    if (!val) { continue; }
-
-    const hasDot = val.includes('.');
-    const hasComma = val.includes(',');
-
-    if (hasDot && hasComma) {
-      const lastDot = val.lastIndexOf('.');
-      const lastComma = val.lastIndexOf(',');
-      if (lastComma > lastDot) {
-        euVotes += 2; // Strong signal: 3.000,00
-      } else {
-        usVotes += 2; // Strong signal: 3,000.00
-      }
-    } else if (hasComma && !hasDot) {
-      euVotes += 1; // Comma-only decimal: 3877,3
-    } else if (hasDot && !hasComma) {
-      // Ambiguous dot-only: check if exactly 3 digits follow the dot
-      const afterDot = val.split('.').pop() ?? '';
-      if (afterDot.length === 3 && /^\d+$/.test(afterDot)) {
-        euVotes += 1; // Likely German thousands: 2.852
-      }
-      // else: treat as plain decimal, no vote
-    }
-  }
-
-  return euVotes >= usVotes ? 'EU' : 'US';
+  return score >= 0 ? 'EU' : 'US';
 };
