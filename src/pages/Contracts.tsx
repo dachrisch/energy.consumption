@@ -237,7 +237,7 @@ const Contracts: Component = () => {
                icon={<Icon name="contract" class="h-12 w-12" />}
              />
            }>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class={`grid grid-cols-1 gap-6 ${sortedItems().length > 1 ? 'md:grid-cols-2' : ''}`}>
                 <For each={sortedItems()} fallback={
                   <EmptyState 
                     title="No contracts defined"
