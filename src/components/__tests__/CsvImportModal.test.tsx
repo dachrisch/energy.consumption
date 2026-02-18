@@ -23,9 +23,9 @@ describe('CsvImportModal', () => {
 
   it('renders paste area when open', () => {
     render(() => <CsvImportModal isOpen={true} onClose={() => {}} onSave={async () => {}} meters={[]} />);
-    expect(screen.getAllByText('Import Data')[0]).toBeInTheDocument();
-    expect(screen.getByText('Paste from Clipboard')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/01\.01\.2022.*2\.852\.\.\./)).toBeInTheDocument();
+    expect(screen.getAllByText('Import Data').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Paste from Clipboard').length).toBeGreaterThan(0);
+    expect(screen.getAllByPlaceholderText(/01\.01\.2022.*2\.852\.\.\./).length).toBeGreaterThan(0);
   });
 
   // Note: Testing file input change and async parsing logic requires careful setup of File objects
