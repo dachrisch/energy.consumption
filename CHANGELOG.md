@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.6](https://github.com/dachrisch/energy.consumption/compare/v3.11.5...v3.11.6) (2026-02-18)
+
+
+### Bug Fixes
+
+* replace Coverage Gaps badge with prominent warning div on meter cards ([518f737](https://github.com/dachrisch/energy.consumption/commit/518f7377cd3d26de11c3e35519992bdb29eb2818))
+
 ### [3.11.5](https://github.com/dachrisch/energy.consumption/compare/v3.11.4...v3.11.5) (2026-02-17)
 
 
