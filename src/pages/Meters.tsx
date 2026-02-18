@@ -144,9 +144,6 @@ const MeterCard: Component<MeterCardProps> = (props) => {
             >
                 View Contracts
             </A>
-            <Show when={hasGaps()}>
-                <span class="badge badge-sm badge-warning font-black uppercase tracking-tighter animate-pulse">Coverage Gaps</span>
-            </Show>
         </div>
 
         <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
@@ -167,17 +164,17 @@ const MeterCard: Component<MeterCardProps> = (props) => {
 
         <Show when={!hasContract() || hasGaps()}>
           <div 
-            class={`border-2 border-dashed p-4 rounded-2xl mt-6 flex flex-col items-center text-center gap-2 group transition-all cursor-default ${!hasContract() ? 'bg-warning/5 border-warning/20 hover:border-warning/40' : 'bg-base-200/30 border-base-content/10 hover:border-primary/30'}`}
+            class={`border-2 border-dashed p-4 rounded-2xl mt-6 flex flex-col items-center text-center gap-2 group transition-all cursor-default ${hasGaps() ? 'bg-base-200/30 border-base-content/10 hover:border-primary/30' : 'bg-warning/5 border-warning/20 hover:border-warning/40'}`}
             onClick={(e) => e.stopPropagation()}
           >
-             <p class={`text-[10px] font-black uppercase tracking-widest leading-none ${!hasContract() ? 'text-warning' : 'text-primary'}`}>
-                {!hasContract() ? 'Pricing Missing' : `${gaps().length} Coverage Gap${gaps().length > 1 ? 's' : ''}`}
+             <p class={`text-[10px] font-black uppercase tracking-widest leading-none ${hasGaps() ? 'text-primary' : 'text-warning'}`}>
+                {hasGaps() ? `${gaps().length} Coverage Gap${gaps().length > 1 ? 's' : ''}` : 'Pricing Missing'}
               </p>
               <A 
                 href={`/contracts/add?meterId=${props.meter._id}${hasGaps() ? `&startDate=${formatDateForURL(gaps()[0].startDate)}&endDate=${formatDateForURL(gaps()[0].endDate)}` : ''}`} 
-                class={`btn btn-xs rounded-lg font-black px-4 shadow-lg ${!hasContract() ? 'btn-warning shadow-warning/20' : 'btn-primary shadow-primary/20'}`}
+                class={`btn btn-xs rounded-lg font-black px-4 shadow-lg ${hasGaps() ? 'btn-primary shadow-primary/20' : 'btn-warning shadow-warning/20'}`}
               >
-                {!hasContract() ? 'Add Contract' : 'Fill First Gap'}
+                {hasGaps() ? 'Fill First Gap' : 'Add Contract'}
               </A>
           </div>
         </Show>
