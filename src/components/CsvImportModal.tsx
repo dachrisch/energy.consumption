@@ -1,7 +1,8 @@
 import { Component, Show, createSignal, For, createEffect } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { parseCsv } from '../lib/csvParser';
-import { parseLocaleNumber } from '../lib/numberUtils';
+import { parseLocaleNumber, detectLocale, NumberLocale } from '../lib/numberUtils';
+import { parseDate } from '../lib/dateUtils';
 import MeterForm from './MeterForm';
 import EmptyState from './EmptyState';
 import Icon from './Icon';
@@ -25,10 +26,41 @@ const StepUpload: Component<{ onPasteClick: () => void, onManualPaste: (e: { tar
   </div>
 );
 
-const StepMapping: Component<{ 
+const LocaleSwitcher: Component<{
+  locale: NumberLocale;
+  setLocale: (l: NumberLocale) => void;
+  autoDetected: boolean;
+}> = (props) => (
+  <div class="form-control flex flex-col gap-2">
+    <div class="flex items-center gap-2 px-1">
+      <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Number Format</span>
+      <Show when={props.autoDetected}>
+        <span class="badge badge-xs badge-ghost font-bold opacity-40 uppercase tracking-widest">Auto-detected</span>
+      </Show>
+    </div>
+    <div class="join w-full">
+      <button
+        class={`join-item btn btn-sm flex-1 font-black text-xs ${props.locale === 'EU' ? 'btn-primary' : 'btn-ghost border border-base-content/10'}`}
+        onClick={() => props.setLocale('EU')}
+      >
+        EU &nbsp;<span class="opacity-60 font-mono">1.234,56</span>
+      </button>
+      <button
+        class={`join-item btn btn-sm flex-1 font-black text-xs ${props.locale === 'US' ? 'btn-primary' : 'btn-ghost border border-base-content/10'}`}
+        onClick={() => props.setLocale('US')}
+      >
+        US &nbsp;<span class="opacity-60 font-mono">1,234.56</span>
+      </button>
+    </div>
+  </div>
+);
+
+const StepMapping: Component<{
   meters: Meter[], targetMeterId: string, setTargetMeterId: (v: string) => void,
   headers: string[], dateColumn: string, setDateColumn: (v: string) => void,
   valueColumn: string, setValueColumn: (v: string) => void,
+  locale: NumberLocale, setLocale: (l: NumberLocale) => void,
+  autoDetected: boolean,
   sampleRow?: Record<string, string>, onCreateNewMeter?: () => void
 }> = (props) => (
   <div class="space-y-6">
@@ -44,6 +76,7 @@ const StepMapping: Component<{
       <div class="form-control flex flex-col gap-2"><label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Value Column</span></label>
         <select class="select select-bordered h-12 rounded-xl" value={props.valueColumn} onChange={(e) => props.setValueColumn(e.currentTarget.value)}><For each={props.headers}>{(header) => <option value={header}>{header}</option>}</For></select></div>
     </div>
+    <LocaleSwitcher locale={props.locale} setLocale={props.setLocale} autoDetected={props.autoDetected} />
     <div class="bg-base-200/30 border p-4 rounded-2xl overflow-x-auto"><table class="table table-xs"><thead><tr><For each={props.headers}>{(h) => <th class="font-bold text-xs">{h}</th>}</For></tr></thead>
       <tbody><tr><For each={props.headers}>{(h) => <td class="text-xs">{props.sampleRow?.[h]}</td>}</For></tr></tbody></table></div>
   </div>
@@ -60,11 +93,29 @@ const ModalFooter: Component<{ step: Step; onClose: () => void; onBack: () => vo
 );
 
 const CsvImportModal: Component<CsvImportModalProps> = (props) => {
-  const [step, setStep] = createSignal<Step>('upload'); const [csvData, setCsvData] = createSignal<Record<string, string>[]>([]); const [headers, setHeaders] = createSignal<string[]>([]);
-  const [targetMeterId, setTargetMeterId] = createSignal(''); const [dateColumn, setDateColumn] = createSignal(''); const [valueColumn, setValueColumn] = createSignal('');
-  const [error, setError] = createSignal<string | null>(null); const [newMeterName, setNewMeterName] = createSignal(''); const [newMeterNumber, setNewMeterNumber] = createSignal('');
-  const [newMeterType, setNewMeterType] = createSignal('power'); const [newMeterUnit, setNewMeterUnit] = createSignal('kWh'); const [isCreatingMeter, setIsCreatingMeter] = createSignal(false);
-  const reset = () => { setStep('upload'); setCsvData([]); setHeaders([]); setTargetMeterId(props.meters[0]?._id || ''); setDateColumn(''); setValueColumn(''); setError(null); setNewMeterName(''); setNewMeterNumber(''); setNewMeterType('power'); setNewMeterUnit('kWh'); setIsCreatingMeter(false); };
+  const [step, setStep] = createSignal<Step>('upload');
+  const [csvData, setCsvData] = createSignal<Record<string, string>[]>([]);
+  const [headers, setHeaders] = createSignal<string[]>([]);
+  const [targetMeterId, setTargetMeterId] = createSignal('');
+  const [dateColumn, setDateColumn] = createSignal('');
+  const [valueColumn, setValueColumn] = createSignal('');
+  const [locale, setLocale] = createSignal<NumberLocale>('EU');
+  const [autoDetected, setAutoDetected] = createSignal(false);
+  const [error, setError] = createSignal<string | null>(null);
+  const [newMeterName, setNewMeterName] = createSignal('');
+  const [newMeterNumber, setNewMeterNumber] = createSignal('');
+  const [newMeterType, setNewMeterType] = createSignal('power');
+  const [newMeterUnit, setNewMeterUnit] = createSignal('kWh');
+  const [isCreatingMeter, setIsCreatingMeter] = createSignal(false);
+
+  const reset = () => {
+    setStep('upload'); setCsvData([]); setHeaders([]);
+    setTargetMeterId(props.meters[0]?._id || ''); setDateColumn(''); setValueColumn('');
+    setLocale('EU'); setAutoDetected(false); setError(null);
+    setNewMeterName(''); setNewMeterNumber(''); setNewMeterType('power'); setNewMeterUnit('kWh');
+    setIsCreatingMeter(false);
+  };
+
   const handleCreateNewMeter = async () => {
     if (!newMeterName() || !newMeterNumber()) { return setError('Enter name and number'); }
     setIsCreatingMeter(true);
@@ -74,31 +125,59 @@ const CsvImportModal: Component<CsvImportModalProps> = (props) => {
       const m = await res.json(); setTargetMeterId(m._id); props.onMeterCreated?.(m); setStep('mapping'); setError(null);
     } catch (_e) { setError('Error creating meter'); } finally { setIsCreatingMeter(false); }
   };
+
   createEffect(() => { if (props.isOpen) { reset(); } });
+
   const handleTextProcess = (t: string) => {
     try {
-      const parsed = parseCsv(t); if (!parsed.length) { return setError('No data found'); }
-      setCsvData(parsed); setHeaders(Object.keys(parsed[0])); setDateColumn(Object.keys(parsed[0]).find(h => /date|datum/i.test(h)) || Object.keys(parsed[0])[0]);
-      setValueColumn(Object.keys(parsed[0]).find(h => /value|wert/i.test(h)) || (Object.keys(parsed[0]).length > 1 ? Object.keys(parsed[0])[1] : ''));
-      setStep('mapping'); setError(null);
+      const parsed = parseCsv(t);
+      if (!parsed.length) { return setError('No data found'); }
+
+      const detectedHeaders = Object.keys(parsed[0]);
+      const detectedValueCol = detectedHeaders.find(h => /value|wert/i.test(h)) || (detectedHeaders.length > 1 ? detectedHeaders[1] : '');
+
+      // Detect locale from the value column sample
+      if (detectedValueCol) {
+        const sample = parsed.slice(0, 20).map(row => row[detectedValueCol]).filter(Boolean);
+        const detected = detectLocale(sample);
+        setLocale(detected);
+        setAutoDetected(true);
+      }
+
+      setCsvData(parsed);
+      setHeaders(detectedHeaders);
+      setDateColumn(detectedHeaders.find(h => /date|datum/i.test(h)) || detectedHeaders[0]);
+      setValueColumn(detectedValueCol);
+      setStep('mapping');
+      setError(null);
     } catch (_e) { setError('Failed to parse content'); }
   };
+
   const getPreviewData = (): PreviewReading[] => {
     const mId = targetMeterId(); const dCol = dateColumn(); const vCol = valueColumn();
     if (!mId || !dCol || !vCol) { return []; }
     return csvData().reduce((acc: PreviewReading[], row) => {
-      const d = new Date(row[dCol]); const v = parseLocaleNumber(row[vCol]);
-      if (!isNaN(d.getTime()) && !isNaN(v)) { acc.push({ meterId: mId, date: d, value: v, originalDate: row[dCol], originalValue: row[vCol] }); }
+      const d = parseDate(row[dCol]);
+      const v = parseLocaleNumber(row[vCol], locale());
+      if (!isNaN(d.getTime()) && !isNaN(v)) {
+        acc.push({ meterId: mId, date: d, value: v, originalDate: row[dCol], originalValue: row[vCol] });
+      }
       return acc;
     }, []);
   };
-  const handleImport = async () => { setStep('importing'); try { await props.onSave(getPreviewData()); props.onClose(); } catch (_e) { setError('Import failed'); setStep('preview'); } };
+
+  const handleImport = async () => {
+    setStep('importing');
+    try { await props.onSave(getPreviewData()); props.onClose(); }
+    catch (_e) { setError('Import failed'); setStep('preview'); }
+  };
+
   return (
     <Show when={props.isOpen}><Portal><div class="modal modal-open"><div class="modal-box w-11/12 max-w-2xl"><h3 class="font-bold text-lg">Import Data</h3><div class="py-4">
       <Show when={props.meters.length === 0 && step() === 'upload'}><EmptyState title="No meters" description="Create one first." compact={true} onAction={() => setStep('new-meter')} actionLabel="Create" icon={<Icon name="warning" class="h-10 w-10" />} /></Show>
       {error() && <div class="alert alert-error mb-4">{error()}</div>}
       <Show when={step() === 'upload'}><StepUpload onPasteClick={async () => handleTextProcess(await navigator.clipboard.readText())} onManualPaste={e => handleTextProcess(e.target.value)} /></Show>
-      <Show when={step() === 'mapping'}><StepMapping meters={props.meters} targetMeterId={targetMeterId()} setTargetMeterId={setTargetMeterId} headers={headers()} dateColumn={dateColumn()} setDateColumn={setDateColumn} valueColumn={valueColumn()} setValueColumn={setValueColumn} sampleRow={csvData()[0]} onCreateNewMeter={() => setStep('new-meter')} /></Show>
+      <Show when={step() === 'mapping'}><StepMapping meters={props.meters} targetMeterId={targetMeterId()} setTargetMeterId={setTargetMeterId} headers={headers()} dateColumn={dateColumn()} setDateColumn={setDateColumn} valueColumn={valueColumn()} setValueColumn={setValueColumn} locale={locale()} setLocale={(l) => { setLocale(l); setAutoDetected(false); }} autoDetected={autoDetected()} sampleRow={csvData()[0]} onCreateNewMeter={() => setStep('new-meter')} /></Show>
       <Show when={step() === 'new-meter'}><MeterForm name={newMeterName()} setName={setNewMeterName} meterNumber={newMeterNumber()} setMeterNumber={setNewMeterNumber} type={newMeterType()} setType={setNewMeterType} unit={newMeterUnit()} setUnit={setNewMeterUnit} isLoading={isCreatingMeter()} compact={true} /></Show>
       <Show when={step() === 'preview'}><p class="mb-4 font-black uppercase text-xs opacity-60">Preview ({getPreviewData().length})</p><div class="overflow-x-auto max-h-96 border rounded-2xl"><table class="table table-xs"><thead><tr><th>Date</th><th>Value</th><th>Original</th></tr></thead>
         <tbody><For each={getPreviewData()}>{r => <tr><td>{r.date.toLocaleDateString()}</td><td class="font-bold">{r.value}</td><td class="opacity-60">{r.originalDate} | {r.originalValue}</td></tr>}</For></tbody></table></div></Show>
