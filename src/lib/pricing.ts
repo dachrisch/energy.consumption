@@ -34,6 +34,71 @@ export function findContractForDate(contracts: Contract[], date: Date): Contract
 }
 
 /**
+ * Find the applicable contract for a specific date, with fallback to the most recent expired contract.
+ */
+export function findActiveOrLastContract(contracts: Contract[], date: Date): Contract | null {
+  const active = findContractForDate(contracts, date);
+  if (active) {return active;}
+
+  if (contracts.length === 0) {return null;}
+
+  return [...contracts]
+    .filter(c => new Date(c.startDate) <= date)
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0] || null;
+}
+
+export interface MeterStats {
+  dailyAverage: number;
+  yearlyProjection: number;
+  estimatedYearlyCost: number;
+  dailyCost: number;
+}
+
+/**
+ * Unified calculation for meter statistics used across the application.
+ */
+export function calculateMeterStats(readings: { value: number; date: Date }[], contracts: Contract[]): MeterStats {
+  if (readings.length < 2) {
+    return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
+  }
+
+  const sorted = [...readings].sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+  // Basic consumption: last - first (handles most cases, resets are handled by dailyAverage in consumption.ts but here we do a simple version)
+  // To match calculateDailyAverage exactly, we should sum positive deltas.
+  let totalConsumption = 0;
+  for (let i = 1; i < sorted.length; i++) {
+    totalConsumption += Math.max(0, sorted[i].value - sorted[i - 1].value);
+  }
+
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  const days = (last.date.getTime() - first.date.getTime()) / (1000 * 60 * 60 * 24);
+  
+  const dailyAverage = days > 0 ? totalConsumption / days : 0;
+  const yearlyProjection = dailyAverage * 365.25;
+
+  const activeContract = findActiveOrLastContract(contracts, new Date());
+  
+  let estimatedYearlyCost = 0;
+  let dailyCost = 0;
+  
+  if (activeContract) {
+    estimatedYearlyCost = calculateCostForContract({
+      consumption: yearlyProjection,
+      days: 365.25,
+      contract: activeContract
+    });
+    
+    const dailyBase = (Number(activeContract.basePrice) || 0) / 30.44;
+    const dailyWorking = (Number(activeContract.workingPrice) || 0) * dailyAverage;
+    dailyCost = dailyBase + dailyWorking;
+  }
+
+  return { dailyAverage, yearlyProjection, estimatedYearlyCost, dailyCost };
+}
+
+/**
 
  * Projects yearly consumption based on current daily average.
 

@@ -3,7 +3,8 @@ import { Portal } from 'solid-js/web';
 import { parseCsv } from '../lib/csvParser';
 import { isUnifiedExportFormat, parseUnifiedFormat } from '../lib/jsonParser';
 import { detectFileType } from '../lib/fileTypeDetector';
-import { parseLocaleNumber } from '../lib/numberUtils';
+import { parseLocaleNumber, detectLocale } from '../lib/numberUtils';
+import { parseFlexibleDate } from '../lib/dateUtils';
 import MeterForm from './MeterForm';
 import EmptyState from './EmptyState';
 import Icon from './Icon';
@@ -104,9 +105,28 @@ const StepMapping: Component<{
   meters: Meter[]; targetMeterId: string; setTargetMeterId: (v: string) => void;
   headers: string[]; dateColumn: string; setDateColumn: (v: string) => void;
   valueColumn: string; setValueColumn: (v: string) => void;
+  importLocale: 'EU' | 'US'; setImportLocale: (v: 'EU' | 'US') => void;
   onCreateNewMeter?: () => void;
 }> = (props) => (
   <div class="space-y-6">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-black uppercase tracking-widest opacity-60">Data Format / Locale</p>
+      <div class="join shadow-sm border border-base-content/10 rounded-xl overflow-hidden bg-base-200/50">
+        <button 
+          class={`join-item btn btn-xs px-4 h-8 border-none ${props.importLocale === 'EU' ? 'btn-primary text-white' : 'btn-ghost'}`}
+          onClick={() => props.setImportLocale('EU')}
+        >
+          EU (DD.MM / 1.234,5)
+        </button>
+        <button 
+          class={`join-item btn btn-xs px-4 h-8 border-none ${props.importLocale === 'US' ? 'btn-primary text-white' : 'btn-ghost'}`}
+          onClick={() => props.setImportLocale('US')}
+        >
+          US (MM/DD / 1,234.5)
+        </button>
+      </div>
+    </div>
+
     <div class="form-control w-full flex flex-col gap-2">
       <label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">1. Select Target Meter</span></label>
       <select 
@@ -142,12 +162,31 @@ const StepMapping: Component<{
   </div>
 );
 
-const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; existingMeters: Meter[]; }> = (props) => {
+const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; existingMeters: Meter[]; importLocale: 'EU' | 'US'; setImportLocale: (v: 'EU' | 'US') => void; }> = (props) => {
   const getMeterName = (id: string) => props.backupInfo?.data?.meters?.find(m => m.id === id)?.name || props.existingMeters.find(m => m._id === id)?.name || 'Unknown Meter';
   const willCreateMeter = (m: { meterNumber: string }) => !props.existingMeters.find(em => em.meterNumber === m.meterNumber);
 
   return (
     <div class="space-y-6">
+      <Show when={!props.backupInfo}>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-[10px] font-black uppercase tracking-widest opacity-60">Ambiguous Data?</p>
+          <div class="join shadow-sm border border-base-content/10 rounded-xl overflow-hidden bg-base-200/50">
+            <button 
+              class={`join-item btn btn-xs px-4 h-8 border-none ${props.importLocale === 'EU' ? 'btn-primary text-white' : 'btn-ghost'}`}
+              onClick={() => props.setImportLocale('EU')}
+            >
+              EU
+            </button>
+            <button 
+              class={`join-item btn btn-xs px-4 h-8 border-none ${props.importLocale === 'US' ? 'btn-primary text-white' : 'btn-ghost'}`}
+              onClick={() => props.setImportLocale('US')}
+            >
+              US
+            </button>
+          </div>
+        </div>
+      </Show>
       <Show when={props.backupInfo?.data?.meters?.length}>
          <div class="space-y-4">
            <div>
@@ -210,16 +249,26 @@ const handleUnifiedBackup = (opts: { jsonData: ImportData; state: ImportState })
 const handleJsonArrayImport = (opts: { jsonData: unknown[]; state: ImportState }) => {
   const firstItem = opts.jsonData[0] as Record<string, unknown>;
   const cols = Object.keys(firstItem);
-  opts.state.setCsvData(opts.jsonData.map(row => {
+  const mappedData = opts.jsonData.map(row => {
     const newRow: Record<string, string> = {};
     Object.entries(row as Record<string, unknown>).forEach(([k, v]) => {
       newRow[k] = v === null || v === undefined ? '' : String(v);
     });
     return newRow;
-  }));
+  });
+  opts.state.setCsvData(mappedData);
   opts.state.setHeaders(cols);
-  opts.state.setDateColumn(cols.find(h => /date|datum|time/i.test(h)) || cols[0]);
-  opts.state.setValueColumn(cols.find(h => /value|wert|reading|strom|gas|wasser/i.test(h)) || (cols.length > 1 ? cols[1] : ''));
+  const dateCol = cols.find(h => /date|datum|time/i.test(h)) || cols[0];
+  const valCol = cols.find(h => /value|wert|reading|strom|gas|wasser/i.test(h)) || (cols.length > 1 ? cols[1] : '');
+  opts.state.setDateColumn(dateCol);
+  opts.state.setValueColumn(valCol);
+  
+  // Auto-detect locale from the value column
+  const sampleValues = mappedData.slice(0, 50).map(row => row[valCol]).filter(Boolean);
+  if (sampleValues.length > 0) {
+    opts.state.setImportLocale(detectLocale(sampleValues));
+  }
+
   opts.state.setFileFormat('csv');
   opts.state.setStep('mapping');
 };
@@ -245,6 +294,7 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
   const [targetMeterId, setTargetMeterId] = createSignal<string>('');
   const [dateColumn, setDateColumn] = createSignal<string>('');
   const [valueColumn, setValueColumn] = createSignal<string>('');
+  const [importLocale, setImportLocale] = createSignal<'EU' | 'US'>('EU');
   const [error, setError] = createSignal<string | null>(null);
   const [newMeterName, setNewMeterName] = createSignal<string>('');
   const [newMeterNumber, setNewMeterNumber] = createSignal<string>('');
@@ -257,8 +307,8 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
   const reset = () => {
     setStep('upload'); setFileFormat('csv'); setCsvData([]); setJsonReadings([]); setBackupData(null);
     setHeaders([]); setTargetMeterId(props.meters[0]?._id || ''); setDateColumn(''); setValueColumn('');
-    setError(null); setNewMeterName(''); setNewMeterNumber(''); setNewMeterType('power');
-    setNewMeterUnit('kWh'); setIsCreatingMeter(false);
+    setImportLocale('EU'); setError(null); setNewMeterName(''); setNewMeterNumber(''); 
+    setNewMeterType('power'); setNewMeterUnit('kWh'); setIsCreatingMeter(false);
   };
 
   const handleCreateNewMeter = async () => {
@@ -288,8 +338,20 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
       const detectedType = detectFileType(file.name, content);
       if (detectedType === 'json') { processJsonFile(content); } else {
         const parsed = parseCsv(content); if (parsed.length === 0) { return setError('No data found'); }
-        setCsvData(parsed); setHeaders(Object.keys(parsed[0])); setDateColumn(Object.keys(parsed[0]).find(h => /date|datum|time/i.test(h)) || Object.keys(parsed[0])[0]);
-        setValueColumn(Object.keys(parsed[0]).find(h => /value|wert|reading/i.test(h)) || (Object.keys(parsed[0]).length > 1 ? Object.keys(parsed[0])[1] : ''));
+        setCsvData(parsed); 
+        const cols = Object.keys(parsed[0]);
+        setHeaders(cols); 
+        const dCol = cols.find(h => /date|datum|time/i.test(h)) || cols[0];
+        const vCol = cols.find(h => /value|wert|reading|strom/i.test(h)) || (cols.length > 1 ? cols[1] : '');
+        setDateColumn(dCol);
+        setValueColumn(vCol);
+
+        // Auto-detect locale from the value column
+        const sampleValues = parsed.slice(0, 50).map(row => row[vCol]).filter(Boolean);
+        if (sampleValues.length > 0) {
+          setImportLocale(detectLocale(sampleValues));
+        }
+
         setFileFormat('csv'); setStep('mapping');
       }
     } catch (err) { setError(`Failed to parse file: ${err instanceof Error ? err.message : 'Error'}`); }
@@ -300,8 +362,8 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
     const mId = targetMeterId(); const dCol = dateColumn(); const vCol = valueColumn();
     if (!mId || !dCol || !vCol) { return []; }
     return csvData().reduce((acc: PreviewReading[], row) => {
-      const date = new Date(row[dCol]); const value = parseLocaleNumber(row[vCol]);
-      if (!isNaN(date.getTime()) && !isNaN(value)) { acc.push({ meterId: mId, date, value, originalDate: row[dCol], originalValue: row[vCol] }); }
+      const date = parseFlexibleDate(row[dCol], importLocale()); const value = parseLocaleNumber(row[vCol], importLocale());
+      if (date && !isNaN(value)) { acc.push({ meterId: mId, date, value, originalDate: row[dCol], originalValue: row[vCol] }); }
       return acc;
     }, []);
   };
@@ -320,9 +382,9 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
         <Show when={props.meters.length === 0 && step() === 'upload'}><EmptyState title="No meters found" description="Create one first." inline={true} onAction={() => setStep('new-meter')} actionLabel="Create Meter" colorScheme="warning" /></Show>
         {error() && <div class="alert alert-error mb-4">{error()}</div>}
         <Show when={step() === 'upload'}><StepUpload onFileSelected={handleFileSelected} onPasteClick={async () => handleFileSelected(new File([await navigator.clipboard.readText()], 'paste.csv'))} /></Show>
-        <Show when={step() === 'mapping'}><StepMapping meters={props.meters} targetMeterId={targetMeterId()} setTargetMeterId={setTargetMeterId} headers={headers()} dateColumn={dateColumn()} setDateColumn={setDateColumn} valueColumn={valueColumn()} setValueColumn={setValueColumn} onCreateNewMeter={() => setStep('new-meter')} /></Show>
+        <Show when={step() === 'mapping'}><StepMapping meters={props.meters} targetMeterId={targetMeterId()} setTargetMeterId={setTargetMeterId} headers={headers()} dateColumn={dateColumn()} setDateColumn={setDateColumn} valueColumn={valueColumn()} setValueColumn={setValueColumn} onCreateNewMeter={() => setStep('new-meter')} importLocale={importLocale()} setImportLocale={setImportLocale} /></Show>
         <Show when={step() === 'new-meter'}><MeterForm name={newMeterName()} setName={setNewMeterName} meterNumber={newMeterNumber()} setMeterNumber={setNewMeterNumber} type={newMeterType()} setType={setNewMeterType} unit={newMeterUnit()} setUnit={setNewMeterUnit} isLoading={isCreatingMeter()} compact={true} /></Show>
-        <Show when={step() === 'preview'}><StepPreview data={getPreviewData()} backupInfo={backupData() ?? undefined} existingMeters={props.meters} /></Show>
+        <Show when={step() === 'preview'}><StepPreview data={getPreviewData()} backupInfo={backupData() ?? undefined} existingMeters={props.meters} importLocale={importLocale()} setImportLocale={setImportLocale} /></Show>
         <Show when={step() === 'importing'}><div class="flex justify-center p-10"><span class="loading loading-spinner loading-lg"></span></div></Show>
       </div>
       <ModalFooter step={step()} onClose={props.onClose} onBack={onBack} onNext={() => (targetMeterId() && dateColumn() && valueColumn()) ? setStep('preview') : setError('Map all fields.')} onImport={async () => { setStep('importing'); try { await props.onSave(backupData() || getPreviewData()); props.onClose(); } catch (_e) { setError('Import failed'); setStep('preview'); } }} onCreateMeter={handleCreateNewMeter} isCreatingMeter={isCreatingMeter()} hasBackup={!!backupData()} />
@@ -331,3 +393,4 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
 };
 
 export default UnifiedImportModal;
+
