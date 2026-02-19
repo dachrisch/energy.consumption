@@ -43,6 +43,13 @@ const authLimiter = rateLimit({
 	legacyHeaders: false,
 });
 
+const staticLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 200, // Limit each IP to 200 SPA fallback requests per window
+	standardHeaders: true,
+	legacyHeaders: false,
+});
+
 app.use('/api/register', authLimiter);
 app.use('/api/login', authLimiter);
 
@@ -82,7 +89,7 @@ app.all('/api/*', async (req, res) => {
 });
 
 // SPA fallback: Serve index.html for all other routes
-app.get('*', (req, res) => {
+app.get('*', staticLimiter, (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
