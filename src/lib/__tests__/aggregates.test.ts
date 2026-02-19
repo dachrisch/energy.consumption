@@ -53,4 +53,34 @@ describe('calculateAggregates', () => {
     expect(result.gasYearlyCost).toBeCloseTo(790.5, 1);
     expect(result.totalYearlyCost).toBeCloseTo(2006.2, 1);
   });
+
+  it('should calculate actual and prognosis for current year', () => {
+    const currentYear = new Date().getFullYear();
+    const meters = [{ _id: 'm1', type: 'power', name: 'Power Meter' }];
+    
+    // 100 units in 100 days = 1 unit/day
+    // Yearly = 365.25 units
+    const readings = [
+      { meterId: 'm1', value: 1000, date: new Date(`${currentYear}-01-01`) },
+      { meterId: 'm1', value: 1100, date: new Date(`${currentYear}-04-10`) } 
+    ];
+
+    const contracts = [
+      { 
+        meterId: 'm1', 
+        type: 'power', 
+        startDate: new Date(`${currentYear}-01-01`), 
+        basePrice: 0, 
+        workingPrice: 1.0 
+      }
+    ];
+
+    const result = calculateAggregates(meters as any, readings as any, contracts as any) as any;
+    
+    const currentYearStats = result.yearlyHistory.find((h: any) => h.year === currentYear);
+    expect(currentYearStats).toBeDefined();
+    expect(currentYearStats.powerCostActual).toBe(100); // 100 units * 1.0
+    // Total estimated depends on daily average and pricing logic
+    expect(currentYearStats.powerCostPrognosis).toBeGreaterThan(0);
+  });
 });

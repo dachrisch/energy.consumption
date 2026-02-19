@@ -18,7 +18,7 @@ export const parseLocaleNumber = (val: string, locale: NumberLocale = 'EU'): num
       // US style: comma = thousands, dot = decimal
       clean = clean.replace(/,/g, '');
   }
-  
+
   return parseFloat(clean);
 };
 

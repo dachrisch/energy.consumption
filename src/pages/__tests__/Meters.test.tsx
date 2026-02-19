@@ -59,7 +59,6 @@ describe('Meters Page', () => {
     const grid = await screen.findByTestId('meters-grid');
     expect(grid.className).toContain('grid-cols-1');
     expect(grid.className).toContain('md:grid-cols-2');
-    // We want to remove lg:grid-cols-3
     expect(grid.className).not.toContain('lg:grid-cols-3');
   });
 });
