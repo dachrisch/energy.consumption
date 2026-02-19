@@ -122,8 +122,12 @@ const processDashboardData = (d: { meters: Meter[], readings: Reading[], contrac
   const contracts = d.contracts || [];
 
   const agg = d.aggregates;
+  
+  // Note: We use the pre-calculated aggregates from the backend.
+  // We still need to find meters with missing contracts/gaps for the UI warning banners.
   const noC = meters.filter((m: Meter) => !getMeterContracts(m, contracts).length);
   const gaps = getMetersWithGaps(meters, readings, contracts, noC);
+
   return { 
     meters, readings, contracts,
     aggregates: agg, 

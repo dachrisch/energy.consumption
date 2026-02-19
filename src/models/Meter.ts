@@ -7,6 +7,12 @@ const meterSchema = new mongoose.Schema({
   type: { type: String, enum: ['power', 'gas'], required: true },
   unit: { type: String, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  stats: {
+    dailyAverage: { type: Number, default: 0 },
+    yearlyProjection: { type: Number, default: 0 },
+    estimatedYearlyCost: { type: Number, default: 0 },
+    dailyCost: { type: Number, default: 0 },
+  }
 }, { timestamps: true });
 
 // Compound unique index to ensure uniqueness is scoped per user

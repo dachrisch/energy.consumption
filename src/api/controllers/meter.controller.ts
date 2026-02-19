@@ -3,6 +3,7 @@ import Reading from '../../models/Reading';
 import Contract from '../../models/Contract';
 import { RouteParams, sanitizeString } from '../utils';
 import { meterSchema, formatZodError } from '../validation';
+import { recalculateUserStats } from '../../lib/recalculationService';
 
 export async function handleMeters({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
@@ -20,6 +21,10 @@ export async function handleMeters({ req, res, userId, url }: RouteParams) {
       return;
     }
     const meter = await Meter.create({ ...result.data, userId });
+    
+    // Recalculate stats for the user after creating a meter (mainly for dashboard aggregates)
+    await recalculateUserStats(userId);
+    
     res.statusCode = 201;
     res.end(JSON.stringify(meter));
     return;
@@ -40,6 +45,10 @@ export async function handleMeterItem({ req, res, userId, path }: RouteParams) {
       Contract.deleteMany({ meterId: { $eq: id } }).setOptions({ userId }),
       Meter.deleteOne({ _id: { $eq: id } }).setOptions({ userId })
     ]);
+    
+    // Recalculate stats for the user after deleting a meter
+    await recalculateUserStats(userId);
+    
     res.end(JSON.stringify({ message: 'Meter and associated data deleted' }));
     return;
   }
@@ -51,6 +60,10 @@ export async function handleMeterItem({ req, res, userId, path }: RouteParams) {
       return;
     }
     const updated = await Meter.findOneAndUpdate({ _id: { $eq: id } }, { $set: result.data }, { new: true }).setOptions({ userId });
+    
+    // Recalculate stats for the user after updating a meter
+    await recalculateUserStats(userId);
+    
     res.end(JSON.stringify(updated));
     return;
   }

@@ -1,7 +1,5 @@
 import { Component, createResource, For, Show } from 'solid-js';
 import { A, useNavigate } from '@solidjs/router';
-import { calculateStats } from '../lib/consumption';
-import { findContractForDate, calculateCostForContract, calculateIntervalCost } from '../lib/pricing';
 import { findContractGaps } from '../lib/gapDetection';
 import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
@@ -19,6 +17,12 @@ interface Meter {
   unit: string;
   type: string;
   meterNumber: string;
+  stats?: {
+    dailyAverage: number;
+    yearlyProjection: number;
+    estimatedYearlyCost: number;
+    dailyCost: number;
+  };
 }
 
 interface Reading {
@@ -38,55 +42,6 @@ interface Contract {
    providerName: string;
 }
 
-const calculateMeterStats = (readings: Reading[], contracts: Contract[]) => {
-  if (readings.length < 2) {
-    return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
-  }
-
-  const consumptionStats = calculateStats(readings.map((r: Reading) => ({
-    value: r.value,
-    date: new Date(r.date)
-  })));
-
-  const sortedReadings = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const last = sortedReadings[0];
-  const prev = sortedReadings[1];
-  const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
-
-  let dailyCost = 0;
-  if (intervalDays > 0) {
-    const normalizedContracts = contracts.map((c) => ({
-      ...c,
-      startDate: new Date(c.startDate),
-      endDate: c.endDate ? new Date(c.endDate) : null
-    }));
-    const totalIntervalCost = calculateIntervalCost(
-      new Date(prev.date),
-      new Date(last.date),
-      last.value - prev.value,
-      normalizedContracts
-    );
-    dailyCost = totalIntervalCost / intervalDays;
-  }
-
-  const normalizedContracts = contracts.map((c) => ({
-    ...c,
-    startDate: new Date(c.startDate),
-    endDate: c.endDate ? new Date(c.endDate) : null
-  }));
-  const activeContract = findContractForDate(normalizedContracts, new Date());
-  let estimatedYearlyCost = 0;
-  if (activeContract) {
-    estimatedYearlyCost = calculateCostForContract({
-      consumption: consumptionStats.yearlyProjection,
-      days: 365.25,
-      contract: activeContract
-    });
-  }
-
-  return { ...consumptionStats, estimatedYearlyCost, dailyCost };
-};
-
 interface MeterCardProps {
   meter: Meter;
   readings: Reading[];
@@ -96,7 +51,10 @@ interface MeterCardProps {
 }
 
 const MeterCard: Component<MeterCardProps> = (props) => {
-  const stats = () => calculateMeterStats(props.readings, props.contracts);
+  const stats = () => {
+    // Use pre-calculated stats from backend.
+    return props.meter.stats || { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
+  };
 
   const gaps = () => findContractGaps(props.readings, props.contracts);
 
@@ -237,7 +195,7 @@ const Meters: Component = () => {
        </div>
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-        <div data-testid="meters-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div data-testid="meters-grid" class={`grid grid-cols-1 gap-6 ${(data()?.meters?.length ?? 0) > 1 ? 'md:grid-cols-2' : ''}`}>
           <For each={data()?.meters} fallback={
             <EmptyState 
               title="No meters found"

@@ -208,35 +208,82 @@ function calculateYtdCosts(params: {
 }
 
 function getMeterContractsList(meterId: string, contracts: IContract[]): Contract[] {
-    return (contracts as unknown as Contract[]).filter((c) => {
-        const contract = c as unknown as { meterId: string | { _id: string } };
-        const cId = typeof contract.meterId === 'string' ? contract.meterId : (contract.meterId as unknown as { _id: string })?._id;
+    return contracts.filter((c) => {
+        const cId = typeof c.meterId === 'string' ? c.meterId : (c.meterId as unknown as { _id: string })?._id;
         return cId?.toString() === meterId.toString();
-    }).map(c => ({
-        ...c,
-        startDate: new Date(c.startDate),
-        endDate: c.endDate ? new Date(c.endDate) : null
-    }));
+    }).map(c => {
+        // Ensure we extract data from Mongoose document correctly if it is one
+        const hasToObject = (val: unknown): val is { toObject: () => Record<string, unknown> } => 
+            !!val && typeof val === 'object' && 'toObject' in val && typeof (val as Record<string, unknown>).toObject === 'function';
+        
+        const data = hasToObject(c) ? c.toObject() : (c as unknown as Record<string, unknown>);
+        return {
+            ...data,
+            startDate: new Date(data.startDate as string | number | Date),
+            endDate: data.endDate ? new Date(data.endDate as string | number | Date) : null
+        } as unknown as Contract;
+    });
 }
 
-function calculateActiveYearlyCost(meter: IMeter, readings: { value: number; date: Date }[], meterContracts: Contract[], now: Date): number {
-    const activeContract = meterContracts.find(c => {
+function calculateActiveYearlyCost(readings: { value: number; date: Date }[], meterContracts: Contract[], now: Date): number {
+    let activeContract = meterContracts.find(c => {
         const start = c.startDate;
         const end = c.endDate || new Date('2099-12-31');
-        return now >= start && now <= end;
+        const endOfContract = new Date(end);
+        if (!c.endDate) {
+            endOfContract.setFullYear(2099, 11, 31);
+        }
+        endOfContract.setHours(23, 59, 59, 999);
+        return now >= start && now <= endOfContract;
     });
+
+    // Fallback: If no active contract, use the most recent expired one
+    if (!activeContract && meterContracts.length > 0) {
+        activeContract = [...meterContracts]
+            .filter(c => c.startDate <= now)
+            .sort((a, b) => b.startDate.getTime() - a.startDate.getTime())[0];
+    }
 
     if (!activeContract) {
         return 0;
     }
 
     const dailyAverage = calculateDailyAverage(readings);
-    const baseCost = (activeContract.basePrice || 0) * (365.25 / 30.44);
-    const workingCost = (activeContract.workingPrice || 0) * (dailyAverage * 365.25);
+    const baseCost = (Number(activeContract.basePrice) || 0) * (365.25 / 30.44);
+    const workingCost = (Number(activeContract.workingPrice) || 0) * (dailyAverage * 365.25);
     const totalCost = baseCost + workingCost;
 
     // Ensure we return a valid number (not NaN, Infinity, or negative)
     return isNaN(totalCost) || !isFinite(totalCost) ? 0 : Math.max(0, totalCost);
+}
+
+function getMeterReadingsList(meterId: string, readings: IReading[]) {
+  return readings
+    .filter((r) => r.meterId.toString() === meterId)
+    .map((r) => ({ value: r.value, date: new Date(r.date) }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+}
+
+function calculateEstimatedUtilityCosts(params: {
+  meter: IMeter;
+  estimatedYearlyCost: number;
+  ytd: { current: number; previous: number };
+}) {
+  const { meter, estimatedYearlyCost, ytd } = params;
+  const isPower = meter.type === 'power';
+  const val = ytd.current || 0;
+  const prev = ytd.previous || 0;
+
+  return {
+    powerYearlyCost: isPower ? estimatedYearlyCost : 0,
+    gasYearlyCost: !isPower ? estimatedYearlyCost : 0,
+    ytdCostCurrent: val,
+    ytdCostPrevious: prev,
+    ytdPowerCurrent: isPower ? val : 0,
+    ytdPowerPrevious: isPower ? prev : 0,
+    ytdGasCurrent: !isPower ? val : 0,
+    ytdGasPrevious: !isPower ? prev : 0
+  };
 }
 
 function processMeter(params: {
@@ -251,10 +298,7 @@ function processMeter(params: {
     currentYear: number;
 }) {
     const { meter, readings, contracts, now, jan1Current, jan1Prev, todayPrevYear, yearlyStatsMap, currentYear } = params;
-    const meterReadings = readings
-      .filter((r) => r.meterId.toString() === meter._id.toString())
-      .map((r) => ({ value: r.value, date: new Date(r.date) }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    const meterReadings = getMeterReadingsList(meter._id.toString(), readings);
 
     if (meterReadings.length < 2) {
         return { powerYearlyCost: 0, gasYearlyCost: 0, ytdCostCurrent: 0, ytdCostPrevious: 0, ytdPowerCurrent: 0, ytdPowerPrevious: 0, ytdGasCurrent: 0, ytdGasPrevious: 0 };
@@ -262,26 +306,18 @@ function processMeter(params: {
 
     const meterContracts = getMeterContractsList(meter._id.toString(), contracts);
     const ytd = calculateYtdCosts({ now, jan1Current, jan1Prev, todayPrevYear, meterReadings, meterContracts });
-    const estimatedYearlyCost = calculateActiveYearlyCost(meter, meterReadings, meterContracts, now);
+    const estimatedYearlyCost = calculateActiveYearlyCost(meterReadings, meterContracts, now);
 
     calculateHistoricalYearlyStats({ meterReadings, meterContracts, meterType: meter.type as 'power' | 'gas', currentYear, yearlyStatsMap });
 
-    return {
-        powerYearlyCost: meter.type === 'power' ? estimatedYearlyCost : 0,
-        gasYearlyCost: meter.type === 'gas' ? estimatedYearlyCost : 0,
-        ytdCostCurrent: ytd.current,
-        ytdCostPrevious: ytd.previous,
-        ytdPowerCurrent: meter.type === 'power' ? ytd.current : 0,
-        ytdPowerPrevious: meter.type === 'power' ? ytd.previous : 0,
-        ytdGasCurrent: meter.type === 'gas' ? ytd.current : 0,
-        ytdGasPrevious: meter.type === 'gas' ? ytd.previous : 0
-    };
+    return calculateEstimatedUtilityCosts({ meter, estimatedYearlyCost, ytd });
 }
 
 export function calculateAggregates(
   meters: IMeter[],
   readings: IReading[],
-  contracts: IContract[]
+  contracts: IContract[],
+  now: Date = new Date()
 ): AggregateResult | DetailedAggregates {
   let powerYearlyCost = 0;
   let gasYearlyCost = 0;
@@ -292,7 +328,6 @@ export function calculateAggregates(
   let ytdGasCurrent = 0;
   let ytdGasPrevious = 0;
 
-  const now = new Date();
   const currentYear = now.getFullYear();
   const lastYear = currentYear - 1;
   const yearlyStatsMap = new Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>();
