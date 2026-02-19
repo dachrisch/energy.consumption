@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.13.0](https://github.com/dachrisch/energy.consumption/compare/v3.11.6...v3.13.0) (2026-02-19)
+
+
+### Features
+
+* display actual consumption and prognosis in dashboard chart ([b45a268](https://github.com/dachrisch/energy.consumption/commit/b45a2683fd179c15ace64cc140727a82224399aa))
+* implement backend-driven materialized metrics and robust locale-aware import ([3372d50](https://github.com/dachrisch/energy.consumption/commit/3372d5076ab3e0ab5d5d409ccabaea2adcbf70fe))
+* integrate dynamic full-width single card layout from PR 288 ([ce50115](https://github.com/dachrisch/energy.consumption/commit/ce50115b829d347a4951dfdceb5bf9775fa9eee7))
+* use full-width layout for single card on Meters and Contracts pages ([63a9b15](https://github.com/dachrisch/energy.consumption/commit/63a9b150d132dfeff7ae62022bfbc4ac02294949))
+
+
+### Bug Fixes
+
+* fix clipboard import date and number parsing for German locale ([22822f9](https://github.com/dachrisch/energy.consumption/commit/22822f94d1ef1aa6169fa09dd390625c825a3c96))
+* reduce detectLocale complexity below ESLint limit by extracting scoreValue helper ([c31a998](https://github.com/dachrisch/energy.consumption/commit/c31a998f3c39edde7a87855263d640985c441f59))
+* use getAllBy* in CsvImportModal test to handle Portal DOM leakage ([1220a4c](https://github.com/dachrisch/energy.consumption/commit/1220a4cf88ca543fee6c875075fbe303c7a5d38e))
+
 ## [3.12.0](https://github.com/dachrisch/energy.consumption/compare/v3.11.6...v3.12.0) (2026-02-19)
 
 

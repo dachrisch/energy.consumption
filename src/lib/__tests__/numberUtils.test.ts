@@ -31,7 +31,39 @@ describe('Number Utils', () => {
   });
 
   it('returns NaN for empty or invalid input', () => {
-    expect(parseLocaleNumber('')).toBeNaN();
-    expect(parseLocaleNumber('abc')).toBeNaN();
+    expect(parseLocaleNumber('', 'EU')).toBeNaN();
+    expect(parseLocaleNumber('abc', 'EU')).toBeNaN();
+  });
+
+  it('defaults to EU locale when no locale provided', () => {
+    expect(parseLocaleNumber('3877,3')).toBe(3877.3);
+    expect(parseLocaleNumber('2.852')).toBe(2852);
+  });
+});
+
+describe('detectLocale', () => {
+  it('detects EU from comma-decimal values', () => {
+    expect(detectLocale(['3877,3', '4051,5', '4698'])).toBe('EU');
+  });
+
+  it('detects EU from dot-thousands values', () => {
+    expect(detectLocale(['2.852', '4.914', '5.912'])).toBe('EU');
+  });
+
+  it('detects EU from mixed EU separators', () => {
+    expect(detectLocale(['3.877,3', '4.051,5'])).toBe('EU');
+  });
+
+  it('detects US from dot-decimal values with comma thousands', () => {
+    expect(detectLocale(['3,877.3', '4,051.5'])).toBe('US');
+  });
+
+  it('defaults to EU on plain integers', () => {
+    expect(detectLocale(['4698', '4914', '6511'])).toBe('EU');
+  });
+
+  it('handles mixed EU dataset like the clipboard example', () => {
+    const sample = ['2.852', '3877,3', '3883,4', '4051,5', '4698', '4914'];
+    expect(detectLocale(sample)).toBe('EU');
   });
 });
