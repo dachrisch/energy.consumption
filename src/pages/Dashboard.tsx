@@ -55,20 +55,102 @@ const getChartData = (agg: Aggregates) => {
   if (!agg || !agg.yearlyHistory) {
     return { labels: [], datasets: [] };
   }
-  const pc = getThemeColor('--color-meter-power-chart'); const gc = getThemeColor('--color-meter-gas-chart');
+  const pc = getThemeColor('--color-meter-power-chart');
+  const gc = getThemeColor('--color-meter-gas-chart');
+  
   return {
     labels: agg.yearlyHistory.map(h => h.year.toString()),
     datasets: [
-      { label: 'Power (€)', data: agg.yearlyHistory.map(h => h.powerCost), backgroundColor: pc, hoverBackgroundColor: getThemeColor('--color-meter-power'), borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8 },
-      { label: 'Gas (€)', data: agg.yearlyHistory.map(h => h.gasCost), backgroundColor: gc, hoverBackgroundColor: getThemeColor('--color-meter-gas'), borderRadius: 4, barPercentage: 0.6, categoryPercentage: 0.8 }
+      { 
+        label: 'Power (€)', 
+        data: agg.yearlyHistory.map(h => h.powerCostActual), 
+        backgroundColor: pc, 
+        hoverBackgroundColor: getThemeColor('--color-meter-power'), 
+        borderRadius: 4, 
+        barPercentage: 0.6, 
+        categoryPercentage: 0.8,
+        stack: 'power'
+      },
+      { 
+        label: 'Power (Prognosis) (€)', 
+        data: agg.yearlyHistory.map(h => h.powerCostPrognosis), 
+        backgroundColor: pc + '40', // 25% opacity
+        borderColor: pc,
+        borderWidth: { top: 2, left: 0, right: 0, bottom: 0 },
+        borderDash: [5, 5],
+        hoverBackgroundColor: pc + '60', 
+        borderRadius: 4, 
+        barPercentage: 0.6, 
+        categoryPercentage: 0.8,
+        stack: 'power'
+      },
+      { 
+        label: 'Gas (€)', 
+        data: agg.yearlyHistory.map(h => h.gasCostActual), 
+        backgroundColor: gc, 
+        hoverBackgroundColor: getThemeColor('--color-meter-gas'), 
+        borderRadius: 4, 
+        barPercentage: 0.6, 
+        categoryPercentage: 0.8,
+        stack: 'gas'
+      },
+      { 
+        label: 'Gas (Prognosis) (€)', 
+        data: agg.yearlyHistory.map(h => h.gasCostPrognosis), 
+        backgroundColor: gc + '40', // 25% opacity
+        borderColor: gc,
+        borderWidth: { top: 2, left: 0, right: 0, bottom: 0 },
+        borderDash: [5, 5],
+        hoverBackgroundColor: gc + '60', 
+        borderRadius: 4, 
+        barPercentage: 0.6, 
+        categoryPercentage: 0.8,
+        stack: 'gas'
+      }
     ]
   };
 };
 
 const getChartOpts = (isMob: boolean) => ({
-  indexAxis: isMob ? 'y' as const : 'x' as const, responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
-  plugins: { legend: { display: false }, tooltip: { backgroundColor: '#2b2d42', padding: 12, cornerRadius: 12, callbacks: { label: (c: TooltipItem<'bar'>) => `${c.dataset.label}: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(c.parsed[isMob ? 'x' : 'y'] || 0)}` } } },
-  scales: { x: { stacked: true, display: !isMob, grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } }, y: { stacked: true, display: isMob, grid: { display: false }, border: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } } }
+  indexAxis: isMob ? 'y' as const : 'x' as const, 
+  responsive: true, 
+  maintainAspectRatio: false, 
+  animation: { duration: 0 },
+  interaction: {
+    mode: 'index' as const,
+    intersect: false,
+  },
+  plugins: { 
+    legend: { display: false }, 
+    tooltip: { 
+      backgroundColor: '#2b2d42', 
+      padding: 12, 
+      cornerRadius: 12, 
+      callbacks: { 
+        label: (c: TooltipItem<'bar'>) => {
+          const val = c.parsed[isMob ? 'x' : 'y'] || 0;
+          if (val === 0) { return null; }
+          return `${c.dataset.label}: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val)}`;
+        }
+      } 
+    } 
+  },
+  scales: { 
+    x: { 
+      stacked: true, 
+      display: !isMob, 
+      grid: { display: false }, 
+      border: { display: false }, 
+      ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } 
+    }, 
+    y: { 
+      stacked: true, 
+      display: isMob, 
+      grid: { display: false }, 
+      border: { display: false }, 
+      ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } } 
+    } 
+  }
 });
 
 const UtilityStats: Component<{ label: string, cost: number, current: number, previous: number }> = (p) => (
