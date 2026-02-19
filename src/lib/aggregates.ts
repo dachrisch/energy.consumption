@@ -8,6 +8,10 @@ export interface YearStats {
   consumption: number;
   powerCost: number;
   gasCost: number;
+  powerCostActual: number;
+  powerCostPrognosis: number;
+  gasCostActual: number;
+  gasCostPrognosis: number;
 }
 
 export interface DetailedAggregates extends AggregateResult {
@@ -29,12 +33,15 @@ export interface AggregateResult {
   gasYearlyCost: number;
 }
 
-interface HistoryOptions {
-  meterReadings: { value: number; date: Date }[];
-  meterContracts: Contract[];
-  meterType: 'power' | 'gas';
-  currentYear: number;
-  yearlyStatsMap: Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>;
+interface YearStatsMapValue {
+  cost: number;
+  consumption: number;
+  powerCost: number;
+  gasCost: number;
+  powerCostActual: number;
+  powerCostPrognosis: number;
+  gasCostActual: number;
+  gasCostPrognosis: number;
 }
 
 interface ConsumptionSegment {
@@ -139,14 +146,59 @@ function calculateSegmentYearContribution(
   return null;
 }
 
-function calculateHistoricalYearlyStats(options: HistoryOptions) {
-  const { meterReadings, meterContracts, meterType, currentYear, yearlyStatsMap } = options;
+function updateYearlyStats(options: {
+  year: number;
+  currentYear: number;
+  meterType: 'power' | 'gas';
+  yearTotalCost: number;
+  yearTotalConsumption: number;
+  estimatedYearlyCost: number;
+  yearlyStatsMap: Map<number, YearStatsMapValue>;
+}) {
+  const { year, currentYear, meterType, yearTotalCost, yearTotalConsumption, estimatedYearlyCost, yearlyStatsMap } = options;
+  
+  const existing = yearlyStatsMap.get(year) || { 
+    cost: 0, consumption: 0, powerCost: 0, gasCost: 0,
+    powerCostActual: 0, powerCostPrognosis: 0, gasCostActual: 0, gasCostPrognosis: 0 
+  };
 
-  // Split readings into continuous consumption segments (handles meter resets)
+  const isPower = meterType === 'power';
+  const actual = yearTotalCost;
+  let prognosis = 0;
+
+  if (year === currentYear) {
+    prognosis = Math.max(0, estimatedYearlyCost - actual);
+  }
+
+  yearlyStatsMap.set(year, {
+    cost: existing.cost + yearTotalCost,
+    consumption: existing.consumption + yearTotalConsumption,
+    powerCost: existing.powerCost + (isPower ? yearTotalCost : 0),
+    gasCost: existing.gasCost + (!isPower ? yearTotalCost : 0),
+    powerCostActual: existing.powerCostActual + (isPower ? actual : 0),
+    powerCostPrognosis: existing.powerCostPrognosis + (isPower ? prognosis : 0),
+    gasCostActual: existing.gasCostActual + (!isPower ? actual : 0),
+    gasCostPrognosis: existing.gasCostPrognosis + (!isPower ? prognosis : 0)
+  });
+}
+
+interface HistoryOptions {
+  meterReadings: { value: number; date: Date }[];
+  meterContracts: Contract[];
+  meterType: 'power' | 'gas';
+  currentYear: number;
+  estimatedYearlyCost: number;
+  yearlyStatsMap: Map<number, YearStatsMapValue>;
+}
+
+function calculateHistoricalYearlyStats(options: HistoryOptions) {
+  const { meterReadings, meterContracts, meterType, currentYear, estimatedYearlyCost, yearlyStatsMap } = options;
   const segments = splitReadingsIntoSegments(meterReadings);
 
-  // If no valid segments, skip this meter
   if (segments.length === 0) {
+    if (estimatedYearlyCost > 0) {
+      updateYearlyStats({ year: currentYear, currentYear, meterType, yearTotalCost: 0, yearTotalConsumption: 0, estimatedYearlyCost, yearlyStatsMap });
+    }
     return;
   }
 
@@ -159,7 +211,6 @@ function calculateHistoricalYearlyStats(options: HistoryOptions) {
     let yearTotalConsumption = 0;
     let yearTotalCost = 0;
 
-    // Process each consumption segment independently
     for (const segment of segments) {
       const contribution = calculateSegmentYearContribution(segment, yearStart, yearEnd, meterContracts);
       if (contribution) {
@@ -168,15 +219,8 @@ function calculateHistoricalYearlyStats(options: HistoryOptions) {
       }
     }
 
-    // Only add to map if we have valid data for this year
-    if (yearTotalConsumption > 0 || yearTotalCost > 0) {
-      const existing = yearlyStatsMap.get(year) || { cost: 0, consumption: 0, powerCost: 0, gasCost: 0 };
-      yearlyStatsMap.set(year, {
-        cost: existing.cost + yearTotalCost,
-        consumption: existing.consumption + yearTotalConsumption,
-        powerCost: existing.powerCost + (meterType === 'power' ? yearTotalCost : 0),
-        gasCost: existing.gasCost + (meterType === 'gas' ? yearTotalCost : 0)
-      });
+    if (yearTotalConsumption > 0 || yearTotalCost > 0 || (year === currentYear && estimatedYearlyCost > 0)) {
+      updateYearlyStats({ year, currentYear, meterType, yearTotalCost, yearTotalConsumption, estimatedYearlyCost, yearlyStatsMap });
     }
   }
 }
@@ -247,7 +291,16 @@ function processMeter(params: {
     jan1Current: Date;
     jan1Prev: Date;
     todayPrevYear: Date;
-    yearlyStatsMap: Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>;
+    yearlyStatsMap: Map<number, { 
+      cost: number; 
+      consumption: number; 
+      powerCost: number; 
+      gasCost: number;
+      powerCostActual: number;
+      powerCostPrognosis: number;
+      gasCostActual: number;
+      gasCostPrognosis: number;
+    }>;
     currentYear: number;
 }) {
     const { meter, readings, contracts, now, jan1Current, jan1Prev, todayPrevYear, yearlyStatsMap, currentYear } = params;
@@ -256,15 +309,18 @@ function processMeter(params: {
       .map((r) => ({ value: r.value, date: new Date(r.date) }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    if (meterReadings.length < 2) {
-        return { powerYearlyCost: 0, gasYearlyCost: 0, ytdCostCurrent: 0, ytdCostPrevious: 0, ytdPowerCurrent: 0, ytdPowerPrevious: 0, ytdGasCurrent: 0, ytdGasPrevious: 0 };
-    }
-
     const meterContracts = getMeterContractsList(meter._id.toString(), contracts);
-    const ytd = calculateYtdCosts({ now, jan1Current, jan1Prev, todayPrevYear, meterReadings, meterContracts });
     const estimatedYearlyCost = calculateActiveYearlyCost(meter, meterReadings, meterContracts, now);
 
-    calculateHistoricalYearlyStats({ meterReadings, meterContracts, meterType: meter.type as 'power' | 'gas', currentYear, yearlyStatsMap });
+    if (meterReadings.length < 2) {
+        // Even with no readings, we calculate historical stats for the current year prognosis
+        calculateHistoricalYearlyStats({ meterReadings, meterContracts, meterType: meter.type as 'power' | 'gas', currentYear, estimatedYearlyCost, yearlyStatsMap });
+        return { powerYearlyCost: meter.type === 'power' ? estimatedYearlyCost : 0, gasYearlyCost: meter.type === 'gas' ? estimatedYearlyCost : 0, ytdCostCurrent: 0, ytdCostPrevious: 0, ytdPowerCurrent: 0, ytdPowerPrevious: 0, ytdGasCurrent: 0, ytdGasPrevious: 0 };
+    }
+
+    const ytd = calculateYtdCosts({ now, jan1Current, jan1Prev, todayPrevYear, meterReadings, meterContracts });
+
+    calculateHistoricalYearlyStats({ meterReadings, meterContracts, meterType: meter.type as 'power' | 'gas', currentYear, estimatedYearlyCost, yearlyStatsMap });
 
     return {
         powerYearlyCost: meter.type === 'power' ? estimatedYearlyCost : 0,
@@ -295,7 +351,16 @@ export function calculateAggregates(
   const now = new Date();
   const currentYear = now.getFullYear();
   const lastYear = currentYear - 1;
-  const yearlyStatsMap = new Map<number, { cost: number; consumption: number; powerCost: number; gasCost: number }>();
+  const yearlyStatsMap = new Map<number, { 
+    cost: number; 
+    consumption: number; 
+    powerCost: number; 
+    gasCost: number;
+    powerCostActual: number;
+    powerCostPrognosis: number;
+    gasCostActual: number;
+    gasCostPrognosis: number;
+  }>();
 
   const jan1Current = new Date(currentYear, 0, 1);
   const jan1Prev = new Date(lastYear, 0, 1);
