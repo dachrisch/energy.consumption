@@ -18,7 +18,7 @@ describe('UnifiedImportModal', () => {
         />
       ));
 
-      expect(screen.queryAllByText(/Import Data/i).length).toBeGreaterThan(0);
+      expect(screen.queryByText(/Import Data/i)).toBeTruthy();
     });
   });
 
