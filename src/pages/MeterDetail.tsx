@@ -95,7 +95,7 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
           <p class="text-4xl font-black tracking-tighter">€{props.stats.estimatedYearlyCost.toFixed(2)}</p>
           <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
             <span class="text-[10px] font-black uppercase tracking-widest opacity-60">Active Contract</span>
-            <A href="/contracts" class="btn btn-xs btn-ghost bg-white/10 hover:bg-white/20 text-white rounded-lg border-none px-3 font-black">Manage</A>
+            <A href={`/contracts?meterId=${props.meter._id}`} class="btn btn-xs btn-ghost bg-white/10 hover:bg-white/20 text-white rounded-lg border-none px-3 font-black">Manage</A>
           </div>
         </div>
         <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
@@ -122,12 +122,6 @@ const ConsumptionChartCard: Component<{
     <div class="card-body p-8 md:p-12">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <h2 class="text-xl font-black uppercase tracking-widest opacity-20">Consumption Trend & Projection</h2>
-        <Show when={props.hasContracts}>
-          <A href={`/contracts?meterId=${props.meter._id}`} class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-4 h-8 uppercase tracking-widest text-[10px]">
-            <Icon name="reading" class="h-4 w-4 mr-1" />
-            View Contracts
-          </A>
-        </Show>
       </div>
       <ConsumptionChart 
         readings={props.readings} 
