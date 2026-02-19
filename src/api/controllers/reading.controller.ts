@@ -4,6 +4,7 @@ import Contract from '../../models/Contract';
 import { processBulkReadings, processUnifiedImport } from '../../lib/readingService';
 import { RouteParams, sanitizeString } from '../utils';
 import { readingSchema, bulkReadingSchema, unifiedExportSchema, formatZodError } from '../validation';
+import { recalculateUserStats } from '../../lib/recalculationService';
 
 export async function exportReadingsAsJson(userId: string, meterId?: string) {
   let meterQuery = {};
@@ -118,6 +119,9 @@ export async function handleBulkReadings({ req, res, userId }: RouteParams) {
 
     // Pass Mongoose models explicitly to service
     const importResult = await processBulkReadings(result.data, userId, Meter, Reading);
+    
+    // Recalculate stats for the user after bulk import
+    await recalculateUserStats(userId);
 
     res.statusCode = 200;
     res.end(JSON.stringify(importResult));
@@ -149,6 +153,10 @@ export async function handleReadings({ req, res, userId, url }: RouteParams) {
       return;
     }
     const reading = await Reading.create({ ...result.data, userId });
+    
+    // Recalculate stats for the user after creating a reading
+    await recalculateUserStats(userId);
+    
     res.statusCode = 201;
     res.end(JSON.stringify(reading));
     return;
@@ -165,6 +173,10 @@ export async function handleReadingItem({ req, res, userId, path }: RouteParams)
 
   if (req.method === 'DELETE') {
     await Reading.deleteOne({ _id: { $eq: id } }).setOptions({ userId });
+    
+    // Recalculate stats for the user after deleting a reading
+    await recalculateUserStats(userId);
+    
     res.end(JSON.stringify({ message: 'Deleted' }));
     return;
   }
@@ -176,6 +188,10 @@ export async function handleReadingItem({ req, res, userId, path }: RouteParams)
       return;
     }
     const updated = await Reading.findOneAndUpdate({ _id: { $eq: id } }, { $set: result.data }, { new: true }).setOptions({ userId });
+    
+    // Recalculate stats for the user after updating a reading
+    await recalculateUserStats(userId);
+    
     res.end(JSON.stringify(updated));
     return;
   }
@@ -197,6 +213,9 @@ export async function handleUnifiedImport({ req, res, userId }: RouteParams) {
       ReadingModel: Reading, 
       ContractModel: Contract
     });
+
+    // Recalculate stats for the user after unified import
+    await recalculateUserStats(userId);
 
     res.statusCode = 200;
     res.end(JSON.stringify(importResult));

@@ -1,19 +1,22 @@
 export type NumberLocale = 'EU' | 'US';
 
 /**
- * Parses a number string using an explicit locale.
- * EU: dot = thousands separator, comma = decimal  (e.g. 3.877,3 → 3877.3)
- * US: comma = thousands separator, dot = decimal  (e.g. 3,877.3 → 3877.3)
+ * Parses a string representation of a number into a float,
+ * handling different locales like EU (3.000,00) and US (3,000.00).
+ * @param locale Hint for ambiguous formats like "1.234"
  */
 export const parseLocaleNumber = (val: string, locale: NumberLocale = 'EU'): number => {
-  if (!val) { return NaN; }
-
+  if (!val) {return NaN;}
+  
+  // Remove all whitespace
   let clean = val.replace(/\s/g, '');
-
+  
   if (locale === 'EU') {
-    clean = clean.replace(/\./g, '').replace(',', '.');
+      // European style: dot = thousands, comma = decimal
+      clean = clean.replace(/\./g, '').replace(',', '.');
   } else {
-    clean = clean.replace(/,/g, '');
+      // US style: comma = thousands, dot = decimal
+      clean = clean.replace(/,/g, '');
   }
 
   return parseFloat(clean);
@@ -30,28 +33,23 @@ const scoreValue = (val: string): number => {
   if (hasComma) { return 1; } // comma-only decimal: 3877,3 → EU
   if (hasDot) {
     const afterDot = val.split('.').pop() ?? '';
-    return afterDot.length === 3 && /^\d+$/.test(afterDot) ? 1 : 0;
+    // German thousands: 2.852 means 2852 (exactly 3 digits after dot)
+    if (afterDot.length === 3 && /^\d+$/.test(afterDot)) {
+        return 1;
+    }
+    // US decimal: 1.2 or 1.2345 (dot with NOT 3 digits)
+    return -1;
   }
   return 0;
 };
 
 /**
  * Heuristically detects the number locale from a sample of raw value strings.
- *
- * Votes EU when:
- *   - Any value has both separators with comma last  (e.g. 3.877,3)
- *   - Any value has only a comma                    (e.g. 3877,3)
- *   - Any value has a dot followed by exactly 3 digits and no comma
- *     (German thousands: 2.852 means 2852)
- *
- * Votes US when:
- *   - Any value has both separators with dot last   (e.g. 3,877.3)
- *
  * Returns 'EU' as default when evidence is insufficient.
  */
 export const detectLocale = (values: string[]): NumberLocale => {
   const score = values
-    .map(raw => raw.replace(/\s/g, ''))
+    .map(raw => (typeof raw === 'string' ? raw : String(raw)).replace(/\s/g, ''))
     .filter(Boolean)
     .reduce((acc, val) => acc + scoreValue(val), 0);
 

@@ -7,6 +7,12 @@ export interface IMeter {
   userId: string;
   createdAt?: string;
   updatedAt?: string;
+  stats?: {
+    dailyAverage: number;
+    yearlyProjection: number;
+    estimatedYearlyCost: number;
+    dailyCost: number;
+  };
 }
 
 export interface IReading {
@@ -40,4 +46,5 @@ export interface IUser {
   googleApiKey?: string;
   createdAt?: string;
   updatedAt?: string;
+  stats?: Record<string, unknown>;
 }

@@ -1,9 +1,7 @@
 import { Component, createResource, Show, ErrorBoundary } from 'solid-js';
 import { useParams, A } from '@solidjs/router';
-import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
+import { IMeter as Meter, IReading as Reading } from '../types/models';
 import ConsumptionChart from '../components/ConsumptionChart';
-import { calculateStats } from '../lib/consumption';
-import { findContractForDate, calculateCostForContract, calculateIntervalCost, Contract as PricingContract } from '../lib/pricing';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import { calculateProjection } from '../lib/projectionUtils';
 import Icon from '../components/Icon';
@@ -108,55 +106,6 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
   </div>
 );
 
-const calculateDailyCost = (readings: Reading[], contracts: Contract[]) => {
-  if (readings.length < 2) {return 0;}
-  const sorted = [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const last = sorted[0];
-  const prev = sorted[1];
-  const intervalDays = (new Date(last.date).getTime() - new Date(prev.date).getTime()) / (1000 * 60 * 60 * 24);
-  
-  if (intervalDays <= 0) {return 0;}
-  const totalIntervalCost = calculateIntervalCost(
-    new Date(prev.date),
-    new Date(last.date),
-    last.value - prev.value,
-    contracts as unknown as PricingContract[] 
-  );
-  return totalIntervalCost / intervalDays;
-};
-
-const calculateYearlyCost = (contracts: Contract[], yearlyProjection: number) => {
-  const activeContract = findContractForDate(contracts as unknown as PricingContract[], new Date());
-  if (!activeContract) {return 0;}
-  return calculateCostForContract({
-    consumption: yearlyProjection,
-    days: 365.25,
-    contract: activeContract
-  });
-};
-
-const calculateMeterStats = (d: { readings: Reading[], contracts: Contract[] } | undefined) => {
-  if (!d?.readings) {return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };}
-  
-  try {
-    const readings = d.readings;
-    const consumptionStats = calculateStats(readings.map((r: Reading) => ({
-      value: r.value,
-      date: new Date(r.date)
-    })));
-
-    return {
-      ...consumptionStats,
-      estimatedYearlyCost: calculateYearlyCost(d.contracts, consumptionStats.yearlyProjection),
-      dailyCost: calculateDailyCost(readings, d.contracts),
-      gaps: findContractGaps(readings, d.contracts)
-    };
-  } catch (err) {
-    console.error('[MeterDetail] Stats calculation error:', err);
-    return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
-  }
-};
-
 const calculateMeterProjection = (d: { readings: Reading[] } | undefined) => {
   const readings = d?.readings;
   if (!readings) {return [];}
@@ -193,7 +142,16 @@ const MeterDetail: Component = () => {
   const params = useParams();
   const [data] = createResource(() => params.id, fetchMeterData);
 
-  const stats = () => calculateMeterStats(data());
+  const stats = () => {
+    const meter = data()?.meter;
+    // Use pre-calculated stats from backend.
+    // If not available (e.g. for a very new meter or legacy data), we might show 0s or N/A
+    // but the backend recalculation service should have run on any update.
+    return {
+        ...(meter?.stats || { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 }),
+        gaps: findContractGaps(data()?.readings || [], data()?.contracts || [])
+    };
+  };
   const projection = () => calculateMeterProjection(data());
 
   return (

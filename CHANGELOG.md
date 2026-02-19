@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.12.0](https://github.com/dachrisch/energy.consumption/compare/v3.11.6...v3.12.0) (2026-02-19)
+
+
+### Features
+
+* implement backend-driven materialized metrics and robust locale-aware import ([3372d50](https://github.com/dachrisch/energy.consumption/commit/3372d5076ab3e0ab5d5d409ccabaea2adcbf70fe))
+* integrate dynamic full-width single card layout from PR 288 ([ce50115](https://github.com/dachrisch/energy.consumption/commit/ce50115b829d347a4951dfdceb5bf9775fa9eee7))
+
 ### [3.11.6](https://github.com/dachrisch/energy.consumption/compare/v3.11.5...v3.11.6) (2026-02-18)
 
 

@@ -1,6 +1,7 @@
 import Contract from '../../models/Contract';
 import { RouteParams, sanitizeString } from '../utils';
 import { contractSchema, contractUpdateSchema, formatZodError } from '../validation';
+import { recalculateUserStats } from '../../lib/recalculationService';
 
 interface OverlapParams {
   meterId: string;
@@ -71,6 +72,10 @@ export async function handleContracts({ req, res, userId, url }: RouteParams) {
     }
 
     const contract = await Contract.create({ ...result.data, userId });
+    
+    // Recalculate stats for the user after creating a contract
+    await recalculateUserStats(userId);
+    
     res.statusCode = 201;
     res.end(JSON.stringify(contract));
     return;
@@ -111,6 +116,10 @@ export async function handleContractItem({ req, res, userId, path }: RouteParams
 
   if (req.method === 'DELETE') {
     await Contract.deleteOne({ _id: { $eq: id } }).setOptions({ userId });
+    
+    // Recalculate stats for the user after deleting a contract
+    await recalculateUserStats(userId);
+    
     res.end(JSON.stringify({ message: 'Deleted' }));
     return;
   }
@@ -134,5 +143,9 @@ export async function handleContractItem({ req, res, userId, path }: RouteParams
   }
 
   const updated = await Contract.findOneAndUpdate({ _id: { $eq: id } }, { $set: result.data }, { new: true }).setOptions({ userId });
+  
+  // Recalculate stats for the user after updating a contract
+  await recalculateUserStats(userId);
+  
   res.end(JSON.stringify(updated));
 }
