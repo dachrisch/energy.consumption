@@ -225,7 +225,7 @@ function getMeterContractsList(meterId: string, contracts: IContract[]): Contrac
     });
 }
 
-function calculateActiveYearlyCost(meter: IMeter, readings: { value: number; date: Date }[], meterContracts: Contract[], now: Date): number {
+function calculateActiveYearlyCost(readings: { value: number; date: Date }[], meterContracts: Contract[], now: Date): number {
     let activeContract = meterContracts.find(c => {
         const start = c.startDate;
         const end = c.endDate || new Date('2099-12-31');
@@ -306,7 +306,7 @@ function processMeter(params: {
 
     const meterContracts = getMeterContractsList(meter._id.toString(), contracts);
     const ytd = calculateYtdCosts({ now, jan1Current, jan1Prev, todayPrevYear, meterReadings, meterContracts });
-    const estimatedYearlyCost = calculateActiveYearlyCost(meter, meterReadings, meterContracts, now);
+    const estimatedYearlyCost = calculateActiveYearlyCost(meterReadings, meterContracts, now);
 
     calculateHistoricalYearlyStats({ meterReadings, meterContracts, meterType: meter.type as 'power' | 'gas', currentYear, yearlyStatsMap });
 
