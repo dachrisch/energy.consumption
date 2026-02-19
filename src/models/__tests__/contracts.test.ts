@@ -34,7 +34,6 @@ describe('Contract Model Validation', () => {
     // Jan 1 to June 30
     await Contract.create({
       providerName: 'Provider A',
-      type: 'power',
       startDate: new Date('2026-01-01'),
       endDate: new Date('2026-06-30'),
       basePrice: 10,

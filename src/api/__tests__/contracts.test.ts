@@ -36,7 +36,6 @@ describe('Contract Model & Validation', () => {
     // Test that Contract model correctly stores all required fields
     const contract = await Contract.create({
       providerName: 'Test Provider',
-      type: 'power',
       startDate: new Date('2027-01-01'),
       endDate: new Date('2027-12-31'),
       basePrice: 15.50,
@@ -55,7 +54,6 @@ describe('Contract Model & Validation', () => {
     // Test that the model schema enforces required fields
     try {
       await Contract.create({
-        type: 'power',
         startDate: new Date('2027-01-01'),
         // Missing providerName and basePrice/workingPrice
         meterId,

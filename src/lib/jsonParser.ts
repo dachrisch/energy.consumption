@@ -17,7 +17,6 @@ export interface Contract {
   endDate?: string;
   basePrice: number;
   workingPrice: number;
-  type: string;
 }
 
 export interface ParsedResult {
@@ -312,8 +311,7 @@ function parseUnifiedContracts(contractsData: unknown): Contract[] {
           startDate: contract.startDate as string,
           endDate: contract.endDate as string | undefined,
           basePrice: contract.basePrice as number,
-          workingPrice: contract.workingPrice as number,
-          type: contract.type as string
+          workingPrice: contract.workingPrice as number
         });
       }
     }

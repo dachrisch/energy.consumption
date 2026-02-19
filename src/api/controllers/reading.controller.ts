@@ -61,7 +61,6 @@ export async function exportFullBackup(userId: string) {
       contracts: contracts.map(c => ({
         id: c._id.toString(),
         providerName: c.providerName,
-        type: c.type,
         startDate: c.startDate.toISOString().split('T')[0],
         endDate: c.endDate ? c.endDate.toISOString().split('T')[0] : null,
         basePrice: c.basePrice,
@@ -97,7 +96,6 @@ export async function exportUnifiedFormat(userId: string, options: { includeMete
       contracts: contracts.map(c => ({
         id: c._id.toString(),
         providerName: c.providerName,
-        type: c.type,
         startDate: c.startDate.toISOString().split('T')[0],
         endDate: c.endDate ? c.endDate.toISOString().split('T')[0] : null,
         basePrice: c.basePrice,

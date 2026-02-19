@@ -28,7 +28,6 @@ export interface IReading {
 export interface IContract {
   _id: string;
   providerName: string;
-  type: 'power' | 'gas';
   startDate: string | Date;
   endDate?: string | Date;
   basePrice: number;

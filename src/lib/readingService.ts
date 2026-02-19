@@ -10,7 +10,7 @@ interface BulkImportResult {
 interface UnifiedImportData {
   meters?: Array<{ id: string; name: string; meterNumber: string; type: 'power' | 'gas'; unit: string }>;
   readings?: Array<{ meterId: string; date: string; value: number }>;
-  contracts?: Array<{ meterId: string; providerName: string; startDate: string; endDate?: string; basePrice: number; workingPrice: number; type: 'power' | 'gas' }>;
+  contracts?: Array<{ meterId: string; providerName: string; startDate: string; endDate?: string; basePrice: number; workingPrice: number }>;
 }
 
 interface MeterImportOptions {
@@ -155,7 +155,6 @@ async function importContracts(options: ContractImportOptions): Promise<void> {
       contractsToInsert.push({
         meterId: newMeterId,
         providerName: cData.providerName,
-        type: cData.type,
         startDate: new Date(cData.startDate),
         endDate: cData.endDate ? new Date(cData.endDate) : undefined,
         basePrice: cData.basePrice,

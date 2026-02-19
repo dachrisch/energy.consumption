@@ -41,7 +41,6 @@ export interface ImportData {
       endDate?: string; 
       basePrice: number; 
       workingPrice: number; 
-      type: string; 
     }>;
   };
 }
@@ -244,7 +243,7 @@ const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; 
                      <span class="text-[10px] opacity-50">{getMeterName(c.meterId)} • Starts {new Date(c.startDate).toLocaleDateString()}</span>
                    </div>
                    <div class="flex items-center gap-3">
-                     <Icon name={c.type as 'power' | 'gas'} class="h-3 w-3 opacity-30" />
+                     <Icon name={(props.backupInfo?.data?.meters?.find(m => m.id === c.meterId)?.type || props.existingMeters.find(em => em._id === c.meterId)?.type || 'power') as 'power' | 'gas'} class="h-3 w-3 opacity-30" />
                      <span class={`badge badge-sm font-bold ${willCreateContract(c) ? 'badge-primary' : 'badge-ghost opacity-50'}`}>{willCreateContract(c) ? 'NEW' : 'EXISTING'}</span>
                    </div>
                  </div>

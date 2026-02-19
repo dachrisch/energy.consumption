@@ -15,12 +15,12 @@ const fetchDashboardData = async () => {
 interface Meter {
   _id: string;
   name: string;
+  type: 'power' | 'gas';
 }
 
 interface Contract {
   _id: string;
   providerName: string;
-  type: 'power' | 'gas';
   startDate: string | Date;
   endDate?: string | Date;
   basePrice: number;
@@ -63,7 +63,7 @@ const ContractCard: Component<{
   contract: Contract;
   onDelete: (id: string) => void;
 }> = (props) => {
-  const contractColor = () => props.contract.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
+  const contractColor = () => props.contract.meterId.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
   
   return (
     <div 
@@ -98,7 +98,7 @@ const ContractCard: Component<{
                   class="p-1.5 rounded-lg"
                   style={{ "background-color": `color-mix(in srgb, ${contractColor()}, transparent 90%)`, "color": contractColor() }}
                 >
-                  <Icon name={props.contract.type} class="h-4 w-4" />
+                  <Icon name={props.contract.meterId.type} class="h-4 w-4" />
                 </div>
             </div>
           </div>
@@ -111,7 +111,7 @@ const ContractCard: Component<{
           </div>
           <div>
             <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Working Price</p>
-            <p class="text-xl font-black">€{props.contract.workingPrice.toFixed(4)}<span class="text-xs font-bold opacity-40 ml-1">/{props.contract.type === 'power' ? 'kWh' : 'm³'}</span></p>
+            <p class="text-xl font-black">€{props.contract.workingPrice.toFixed(4)}<span class="text-xs font-bold opacity-40 ml-1">/{props.contract.meterId.type === 'power' ? 'kWh' : 'm³'}</span></p>
           </div>
         </div>
 
@@ -174,7 +174,7 @@ const getSortedItems = (data: DashboardData | undefined, gaps: Array<{ gap: Gap;
       type: 'contract',
       data: c,
       date: new Date(c.startDate).getTime(),
-      utilityType: c.type
+      utilityType: c.meterId.type
     }));
 
   const gapItems = gaps.map((g: { gap: Gap, meter: { _id: string, name: string, type: string } }) => ({

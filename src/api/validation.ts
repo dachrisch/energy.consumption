@@ -47,7 +47,6 @@ export const bulkReadingSchema = z.array(z.object({
 export const contractSchema = z.object({
   meterId: objectIdSchema,
   providerName: z.string().min(1, 'Provider name is required'),
-  type: z.enum(['power', 'gas', 'water']),
   basePrice: z.number().nonnegative(),
   workingPrice: z.number().nonnegative(),
   startDate: z.string().pipe(z.coerce.date()),
@@ -77,7 +76,6 @@ export const unifiedExportSchema = z.object({
     contracts: z.array(z.object({
       id: z.string(),
       providerName: z.string(),
-      type: z.enum(['power', 'gas', 'water']),
       startDate: z.string(),
       endDate: z.string().nullable().optional(),
       basePrice: z.number(),

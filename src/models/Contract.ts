@@ -3,7 +3,6 @@ import { applyPreFilter } from './sessionFilter';
 
 const contractSchema = new mongoose.Schema({
   providerName: { type: String, required: true },
-  type: { type: String, enum: ['power', 'gas'], required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date },
   basePrice: { type: Number, required: true }, // Monthly fixed fee
