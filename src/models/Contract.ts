@@ -13,5 +13,10 @@ const contractSchema = new mongoose.Schema({
 
 applyPreFilter(contractSchema);
 
-const Contract = mongoose.models.Contract || mongoose.model('Contract', contractSchema);
+// Force schema update by deleting existing model if it exists
+if (mongoose.models.Contract) {
+  delete mongoose.models.Contract;
+}
+
+const Contract = mongoose.model('Contract', contractSchema);
 export default Contract;

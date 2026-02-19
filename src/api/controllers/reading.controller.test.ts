@@ -208,7 +208,6 @@ describe('Reading Controller - Full Backup Export', () => {
 
     await Contract.create({
       providerName: 'Test Provider',
-      type: 'power',
       startDate: new Date('2026-01-01'),
       basePrice: 50,
       workingPrice: 0.25,

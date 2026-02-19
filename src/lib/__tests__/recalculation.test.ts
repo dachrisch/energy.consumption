@@ -44,7 +44,6 @@ describe('Recalculation Service', () => {
     // Add contract
     await Contract.create({
         providerName: 'test',
-        type: 'power',
         startDate: new Date("2025-01-01"),
         basePrice: 10, // 10 per month
         workingPrice: 0.20, // 0.20 per kWh
