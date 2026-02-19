@@ -4,7 +4,8 @@ export type DateLocale = 'EU' | 'US';
 
 function tryParseFormat(val: string, format: string): Date | null {
   const d = parse(val, format, new Date());
-  return isNaN(d.getTime()) ? null : d;
+  if (isNaN(d.getTime())) return null;
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }
 
 /**
