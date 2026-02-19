@@ -1,5 +1,5 @@
 import { Component, createSignal, onMount } from 'solid-js';
-import { useToast } from '../context/ToastContext';
+import { useToast, ToastType } from '../context/ToastContext';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import ExportModal from '../components/ExportModal';
 import Icon from '../components/Icon';
@@ -124,7 +124,9 @@ interface Reading {
 
 interface Contract {
   _id: string;
+  meterId: string | { _id: string };
   providerName: string;
+  startDate: string | Date;
 }
 
 const fetchImportExportData = async (
@@ -155,7 +157,7 @@ const fetchImportExportData = async (
 
 const handleDataImport = async (
   data: unknown,
-  toast: { showToast: (msg: string, type: string) => void },
+  toast: { showToast: (msg: string, type?: ToastType) => void },
   setShowImportModal: (v: boolean) => void,
   onSuccess: () => void
 ) => {
@@ -232,6 +234,7 @@ const ImportExport: Component = () => {
         onClose={() => setShowImportModal(false)}
         onSave={onSaveImport}
         meters={meters()}
+        existingContracts={contracts()}
         onMeterCreated={(m) => setMeters([...meters(), m])}
       />
 

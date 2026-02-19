@@ -17,7 +17,7 @@ interface Meter {
   unit?: string;
 }
 
-interface ImportReading {
+export interface ImportReading {
   meterId: string;
   date: Date;
   value: number;
@@ -28,7 +28,7 @@ interface PreviewReading extends ImportReading {
   originalValue: string;
 }
 
-interface ImportData {
+export interface ImportData {
   exportDate?: string;
   version?: string;
   data?: {
@@ -51,6 +51,7 @@ interface UnifiedImportModalProps {
   onClose: () => void;
   onSave: (data: ImportData | ImportReading[]) => Promise<void>;
   meters: Meter[];
+  existingContracts?: Array<{ meterId: string | { _id: string }; providerName: string; startDate: string | Date }>;
   onMeterCreated?: (meter: Meter) => void;
 }
 
@@ -170,9 +171,30 @@ const StepMapping: Component<{
   </div>
 );
 
-const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; existingMeters: Meter[]; importLocale: 'EU' | 'US'; setImportLocale: (v: 'EU' | 'US') => void; }> = (props) => {
+const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; existingMeters: Meter[]; existingContracts?: Array<{ meterId: string | { _id: string }; providerName: string; startDate: string | Date }>; importLocale: 'EU' | 'US'; setImportLocale: (v: 'EU' | 'US') => void; }> = (props) => {
   const getMeterName = (id: string) => props.backupInfo?.data?.meters?.find(m => m.id === id)?.name || props.existingMeters.find(m => m._id === id)?.name || 'Unknown Meter';
   const willCreateMeter = (m: { meterNumber: string }) => !props.existingMeters.find(em => em.meterNumber === m.meterNumber);
+  
+  const willCreateContract = (c: { meterId: string; providerName: string; startDate: string }) => {
+    if (!props.existingContracts) { return true; }
+    
+    // 1. Find meter number from backup
+    const backupMeter = props.backupInfo?.data?.meters?.find(m => m.id === c.meterId);
+    if (!backupMeter) { return true; }
+    
+    // 2. Find existing meter with same number
+    const existingMeter = props.existingMeters.find(em => em.meterNumber === backupMeter.meterNumber);
+    if (!existingMeter) { return true; }
+    
+    // 3. Check for contract with same provider and start date
+    const cStartDate = new Date(c.startDate).getTime();
+    return !props.existingContracts.some(ec => {
+      const ecMeterId = typeof ec.meterId === 'string' ? ec.meterId : ec.meterId?._id;
+      return ecMeterId === existingMeter._id && 
+             ec.providerName === c.providerName && 
+             new Date(ec.startDate).getTime() === cStartDate;
+    });
+  };
 
   return (
     <div class="space-y-6">
@@ -213,7 +235,7 @@ const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; 
       <Show when={props.backupInfo?.data?.contracts?.length}>
          <div class="space-y-4">
            <div>
-             <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Contracts to Import ({props.backupInfo!.data!.contracts!.length})</p>
+             <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Contracts to Sync ({props.backupInfo!.data!.contracts!.length})</p>
              <div class="grid grid-cols-1 gap-2">
                <For each={props.backupInfo!.data!.contracts!}>{(c) => (
                  <div class="flex items-center justify-between p-3 bg-base-200/50 rounded-xl border border-base-content/5">
@@ -221,9 +243,9 @@ const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; 
                      <span class="font-bold text-sm">{c.providerName}</span>
                      <span class="text-[10px] opacity-50">{getMeterName(c.meterId)} • Starts {new Date(c.startDate).toLocaleDateString()}</span>
                    </div>
-                   <div class="flex items-center gap-2">
+                   <div class="flex items-center gap-3">
                      <Icon name={c.type as 'power' | 'gas'} class="h-3 w-3 opacity-30" />
-                     <span class="badge badge-ghost badge-sm opacity-50 font-bold uppercase tracking-tighter">Contract</span>
+                     <span class={`badge badge-sm font-bold ${willCreateContract(c) ? 'badge-primary' : 'badge-ghost opacity-50'}`}>{willCreateContract(c) ? 'NEW' : 'EXISTING'}</span>
                    </div>
                  </div>
                )}</For>
@@ -414,7 +436,7 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
         <Show when={step() === 'upload'}><StepUpload onFileSelected={handleFileSelected} onPasteClick={async () => handleFileSelected(new File([await navigator.clipboard.readText()], 'paste.csv'))} /></Show>
         <Show when={step() === 'mapping'}><StepMapping meters={props.meters} targetMeterId={targetMeterId()} setTargetMeterId={setTargetMeterId} headers={headers()} dateColumn={dateColumn()} setDateColumn={setDateColumn} valueColumn={valueColumn()} setValueColumn={setValueColumn} onCreateNewMeter={() => setStep('new-meter')} importLocale={importLocale()} setImportLocale={setImportLocale} /></Show>
         <Show when={step() === 'new-meter'}><MeterForm name={newMeterName()} setName={setNewMeterName} meterNumber={newMeterNumber()} setMeterNumber={setNewMeterNumber} type={newMeterType()} setType={setNewMeterType} unit={newMeterUnit()} setUnit={setNewMeterUnit} isLoading={isCreatingMeter()} compact={true} /></Show>
-        <Show when={step() === 'preview'}><StepPreview data={getPreviewData()} backupInfo={backupData() ?? undefined} existingMeters={props.meters} importLocale={importLocale()} setImportLocale={setImportLocale} /></Show>
+        <Show when={step() === 'preview'}><StepPreview data={getPreviewData()} backupInfo={backupData() ?? undefined} existingMeters={props.meters} existingContracts={props.existingContracts} importLocale={importLocale()} setImportLocale={setImportLocale} /></Show>
         <Show when={step() === 'importing'}><div class="flex justify-center p-10"><span class="loading loading-spinner loading-lg"></span></div></Show>
       </div>
       <ModalFooter step={step()} onClose={props.onClose} onBack={onBack} onNext={() => (targetMeterId() && dateColumn() && valueColumn()) ? setStep('preview') : setError('Map all fields.')} onImport={async () => { setStep('importing'); try { await props.onSave(backupData() || getPreviewData()); props.onClose(); } catch (_e) { setError('Import failed'); setStep('preview'); } }} onCreateMeter={handleCreateNewMeter} isCreatingMeter={isCreatingMeter()} hasBackup={!!backupData()} />

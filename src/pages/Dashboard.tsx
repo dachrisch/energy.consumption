@@ -1,7 +1,7 @@
 import { Component, createResource, Show, createSignal, onMount, onCleanup, createMemo } from 'solid-js';
 import { A } from '@solidjs/router';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
-import UnifiedImportModal from '../components/UnifiedImportModal';
+import UnifiedImportModal, { ImportData, ImportReading } from '../components/UnifiedImportModal';
 import { useToast } from '../context/ToastContext';
 import { DetailedAggregates } from '../lib/aggregates';
 import { findContractGaps, Gap } from '../lib/gapDetection';
@@ -250,7 +250,7 @@ const Dashboard: Component = () => {
   
   const data = createMemo(() => processDashboardData(rawData.latest));
 
-  const handleImport = async (iData: { version?: string }) => {
+  const handleImport = async (iData: ImportData | ImportReading[]) => {
     const isU = typeof iData === 'object' && iData !== null && !Array.isArray(iData) && iData.version === '1.0';
     const res = await fetch(isU ? '/api/import/unified' : '/api/readings/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(iData) });
     const r = await res.json();
@@ -264,7 +264,7 @@ const Dashboard: Component = () => {
 
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0 w-full overflow-x-hidden">
-      <UnifiedImportModal isOpen={isImportOpen()} onClose={() => setImportOpen(false)} onSave={handleImport} meters={rawData.latest?.meters || []} onMeterCreated={() => refetch()} />
+      <UnifiedImportModal isOpen={isImportOpen()} onClose={() => setImportOpen(false)} onSave={handleImport} meters={rawData.latest?.meters || []} existingContracts={rawData.latest?.contracts || []} onMeterCreated={() => refetch()} />
       <DashboardHeader onImport={() => setImportOpen(true)} />
       <Show when={!rawData.loading || rawData.latest} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <div class="flex flex-col gap-6">
