@@ -211,19 +211,23 @@ const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; 
         </div>
       </Show>
       <Show when={props.backupInfo?.data?.contracts?.length}>
-        <div>
-          <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Contracts to Import ({props.backupInfo!.data!.contracts!.length})</p>
-          <div class="overflow-x-auto border border-base-content/10 rounded-2xl bg-base-200/20 mb-4">
-            <table class="table table-xs">
-              <thead><tr><th class="font-bold text-xs">Meter</th><th class="font-bold text-xs">Provider</th><th class="font-bold text-xs text-right">Start Date</th></tr></thead>
-              <tbody><For each={props.backupInfo!.data!.contracts!}>{(c) => (
-                <tr>
-                  <td class="text-[10px] font-bold opacity-70 truncate max-w-[100px]">{getMeterName(c.meterId)}</td>
-                  <td class="text-xs">{c.providerName}</td>
-                  <td class="text-xs text-right">{new Date(c.startDate).toLocaleDateString()}</td>
-                </tr>
-              )}</For></tbody>
-            </table>
+         <div class="space-y-4">
+           <div>
+             <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Contracts to Import ({props.backupInfo!.data!.contracts!.length})</p>
+             <div class="grid grid-cols-1 gap-2">
+               <For each={props.backupInfo!.data!.contracts!}>{(c) => (
+                 <div class="flex items-center justify-between p-3 bg-base-200/50 rounded-xl border border-base-content/5">
+                   <div class="flex flex-col">
+                     <span class="font-bold text-sm">{c.providerName}</span>
+                     <span class="text-[10px] opacity-50">{getMeterName(c.meterId)} • Starts {new Date(c.startDate).toLocaleDateString()}</span>
+                   </div>
+                   <div class="flex items-center gap-2">
+                     <Icon name={c.type as 'power' | 'gas'} class="h-3 w-3 opacity-30" />
+                     <span class="badge badge-ghost badge-sm opacity-50 font-bold uppercase tracking-tighter">Contract</span>
+                   </div>
+                 </div>
+               )}</For>
+            </div>
           </div>
         </div>
       </Show>
