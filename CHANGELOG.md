@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.14.1](https://github.com/dachrisch/energy.consumption/compare/v3.14.0...v3.14.1) (2026-02-19)
+
+
+### Bug Fixes
+
+* force contract model schema update and fix remaining test references ([3bf65cc](https://github.com/dachrisch/energy.consumption/commit/3bf65cc592923b62a27edf2940622f394950789d))
+* **lint:** install @eslint/js, add curly braces, use ref callback in SolidJS ([e55a370](https://github.com/dachrisch/energy.consumption/commit/e55a370ed7a56f48a7fdb0e39387aa86e7cc9a19))
+* return UTC midnight dates from parseFlexibleDate to match ISO parsing behaviour ([2ab1030](https://github.com/dachrisch/energy.consumption/commit/2ab1030bd735e3e99d506268e3fdb16cc71b5bee))
+* update wildcard routes for Express 5 path-to-regexp compatibility ([ac2f72d](https://github.com/dachrisch/energy.consumption/commit/ac2f72da8195c75f55c0c967338aece9cfcdf3ff))
+
 ## [3.14.0](https://github.com/dachrisch/energy.consumption/compare/v3.13.0...v3.14.0) (2026-02-19)
 
 
