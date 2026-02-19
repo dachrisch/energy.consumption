@@ -98,7 +98,7 @@ const StepUpload: Component<{ onFileSelected: (file: File) => void, onPasteClick
         <Icon name="import" class="w-6 h-6 opacity-60" />
         <span class="font-bold text-sm">Drop file here or click</span>
         <span class="text-xs opacity-60">JSON or CSV files supported</span>
-        <input ref={fileInputRef} type="file" accept=".json,.csv" class="hidden" onChange={(e) => {
+        <input ref={(el) => { fileInputRef = el; }} type="file" accept=".json,.csv" class="hidden" onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) {
             props.onFileSelected(file);
