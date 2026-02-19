@@ -195,7 +195,7 @@ const Meters: Component = () => {
        </div>
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-        <div data-testid="meters-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div data-testid="meters-grid" class={`grid grid-cols-1 gap-6 ${(data()?.meters?.length ?? 0) > 1 ? 'md:grid-cols-2' : ''}`}>
           <For each={data()?.meters} fallback={
             <EmptyState 
               title="No meters found"
