@@ -258,19 +258,12 @@ export function isUnifiedExportFormat(json: unknown): boolean {
 
 
 /**
- * Extract readings from unified export format
+ * Extract meters from unified export format
  */
-export function parseUnifiedFormat(json: unknown): ParsedResult {
-  const data = json as Record<string, unknown>;
-  const exportData = data.data as Record<string, unknown>;
-  
+function parseUnifiedMeters(metersData: unknown): Meter[] {
   const meters: Meter[] = [];
-  const readings: Reading[] = [];
-  const contracts: Contract[] = [];
-
-  // Parse meters
-  if (Array.isArray(exportData.meters)) {
-    for (const m of exportData.meters) {
+  if (Array.isArray(metersData)) {
+    for (const m of metersData) {
       if (m && typeof m === 'object') {
         const meter = m as Record<string, unknown>;
         meters.push({
@@ -281,10 +274,16 @@ export function parseUnifiedFormat(json: unknown): ParsedResult {
       }
     }
   }
+  return meters;
+}
 
-  // Parse readings
-  if (Array.isArray(exportData.readings)) {
-    for (const r of exportData.readings) {
+/**
+ * Extract readings from unified export format
+ */
+function parseUnifiedReadings(readingsData: unknown): Reading[] {
+  const readings: Reading[] = [];
+  if (Array.isArray(readingsData)) {
+    for (const r of readingsData) {
       if (r && typeof r === 'object') {
         const reading = r as Record<string, unknown>;
         readings.push({
@@ -295,10 +294,16 @@ export function parseUnifiedFormat(json: unknown): ParsedResult {
       }
     }
   }
+  return readings;
+}
 
-  // Parse contracts
-  if (Array.isArray(exportData.contracts)) {
-    for (const c of exportData.contracts) {
+/**
+ * Extract contracts from unified export format
+ */
+function parseUnifiedContracts(contractsData: unknown): Contract[] {
+  const contracts: Contract[] = [];
+  if (Array.isArray(contractsData)) {
+    for (const c of contractsData) {
       if (c && typeof c === 'object') {
         const contract = c as Record<string, unknown>;
         contracts.push({
@@ -313,8 +318,21 @@ export function parseUnifiedFormat(json: unknown): ParsedResult {
       }
     }
   }
+  return contracts;
+}
 
-  return { meters, readings, contracts };
+/**
+ * Extract readings from unified export format
+ */
+export function parseUnifiedFormat(json: unknown): ParsedResult {
+  const data = json as Record<string, unknown>;
+  const exportData = data.data as Record<string, unknown>;
+  
+  return {
+    meters: parseUnifiedMeters(exportData.meters),
+    readings: parseUnifiedReadings(exportData.readings),
+    contracts: parseUnifiedContracts(exportData.contracts)
+  };
 }
 
 /**
