@@ -73,7 +73,7 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
         <p class="text-3xl font-black">{Math.round(props.stats.yearlyProjection).toLocaleString()}<span class="text-sm font-bold opacity-40 ml-2">{props.meter.unit}/year</span></p>
       </div>
     </div>
-    <Show when={props.stats.estimatedYearlyCost > 0} fallback={
+    <Show when={props.hasContracts && (props.stats.gaps?.length ?? 0) === 0} fallback={
       <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl shadow-warning/5">
         <div class="card-body p-8">
           <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Estimated Yearly Cost</p>

@@ -4,43 +4,13 @@ import { findContractGaps } from '../lib/gapDetection';
 import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
+import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
   if (!res.ok) {throw new Error('Failed to fetch dashboard data');}
   return res.json();
 };
-
-interface Meter {
-  _id: string;
-  name: string;
-  unit: string;
-  type: string;
-  meterNumber: string;
-  stats?: {
-    dailyAverage: number;
-    yearlyProjection: number;
-    estimatedYearlyCost: number;
-    dailyCost: number;
-  };
-}
-
-interface Reading {
-  meterId: string;
-  date: string | Date;
-  value: number;
-}
-
-interface Contract {
-   _id: string;
-   meterId: string;
-   startDate: string | Date;
-   endDate?: string | Date;
-   basePrice: number;
-   workingPrice: number;
-   type: 'power' | 'gas';
-   providerName: string;
-}
 
 interface MeterCardProps {
   meter: Meter;
@@ -114,7 +84,7 @@ const MeterCard: Component<MeterCardProps> = (props) => {
           </div>
           <div>
             <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Yearly Cost</p>
-            <Show when={stats().estimatedYearlyCost > 0} fallback={<p class="text-xs font-bold opacity-20 mt-1">N/A</p>}>
+            <Show when={hasContract() && !hasGaps()} fallback={<p class="text-xs font-bold opacity-20 mt-1">N/A</p>}>
               <p class="text-xl font-black text-primary">€{Math.round(stats().estimatedYearlyCost)}</p>
             </Show>
           </div>
