@@ -54,7 +54,7 @@ app.use('/api/register', authLimiter);
 app.use('/api/login', authLimiter);
 
 // Apply general API limiter only to /api/ routes
-app.use('/api/*', apiLimiter);
+app.use('/api/*path', apiLimiter);
 
 app.use(bodyParser.json({ limit: '10mb' }));
 
@@ -62,7 +62,7 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Handle all /api/* routes
-app.all('/api/*', async (req, res) => {
+app.all('/api/*path', async (req, res) => {
   const apiReq = {
     url: req.originalUrl,
     method: req.method,
@@ -89,7 +89,7 @@ app.all('/api/*', async (req, res) => {
 });
 
 // SPA fallback: Serve index.html for all other routes
-app.get('*', staticLimiter, (req, res) => {
+app.get('/{*path}', staticLimiter, (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
