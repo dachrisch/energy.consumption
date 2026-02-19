@@ -34,7 +34,15 @@ interface ImportData {
   data?: {
     meters?: Array<{ id: string; name: string; meterNumber: string; type: string; unit: string }>;
     readings?: Array<{ meterId: string; date: string; value: number }>;
-    contracts?: Array<{ meterId: string; providerName: string; startDate: string }>;
+    contracts?: Array<{ 
+      meterId: string; 
+      providerName: string; 
+      startDate: string; 
+      endDate?: string; 
+      basePrice: number; 
+      workingPrice: number; 
+      type: string; 
+    }>;
   };
 }
 
@@ -202,6 +210,23 @@ const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; 
           </div>
         </div>
       </Show>
+      <Show when={props.backupInfo?.data?.contracts?.length}>
+        <div>
+          <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">Contracts to Import ({props.backupInfo!.data!.contracts!.length})</p>
+          <div class="overflow-x-auto border border-base-content/10 rounded-2xl bg-base-200/20 mb-4">
+            <table class="table table-xs">
+              <thead><tr><th class="font-bold text-xs">Meter</th><th class="font-bold text-xs">Provider</th><th class="font-bold text-xs text-right">Start Date</th></tr></thead>
+              <tbody><For each={props.backupInfo!.data!.contracts!}>{(c) => (
+                <tr>
+                  <td class="text-[10px] font-bold opacity-70 truncate max-w-[100px]">{getMeterName(c.meterId)}</td>
+                  <td class="text-xs">{c.providerName}</td>
+                  <td class="text-xs text-right">{new Date(c.startDate).toLocaleDateString()}</td>
+                </tr>
+              )}</For></tbody>
+            </table>
+          </div>
+        </div>
+      </Show>
       <div>
         <p class="text-[10px] font-black uppercase tracking-widest opacity-50 mb-2">{props.backupInfo ? 'Readings to Import' : 'Preview Readings'} ({props.data.length})</p>
         <div class="overflow-x-auto max-h-64 border border-base-content/10 rounded-2xl bg-base-200/20">
@@ -236,6 +261,7 @@ interface ImportState {
   newMeterType: () => string;
   newMeterUnit: () => string;
   setIsCreatingMeter: (v: boolean) => void;
+  setImportLocale: (v: 'EU' | 'US') => void;
 }
 
 const handleUnifiedBackup = (opts: { jsonData: ImportData; state: ImportState }) => {
@@ -302,7 +328,7 @@ const UnifiedImportModal: Component<UnifiedImportModalProps> = (props) => {
   const [newMeterUnit, setNewMeterUnit] = createSignal<string>('kWh');
   const [isCreatingMeter, setIsCreatingMeter] = createSignal(false);
 
-  const state: ImportState = { setStep, setFileFormat, setCsvData, setJsonReadings, setBackupData, setHeaders, setTargetMeterId, setDateColumn, setValueColumn, setError, newMeterName, newMeterNumber, newMeterType, newMeterUnit, setIsCreatingMeter };
+  const state: ImportState = { setStep, setFileFormat, setCsvData, setJsonReadings, setBackupData, setHeaders, setTargetMeterId, setDateColumn, setValueColumn, setError, newMeterName, newMeterNumber, newMeterType, newMeterUnit, setIsCreatingMeter, setImportLocale };
 
   const reset = () => {
     setStep('upload'); setFileFormat('csv'); setCsvData([]); setJsonReadings([]); setBackupData(null);

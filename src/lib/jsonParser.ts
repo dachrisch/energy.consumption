@@ -10,9 +10,20 @@ export interface Reading {
   value: number;
 }
 
+export interface Contract {
+  meterId: string;
+  providerName: string;
+  startDate: string;
+  endDate?: string;
+  basePrice: number;
+  workingPrice: number;
+  type: string;
+}
+
 export interface ParsedResult {
   meters: Meter[];
   readings: Reading[];
+  contracts: Contract[];
 }
 
 /**
@@ -83,10 +94,11 @@ export function parseNestedFormat(json: unknown): ParsedResult {
   if (Array.isArray(json)) {
     const meters: Meter[] = [];
     const readings: Reading[] = [];
+    const contracts: Contract[] = [];
 
     // Handle empty array (valid export with no data)
     if (json.length === 0) {
-      return { meters, readings };
+      return { meters, readings, contracts };
     }
 
     for (const item of json) {
@@ -114,12 +126,12 @@ export function parseNestedFormat(json: unknown): ParsedResult {
          location: (meterData.location as string) || ''
        };
 
-       meters.push(meterInfo);
-       readings.push(...parseReadingsFromItem(meterId, data.readings));
-     }
+        meters.push(meterInfo);
+        readings.push(...parseReadingsFromItem(meterId, data.readings));
+      }
 
-    return { meters, readings };
-  }
+     return { meters, readings, contracts };
+   }
 
   // Format 1: { meters: [...] }
   if (!json || typeof json !== 'object' || !('meters' in json)) {
@@ -135,6 +147,7 @@ export function parseNestedFormat(json: unknown): ParsedResult {
 
   const meters: Meter[] = [];
   const readings: Reading[] = [];
+  const contracts: Contract[] = [];
 
   for (const meterData of metersList) {
     if (!meterData || typeof meterData !== 'object') {
@@ -150,7 +163,7 @@ export function parseNestedFormat(json: unknown): ParsedResult {
     readings.push(...meterReadings);
   }
 
-  return { meters, readings };
+  return { meters, readings, contracts };
 }
 
 /**
@@ -190,7 +203,7 @@ export function parseFlatFormat(json: unknown): ParsedResult {
     });
   }
 
-  return { meters: [], readings };
+  return { meters: [], readings, contracts: [] };
 }
 
 const parseReadingsFromItem = (meterId: string, readingsData: unknown): Reading[] => {
@@ -253,6 +266,7 @@ export function parseUnifiedFormat(json: unknown): ParsedResult {
   
   const meters: Meter[] = [];
   const readings: Reading[] = [];
+  const contracts: Contract[] = [];
 
   // Parse meters
   if (Array.isArray(exportData.meters)) {
@@ -282,7 +296,25 @@ export function parseUnifiedFormat(json: unknown): ParsedResult {
     }
   }
 
-  return { meters, readings };
+  // Parse contracts
+  if (Array.isArray(exportData.contracts)) {
+    for (const c of exportData.contracts) {
+      if (c && typeof c === 'object') {
+        const contract = c as Record<string, unknown>;
+        contracts.push({
+          meterId: contract.meterId as string,
+          providerName: contract.providerName as string,
+          startDate: contract.startDate as string,
+          endDate: contract.endDate as string | undefined,
+          basePrice: contract.basePrice as number,
+          workingPrice: contract.workingPrice as number,
+          type: contract.type as string
+        });
+      }
+    }
+  }
+
+  return { meters, readings, contracts };
 }
 
 /**
