@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.14.0](https://github.com/dachrisch/energy.consumption/compare/v3.13.0...v3.14.0) (2026-02-19)
+
+
+### Features
+
+* dashboard chart actual vs prognosis ([#290](https://github.com/dachrisch/energy.consumption/issues/290)) ([4854286](https://github.com/dachrisch/energy.consumption/commit/4854286f418a3f82f0ad95e840ce1e25fa3fda57))
+* dashboard chart actual vs prognosis (restored) ([#291](https://github.com/dachrisch/energy.consumption/issues/291)) ([ca52e24](https://github.com/dachrisch/energy.consumption/commit/ca52e248337d40c25dfe115a602cc0970a797e45))
+* implement contract preview in unified import modal ([b109881](https://github.com/dachrisch/energy.consumption/commit/b10988180883234acb79c39a7d68b6b631ae1fe6))
+
+
+### Bug Fixes
+
+* ensure contract card is shown even with zero consumption ([586f58c](https://github.com/dachrisch/energy.consumption/commit/586f58c20c1f8adc71bbbbdbf0c3ea7bbd88b12b))
+* restore meter pre-selection race condition fix in AddContract ([b4de7f1](https://github.com/dachrisch/energy.consumption/commit/b4de7f12ee66ad2efa05dd137c377b77631c2760))
+
 ## [3.13.0](https://github.com/dachrisch/energy.consumption/compare/v3.11.6...v3.13.0) (2026-02-19)
 
 
