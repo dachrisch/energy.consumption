@@ -9,6 +9,7 @@ import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, Linea
 import { Bar } from 'solid-chartjs';
 import Icon from '../components/Icon';
 import EmptyState from '../components/EmptyState';
+import TimeRangeCostCard from '../components/TimeRangeCostCard';
 
 Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
 
@@ -280,6 +281,15 @@ const Dashboard: Component = () => {
               />
             }>
               <DashboardAggregates data={data()!} />
+            </Show>
+          </div>
+          <div class="w-full">
+            <Show when={data()}>
+              <TimeRangeCostCard
+                meters={data()!.meters}
+                readings={data()!.readings}
+                contracts={data()!.contracts}
+              />
             </Show>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
