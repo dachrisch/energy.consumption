@@ -163,14 +163,14 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
       <Show when={!isValidDateRange()}>
         <div class="alert alert-warning mb-6 rounded-xl">
           <Icon name="warning" class="h-5 w-5" />
-          <span class="text-sm font-bold">Please select a valid date range (start ≤ end, both in the past)</span>
+          <span class="text-sm font-bold">Invalid date range</span>
         </div>
       </Show>
 
       <Show when={isValidDateRange() && selectedMeterIds().size === 0}>
         <div class="alert alert-info mb-6 rounded-xl">
           <Icon name="info" class="h-5 w-5" />
-          <span class="text-sm font-bold">Please select at least one meter to calculate costs</span>
+          <span class="text-sm font-bold">Select meters to calculate</span>
         </div>
       </Show>
 
