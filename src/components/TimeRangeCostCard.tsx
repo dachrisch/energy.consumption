@@ -10,6 +10,7 @@ import {
 } from '../lib/timeRangeCostCalculation';
 import TimeRangeChart from './TimeRangeChart';
 import MeterMultiSelect from './MeterMultiSelect';
+import DateRangePicker from './DateRangePicker';
 import Icon from './Icon';
 
 interface TimeRangeCostCardProps {
@@ -94,22 +95,7 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
     return datasets;
   });
 
-  const handleStartDateChange = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    setStartDate(new Date(input.value + 'T00:00:00'));
-  };
 
-  const handleEndDateChange = (e: Event) => {
-    const input = e.target as HTMLInputElement;
-    setEndDate(new Date(input.value + 'T23:59:59'));
-  };
-
-  const formatDateForInput = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
   return (
     <div class="card bg-base-100 shadow-xl border p-6 md:p-8 rounded-3xl w-full">
@@ -126,30 +112,14 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
 
       {/* Controls */}
       <div class="space-y-4 mb-6">
-        {/* Date Range */}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <label class="text-xs font-black uppercase tracking-widest opacity-60">Start Date</label>
-            <input
-              type="date"
-              class="input input-bordered w-full rounded-xl font-bold"
-              value={formatDateForInput(startDate())}
-              onChange={handleStartDateChange}
-              max={formatDateForInput(endDate())}
-            />
-          </div>
-          <div class="space-y-2">
-            <label class="text-xs font-black uppercase tracking-widest opacity-60">End Date</label>
-            <input
-              type="date"
-              class="input input-bordered w-full rounded-xl font-bold"
-              value={formatDateForInput(endDate())}
-              onChange={handleEndDateChange}
-              min={formatDateForInput(startDate())}
-              max={formatDateForInput(today)}
-            />
-          </div>
-        </div>
+        {/* Date Range Picker */}
+        <DateRangePicker
+          startDate={startDate()}
+          endDate={endDate()}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          maxDate={today}
+        />
 
         {/* Meter Selection */}
         <MeterMultiSelect
