@@ -21,11 +21,61 @@ interface TimeRangeCostCardProps {
 
 const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
   const today = new Date();
+  today.setHours(23, 59, 59, 999);
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  thirtyDaysAgo.setHours(0, 0, 0, 0);
 
   const [startDate, setStartDate] = createSignal(thirtyDaysAgo);
   const [endDate, setEndDate] = createSignal(today);
+  const [activePreset, setActivePreset] = createSignal<string>('30d');
+
+  const presets: { id: string; label: string; getRange: () => { start: Date; end: Date } }[][] = [
+    [
+      { id: '7d', label: 'Last 7 days', getRange: () => {
+        const end = new Date(today); end.setHours(23, 59, 59, 999);
+        const start = new Date(end); start.setDate(start.getDate() - 7); start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }},
+      { id: '30d', label: 'Last 30 days', getRange: () => {
+        const end = new Date(today); end.setHours(23, 59, 59, 999);
+        const start = new Date(end); start.setDate(start.getDate() - 30); start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }},
+      { id: '90d', label: 'Last 90 days', getRange: () => {
+        const end = new Date(today); end.setHours(23, 59, 59, 999);
+        const start = new Date(end); start.setDate(start.getDate() - 90); start.setHours(0, 0, 0, 0);
+        return { start, end };
+      }},
+    ],
+    [
+      { id: 'lastYear', label: 'Last year', getRange: () => ({
+        start: new Date(today.getFullYear() - 1, 0, 1, 0, 0, 0, 0),
+        end: new Date(today.getFullYear() - 1, 11, 31, 23, 59, 59, 999),
+      })},
+      { id: 'thisYear', label: 'This year', getRange: () => ({
+        start: new Date(today.getFullYear(), 0, 1, 0, 0, 0, 0),
+        end: new Date(today),
+      })},
+      { id: 'lastMonth', label: 'Last month', getRange: () => {
+        const end = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+        const start = new Date(end.getFullYear(), end.getMonth(), 1, 0, 0, 0, 0);
+        return { start, end };
+      }},
+    ],
+  ];
+
+  const applyPreset = (id: string, getRange: () => { start: Date; end: Date }) => {
+    const { start, end } = getRange();
+    setStartDate(start);
+    setEndDate(end);
+    setActivePreset(id);
+  };
+
+  const handleManualDateChange = (setter: (d: Date) => void) => (date: Date) => {
+    setter(date);
+    setActivePreset('');
+  };
   const [selectedMeterIds, setSelectedMeterIds] = createSignal<Set<string>>(
     new Set(props.meters.map(m => m._id))
   );
@@ -112,12 +162,32 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
 
       {/* Controls */}
       <div class="space-y-4 mb-6">
+        {/* Presets */}
+        <div class="space-y-2">
+          <For each={presets}>
+            {(row) => (
+              <div class="grid grid-cols-3 gap-2">
+                <For each={row}>
+                  {(preset) => (
+                    <button
+                      class={`btn btn-sm rounded-lg font-bold ${activePreset() === preset.id ? 'btn-primary' : 'btn-outline opacity-60 hover:opacity-100'}`}
+                      onClick={() => applyPreset(preset.id, preset.getRange)}
+                    >
+                      {preset.label}
+                    </button>
+                  )}
+                </For>
+              </div>
+            )}
+          </For>
+        </div>
+
         {/* Date Range Picker */}
         <DateRangePicker
           startDate={startDate()}
           endDate={endDate()}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
+          onStartDateChange={handleManualDateChange(setStartDate)}
+          onEndDateChange={handleManualDateChange(setEndDate)}
           maxDate={today}
         />
 
@@ -172,7 +242,7 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
                     <div class="flex-1 min-w-0">
                       <p class="font-bold text-sm">{breakdown.meterName}</p>
                       <p class="text-xs opacity-60">
-                        {breakdown.consumption.toFixed(2)} {breakdown.meterId}
+                        {breakdown.consumption.toFixed(2)} {breakdown.unit}
                       </p>
                     </div>
                     <div class="text-right font-black">

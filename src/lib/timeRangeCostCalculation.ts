@@ -148,7 +148,7 @@ export function generateChartDataForMeter(
   startDate: Date,
   endDate: Date
 ): ChartDataset | null {
-  if (rangeReadings.length === 0) {
+  if (allReadings.length < 2) {
     return null;
   }
 
@@ -169,12 +169,20 @@ export function generateChartDataForMeter(
   const interpolatedLine: ChartDataPoint[] = [];
   if (allReadings.length >= 2) {
     const hourInMs = 60 * 60 * 1000;
+    const msPerDay = 24 * 60 * 60 * 1000;
     let currentTime = startDate.getTime();
     const endTime = endDate.getTime();
+    const lastReading = allReadings[allReadings.length - 1];
+    const dailyAvg = calculateDailyAverage(allReadings as unknown as { value: number; date: Date }[]);
 
     while (currentTime <= endTime) {
       const currentDate = new Date(currentTime);
-      const value = interpolateValueAtDate(currentDate, allReadings as unknown as { date: Date; value: number }[]);
+      let value = interpolateValueAtDate(currentDate, allReadings as unknown as { date: Date; value: number }[]);
+      // Extrapolate beyond the last reading using the daily average rate
+      if (value === null && currentDate > lastReading.date) {
+        const daysSince = (currentTime - lastReading.date.getTime()) / msPerDay;
+        value = lastReading.value + dailyAvg * daysSince;
+      }
       if (value !== null) {
         interpolatedLine.push({ x: currentTime, y: value });
       }
