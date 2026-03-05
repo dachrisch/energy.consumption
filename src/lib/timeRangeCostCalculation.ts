@@ -1,4 +1,4 @@
-import { interpolateValueAtDate } from './consumption';
+import { interpolateValueAtDate, calculateDailyAverage } from './consumption';
 import { calculateIntervalCost, Contract } from './pricing';
 import { IMeter, IReading, IContract } from '../types/models';
 
@@ -11,6 +11,7 @@ export interface MeterCostBreakdown {
   meterId: string;
   meterName: string;
   meterType: 'power' | 'gas';
+  unit: string;
   consumption: number;
   cost: number;
 }
@@ -112,10 +113,29 @@ export function calculateConsumptionInRange(
   }
 
   if (startValue === null || endValue === null) {
+    // Range is entirely beyond all readings — extrapolate from daily average
+    if (allReadings.length >= 2) {
+      const dailyAvg = calculateDailyAverage(allReadings as unknown as { value: number; date: Date }[]);
+      const daysInRange = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+      return Math.max(0, dailyAvg * daysInRange);
+    }
     return 0;
   }
 
-  return Math.max(0, endValue - startValue);
+  // Build ordered sequence: synthetic boundary values + actual readings in range
+  const sequence = [
+    { date: startDate, value: startValue },
+    ...readings,
+    { date: endDate, value: endValue },
+  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // Sum only positive deltas — ignores meter resets (negative deltas)
+  let total = 0;
+  for (let i = 1; i < sequence.length; i++) {
+    const delta = sequence[i].value - sequence[i - 1].value;
+    if (delta > 0) total += delta;
+  }
+  return total;
 }
 
 /**
@@ -214,6 +234,7 @@ export function calculateTimeRangeCosts(
       meterId: meter._id,
       meterName: meter.name,
       meterType: meter.type,
+      unit: meter.unit,
       consumption,
       cost: Math.max(0, cost)
     });
