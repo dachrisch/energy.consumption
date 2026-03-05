@@ -76,6 +76,9 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
     setter(date);
     setActivePreset('');
   };
+
+  const [isOpen, setIsOpen] = createSignal(true);
+
   const [selectedMeterIds, setSelectedMeterIds] = createSignal<Set<string>>(
     new Set(props.meters.map(m => m._id))
   );
@@ -148,17 +151,27 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
 
 
   return (
-    <div class="card bg-base-100 shadow-xl border p-6 md:p-8 rounded-3xl w-full">
-      {/* Header */}
-      <div class="flex items-center gap-3 mb-6">
-        <div class="bg-primary/10 p-3 rounded-2xl">
-          <Icon name="calendar" class="h-6 w-6 text-primary" />
-        </div>
+    <div class="card bg-base-100 shadow-xl border rounded-3xl w-full overflow-hidden">
+      {/* Accordion Header */}
+      <button
+        class="w-full flex items-center justify-between p-6 md:p-8 hover:bg-base-200/30 transition-colors text-left"
+        onClick={() => setIsOpen(!isOpen())}
+      >
         <div>
           <h2 class="text-2xl font-black uppercase">Cost Calculator</h2>
-          <p class="text-sm opacity-60 font-bold">Select a timeframe to analyze costs</p>
+          <p class="text-sm opacity-60 font-bold">
+            {isOpen() ? 'Select a timeframe to analyze costs' : `${formatDate(startDate())} – ${formatDate(endDate())}`}
+          </p>
         </div>
-      </div>
+        <Icon
+          name="arrow-down"
+          class={`h-5 w-5 opacity-60 transition-transform duration-200 ${isOpen() ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {/* Accordion Body */}
+      <Show when={isOpen()}>
+        <div class="px-6 md:px-8 pb-6 md:pb-8">
 
       {/* Controls */}
       <div class="space-y-4 mb-6">
@@ -275,6 +288,9 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
         <div class="text-center py-8 opacity-60">
           <Icon name="info" class="h-8 w-8 mx-auto mb-3 opacity-40" />
           <p class="text-sm font-bold">No readings found for the selected period</p>
+        </div>
+      </Show>
+
         </div>
       </Show>
     </div>
