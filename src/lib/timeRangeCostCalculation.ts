@@ -82,6 +82,30 @@ function getMeterContracts(meterId: string, contracts: IContract[]): Contract[] 
     }));
 }
 
+function resolveBoundaryValues(
+  readings: TimeRangeReading[],
+  startDate: Date,
+  endDate: Date,
+  allReadings: TimeRangeReading[]
+): { startValue: number | null; endValue: number | null } {
+  let startValue: number | null = null;
+  let endValue: number | null = null;
+
+  if (allReadings.length >= 2) {
+    startValue = interpolateValueAtDate(startDate, allReadings as unknown as { date: Date; value: number }[]);
+    endValue = interpolateValueAtDate(endDate, allReadings as unknown as { date: Date; value: number }[]);
+  }
+
+  if (startValue === null && readings.length > 0) {
+    startValue = readings[0].value;
+  }
+  if (endValue === null && readings.length > 0) {
+    endValue = readings[readings.length - 1].value;
+  }
+
+  return { startValue, endValue };
+}
+
 /**
  * Calculate consumption for a meter within a time range
  */
@@ -95,22 +119,7 @@ export function calculateConsumptionInRange(
     return 0;
   }
 
-  // Try to interpolate values at start and end if we have full history
-  let startValue: number | null = null;
-  let endValue: number | null = null;
-
-  if (allReadings.length >= 2) {
-    startValue = interpolateValueAtDate(startDate, allReadings as unknown as { date: Date; value: number }[]);
-    endValue = interpolateValueAtDate(endDate, allReadings as unknown as { date: Date; value: number }[]);
-  }
-
-  // Fallback: if interpolation didn't work, use first/last readings in range
-  if (startValue === null && readings.length > 0) {
-    startValue = readings[0].value;
-  }
-  if (endValue === null && readings.length > 0) {
-    endValue = readings[readings.length - 1].value;
-  }
+  const { startValue, endValue } = resolveBoundaryValues(readings, startDate, endDate, allReadings);
 
   if (startValue === null || endValue === null) {
     // Range is entirely beyond all readings — extrapolate from daily average
@@ -129,11 +138,16 @@ export function calculateConsumptionInRange(
     { date: endDate, value: endValue },
   ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  // Sum only positive deltas — ignores meter resets (negative deltas)
+  return sumPositiveDeltas(sequence);
+}
+
+function sumPositiveDeltas(sequence: { date: Date; value: number }[]): number {
   let total = 0;
   for (let i = 1; i < sequence.length; i++) {
     const delta = sequence[i].value - sequence[i - 1].value;
-    if (delta > 0) total += delta;
+    if (delta > 0) {
+      total += delta;
+    }
   }
   return total;
 }

@@ -1,4 +1,4 @@
-import { Component, createSignal, createEffect, Show } from 'solid-js';
+import { Component, createSignal } from 'solid-js';
 import { formatDate } from '../lib/timeRangeCostCalculation';
 import Icon from './Icon';
 

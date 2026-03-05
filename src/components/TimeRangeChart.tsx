@@ -11,10 +11,6 @@ interface TimeRangeChartProps {
   endDate: Date;
 }
 
-interface ChartDataPoint {
-  x: number;
-  y: number | null;
-}
 
 const TimeRangeChart: Component<TimeRangeChartProps> = (props) => {
   const [isMobile, setIsMobile] = createSignal(window.innerWidth < 768);
