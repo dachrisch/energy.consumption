@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.16.1](https://github.com/dachrisch/energy.consumption/compare/v3.14.1...v3.16.1) (2026-03-10)
+
+
+### Features
+
+* add time range cost calculator + security fixes ([#294](https://github.com/dachrisch/energy.consumption/issues/294)) ([b78a31d](https://github.com/dachrisch/energy.consumption/commit/b78a31d6af0a498296a5907fb70fef4e9add41f8))
+* add time range cost calculator card to dashboard ([#293](https://github.com/dachrisch/energy.consumption/issues/293)) ([453f031](https://github.com/dachrisch/energy.consumption/commit/453f03119e59a345745a1728986739db3afcfaab))
+
 ## [3.16.0](https://github.com/dachrisch/energy.consumption/compare/v3.14.1...v3.16.0) (2026-03-10)
 
 
