@@ -8,6 +8,50 @@ interface MeterMultiSelectProps {
   onSelectionChange: (selectedIds: Set<string>) => void;
 }
 
+interface MeterSectionProps {
+  type: 'power' | 'gas';
+  label: string;
+  meters: Meter[];
+  selectedMeterIds: Set<string>;
+  onToggleType: (type: 'power' | 'gas') => void;
+  onToggleMeter: (meterId: string) => void;
+}
+
+const MeterSection: Component<MeterSectionProps> = (props) => {
+  const isSelected = () => props.meters.every(m => props.selectedMeterIds.has(m._id));
+  const selectedCount = () => props.meters.filter(m => props.selectedMeterIds.has(m._id)).length;
+
+  return (
+    <div class={`space-y-2 ${props.type === 'gas' ? 'border-t border-base-300 pt-3' : ''}`}>
+      <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-base-200 rounded-lg">
+        <input
+          type="checkbox"
+          class="checkbox checkbox-sm"
+          checked={isSelected()}
+          onChange={() => props.onToggleType(props.type)}
+        />
+        <span class="font-bold text-sm flex-1">{props.label}</span>
+        <span class="text-xs opacity-60">{selectedCount()}/{props.meters.length}</span>
+      </label>
+      <div class="ml-4 space-y-1">
+        <For each={props.meters}>
+          {(meter) => (
+            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-base-200 rounded-lg">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-xs"
+                checked={props.selectedMeterIds.has(meter._id)}
+                onChange={() => props.onToggleMeter(meter._id)}
+              />
+              <span class="text-sm">{meter.name}</span>
+            </label>
+          )}
+        </For>
+      </div>
+    </div>
+  );
+};
+
 const MeterMultiSelect: Component<MeterMultiSelectProps> = (props) => {
   const [showDropdown, setShowDropdown] = createSignal(false);
   const [selectedCount, setSelectedCount] = createSignal(0);
@@ -44,9 +88,6 @@ const MeterMultiSelect: Component<MeterMultiSelectProps> = (props) => {
   const powerMeters = () => props.meters.filter(m => m.type === 'power');
   const gasMeters = () => props.meters.filter(m => m.type === 'gas');
 
-  const powerSelected = () => powerMeters().every(m => props.selectedMeterIds.has(m._id));
-  const gasSelected = () => gasMeters().every(m => props.selectedMeterIds.has(m._id));
-
   return (
     <div class="relative w-full">
       <button
@@ -59,66 +100,26 @@ const MeterMultiSelect: Component<MeterMultiSelectProps> = (props) => {
 
       {showDropdown() && (
         <div class="absolute top-full left-0 right-0 mt-2 bg-base-100 border border-base-300 rounded-xl shadow-lg z-50 p-4 space-y-3">
-          {/* Power Meters Section */}
           {powerMeters().length > 0 && (
-            <div class="space-y-2">
-              <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-base-200 rounded-lg">
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                  checked={powerSelected()}
-                  onChange={() => toggleMeterType('power')}
-                />
-                <span class="font-bold text-sm flex-1">Power Meters</span>
-                <span class="text-xs opacity-60">{powerMeters().filter(m => props.selectedMeterIds.has(m._id)).length}/{powerMeters().length}</span>
-              </label>
-              <div class="ml-4 space-y-1">
-                <For each={powerMeters()}>
-                  {(meter) => (
-                    <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-base-200 rounded-lg">
-                      <input
-                        type="checkbox"
-                        class="checkbox checkbox-xs"
-                        checked={props.selectedMeterIds.has(meter._id)}
-                        onChange={() => toggleMeter(meter._id)}
-                      />
-                      <span class="text-sm">{meter.name}</span>
-                    </label>
-                  )}
-                </For>
-              </div>
-            </div>
+            <MeterSection
+              type="power"
+              label="Power Meters"
+              meters={powerMeters()}
+              selectedMeterIds={props.selectedMeterIds}
+              onToggleType={toggleMeterType}
+              onToggleMeter={toggleMeter}
+            />
           )}
 
-          {/* Gas Meters Section */}
           {gasMeters().length > 0 && (
-            <div class="space-y-2 border-t border-base-300 pt-3">
-              <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-base-200 rounded-lg">
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                  checked={gasSelected()}
-                  onChange={() => toggleMeterType('gas')}
-                />
-                <span class="font-bold text-sm flex-1">Gas Meters</span>
-                <span class="text-xs opacity-60">{gasMeters().filter(m => props.selectedMeterIds.has(m._id)).length}/{gasMeters().length}</span>
-              </label>
-              <div class="ml-4 space-y-1">
-                <For each={gasMeters()}>
-                  {(meter) => (
-                    <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-base-200 rounded-lg">
-                      <input
-                        type="checkbox"
-                        class="checkbox checkbox-xs"
-                        checked={props.selectedMeterIds.has(meter._id)}
-                        onChange={() => toggleMeter(meter._id)}
-                      />
-                      <span class="text-sm">{meter.name}</span>
-                    </label>
-                  )}
-                </For>
-              </div>
-            </div>
+            <MeterSection
+              type="gas"
+              label="Gas Meters"
+              meters={gasMeters()}
+              selectedMeterIds={props.selectedMeterIds}
+              onToggleType={toggleMeterType}
+              onToggleMeter={toggleMeter}
+            />
           )}
 
           {props.meters.length === 0 && (
