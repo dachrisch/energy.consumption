@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.14.2](https://github.com/dachrisch/energy.consumption/compare/v3.14.1...v3.14.2) (2026-03-10)
+
+
+### Features
+
+* add time range cost calculator card to dashboard ([14a2fe1](https://github.com/dachrisch/energy.consumption/commit/14a2fe1d2fcb23980486a41f66ecf12e3cb3f8cb))
+* replace separate date inputs with unified range picker ([2c0248b](https://github.com/dachrisch/energy.consumption/commit/2c0248bcee7daf3c124d1698b89ef5fda397dab1))
+
+
+### Bug Fixes
+
+* add helmet security headers and upgrade express-rate-limit ([d00fa69](https://github.com/dachrisch/energy.consumption/commit/d00fa69422814cba73c4a4505e6990b5d88a3809))
+
 ### [3.14.1](https://github.com/dachrisch/energy.consumption/compare/v3.14.0...v3.14.1) (2026-02-19)
 
 
