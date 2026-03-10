@@ -8,15 +8,20 @@ This document serves as the primary technical reference for agentic coding agent
 | Command | Description |
 | :--- | :--- |
 | `npm run dev` | Start development server with in-memory MongoDB. |
+| `npm run vite-dev` | Start Vite dev server only (no backend). |
 | `npm run build` | Build frontend and server. |
+| `npm run start:prod` | Run production server. |
 | `npm run lint` | Run ESLint across the project. |
 | `npm test` | Run all unit tests using Vitest. |
 | `npm run test:e2e` | Run Playwright E2E tests. |
 
-### Specialized Testing
-- **Run specific test file:** `npx vitest <path-to-file>`
-- **Run tests in watch mode:** `npx vitest`
+### Testing
+- **Run specific test file:** `npx vitest <path-to-file>` (e.g., `npx vitest src/lib/consumption.test.ts`)
+- **Run specific test:** `npx vitest <path-to-file> -t "test name"`
+- **Run tests in watch mode:** `npx vitest` (runs file changes)
+- **Run tests once (CI):** `npx vitest --run`
 - **Coverage report:** `npx vitest --coverage`
+- **Debug tests:** Add `console.log` and run with `npx vitest --reporter=verbose`
 
 ## 🚀 CI/CD Pipelines
 
@@ -107,31 +112,30 @@ Follow the **Google TypeScript Style Guide** as a baseline.
 - **Conventional Commits:** Use clear, descriptive commit messages.
 - **Documentation:** Update this file or other relevant docs if project conventions evolve.
 
-## 📋 Recent Updates & Known Issues (v3.10.1)
+## 📋 Recent Updates & Known Issues (v3.16.0)
+
+### Time Range Cost Calculator (v3.16.0)
+- **Feature:** New dashboard card for calculating costs over custom date ranges.
+- **Components:**
+  - `src/components/TimeRangeCostCard.tsx` - Main card with date picker and meter selection
+  - `src/components/TimeRangeChart.tsx` - Line chart visualization
+  - `src/components/DateRangePicker.tsx` - Unified date picker with presets (7d, 30d, 90d, 1y)
+  - `src/components/MeterMultiSelect.tsx` - Multi-meter selection dropdown
+- **Logic:** `src/lib/timeRangeCostCalculation.ts` - Cost calculation using contract rates
+
+### Security Hardening (v3.15.0)
+- **Helmet.js:** Added security headers middleware (`src/api/server.ts`)
+- **express-rate-limit:** Upgraded to 8.3.1 to fix IPv6 bypass vulnerability (GHSA-46wh-pxpv-q5gq)
 
 ### Unified Import/Export System
-- **Feature:** Added comprehensive backup/restore functionality via new unified export format.
+- **Feature:** Comprehensive backup/restore functionality via unified export format.
 - **Endpoints:**
   - `POST /api/export` - Export data in unified JSON format (meters, readings, contracts).
-  - `POST /api/import/unified` - Import complete backup files including meters, readings, and contracts.
+  - `POST /api/import/unified` - Import complete backup files.
   - `POST /api/readings/bulk` - Legacy bulk readings import (still supported).
 - **Format:** Unified exports use `exportDate`, `version: '1.0'`, and nested `data` object.
-- **Implementation:**
-  - `src/lib/readingService.ts` - `processUnifiedImport()` handles multi-entity backup restoration.
-  - `src/api/controllers/reading.controller.ts` - Export and import handlers.
-  - `src/api/validation.ts` - `unifiedExportSchema` for request validation.
-  - `src/components/UnifiedImportModal.tsx` - Enhanced UI with backup format detection.
-  - `src/lib/jsonParser.ts` - `isUnifiedExportFormat()` and `parseUnifiedFormat()` utilities.
 
 ### AddContract Pre-fill Race Condition Fix
 - **Issue:** When navigating to `/contracts/add?meterId=<id>` from the Meters page, the meter dropdown was not pre-selecting the linked meter.
-- **Root Cause:** `createEffect` in `AddContract.tsx` was setting `meterId` signal before the `meters` resource had finished loading, causing a mismatch between the signal value and available DOM options.
-- **Solution:** Modified the effect to depend on both `searchParams.meterId` and the `meters()` resource, ensuring selection occurs after options are rendered.
+- **Solution:** Modified the effect to depend on both `searchParams.meterId` and the `meters()` resource.
 - **File:** `src/pages/AddContract.tsx` (lines 64-70).
-- **Test Verification:** Confirmed via Chrome MCP test that the meter is now correctly selected when clicking "Add Contract" from the Meters page.
-
-### Import/Export UI Updates
-- **CsvImportModal.tsx** - Renamed UI labels from "Import Readings" to "Import Data" for clarity.
-- **UnifiedImportModal.tsx** - Enhanced with drag-and-drop file upload, backup metadata preview, and automatic format detection.
-- **EmptyState.tsx** - Added inline mode for compact modal warnings.
-- **Dashboard.tsx** - Updated import handler to support both unified backups and legacy bulk readings.
