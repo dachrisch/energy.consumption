@@ -25,10 +25,12 @@ This document serves as the primary technical reference for agentic coding agent
 
 ## 🚀 CI/CD Pipelines
 
-The project uses **CircleCI** for continuous integration and deployment.
-- **Workflow:** `build_test_deploy`
-- **Configuration:** `.circleci/config.yml`
-- **Secrets required:** `DOCKER_USER`, `DOCKER_TOKEN` (for pushing images).
+The project uses **GitHub Actions** for continuous integration and deployment.
+- **Workflows:**
+  - `ci.yaml` - Runs on tags (build, test, docker push)
+  - `ci_branch.yaml` - Runs on branches and PRs (build and docker test)
+- **Configuration:** `.github/workflows/`
+- **Secrets required:** `DOCKER_USER`, `DOCKER_TOKEN` (for pushing images to Docker Hub).
 
 ## 📏 Code Style & Guidelines
 

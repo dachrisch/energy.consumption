@@ -1,5 +1,3 @@
-# DISABLED: Switched to CircleCI due to GitHub Packages pricing concerns.
-# See: https://docs.github.com/en/billing/concepts/product-billing/github-packages
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 name: 🏗️🧪🚀 Build, Test and Deploy everything
