@@ -155,13 +155,19 @@ function sumPositiveDeltas(sequence: { date: Date; value: number }[]): number {
 /**
  * Generate chart data with actual readings as points and interpolated line
  */
-export function generateChartDataForMeter(
-  meter: IMeter,
-  allReadings: TimeRangeReading[],
-  rangeReadings: TimeRangeReading[],
-  startDate: Date,
-  endDate: Date
-): ChartDataset | null {
+export function generateChartDataForMeter({
+  meter,
+  allReadings,
+  rangeReadings,
+  startDate,
+  endDate
+}: {
+  meter: IMeter;
+  allReadings: TimeRangeReading[];
+  rangeReadings: TimeRangeReading[];
+  startDate: Date;
+  endDate: Date;
+}): ChartDataset | null {
   if (allReadings.length < 2) {
     return null;
   }
@@ -218,14 +224,21 @@ export function generateChartDataForMeter(
 /**
  * Calculate costs for all selected meters within a time range
  */
-export function calculateTimeRangeCosts(
-  meters: IMeter[],
-  selectedMeterIds: Set<string>,
-  readings: IReading[],
-  contracts: IContract[],
-  startDate: Date,
-  endDate: Date
-): TimeRangeCostResult {
+export function calculateTimeRangeCosts({
+  meters,
+  selectedMeterIds,
+  readings,
+  contracts,
+  startDate,
+  endDate
+}: {
+  meters: IMeter[];
+  selectedMeterIds: Set<string>;
+  readings: IReading[];
+  contracts: IContract[];
+  startDate: Date;
+  endDate: Date;
+}): TimeRangeCostResult {
   const meterBreakdowns: MeterCostBreakdown[] = [];
   let totalCost = 0;
   const allReadingsInRange = new Map<string, TimeRangeReading[]>();

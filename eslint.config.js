@@ -7,6 +7,8 @@ export default [
   js.configs.recommended,
   {
     ignores: [
+      "**/__tests__/**",
+      "e2e/**",
       "node_modules/**",
       "dist/**",
       "dist-server/**",

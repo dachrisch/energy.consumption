@@ -1,4 +1,4 @@
-import { Component, createSignal } from 'solid-js';
+import { Component, createSignal, For } from 'solid-js';
 import { formatDate } from '../lib/timeRangeCostCalculation';
 import Icon from './Icon';
 
@@ -10,40 +10,41 @@ interface DateRangePickerProps {
   maxDate?: Date;
 }
 
+const formatDateForInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const PRESETS = [
+  { label: 'Last 7 days', days: 7 },
+  { label: 'Last 30 days', days: 30 },
+  { label: 'Last 90 days', days: 90 },
+  { label: 'Last year', days: 365 }
+];
+
 const DateRangePicker: Component<DateRangePickerProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(false);
   const today = props.maxDate || new Date();
 
-  const formatDateForInput = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
   const handleStartDateChange = (e: Event) => {
     const input = e.target as HTMLInputElement;
-    const newDate = new Date(input.value + 'T00:00:00');
-    props.onStartDateChange(newDate);
+    props.onStartDateChange(new Date(input.value + 'T00:00:00'));
   };
 
   const handleEndDateChange = (e: Event) => {
     const input = e.target as HTMLInputElement;
-    const newDate = new Date(input.value + 'T23:59:59');
-    props.onEndDateChange(newDate);
-  };
-
-  const getPresetDays = (days: number) => {
-    const end = new Date(today);
-    const start = new Date(end);
-    start.setDate(start.getDate() - days);
-    return { start, end };
+    props.onEndDateChange(new Date(input.value + 'T23:59:59'));
   };
 
   const applyPreset = (days: number) => {
-    const { start, end } = getPresetDays(days);
+    const end = new Date(today);
+    const start = new Date(end);
+    start.setDate(start.getDate() - days);
     props.onStartDateChange(start);
     props.onEndDateChange(end);
+    setIsOpen(false);
   };
 
   const daysDifference = () => {
@@ -53,7 +54,6 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
 
   return (
     <div class="relative">
-      {/* Display Button */}
       <button
         class="w-full p-4 bg-base-200/50 rounded-xl border border-base-content/10 font-bold text-left hover:border-base-content/20 transition-all flex items-center justify-between"
         onClick={() => setIsOpen(!isOpen())}
@@ -74,49 +74,25 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
         />
       </button>
 
-      {/* Dropdown */}
       {isOpen() && (
         <>
-          {/* Backdrop */}
-          <div
-            class="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-
-          {/* Picker Panel */}
+          <div class="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div class="absolute top-full left-0 right-0 mt-2 bg-base-100 border border-base-content/10 rounded-xl shadow-lg z-50 p-4 space-y-4">
-            {/* Preset Buttons */}
             <div class="grid grid-cols-2 gap-2">
-              <button
-                class="btn btn-sm btn-outline rounded-lg font-bold"
-                onClick={() => { applyPreset(7); setIsOpen(false); }}
-              >
-                Last 7 days
-              </button>
-              <button
-                class="btn btn-sm btn-outline rounded-lg font-bold"
-                onClick={() => { applyPreset(30); setIsOpen(false); }}
-              >
-                Last 30 days
-              </button>
-              <button
-                class="btn btn-sm btn-outline rounded-lg font-bold"
-                onClick={() => { applyPreset(90); setIsOpen(false); }}
-              >
-                Last 90 days
-              </button>
-              <button
-                class="btn btn-sm btn-outline rounded-lg font-bold"
-                onClick={() => { applyPreset(365); setIsOpen(false); }}
-              >
-                Last year
-              </button>
+              <For each={PRESETS}>
+                {(preset) => (
+                  <button
+                    class="btn btn-sm btn-outline rounded-lg font-bold"
+                    onClick={() => applyPreset(preset.days)}
+                  >
+                    {preset.label}
+                  </button>
+                )}
+              </For>
             </div>
 
-            {/* Divider */}
             <div class="divider opacity-20 my-2" />
 
-            {/* Custom Range */}
             <div class="space-y-3">
               <p class="text-xs font-black uppercase tracking-widest opacity-60">Custom Range</p>
               
@@ -144,11 +120,7 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
               </div>
             </div>
 
-            {/* Apply Button */}
-            <button
-              class="btn btn-primary w-full rounded-lg font-bold"
-              onClick={() => setIsOpen(false)}
-            >
+            <button class="btn btn-primary w-full rounded-lg font-bold" onClick={() => setIsOpen(false)}>
               Apply
             </button>
           </div>

@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import { apiHandler } from './handler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,6 +14,9 @@ const PORT = process.env.PORT || 80;
 
 // Trust the first proxy (e.g. Nginx) to correctly handle X-Forwarded-For headers
 app.set('trust proxy', 1);
+
+// Security headers
+app.use(helmet());
 
 // Healthcheck endpoint (must be BEFORE rate limiters)
 app.get('/health', (req, res) => {
