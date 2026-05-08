@@ -28,7 +28,7 @@ COPY healthcheck.js ./healthcheck.js
 RUN npm install --omit=dev
 
 ENV PORT=80
-EXPOSE 80
+EXPOSE ${PORT}
 
 # Health check using dedicated Node.js script
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
