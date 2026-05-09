@@ -7,7 +7,7 @@ ENV VITE_BUILD_VERSION=${VITE_BUILD_VERSION}
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package*.json .npmrc ./
 RUN npm install
 
 COPY . .
@@ -21,7 +21,7 @@ WORKDIR /app
 # Copy built assets
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server ./dist-server
-COPY --from=build /app/package*.json ./
+COPY --from=build /app/package*.json /app/.npmrc ./
 COPY healthcheck.js ./healthcheck.js
 
 # Install production dependencies only
