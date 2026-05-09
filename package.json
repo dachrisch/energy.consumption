@@ -50,7 +50,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
-    "@solidjs/router": "^0.15.4",
+    "@solidjs/router": "^0.16.0",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "chart.js": "^4.5.1",
