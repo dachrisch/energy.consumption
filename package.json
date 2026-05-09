@@ -39,7 +39,7 @@
     "esbuild": "^0.28.0",
     "eslint": "^10.0.0",
     "globals": "^17.3.0",
-    "jsdom": "^28.1.0",
+    "jsdom": "^29.0.0",
     "mongodb-memory-server": "^11.0.1",
     "solid-devtools": "^0.34.5",
     "standard-version": "^9.5.0",
