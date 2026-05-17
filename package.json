@@ -13,11 +13,7 @@
     "serve": "vite preview",
     "test": "vitest --run",
     "test:e2e": "playwright test",
-    "lint": "eslint .",
-    "release": "standard-version && git push --follow-tags origin HEAD",
-    "release:patch": "standard-version --release-as patch && git push --follow-tags origin HEAD",
-    "release:minor": "standard-version --release-as minor && git push --follow-tags origin HEAD",
-    "release:major": "standard-version --release-as major && git push --follow-tags origin HEAD"
+    "lint": "eslint ."
   },
   "license": "MIT",
   "devDependencies": {
@@ -42,7 +38,6 @@
     "jsdom": "^29.0.0",
     "mongodb-memory-server": "^11.0.1",
     "solid-devtools": "^0.34.5",
-    "standard-version": "^9.5.0",
     "tailwindcss": "^4.2.0",
     "typescript": "^6.0.0",
     "vite": "^8.0.0",

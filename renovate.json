@@ -3,6 +3,8 @@
   "extends": [
     "config:recommended"
   ],
+  "semanticCommits": "enabled",
+  "semanticCommitType": "fix",
   "packageRules": [
     {
       "description": "Automerge non-major updates",
