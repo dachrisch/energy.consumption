@@ -3,8 +3,6 @@
   "extends": [
     "config:recommended"
   ],
-  "semanticCommits": "enabled",
-  "semanticCommitType": "fix",
   "packageRules": [
     {
       "description": "Automerge non-major updates",
@@ -12,19 +10,22 @@
         "minor",
         "patch"
       ],
-      "automerge": true
+      "automerge": true,
+      "semanticCommitType": "fix"
     },
     {
       "description": "Automerge dev dependencies",
       "matchDepTypes": [
         "devDependencies"
       ],
-      "automerge": true
+      "automerge": true,
+      "semanticCommitType": "fix"
     },
     {
       "description": "Automerge docker GitHub Actions",
       "matchManagers": ["github-actions"],
-      "automerge": true
+      "automerge": true,
+      "semanticCommitType": "fix"
     }
   ]
 }
