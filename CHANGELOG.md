@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.4](https://github.com/dachrisch/energy.consumption/compare/v3.16.3...v3.16.4) (2026-05-19)
+
+
+### Bug Fixes
+
+* define semanticCommitType in each renovate rule ([cc66289](https://github.com/dachrisch/energy.consumption/commit/cc662897e69320ddc34bea58fb9a5ec2a4b3779d))
+
 ## [3.16.3](https://github.com/dachrisch/energy.consumption/compare/v3.16.2...v3.16.3) (2026-05-17)
 
 
