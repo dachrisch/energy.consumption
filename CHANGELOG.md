@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.3](https://github.com/dachrisch/energy.consumption/compare/v3.16.2...v3.16.3) (2026-05-17)
+
+
+### Bug Fixes
+
+* use github.actor for docker login instead of DOCKER_USER secret ([8bf5c91](https://github.com/dachrisch/energy.consumption/commit/8bf5c91e31762bab87840616c9309c8042c0ef63))
+
 ## [3.16.2](https://github.com/dachrisch/energy.consumption/compare/v3.16.1...v3.16.2) (2026-05-17)
 
 
