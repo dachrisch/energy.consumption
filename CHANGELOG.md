@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.9](https://github.com/dachrisch/energy.consumption/compare/v3.16.8...v3.16.9) (2026-05-25)
+
+
+### Bug Fixes
+
+* **deps:** update typescript-eslint monorepo to v8.60.0 ([#345](https://github.com/dachrisch/energy.consumption/issues/345)) ([6153061](https://github.com/dachrisch/energy.consumption/commit/6153061f9cf64e468a937abe6cba398afb7557c7))
+
 ## [3.16.8](https://github.com/dachrisch/energy.consumption/compare/v3.16.7...v3.16.8) (2026-05-23)
 
 
