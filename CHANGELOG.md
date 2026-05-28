@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.11](https://github.com/dachrisch/energy.consumption/compare/v3.16.10...v3.16.11) (2026-05-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency concurrently to v10 ([#350](https://github.com/dachrisch/energy.consumption/issues/350)) ([111db46](https://github.com/dachrisch/energy.consumption/commit/111db4644d3123868b4ffa61a9dee10707133ae3))
+* **deps:** update dependency mongodb-memory-server to v11.2.0 ([#349](https://github.com/dachrisch/energy.consumption/issues/349)) ([da9a766](https://github.com/dachrisch/energy.consumption/commit/da9a766be05bf78d75f19115f6274ed1c37dae80))
+
 ## [3.16.10](https://github.com/dachrisch/energy.consumption/compare/v3.16.9...v3.16.10) (2026-05-27)
 
 
