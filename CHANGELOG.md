@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.12](https://github.com/dachrisch/energy.consumption/compare/v3.16.11...v3.16.12) (2026-05-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency eslint to v10.4.1 ([#352](https://github.com/dachrisch/energy.consumption/issues/352)) ([7369fd7](https://github.com/dachrisch/energy.consumption/commit/7369fd7e3eeb1d678bd02bb009983e1e7d63484a))
+
 ## [3.16.11](https://github.com/dachrisch/energy.consumption/compare/v3.16.10...v3.16.11) (2026-05-28)
 
 
