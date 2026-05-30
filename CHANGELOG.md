@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.13](https://github.com/dachrisch/energy.consumption/compare/v3.16.12...v3.16.13) (2026-05-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency date-fns to v4.4.0 ([#354](https://github.com/dachrisch/energy.consumption/issues/354)) ([1a341db](https://github.com/dachrisch/energy.consumption/commit/1a341db6e9f57874f8f425897be590504d39463c))
+
 ## [3.16.12](https://github.com/dachrisch/energy.consumption/compare/v3.16.11...v3.16.12) (2026-05-29)
 
 
