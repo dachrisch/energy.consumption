@@ -14,7 +14,7 @@ permissions:
   checks: write
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -38,5 +38,11 @@ jobs:
         with:
           typescript-log: ${{ inputs.project }}/typescript.log
       - name: 🧪 Run vitest
-        run: |
-          npm run test -- --reporter=default --reporter=junit
+        run: npm run test
+      - name: 📊 Publish test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Node Test Results (${{ inputs.project }})
+          path: ${{ inputs.project }}/test-results/junit.xml
+          reporter: java-junit

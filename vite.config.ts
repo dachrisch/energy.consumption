@@ -67,6 +67,10 @@ export default defineConfig(({ mode }) => {
           inline: [/solid-js/, /@solidjs\/router/],
         },
       },
+      reporters: ['default', 'junit'],
+      outputFile: {
+        junit: 'test-results/junit.xml',
+      },
     },
   };
 });
