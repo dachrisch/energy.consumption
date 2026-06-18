@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.17](https://github.com/dachrisch/energy.consumption/compare/v3.16.16...v3.16.17) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deps:** update eslint monorepo to v10.5.0 ([#367](https://github.com/dachrisch/energy.consumption/issues/367)) ([5aef33d](https://github.com/dachrisch/energy.consumption/commit/5aef33db4490e95b0eb9fe6abf32f9a824352f24))
+* **deps:** update tailwindcss monorepo to v4.3.1 ([#365](https://github.com/dachrisch/energy.consumption/issues/365)) ([14a5a4b](https://github.com/dachrisch/energy.consumption/commit/14a5a4b682256e72df1aac9fdde8b12ef8ad2b13))
+* **deps:** update vitest monorepo to v4.1.9 ([#366](https://github.com/dachrisch/energy.consumption/issues/366)) ([261a4cd](https://github.com/dachrisch/energy.consumption/commit/261a4cd469629d4429eae7c17f1b98363e7d2ae1))
+
 ## [3.16.16](https://github.com/dachrisch/energy.consumption/compare/v3.16.15...v3.16.16) (2026-06-18)
 
 
