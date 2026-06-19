@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.20](https://github.com/dachrisch/energy.consumption/compare/v3.16.19...v3.16.20) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** update actions/checkout action to v7 ([#376](https://github.com/dachrisch/energy.consumption/issues/376)) ([ea76218](https://github.com/dachrisch/energy.consumption/commit/ea7621861b875965b2f42080ad5172cf2a5db407))
+
 ## [3.16.19](https://github.com/dachrisch/energy.consumption/compare/v3.16.18...v3.16.19) (2026-06-19)
 
 
