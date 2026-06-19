@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.21](https://github.com/dachrisch/energy.consumption/compare/v3.16.20...v3.16.21) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** update dorny/test-reporter action to v3 ([#377](https://github.com/dachrisch/energy.consumption/issues/377)) ([9a9eab0](https://github.com/dachrisch/energy.consumption/commit/9a9eab0a127a8e108fc3dcb0ac8017065ffa152f))
+
 ## [3.16.20](https://github.com/dachrisch/energy.consumption/compare/v3.16.19...v3.16.20) (2026-06-19)
 
 
