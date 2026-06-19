@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.19](https://github.com/dachrisch/energy.consumption/compare/v3.16.18...v3.16.19) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** update playwright monorepo to v1.61.0 ([#372](https://github.com/dachrisch/energy.consumption/issues/372)) ([b24e46b](https://github.com/dachrisch/energy.consumption/commit/b24e46bdc32f6a7f882257a26f0be6695330b867))
+* **deps:** update typescript-eslint monorepo to v8.61.1 ([#373](https://github.com/dachrisch/energy.consumption/issues/373)) ([9f870b1](https://github.com/dachrisch/energy.consumption/commit/9f870b1a714065af5372e3a05c36318a9dbc8c7a))
+
 ## [3.16.18](https://github.com/dachrisch/energy.consumption/compare/v3.16.17...v3.16.18) (2026-06-18)
 
 
