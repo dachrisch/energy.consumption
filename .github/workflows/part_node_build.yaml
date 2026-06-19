@@ -41,7 +41,7 @@ jobs:
         run: npm run test
       - name: 📊 Publish test results
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v3
         with:
           name: Node Test Results (${{ inputs.project }})
           path: ${{ inputs.project }}/test-results/junit.xml
