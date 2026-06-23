@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.25](https://github.com/dachrisch/energy.consumption/compare/v3.16.24...v3.16.25) (2026-06-23)
+
+
+### Bug Fixes
+
+* **deps:** update playwright monorepo ([#388](https://github.com/dachrisch/energy.consumption/issues/388)) ([837764e](https://github.com/dachrisch/energy.consumption/commit/837764e7b6f214a336ea0ff62ce63ac89ba5bf68))
+
 ## [3.16.24](https://github.com/dachrisch/energy.consumption/compare/v3.16.23...v3.16.24) (2026-06-23)
 
 
