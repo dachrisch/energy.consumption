@@ -7,6 +7,14 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Bug Fixes
 
+* **deps:** update dependency vite to v8.1.0 ([#386](https://github.com/dachrisch/energy.consumption/issues/386)) ([9346674](https://github.com/dachrisch/energy.consumption/commit/93466740fe72cb0aed0ce0c486cb3d9edaa197bd))
+* **deps:** update typescript-eslint monorepo to v8.62.0 ([#385](https://github.com/dachrisch/energy.consumption/issues/385)) ([58f4a2a](https://github.com/dachrisch/energy.consumption/commit/58f4a2ad43ca49a4c633f0e75e6bb014339d7a0a))
+
+## [3.16.24](https://github.com/dachrisch/energy.consumption/compare/v3.16.23...v3.16.24) (2026-06-23)
+
+
+### Bug Fixes
+
 * **deps:** update typescript-eslint monorepo to v8.62.0 ([#385](https://github.com/dachrisch/energy.consumption/issues/385)) ([58f4a2a](https://github.com/dachrisch/energy.consumption/commit/58f4a2ad43ca49a4c633f0e75e6bb014339d7a0a))
 
 ## [3.16.23](https://github.com/dachrisch/energy.consumption/compare/v3.16.22...v3.16.23) (2026-06-22)
