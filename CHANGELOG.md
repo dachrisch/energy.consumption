@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.31](https://github.com/dachrisch/energy.consumption/compare/v3.16.30...v3.16.31) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.6 ([#401](https://github.com/dachrisch/energy.consumption/issues/401)) ([ada2f4c](https://github.com/dachrisch/energy.consumption/commit/ada2f4c5f2a1c082e927fbd9c0f4892fe5eca207))
+* **deps:** update tailwindcss monorepo to v4.3.2 ([#402](https://github.com/dachrisch/energy.consumption/issues/402)) ([7cc0121](https://github.com/dachrisch/energy.consumption/commit/7cc01211e2766b7190039cb73db77335eefaae0f))
+
 ## [3.16.30](https://github.com/dachrisch/energy.consumption/compare/v3.16.29...v3.16.30) (2026-06-29)
 
 
