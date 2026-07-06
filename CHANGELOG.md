@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.41](https://github.com/dachrisch/energy.consumption/compare/v3.16.40...v3.16.41) (2026-07-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v9.7.4 ([#423](https://github.com/dachrisch/energy.consumption/issues/423)) ([7a97b20](https://github.com/dachrisch/energy.consumption/commit/7a97b201c9250c40e2183f462705f20239f1c2ad))
+* **deps:** update typescript-eslint monorepo to v8.63.0 ([#424](https://github.com/dachrisch/energy.consumption/issues/424)) ([b567fc9](https://github.com/dachrisch/energy.consumption/commit/b567fc962d314f7203051dee419e525c06ab384b))
+
 ## [3.16.40](https://github.com/dachrisch/energy.consumption/compare/v3.16.39...v3.16.40) (2026-07-06)
 
 
