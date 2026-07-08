@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.44](https://github.com/dachrisch/energy.consumption/compare/v3.16.43...v3.16.44) (2026-07-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency typescript to v7 ([#430](https://github.com/dachrisch/energy.consumption/issues/430)) ([ee66f5b](https://github.com/dachrisch/energy.consumption/commit/ee66f5b6467bb5f1338e9dbeb5cee7c37e901fb2))
+
 ## [3.16.43](https://github.com/dachrisch/energy.consumption/compare/v3.16.42...v3.16.43) (2026-07-08)
 
 
