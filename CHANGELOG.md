@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.49](https://github.com/dachrisch/energy.consumption/compare/v3.16.48...v3.16.49) (2026-07-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.16 ([1d6a00b](https://github.com/dachrisch/energy.consumption/commit/1d6a00b78b2de64f18facd9b5bd97a440459ff8b))
+* **deps:** update dependency daisyui to v5.6.16 ([04e4003](https://github.com/dachrisch/energy.consumption/commit/04e40037685cbbc6a79f15131df69a0fd0dffe9e))
+* **deps:** update dependency solid-js to v1.9.14 ([737f934](https://github.com/dachrisch/energy.consumption/commit/737f93434a4de76551295d1871825c725be4638a))
+* **deps:** update tailwindcss monorepo to v4.3.2 ([dc94876](https://github.com/dachrisch/energy.consumption/commit/dc94876d9ff59cd86308ecf1f2b223983e954944))
+* **deps:** update tailwindcss monorepo to v4.3.2 ([100b953](https://github.com/dachrisch/energy.consumption/commit/100b9536bc45c584810ef95206e55efe7cf49630))
+
 ## [3.16.48](https://github.com/dachrisch/energy.consumption/compare/v3.16.47...v3.16.48) (2026-07-10)
 
 
