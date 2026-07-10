@@ -22,12 +22,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: 🟢⚙️ Setup node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v6
         with:
           node-version: "24.x"
           cache: "npm"
           cache-dependency-path: ${{ inputs.project }}/package.json
-      - name: 🔍 Run eslint ${{ inputs.project }}
+      - name: 🔍 Run oxlint ${{ inputs.project }}
         run: |
           npm ci
           npm run lint
