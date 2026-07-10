@@ -20,7 +20,7 @@ jobs:
       run:
         working-directory: ${{ inputs.project }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: 🟢⚙️ Setup node
         uses: actions/setup-node@v7
         with:
@@ -41,7 +41,7 @@ jobs:
         run: npm run test
       - name: 📊 Publish test results
         if: always()
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v3
         with:
           name: Node Test Results (${{ inputs.project }})
           path: ${{ inputs.project }}/test-results/junit.xml

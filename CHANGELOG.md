@@ -2,6 +2,233 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.45](https://github.com/dachrisch/energy.consumption/compare/v3.16.44...v3.16.45) (2026-07-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency vite to v8.1.4 ([#432](https://github.com/dachrisch/energy.consumption/issues/432)) ([ae6f0be](https://github.com/dachrisch/energy.consumption/commit/ae6f0be1ef01e051184c722a25951dd47b512a9d))
+
+## [3.16.44](https://github.com/dachrisch/energy.consumption/compare/v3.16.43...v3.16.44) (2026-07-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency typescript to v7 ([#430](https://github.com/dachrisch/energy.consumption/issues/430)) ([ee66f5b](https://github.com/dachrisch/energy.consumption/commit/ee66f5b6467bb5f1338e9dbeb5cee7c37e901fb2))
+
+## [3.16.43](https://github.com/dachrisch/energy.consumption/compare/v3.16.42...v3.16.43) (2026-07-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.16 ([#428](https://github.com/dachrisch/energy.consumption/issues/428)) ([2d156c1](https://github.com/dachrisch/energy.consumption/commit/2d156c1891085eb272be3d0864f3f24b4e568df7))
+
+## [3.16.42](https://github.com/dachrisch/energy.consumption/compare/v3.16.41...v3.16.42) (2026-07-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.15 ([#426](https://github.com/dachrisch/energy.consumption/issues/426)) ([35aae99](https://github.com/dachrisch/energy.consumption/commit/35aae9962933f626dececa48a6e6235a2932495c))
+
+## [3.16.41](https://github.com/dachrisch/energy.consumption/compare/v3.16.40...v3.16.41) (2026-07-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v9.7.4 ([#423](https://github.com/dachrisch/energy.consumption/issues/423)) ([7a97b20](https://github.com/dachrisch/energy.consumption/commit/7a97b201c9250c40e2183f462705f20239f1c2ad))
+* **deps:** update typescript-eslint monorepo to v8.63.0 ([#424](https://github.com/dachrisch/energy.consumption/issues/424)) ([b567fc9](https://github.com/dachrisch/energy.consumption/commit/b567fc962d314f7203051dee419e525c06ab384b))
+
+## [3.16.40](https://github.com/dachrisch/energy.consumption/compare/v3.16.39...v3.16.40) (2026-07-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.14 ([#421](https://github.com/dachrisch/energy.consumption/issues/421)) ([4e1c3fc](https://github.com/dachrisch/energy.consumption/commit/4e1c3fc5931449166d1d43f694b8e58d46ea4b85))
+
+## [3.16.39](https://github.com/dachrisch/energy.consumption/compare/v3.16.38...v3.16.39) (2026-07-06)
+
+
+### Bug Fixes
+
+* **deps:** update vitest monorepo to v4.1.10 ([#419](https://github.com/dachrisch/energy.consumption/issues/419)) ([ec0b09b](https://github.com/dachrisch/energy.consumption/commit/ec0b09b454ae192918705c11da9ecdf29933cac6))
+
+## [3.16.38](https://github.com/dachrisch/energy.consumption/compare/v3.16.37...v3.16.38) (2026-07-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.13 ([#417](https://github.com/dachrisch/energy.consumption/issues/417)) ([cc1dfce](https://github.com/dachrisch/energy.consumption/commit/cc1dfce1cde0026e926b86157aba5c4120ca0912))
+
+## [3.16.37](https://github.com/dachrisch/energy.consumption/compare/v3.16.36...v3.16.37) (2026-07-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.10 ([#415](https://github.com/dachrisch/energy.consumption/issues/415)) ([ba070e4](https://github.com/dachrisch/energy.consumption/commit/ba070e4213737e6533a4c00d872deada2da9f45d))
+
+## [3.16.36](https://github.com/dachrisch/energy.consumption/compare/v3.16.35...v3.16.36) (2026-07-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency vite to v8.1.3 ([#413](https://github.com/dachrisch/energy.consumption/issues/413)) ([ce93d55](https://github.com/dachrisch/energy.consumption/commit/ce93d55e97ddb8de26b376dc5b60c56fed93f3b7))
+
+## [3.16.35](https://github.com/dachrisch/energy.consumption/compare/v3.16.34...v3.16.35) (2026-07-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.7 ([#410](https://github.com/dachrisch/energy.consumption/issues/410)) ([21fee06](https://github.com/dachrisch/energy.consumption/commit/21fee06f6077ed3e6a966930defde73d1a76f1af))
+* **deps:** update dependency solid-js to v1.9.14 ([#411](https://github.com/dachrisch/energy.consumption/issues/411)) ([3eb37e4](https://github.com/dachrisch/energy.consumption/commit/3eb37e48ffab6aa36be73626691c85beeb324112))
+
+## [3.16.34](https://github.com/dachrisch/energy.consumption/compare/v3.16.33...v3.16.34) (2026-06-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency vite to v8.1.2 ([#408](https://github.com/dachrisch/energy.consumption/issues/408)) ([fdbacdc](https://github.com/dachrisch/energy.consumption/commit/fdbacdc59b4d32bad9405a10df3767fdacddf2f1))
+
+## [3.16.33](https://github.com/dachrisch/energy.consumption/compare/v3.16.32...v3.16.33) (2026-06-30)
+
+
+### Bug Fixes
+
+* **deps:** update dependency vite to v8.1.1 ([#406](https://github.com/dachrisch/energy.consumption/issues/406)) ([f5369c0](https://github.com/dachrisch/energy.consumption/commit/f5369c0da18e941fcb59db0a1329bf8a8f4ca4b3))
+
+## [3.16.32](https://github.com/dachrisch/energy.consumption/compare/v3.16.31...v3.16.32) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** update typescript-eslint monorepo to v8.62.1 ([#404](https://github.com/dachrisch/energy.consumption/issues/404)) ([e1dddb2](https://github.com/dachrisch/energy.consumption/commit/e1dddb218ea6017f88ae9b3d54aae37370fc1f62))
+
+## [3.16.31](https://github.com/dachrisch/energy.consumption/compare/v3.16.30...v3.16.31) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.6 ([#401](https://github.com/dachrisch/energy.consumption/issues/401)) ([ada2f4c](https://github.com/dachrisch/energy.consumption/commit/ada2f4c5f2a1c082e927fbd9c0f4892fe5eca207))
+* **deps:** update tailwindcss monorepo to v4.3.2 ([#402](https://github.com/dachrisch/energy.consumption/issues/402)) ([7cc0121](https://github.com/dachrisch/energy.consumption/commit/7cc01211e2766b7190039cb73db77335eefaae0f))
+
+## [3.16.30](https://github.com/dachrisch/energy.consumption/compare/v3.16.29...v3.16.30) (2026-06-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.5 ([#399](https://github.com/dachrisch/energy.consumption/issues/399)) ([b8f06ec](https://github.com/dachrisch/energy.consumption/commit/b8f06eccce050a6641183adcccff137481f3f62d))
+
+## [3.16.29](https://github.com/dachrisch/energy.consumption/compare/v3.16.28...v3.16.29) (2026-06-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency eslint to v10.6.0 ([#397](https://github.com/dachrisch/energy.consumption/issues/397)) ([4f9210d](https://github.com/dachrisch/energy.consumption/commit/4f9210dd483b53a0ceae8b481e8b74a0a9e98851))
+* **deps:** update dependency mongoose to v9.7.3 ([#396](https://github.com/dachrisch/energy.consumption/issues/396)) ([8e1aa57](https://github.com/dachrisch/energy.consumption/commit/8e1aa57f8f92d0975e0efb42387a09b3fa50084a))
+
+## [3.16.28](https://github.com/dachrisch/energy.consumption/compare/v3.16.27...v3.16.28) (2026-06-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.3 ([#394](https://github.com/dachrisch/energy.consumption/issues/394)) ([601fa40](https://github.com/dachrisch/energy.consumption/commit/601fa402b49deb715e00bce4dbb66ff7cdf0e0cf))
+
+## [3.16.27](https://github.com/dachrisch/energy.consumption/compare/v3.16.26...v3.16.27) (2026-06-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.1 ([#392](https://github.com/dachrisch/energy.consumption/issues/392)) ([7be64fe](https://github.com/dachrisch/energy.consumption/commit/7be64fee13357e184cba60eb1a5d41ba20a6cb7b))
+
+## [3.16.26](https://github.com/dachrisch/energy.consumption/compare/v3.16.25...v3.16.26) (2026-06-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.6.0 ([#390](https://github.com/dachrisch/energy.consumption/issues/390)) ([33b79f2](https://github.com/dachrisch/energy.consumption/commit/33b79f2b3847f4c025b6bf2db3f36254635e8451))
+
+## [3.16.25](https://github.com/dachrisch/energy.consumption/compare/v3.16.24...v3.16.25) (2026-06-23)
+
+
+### Bug Fixes
+
+* **deps:** update playwright monorepo ([#388](https://github.com/dachrisch/energy.consumption/issues/388)) ([837764e](https://github.com/dachrisch/energy.consumption/commit/837764e7b6f214a336ea0ff62ce63ac89ba5bf68))
+
+## [3.16.24](https://github.com/dachrisch/energy.consumption/compare/v3.16.23...v3.16.24) (2026-06-23)
+
+
+### Bug Fixes
+
+* **deps:** update dependency vite to v8.1.0 ([#386](https://github.com/dachrisch/energy.consumption/issues/386)) ([9346674](https://github.com/dachrisch/energy.consumption/commit/93466740fe72cb0aed0ce0c486cb3d9edaa197bd))
+* **deps:** update typescript-eslint monorepo to v8.62.0 ([#385](https://github.com/dachrisch/energy.consumption/issues/385)) ([58f4a2a](https://github.com/dachrisch/energy.consumption/commit/58f4a2ad43ca49a4c633f0e75e6bb014339d7a0a))
+
+## [3.16.24](https://github.com/dachrisch/energy.consumption/compare/v3.16.23...v3.16.24) (2026-06-23)
+
+
+### Bug Fixes
+
+* **deps:** update typescript-eslint monorepo to v8.62.0 ([#385](https://github.com/dachrisch/energy.consumption/issues/385)) ([58f4a2a](https://github.com/dachrisch/energy.consumption/commit/58f4a2ad43ca49a4c633f0e75e6bb014339d7a0a))
+
+## [3.16.23](https://github.com/dachrisch/energy.consumption/compare/v3.16.22...v3.16.23) (2026-06-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v9.7.2 ([#381](https://github.com/dachrisch/energy.consumption/issues/381)) ([ec5bf5c](https://github.com/dachrisch/energy.consumption/commit/ec5bf5c52f6ce15d2e78e6bbc35c5907eb05964d))
+
+## [3.16.22](https://github.com/dachrisch/energy.consumption/compare/v3.16.21...v3.16.22) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** update typescript-eslint monorepo to v8.61.1 ([8c81b1d](https://github.com/dachrisch/energy.consumption/commit/8c81b1dceb2eb8dbd015772e2669479b742e10a0))
+
+## [3.16.21](https://github.com/dachrisch/energy.consumption/compare/v3.16.20...v3.16.21) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** update dorny/test-reporter action to v3 ([#377](https://github.com/dachrisch/energy.consumption/issues/377)) ([9a9eab0](https://github.com/dachrisch/energy.consumption/commit/9a9eab0a127a8e108fc3dcb0ac8017065ffa152f))
+
+## [3.16.20](https://github.com/dachrisch/energy.consumption/compare/v3.16.19...v3.16.20) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** update actions/checkout action to v7 ([#376](https://github.com/dachrisch/energy.consumption/issues/376)) ([ea76218](https://github.com/dachrisch/energy.consumption/commit/ea7621861b875965b2f42080ad5172cf2a5db407))
+
+## [3.16.19](https://github.com/dachrisch/energy.consumption/compare/v3.16.18...v3.16.19) (2026-06-19)
+
+
+### Bug Fixes
+
+* **deps:** update playwright monorepo to v1.61.0 ([#372](https://github.com/dachrisch/energy.consumption/issues/372)) ([b24e46b](https://github.com/dachrisch/energy.consumption/commit/b24e46bdc32f6a7f882257a26f0be6695330b867))
+* **deps:** update typescript-eslint monorepo to v8.61.1 ([#373](https://github.com/dachrisch/energy.consumption/issues/373)) ([9f870b1](https://github.com/dachrisch/energy.consumption/commit/9f870b1a714065af5372e3a05c36318a9dbc8c7a))
+
+## [3.16.18](https://github.com/dachrisch/energy.consumption/compare/v3.16.17...v3.16.18) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency body-parser to v2.3.0 ([#369](https://github.com/dachrisch/energy.consumption/issues/369)) ([c7b26b0](https://github.com/dachrisch/energy.consumption/commit/c7b26b0084371a2b8705d6f6c6c114623ac71ec1))
+* **deps:** update dependency mongoose to v9.7.1 ([#370](https://github.com/dachrisch/energy.consumption/issues/370)) ([e654296](https://github.com/dachrisch/energy.consumption/commit/e654296b87f73bca7a80f5af228659a574f0f655))
+
+## [3.16.17](https://github.com/dachrisch/energy.consumption/compare/v3.16.16...v3.16.17) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deps:** update eslint monorepo to v10.5.0 ([#367](https://github.com/dachrisch/energy.consumption/issues/367)) ([5aef33d](https://github.com/dachrisch/energy.consumption/commit/5aef33db4490e95b0eb9fe6abf32f9a824352f24))
+* **deps:** update tailwindcss monorepo to v4.3.1 ([#365](https://github.com/dachrisch/energy.consumption/issues/365)) ([14a5a4b](https://github.com/dachrisch/energy.consumption/commit/14a5a4b682256e72df1aac9fdde8b12ef8ad2b13))
+* **deps:** update vitest monorepo to v4.1.9 ([#366](https://github.com/dachrisch/energy.consumption/issues/366)) ([261a4cd](https://github.com/dachrisch/energy.consumption/commit/261a4cd469629d4429eae7c17f1b98363e7d2ae1))
+
+## [3.16.16](https://github.com/dachrisch/energy.consumption/compare/v3.16.15...v3.16.16) (2026-06-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency esbuild to v0.28.1 ([#362](https://github.com/dachrisch/energy.consumption/issues/362)) ([7620aea](https://github.com/dachrisch/energy.consumption/commit/7620aea56467c7d83a24c503401e0f1c45de2ec9))
+* **deps:** update dependency vite to v8.0.16 ([#363](https://github.com/dachrisch/energy.consumption/issues/363)) ([0924cef](https://github.com/dachrisch/energy.consumption/commit/0924cef1bad5cea004ab6b2e000acdbc74f61376))
+
 ## [3.16.15](https://github.com/dachrisch/energy.consumption/compare/v3.16.14...v3.16.15) (2026-06-18)
 
 
