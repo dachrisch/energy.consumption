@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.53](https://github.com/dachrisch/energy.consumption/compare/v3.16.52...v3.16.53) (2026-07-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency helmet to v8.3.0 ([#454](https://github.com/dachrisch/energy.consumption/issues/454)) ([c6aeb0b](https://github.com/dachrisch/energy.consumption/commit/c6aeb0bb78e30a3447fee79a2d03a54dd95ed57a))
+
 ## [3.16.52](https://github.com/dachrisch/energy.consumption/compare/v3.16.51...v3.16.52) (2026-07-11)
 
 
