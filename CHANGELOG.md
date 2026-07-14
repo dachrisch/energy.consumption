@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.55](https://github.com/dachrisch/energy.consumption/compare/v3.16.54...v3.16.55) (2026-07-14)
+
+
+### Bug Fixes
+
+* **deps:** update actions/setup-node action to v7 ([#458](https://github.com/dachrisch/energy.consumption/issues/458)) ([c99eb0f](https://github.com/dachrisch/energy.consumption/commit/c99eb0f5bf4b4b7dca92b08cf89974aa590d70f9))
+
 ## [3.16.54](https://github.com/dachrisch/energy.consumption/compare/v3.16.53...v3.16.54) (2026-07-12)
 
 
