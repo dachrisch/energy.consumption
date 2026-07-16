@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.59](https://github.com/dachrisch/energy.consumption/compare/v3.16.58...v3.16.59) (2026-07-16)
+
+
+### Bug Fixes
+
+* **deps:** update tailwindcss monorepo to v4.3.3 ([#466](https://github.com/dachrisch/energy.consumption/issues/466)) ([9f65e61](https://github.com/dachrisch/energy.consumption/commit/9f65e6135364b9628735531c7045141478fb9b3c))
+
 ## [3.16.58](https://github.com/dachrisch/energy.consumption/compare/v3.16.57...v3.16.58) (2026-07-16)
 
 
