@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.68](https://github.com/dachrisch/energy.consumption/compare/v3.16.67...v3.16.68) (2026-07-27)
+
+
+### Bug Fixes
+
+* **deps:** update dependency express-rate-limit to v8.6.1 ([#486](https://github.com/dachrisch/energy.consumption/issues/486)) ([c5dbe31](https://github.com/dachrisch/energy.consumption/commit/c5dbe310e6cd2be0aa5b54ffda91e18918577ddf))
+
 ## [3.16.67](https://github.com/dachrisch/energy.consumption/compare/v3.16.66...v3.16.67) (2026-07-25)
 
 
