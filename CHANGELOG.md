@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.78](https://github.com/dachrisch/energy.consumption/compare/v3.16.77...v3.16.78) (2026-07-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.7.9 ([#509](https://github.com/dachrisch/energy.consumption/issues/509)) ([b257d6f](https://github.com/dachrisch/energy.consumption/commit/b257d6f8fb4de8b54f883132fc3aac2680f793fa))
+
 ## [3.16.77](https://github.com/dachrisch/energy.consumption/compare/v3.16.76...v3.16.77) (2026-07-30)
 
 
