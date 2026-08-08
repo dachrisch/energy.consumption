@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.88](https://github.com/dachrisch/energy.consumption/compare/v3.16.87...v3.16.88) (2026-08-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency esbuild to v0.28.2 ([#529](https://github.com/dachrisch/energy.consumption/issues/529)) ([a74b6c8](https://github.com/dachrisch/energy.consumption/commit/a74b6c834275c830baa78db01cfe625f7b0fca87))
+
 ## [3.16.87](https://github.com/dachrisch/energy.consumption/compare/v3.16.86...v3.16.87) (2026-08-07)
 
 
