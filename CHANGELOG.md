@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.91](https://github.com/dachrisch/energy.consumption/compare/v3.16.90...v3.16.91) (2026-08-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v9.9.2 ([#535](https://github.com/dachrisch/energy.consumption/issues/535)) ([28275b2](https://github.com/dachrisch/energy.consumption/commit/28275b2a46016e3a59182080ae94463fb3b33607))
+
 ## [3.16.90](https://github.com/dachrisch/energy.consumption/compare/v3.16.89...v3.16.90) (2026-08-10)
 
 
