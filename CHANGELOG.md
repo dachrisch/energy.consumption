@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.89](https://github.com/dachrisch/energy.consumption/compare/v3.16.88...v3.16.89) (2026-08-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @testing-library/jest-dom to v7.0.1 ([#531](https://github.com/dachrisch/energy.consumption/issues/531)) ([3fb5e6d](https://github.com/dachrisch/energy.consumption/commit/3fb5e6d83a818da39a717cd31b7c527cfca5e821))
+
 ## [3.16.88](https://github.com/dachrisch/energy.consumption/compare/v3.16.87...v3.16.88) (2026-08-08)
 
 
