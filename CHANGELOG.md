@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.96](https://github.com/dachrisch/energy.consumption/compare/v3.16.95...v3.16.96) (2026-08-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency oxlint to v1.79.0 ([#547](https://github.com/dachrisch/energy.consumption/issues/547)) ([4787a29](https://github.com/dachrisch/energy.consumption/commit/4787a29b262180ed4fe568284c64f7b95c578982))
+* **deps:** update vitest monorepo to v4.1.11 ([#546](https://github.com/dachrisch/energy.consumption/issues/546)) ([0297a90](https://github.com/dachrisch/energy.consumption/commit/0297a90de7506e00b45b4b3df23b875f6091af55))
+
 ## [3.16.95](https://github.com/dachrisch/energy.consumption/compare/v3.16.94...v3.16.95) (2026-08-18)
 
 
