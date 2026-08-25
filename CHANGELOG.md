@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.102](https://github.com/dachrisch/energy.consumption/compare/v3.16.101...v3.16.102) (2026-08-25)
+
+
+### Bug Fixes
+
+* **deps:** update dependency mongoose to v9.9.4 ([#559](https://github.com/dachrisch/energy.consumption/issues/559)) ([4370eab](https://github.com/dachrisch/energy.consumption/commit/4370eaba23116c7c74c417e7d8cb494dfbdc22fc))
+* **deps:** update dependency oxlint to v1.80.0 ([#560](https://github.com/dachrisch/energy.consumption/issues/560)) ([787ad25](https://github.com/dachrisch/energy.consumption/commit/787ad25ff1fe48f93525c5cc23d119f8c2b4954e))
+
 ## [3.16.101](https://github.com/dachrisch/energy.consumption/compare/v3.16.100...v3.16.101) (2026-08-24)
 
 
