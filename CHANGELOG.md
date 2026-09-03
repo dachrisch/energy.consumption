@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.112](https://github.com/dachrisch/energy.consumption/compare/v3.16.111...v3.16.112) (2026-09-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.7.28 ([#582](https://github.com/dachrisch/energy.consumption/issues/582)) ([f5d19e4](https://github.com/dachrisch/energy.consumption/commit/f5d19e4b6005bce16c1d3e9fa514fbc1f24f21bd))
+* **deps:** update vitest monorepo to v5 ([#583](https://github.com/dachrisch/energy.consumption/issues/583)) ([f589971](https://github.com/dachrisch/energy.consumption/commit/f5899710ce12489a93b8ed548c225bf73962aacb))
+
 ## [3.16.111](https://github.com/dachrisch/energy.consumption/compare/v3.16.110...v3.16.111) (2026-09-03)
 
 
