@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.122](https://github.com/dachrisch/energy.consumption/compare/v3.16.121...v3.16.122) (2026-09-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency zod to v4.6.4 ([#605](https://github.com/dachrisch/energy.consumption/issues/605)) ([9aeef3b](https://github.com/dachrisch/energy.consumption/commit/9aeef3b0c3f4f078e8cbe645f11ee2608947a710))
+
 ## [3.16.121](https://github.com/dachrisch/energy.consumption/compare/v3.16.120...v3.16.121) (2026-09-11)
 
 
