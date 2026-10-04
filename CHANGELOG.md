@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.145](https://github.com/dachrisch/energy.consumption/compare/v3.16.144...v3.16.145) (2026-10-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency jsdom to v30.1.2 ([#655](https://github.com/dachrisch/energy.consumption/issues/655)) ([df58571](https://github.com/dachrisch/energy.consumption/commit/df585710664da1d8f4adb3e5df7b1cbfe05c7531))
+
 ## [3.16.144](https://github.com/dachrisch/energy.consumption/compare/v3.16.143...v3.16.144) (2026-10-03)
 
 
