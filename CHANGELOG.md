@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.146](https://github.com/dachrisch/energy.consumption/compare/v3.16.145...v3.16.146) (2026-10-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency oxlint to v1.87.0 ([#657](https://github.com/dachrisch/energy.consumption/issues/657)) ([b2ce093](https://github.com/dachrisch/energy.consumption/commit/b2ce0938b89dbee33cad60156bda433a9eb41d43))
+
 ## [3.16.145](https://github.com/dachrisch/energy.consumption/compare/v3.16.144...v3.16.145) (2026-10-04)
 
 
