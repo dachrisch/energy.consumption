@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.153](https://github.com/dachrisch/energy.consumption/compare/v3.16.152...v3.16.153) (2026-10-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency concurrently to v10.0.6 ([#673](https://github.com/dachrisch/energy.consumption/issues/673)) ([cebfe17](https://github.com/dachrisch/energy.consumption/commit/cebfe1715eb3bb1a50719991767683aebfe03cce))
+* **deps:** update dependency vite to v8.3.4 ([#674](https://github.com/dachrisch/energy.consumption/issues/674)) ([fa46065](https://github.com/dachrisch/energy.consumption/commit/fa46065fbd0e4ab2ecd3265c648b18a4c6d96cfb))
+
 ## [3.16.152](https://github.com/dachrisch/energy.consumption/compare/v3.16.151...v3.16.152) (2026-10-08)
 
 
