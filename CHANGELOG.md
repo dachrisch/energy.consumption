@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.16.168](https://github.com/dachrisch/energy.consumption/compare/v3.16.167...v3.16.168) (2026-10-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency body-parser to v2.4.0 ([#704](https://github.com/dachrisch/energy.consumption/issues/704)) ([92036ed](https://github.com/dachrisch/energy.consumption/commit/92036ede87960e773247a7728e42553ca12947f8))
+* **deps:** update dependency chart.js to v4.6.1 ([#705](https://github.com/dachrisch/energy.consumption/issues/705)) ([9cd8792](https://github.com/dachrisch/energy.consumption/commit/9cd8792367dccba2582cb56a584b6263464b694a))
+
 ## [3.16.167](https://github.com/dachrisch/energy.consumption/compare/v3.16.166...v3.16.167) (2026-10-21)
 
 
