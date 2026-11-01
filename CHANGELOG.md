@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.19.0](https://github.com/dachrisch/energy.consumption/compare/v3.18.1...v3.19.0) (2026-11-01)
+
+
+### Features
+
+* **intake:** /intake page with provider management and staged-item review ([b564060](https://github.com/dachrisch/energy.consumption/commit/b56406053ca6a4b6d8767dbc9318f71ba25ea4ce))
+* **intake:** give the pipeline a /intake page and provider management ([85eb312](https://github.com/dachrisch/energy.consumption/commit/85eb312a195307eeb30533c9e04c707beafbdceb))
+
 ## [3.18.1](https://github.com/dachrisch/energy.consumption/compare/v3.18.0...v3.18.1) (2026-11-01)
 
 
