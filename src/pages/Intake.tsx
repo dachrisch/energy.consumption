@@ -4,7 +4,7 @@ import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import type { IBillComparison, IIntakeItem, IProvider, IProviderDocument } from '../types/models';
+import type { IBillComparison, IIntakeItem, IMeter, IProvider, IProviderDocument } from '../types/models';
 
 interface SyncEntry {
   messageId: string;
@@ -17,6 +17,7 @@ interface SyncEntry {
 interface SyncResponse {
   provider: string;
   count: number;
+  linked?: number;
   processed: SyncEntry[];
 }
 
@@ -213,7 +214,14 @@ const ProviderSettings: Component<{
   );
 };
 
-const ItemRow: Component<{ item: IIntakeItem; onAccept: (item: IIntakeItem) => void; onReject: (item: IIntakeItem) => void }> = (props) => {
+const ItemRow: Component<{
+  item: IIntakeItem;
+  meters: IMeter[];
+  onAccept: (item: IIntakeItem) => void;
+  onReject: (item: IIntakeItem) => void;
+  onLink: (item: IIntakeItem, meterId: string) => void;
+}> = (props) => {
+  const [selectedMeter, setSelectedMeter] = createSignal('');
   const decidable = () => props.item.status === 'pending' || props.item.status === 'conflict';
   return (
     <div class="rounded-2xl border border-base-content/5 bg-base-200 p-4">
@@ -250,7 +258,7 @@ const ItemRow: Component<{ item: IIntakeItem; onAccept: (item: IIntakeItem) => v
         <StatusBadge status={props.item.status} />
       </div>
       <Show when={decidable()}>
-        <div class="mt-3 flex gap-2">
+        <div class="mt-3 flex flex-wrap items-center gap-2">
           <button
             class="btn btn-success btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
             onClick={() => props.onAccept(props.item)}
@@ -264,9 +272,34 @@ const ItemRow: Component<{ item: IIntakeItem; onAccept: (item: IIntakeItem) => v
             Reject
           </button>
           <Show when={!props.item.meterId}>
-            <span class="text-[10px] font-bold uppercase tracking-widest text-warning self-center">
-              unknown meter — link it first
-            </span>
+            <Show
+              when={props.meters.length > 0}
+              fallback={
+                <A href="/meters/add" class="link link-warning text-[10px] font-bold uppercase tracking-widest">
+                  no meters yet — add one first
+                </A>
+              }
+            >
+              <label class="sr-only" for={`link-meter-${props.item._id}`}>Link meter</label>
+              <select
+                id={`link-meter-${props.item._id}`}
+                class="select select-xs select-bordered rounded-lg font-bold max-w-[13rem]"
+                value={selectedMeter()}
+                onChange={(event) => setSelectedMeter(event.currentTarget.value)}
+              >
+                <option value="">Link meter…</option>
+                <For each={props.meters}>
+                  {(meter) => <option value={meter._id}>{meter.name} · {meter.meterNumber}</option>}
+                </For>
+              </select>
+              <button
+                class="btn btn-primary btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                disabled={!selectedMeter()}
+                onClick={() => props.onLink(props.item, selectedMeter())}
+              >
+                Link
+              </button>
+            </Show>
           </Show>
         </div>
       </Show>
@@ -319,6 +352,7 @@ const Intake: Component = () => {
   const auth = useAuth();
   const [providers, setProviders] = createSignal<IProvider[]>([]);
   const [items, setItems] = createSignal<IIntakeItem[]>([]);
+  const [meters, setMeters] = createSignal<IMeter[]>([]);
   const [documents, setDocuments] = createSignal<IProviderDocument[]>([]);
   const [bills, setBills] = createSignal<IBillComparison[]>([]);
   const [showDecided, setShowDecided] = createSignal(false);
@@ -345,6 +379,11 @@ const Intake: Component = () => {
     setDocuments(data.documents);
   };
 
+  const loadMeters = async () => {
+    const data = await api<IMeter[] | { meters: IMeter[] }>('/api/meters');
+    setMeters(Array.isArray(data) ? data : data.meters);
+  };
+
   const loadBills = async () => {
     const data = await api<{ bills: IBillComparison[] }>('/api/intake/bills');
     setBills(data.bills);
@@ -353,7 +392,7 @@ const Intake: Component = () => {
   const loadAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([loadProviders(), loadItems(), loadDocuments(), loadBills()]);
+      await Promise.all([loadProviders(), loadItems(), loadDocuments(), loadBills(), loadMeters()]);
     } catch (error) {
       toast.showToast(error instanceof Error ? error.message : 'Could not load intake data', 'error');
     } finally {
@@ -520,7 +559,7 @@ const Intake: Component = () => {
       setLastSync(result);
       const failed = result.processed.filter((entry) => entry.status === 'failed').length;
       toast.showToast(
-        `${provider.name}: ${result.count} document${result.count === 1 ? '' : 's'}${failed ? `, ${failed} failed` : ''}`,
+        `${provider.name}: ${result.count} document${result.count === 1 ? '' : 's'}${failed ? `, ${failed} failed` : ''}${result.linked ? `, ${result.linked} linked` : ''}`,
         failed ? 'warning' : 'success',
       );
       await Promise.all([loadItems(), loadDocuments(), loadBills()]);
@@ -542,6 +581,23 @@ const Intake: Component = () => {
       await Promise.all([loadItems(), loadBills()]);
     } catch (error) {
       toast.showToast(error instanceof Error ? error.message : `Could not ${action} item`, 'error');
+    }
+  };
+
+  const linkItem = async (item: IIntakeItem, meterId: string) => {
+    try {
+      // Linking can auto-verify the item against that meter's readings.
+      const { item: updated } = await api<{ item: IIntakeItem }>(
+        `/api/intake/items/${item._id}/link`,
+        sendJson('POST', { meterId }),
+      );
+      toast.showToast(
+        updated.status === 'pending' ? 'Meter linked' : `Meter linked · ${updated.status}`,
+        'success',
+      );
+      await Promise.all([loadItems(), loadBills()]);
+    } catch (error) {
+      toast.showToast(error instanceof Error ? error.message : 'Could not link the meter', 'error');
     }
   };
 
@@ -595,6 +651,7 @@ const Intake: Component = () => {
                 <div class="mt-4 rounded-2xl bg-base-200 p-4">
                   <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">
                     Last sync · {result().provider} · {result().count} document{result().count === 1 ? '' : 's'}
+                    <Show when={result().linked}><span> · {result().linked} linked</span></Show>
                   </p>
                   <Show when={result().processed.length > 0} fallback={<p class="text-xs font-bold opacity-50">No new mail matched.</p>}>
                     <ul class="space-y-1">
@@ -642,8 +699,10 @@ const Intake: Component = () => {
                   {(item) => (
                     <ItemRow
                       item={item}
+                      meters={meters()}
                       onAccept={(entry) => decide(entry, 'accept')}
                       onReject={(entry) => decide(entry, 'reject')}
+                      onLink={(entry, meterId) => void linkItem(entry, meterId)}
                     />
                   )}
                 </For>

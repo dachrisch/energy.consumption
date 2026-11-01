@@ -142,9 +142,11 @@ pipeline:
   empty state links to `/contracts/add`.
 - **Staged items** — pending/conflict `IntakeItem`s with value, date, meter
   number and the reconciliation note; Accept promotes into `Reading`/`Bill`,
-  Reject dismisses. A toggle reveals already-decided items. Each reading links to
-  `/meters/:id/readings?highlight=<readingId|YYYY-MM-DD>`, which highlights and
-  scrolls to that datapoint.
+  Reject dismisses. A toggle reveals already-decided items. Unknown-meter items
+  offer a **Link meter** picker (`POST /api/intake/items/<id>/link`), which
+  attaches the meter and re-classifies the item against its readings. Each
+  reading links to `/meters/:id/readings?highlight=<readingId|YYYY-MM-DD>`,
+  which highlights and scrolls to that datapoint.
 - **Bills vs. contract** — billed amount, contract-expected amount and variance,
   straight from `GET /api/intake/bills`.
 - **Recent documents** — status, subject, error text and a **Drive** link for
@@ -158,16 +160,18 @@ pipeline:
 
 Supporting endpoints: `GET /api/providers` (derived view) and
 `PATCH /api/providers` (settings → all contracts of that provider), plus
-`GET /api/intake/documents` and `POST /api/intake/documents/archive`, plus
-`POST /api/intake/documents/<id>/retry`. The settings payload is zod-validated
-(`providerSettingsSchema`, `.strict()`) and every query is scoped with
-`.setOptions({ userId })`.
+`GET /api/intake/documents`, `POST /api/intake/documents/archive`,
+`POST /api/intake/documents/<id>/retry` and
+`POST /api/intake/items/<id>/link`. Meter numbers are compared on their digit
+run, so a meter stored as `SWM 600044` matches a bill that prints `600044`;
+sync also re-links pending items that can now be matched. The settings payload
+is zod-validated (`providerSettingsSchema`, `.strict()`) and every query is
+scoped with `.setOptions({ userId })`.
 
 ### Remaining
 
 | Item | Notes |
 |---|---|
-| Meter linking from the intake page | Accepting an item whose meter number is unknown returns 409 and the page says so, but there is no "create meter" shortcut yet — the user has to go to `/meters/add` first. `meterNumber` is on the item, so pre-filling is straightforward. |
 | Background sync (step 5) | Scheduled `POST /api/intake/sync` per connected user via the existing Ofelia/cron setup, guarded by `google.lastSyncAt` (15 min) and switched to Gmail `history.list` with `google.lastHistoryId` instead of a full search. |
 
 ### Test coverage

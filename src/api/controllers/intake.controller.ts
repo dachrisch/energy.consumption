@@ -23,7 +23,7 @@ import type { GmailClientLike } from '../../lib/google/gmail';
 import { archiveDocument, driveFor, ensureFolder } from '../../lib/google/drive';
 import type { DriveClientLike } from '../../lib/google/drive';
 import { folderYear, processDocument } from '../../lib/intake/processDocument';
-import { computeVariance, expectedCostForBill, periodDays } from '../../lib/intake/reconcile';
+import { classifyReading, computeVariance, expectedCostForBill, findMeterByNumber, periodDays } from '../../lib/intake/reconcile';
 import { findActiveOrLastContract } from '../../lib/pricing';
 
 function callbackUrl(): string {
@@ -292,7 +292,11 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
     }
 
     await User.findByIdAndUpdate(userId, { $set: { 'google.lastSyncAt': new Date() } });
-    res.statusCode = 200; res.end(JSON.stringify({ processed, count: processed.length, provider: providerName }));
+    // Old items may have been left unlinked before the matcher understood
+    // provider prefixes; a sync repairs them along with new documents.
+    const linked = await linkUnmatchedItems(userId, meters);
+    res.statusCode = 200;
+    res.end(JSON.stringify({ processed, count: processed.length, provider: providerName, linked }));
   } catch (e) {
     if (isInvalidGrant(e)) {
       await markReconnectRequired(userId);
@@ -387,6 +391,105 @@ export async function handleIntakeItemAccept({ res, userId, url }: RouteParams):
   res.statusCode = 200; res.end(JSON.stringify({ item: { id, status: 'accepted' } }));
 }
 
+/** Fields needed to point an item at a meter. */
+interface LinkableItem {
+  _id: unknown;
+  kind: string;
+  date?: Date | null;
+  value?: number | null;
+}
+
+/**
+ * Attach an item to a meter and re-classify it against that meter's readings;
+ * linking can therefore turn a pending item into `agrees`/`conflict`.
+ */
+async function applyMeterLink(userId: string, item: LinkableItem, meterId: unknown): Promise<void> {
+  const set: Record<string, unknown> = { meterId };
+  const unset: Record<string, ''> = {};
+  if (item.kind === 'reading' && item.date && typeof item.value === 'number') {
+    const meterReadings = await Reading.find({ meterId }).setOptions({ userId }).lean();
+    const classified = classifyReading(
+      { date: new Date(item.date).toISOString(), value: item.value },
+      meterReadings.map((reading) => ({
+        _id: reading._id.toString(),
+        date: reading.date,
+        value: reading.value,
+      })),
+    );
+    set.status = classified.status;
+    if (classified.matchedReadingId) {
+      set.matchedReadingId = classified.matchedReadingId;
+    } else {
+      unset.matchedReadingId = '';
+    }
+    if (classified.note) {
+      set.note = classified.note;
+    } else {
+      unset.note = '';
+    }
+  }
+  await IntakeItem.findByIdAndUpdate(item._id, {
+    $set: set,
+    ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}),
+  }).setOptions({ userId });
+}
+
+/**
+ * Pending items whose printed meter number now matches a stored meter (the
+ * provider often prefixes its own id, "SWM 600044") are attached automatically.
+ */
+async function linkUnmatchedItems(
+  userId: string,
+  meters: { _id: string; meterNumber: string }[],
+): Promise<number> {
+  const items = await IntakeItem.find({
+    meterId: { $exists: false },
+    status: { $in: ['pending', 'conflict'] },
+  })
+    .setOptions({ userId })
+    .lean();
+  let linked = 0;
+  for (const item of items) {
+    const meter = findMeterByNumber(meters, item.meterNumber);
+    if (!meter) continue;
+    await applyMeterLink(userId, item, meter._id);
+    linked += 1;
+  }
+  return linked;
+}
+
+/** `POST /api/intake/items/<id>/link` → attach an unknown-meter item to a meter. */
+export async function handleIntakeItemLink({ req, res, userId, url }: RouteParams): Promise<void> {
+  const id = intakeItemId(url.pathname);
+  if (!id) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
+  }
+  const body = (req.body ?? {}) as { meterId?: unknown };
+  const meterId = sanitizeString(body.meterId ?? undefined);
+  if (!meterId || !mongoose.Types.ObjectId.isValid(meterId)) {
+    res.statusCode = 400; res.end(JSON.stringify({ error: 'meterId required' })); return;
+  }
+
+  const [item, meter] = await Promise.all([
+    IntakeItem.findOne({ _id: id, userId }).setOptions({ userId }).lean(),
+    Meter.findOne({ _id: meterId }).setOptions({ userId }).lean(),
+  ]);
+  if (!item) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
+  }
+  if (!meter) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Meter not found' })); return;
+  }
+  if (item.status !== 'pending' && item.status !== 'conflict') {
+    res.statusCode = 409; res.end(JSON.stringify({ error: `Item already ${item.status}` })); return;
+  }
+
+  await applyMeterLink(userId, item, meter._id);
+  const updated = await IntakeItem.findById(id).setOptions({ userId }).lean();
+  res.statusCode = 200;
+  res.end(JSON.stringify({ item: updated }));
+}
+
 export async function handleIntakeItemReject({ res, userId, url }: RouteParams): Promise<void> {
   const id = intakeItemId(url.pathname);
   if (!id) {
@@ -414,6 +517,9 @@ export async function handleIntakeItemAction(params: RouteParams): Promise<void>
   }
   if (url.pathname.endsWith('/reject')) {
     return handleIntakeItemReject(params);
+  }
+  if (url.pathname.endsWith('/link')) {
+    return handleIntakeItemLink(params);
   }
   res.statusCode = 404; res.end(JSON.stringify({ error: 'Not found' }));
 }
