@@ -5,7 +5,7 @@ import { handleReadings, handleBulkReadings, handleReadingItem, exportReadingsAs
 import { handleContracts, handleContractItem } from './controllers/contract.controller';
 import { handleOcrScan } from './controllers/ocr.controller';
 import { handleAggregatedRoutes } from './controllers/dashboard.controller';
-import { handleIntakeSync, handleIntakeVerify, handleConnect, handleCallback } from './controllers/intake.controller';
+import { handleIntakeSync, handleIntakeVerify, handleConnect, handleCallback, handleIntakeItems, handleIntakeItemAction, handleIntakeBills } from './controllers/intake.controller';
 
 export async function router(params: RouteParams) {
   const { req, res, userId, path } = params;
@@ -83,6 +83,12 @@ export async function router(params: RouteParams) {
          }
        },
       '/api/contracts': async () => handleContracts(params),
+    '/api/intake/items': async () => {
+      if (req.method === 'GET') { await handleIntakeItems(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); }
+    },
+    '/api/intake/bills': async () => {
+      if (req.method === 'GET') { await handleIntakeBills(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); }
+    },
   };
 
   if (routes[path]) {
@@ -95,6 +101,7 @@ export async function router(params: RouteParams) {
   if (path.startsWith('/api/meters/')) { return handleMeterItem(params); }
   if (path.startsWith('/api/readings/')) { return handleReadingItem(params); }
   if (path.startsWith('/api/contracts/')) { return handleContractItem(params); }
+  if (path.startsWith('/api/intake/items/')) { return handleIntakeItemAction(params); }
 
   res.statusCode = 404;
   res.end(JSON.stringify({ error: 'Not Found' }));

@@ -8,9 +8,18 @@ import {
 import User from '../../models/User';
 import Provider from '../../models/Provider';
 import ProviderDocument from '../../models/ProviderDocument';
+import IntakeItem from '../../models/IntakeItem';
+import Bill from '../../models/Bill';
+import Reading from '../../models/Reading';
+import Meter from '../../models/Meter';
+import Contract from '../../models/Contract';
+import { FOLDER_MIME } from '../../lib/google/drive';
 import { decrypt, encrypt } from '../../lib/encryption';
 import { signState, verifyState } from '../../lib/google/oauth';
-import { handleCallback, handleConnect, handleGoogleSync } from './intake.controller';
+import {
+  handleCallback, handleConnect, handleGoogleSync, handleIntakeBills,
+  handleIntakeItemAction, handleIntakeItems,
+} from './intake.controller';
 import type { ApiRequest, ApiResponse, RouteParams } from '../utils';
 
 const env = {
@@ -72,16 +81,25 @@ function stubExchange(tokens: { access_token?: string; refresh_token?: string })
   } as never);
 }
 
-const attachmentBytes = Buffer.from('%PDF-1.4 provider bill');
+const pdfBytes = Buffer.from('%PDF-1.4 provider bill');
+const csvBytes = Buffer.from('Datum;Wert\n01.01.2024;500\n01.02.2024;620');
 
-function stubGmail(options: { messages?: { id: string }[]; listError?: Error } = {}) {
+interface StubFile {
+  name: string;
+  mimeType: string;
+  bytes: Buffer;
+}
+
+function stubGmail(options: { messages?: { id: string }[]; listError?: Error; files?: StubFile[] } = {}) {
   const messages = options.messages ?? [{ id: 'msg-1' }];
+  const files = options.files ?? [{ name: 'Abrechnung.pdf', mimeType: 'application/pdf', bytes: pdfBytes }];
   const list = vi.fn();
   if (options.listError) {
     list.mockRejectedValue(options.listError);
   } else {
     list.mockResolvedValue({ data: { messages } });
   }
+  const attachmentsById = new Map(files.map((file, index) => [`att-${index + 1}`, file]));
   const gmail = {
     users: {
       messages: {
@@ -94,26 +112,56 @@ function stubGmail(options: { messages?: { id: string }[]; listError?: Error } =
                 { name: 'From', value: 'Stadtwerke <rechnung@stadtwerke.example>' },
                 { name: 'Subject', value: 'Ihre Abrechnung' },
               ],
-              parts: [
-                {
-                  mimeType: 'application/pdf',
-                  filename: 'Abrechnung.pdf',
-                  body: { attachmentId: 'att-1', size: attachmentBytes.length },
-                },
-              ],
+              parts: files.map((file, index) => ({
+                mimeType: file.mimeType,
+                filename: file.name,
+                body: { attachmentId: `att-${index + 1}`, size: file.bytes.length },
+              })),
             },
           },
         }),
       },
       attachments: {
-        get: vi.fn().mockResolvedValue({
-          data: { data: attachmentBytes.toString('base64'), size: attachmentBytes.length },
+        get: vi.fn(async ({ id }: { id: string }) => {
+          const file = attachmentsById.get(id);
+          if (!file) {
+            throw new Error(`unknown attachment ${id}`);
+          }
+          return { data: { data: file.bytes.toString('base64'), size: file.bytes.length } };
         }),
       },
     },
   };
   vi.spyOn(google, 'gmail').mockReturnValue(gmail as never);
   return gmail;
+}
+
+/** In-memory Drive: folders are created, uploads are recorded. */
+function stubDrive() {
+  let counter = 0;
+  const folders: { id: string; name: string; parentId?: string }[] = [];
+  const uploads: { name: string; mimeType: string; body: Buffer | string }[] = [];
+  const drive = {
+    files: {
+      list: vi.fn(async () => ({ data: { files: [] } })),
+      create: vi.fn(async (request: {
+        requestBody: { name: string; mimeType?: string; parents?: string[] };
+        media: { mimeType: string; body: Buffer | string };
+      }) => {
+        counter += 1;
+        const id = `drive-${counter}`;
+        if (request.requestBody.mimeType === FOLDER_MIME) {
+          folders.push({ id, name: request.requestBody.name, parentId: request.requestBody.parents?.[0] });
+        } else {
+          uploads.push({ name: request.requestBody.name, mimeType: request.media.mimeType, body: request.media.body });
+        }
+        return { data: { id, webViewLink: `https://drive.example/${id}` } };
+      }),
+      get: vi.fn(async () => ({ data: Buffer.alloc(0) })),
+    },
+  };
+  vi.spyOn(google, 'drive').mockReturnValue(drive as never);
+  return { drive, folders, uploads };
 }
 
 describe('intake controller', () => {
@@ -147,6 +195,11 @@ describe('intake controller', () => {
     await User.deleteMany({});
     await Provider.deleteMany({});
     await ProviderDocument.deleteMany({});
+    await IntakeItem.deleteMany({});
+    await Bill.deleteMany({});
+    await Reading.deleteMany({});
+    await Meter.deleteMany({});
+    await Contract.deleteMany({});
     for (const [key, value] of Object.entries(env)) {
       if (value === undefined) {
         delete process.env[key];
@@ -320,8 +373,10 @@ describe('intake controller', () => {
       expect(unknown.res.statusCode).toBe(404);
     });
 
-    it('stores attachment metadata and is idempotent across syncs', async () => {
+    it('records a failed document when extraction cannot run, and is idempotent', async () => {
       stubGmail();
+      stubDrive();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const first = mockResponse();
       await handleGoogleSync(params({
@@ -334,17 +389,21 @@ describe('intake controller', () => {
       expect(first.res.statusCode).toBe(200);
       const firstPayload = JSON.parse(first.body()) as {
         count: number;
-        processed: { status: string; attachment: string; documentId: string }[];
+        processed: { status: string; attachment: string; documentId: string; error?: string }[];
       };
+      // A PDF needs a Gemini key; without one the document fails, nothing throws.
       expect(firstPayload.count).toBe(1);
-      expect(firstPayload.processed[0]).toMatchObject({ status: 'stored', attachment: 'Abrechnung.pdf' });
+      expect(firstPayload.processed[0]).toMatchObject({ status: 'failed', attachment: 'Abrechnung.pdf' });
+      expect(firstPayload.processed[0].error).toMatch(/Gemini API key/);
 
       const stored = await ProviderDocument.findOne({ userId: ownerId }).lean();
       expect(stored?.fileName).toBe('Abrechnung.pdf');
       expect(stored?.subject).toBe('Ihre Abrechnung');
       expect(stored?.from).toContain('stadtwerke.example');
       expect(stored?.source).toBe('gmail');
-      expect(stored?.size).toBe(attachmentBytes.length);
+      expect(stored?.size).toBe(pdfBytes.length);
+      expect(stored?.status).toBe('failed');
+      expect(stored?.error).toMatch(/Gemini API key/);
 
       const second = mockResponse();
       await handleGoogleSync(params({
@@ -357,6 +416,49 @@ describe('intake controller', () => {
       const secondPayload = JSON.parse(second.body()) as { processed: { status: string }[] };
       expect(secondPayload.processed[0].status).toBe('already_processed');
       expect(await ProviderDocument.countDocuments({ userId: ownerId })).toBe(1);
+    });
+
+    it('extracts a CSV attachment into IntakeItems and archives it to Drive', async () => {
+      stubGmail({ files: [{ name: 'lastgang.csv', mimeType: 'text/csv', bytes: csvBytes }] });
+      const drive = stubDrive();
+
+      const response = mockResponse();
+      await handleGoogleSync(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        body: { providerName: 'Stadtwerke' },
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const payload = JSON.parse(response.body()) as {
+        count: number;
+        processed: { status: string; intakeItemIds: string[]; driveFileId?: string }[];
+      };
+      expect(payload.count).toBe(1);
+      expect(payload.processed[0].status).toBe('parsed');
+      expect(payload.processed[0].intakeItemIds).toHaveLength(2);
+      expect(payload.processed[0].driveFileId).toBeTruthy();
+
+      const document = await ProviderDocument.findOne({ userId: ownerId }).lean();
+      expect(document?.status).toBe('parsed');
+      expect(document?.driveFileId).toBeTruthy();
+      expect(document?.processedAt).toBeInstanceOf(Date);
+
+      const items = await IntakeItem.find({ userId: ownerId }).lean();
+      expect(items).toHaveLength(2);
+      expect(items.map((item) => item.value).sort()).toEqual([500, 620]);
+      // No meter number in the CSV → the user has to link a meter later.
+      expect(items.every((item) => item.status === 'pending')).toBe(true);
+      expect(items.every((item) => item.meterId === undefined)).toBe(true);
+
+      // Provider folders plus the original document and its JSON sidecar.
+      expect(drive.uploads.map((upload) => upload.name)).toEqual(['lastgang.csv', 'lastgang.csv.json']);
+      expect(JSON.parse(drive.uploads[1].body as string)).toHaveProperty('readings');
+
+      const owner = await User.findById(ownerId).lean();
+      expect(owner?.google?.rootFolderId).toBeTruthy();
+      expect(owner?.google?.lastSyncAt).toBeInstanceOf(Date);
     });
 
     it('marks the account for reconnection when Google rejects the refresh token', async () => {
@@ -378,6 +480,238 @@ describe('intake controller', () => {
       expect(response.res.statusCode).toBe(409);
       const owner = await User.findById(ownerId).lean();
       expect(owner?.google?.status).toBe('reconnect_required');
+    });
+  });
+
+  describe('intake items', () => {
+    async function createMeter() {
+      return Meter.create({
+        name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
+      });
+    }
+
+    async function createItem(overrides: Record<string, unknown> = {}) {
+      return IntakeItem.create({
+        documentId: new mongoose.Types.ObjectId(),
+        kind: 'reading',
+        date: new Date('2024-01-01'),
+        value: 500,
+        unit: 'kWh',
+        status: 'pending',
+        userId: ownerId,
+        ...overrides,
+      });
+    }
+
+    it('lists the user\'s items and filters by status', async () => {
+      await createItem({ status: 'pending' });
+      await createItem({ status: 'rejected', date: new Date('2024-02-01') });
+      await IntakeItem.create({
+        documentId: new mongoose.Types.ObjectId(),
+        kind: 'reading',
+        status: 'pending',
+        userId: otherId,
+      });
+
+      const all = mockResponse();
+      await handleIntakeItems(params({ res: all.res, userId: ownerId }));
+      expect(JSON.parse(all.body()).count).toBe(2);
+
+      const pending = mockResponse();
+      await handleIntakeItems(params({
+        res: pending.res,
+        userId: ownerId,
+        url: '/api/intake/items?status=pending,conflict',
+      }));
+      const payload = JSON.parse(pending.body()) as { count: number; items: { status: string }[] };
+      expect(payload.count).toBe(1);
+      expect(payload.items[0].status).toBe('pending');
+    });
+
+    it('promotes an accepted reading with source "provider"', async () => {
+      const meter = await createMeter();
+      const item = await createItem({ meterId: meter._id });
+      const response = mockResponse();
+
+      await handleIntakeItemAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/accept`,
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const readings = await Reading.find({ userId: ownerId }).lean();
+      expect(readings).toHaveLength(1);
+      expect(readings[0]).toMatchObject({ value: 500, source: 'provider' });
+      expect(String(readings[0].meterId)).toBe(meter._id.toString());
+
+      const updated = await IntakeItem.findById(item._id).lean();
+      expect(updated?.status).toBe('accepted');
+    });
+
+    it('refuses to accept an item whose meter number is unknown', async () => {
+      const item = await createItem();
+      const response = mockResponse();
+
+      await handleIntakeItemAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/accept`,
+      }));
+
+      expect(response.res.statusCode).toBe(409);
+      expect(await Reading.countDocuments({ userId: ownerId })).toBe(0);
+    });
+
+    it('refuses to accept the same item twice or when the date already exists', async () => {
+      const meter = await createMeter();
+      const item = await createItem({ meterId: meter._id, status: 'accepted' });
+      const acceptedAgain = mockResponse();
+      await handleIntakeItemAction(params({
+        res: acceptedAgain.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/accept`,
+      }));
+      expect(acceptedAgain.res.statusCode).toBe(409);
+
+      await Reading.create({
+        meterId: meter._id, date: new Date('2024-03-01'), value: 1, source: 'manual', userId: ownerId,
+      });
+      const conflicting = await createItem({ meterId: meter._id, date: new Date('2024-03-01'), status: 'conflict' });
+      const duplicate = mockResponse();
+      await handleIntakeItemAction(params({
+        res: duplicate.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${conflicting._id.toString()}/accept`,
+      }));
+      expect(duplicate.res.statusCode).toBe(409);
+      expect(duplicate.body()).toContain('already exists');
+    });
+
+    it('keeps items private to their owner', async () => {
+      const meter = await createMeter();
+      const item = await createItem({ meterId: meter._id });
+      const response = mockResponse();
+
+      await handleIntakeItemAction(params({
+        res: response.res,
+        userId: otherId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/accept`,
+      }));
+
+      expect(response.res.statusCode).toBe(404);
+      expect((await IntakeItem.findById(item._id).lean())?.status).toBe('pending');
+    });
+
+    it('rejects without writing a reading', async () => {
+      const meter = await createMeter();
+      const item = await createItem({ meterId: meter._id });
+      const response = mockResponse();
+
+      await handleIntakeItemAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/reject`,
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      expect((await IntakeItem.findById(item._id).lean())?.status).toBe('rejected');
+      expect(await Reading.countDocuments({ userId: ownerId })).toBe(0);
+    });
+
+    it('rejects malformed ids, unknown actions and non-POST requests', async () => {
+      const badId = mockResponse();
+      await handleIntakeItemAction(params({
+        res: badId.res, userId: ownerId, method: 'POST', url: '/api/intake/items/not-an-id/accept',
+      }));
+      expect(badId.res.statusCode).toBe(404);
+
+      const item = await createItem();
+      const unknownAction = mockResponse();
+      await handleIntakeItemAction(params({
+        res: unknownAction.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/archive`,
+      }));
+      expect(unknownAction.res.statusCode).toBe(404);
+
+      const wrongMethod = mockResponse();
+      await handleIntakeItemAction(params({
+        res: wrongMethod.res,
+        userId: ownerId,
+        method: 'GET',
+        url: `/api/intake/items/${item._id.toString()}/accept`,
+      }));
+      expect(wrongMethod.res.statusCode).toBe(405);
+    });
+  });
+
+  describe('bill comparison data', () => {
+    it('computes the expected cost and variance from the meter contract', async () => {
+      const meter = await Meter.create({
+        name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
+      });
+      await Contract.create({
+        providerName: 'Stadtwerke',
+        startDate: new Date('2024-01-01'),
+        endDate: null,
+        basePrice: 12,
+        workingPrice: 0.3,
+        meterId: meter._id,
+        userId: ownerId,
+      });
+      await Bill.create({
+        meterId: meter._id,
+        periodStart: new Date('2024-01-01'),
+        periodEnd: new Date('2024-03-31'),
+        consumption: 100,
+        amountGross: 50,
+        currency: 'EUR',
+        userId: ownerId,
+      });
+
+      const response = mockResponse();
+      await handleIntakeBills(params({ res: response.res, userId: ownerId }));
+
+      const payload = JSON.parse(response.body()) as {
+        count: number;
+        bills: { expected: number; variance: { absolute: number; percent: number } }[];
+      };
+      expect(payload.count).toBe(1);
+      // 12 EUR/month over 90 days + 0.3 EUR/kWh * 100 kWh
+      expect(payload.bills[0].expected).toBeCloseTo(65.48, 1);
+      expect(payload.bills[0].variance.absolute).toBeCloseTo(-15.48, 1);
+      expect(payload.bills[0].variance.percent).toBeCloseTo(-23.64, 1);
+    });
+
+    it('leaves expected and variance empty without a contract', async () => {
+      const meter = await Meter.create({
+        name: 'Gas', meterNumber: '9-999', type: 'gas', unit: 'm³', userId: ownerId,
+      });
+      await Bill.create({
+        meterId: meter._id,
+        periodStart: new Date('2024-01-01'),
+        periodEnd: new Date('2024-03-31'),
+        consumption: 100,
+        amountGross: 50,
+        userId: ownerId,
+      });
+
+      const response = mockResponse();
+      await handleIntakeBills(params({ res: response.res, userId: ownerId }));
+
+      const payload = JSON.parse(response.body()) as {
+        bills: { expected: number | null; variance: number | null }[];
+      };
+      expect(payload.bills[0].expected).toBeNull();
+      expect(payload.bills[0].variance).toBeNull();
     });
   });
 });
