@@ -46,7 +46,7 @@ GOOGLE_CALLBACK_URL=http://localhost:3000/api/google/callback   # or your produc
 ### 5️⃣ Run the connection flow
 In your app (local dev, port 3000 by default):
 
-1. **Connect Google** — `GET /api/google/connect`
+1. **Connect Google** — from the intake page (`/intake`), `GET /api/google/connect`
    - Redirects to Google consent screen with scopes `gmail.readonly drive.file`.
    - A signed `state` JWT is passed, containing the user's `userId`.
 

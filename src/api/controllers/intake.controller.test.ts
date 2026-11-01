@@ -17,8 +17,8 @@ import { FOLDER_MIME } from '../../lib/google/drive';
 import { decrypt, encrypt } from '../../lib/encryption';
 import { signState, verifyState } from '../../lib/google/oauth';
 import {
-  handleCallback, handleConnect, handleGoogleSync, handleIntakeBills, handleIntakeDocuments,
-  handleIntakeItemAction, handleIntakeItems, handleProviders,
+  handleCallback, handleConnect, handleGoogleSync, handleIntakeArchive, handleIntakeBills,
+  handleIntakeDocuments, handleIntakeItemAction, handleIntakeItems, handleProviders,
 } from './intake.controller';
 import type { ApiRequest, ApiResponse, RouteParams } from '../utils';
 
@@ -268,7 +268,7 @@ describe('intake controller', () => {
       }));
 
       expect(response.res.statusCode).toBe(302);
-      expect(response.header('Location')).toBe('/profile?google=connected');
+      expect(response.header('Location')).toBe('/intake?google=connected');
 
       const owner = await User.findById(ownerId).lean();
       const other = await User.findById(otherId).lean();
@@ -400,7 +400,7 @@ describe('intake controller', () => {
 
     it('records a failed document when extraction cannot run, and is idempotent', async () => {
       stubGmail();
-      stubDrive();
+      const drive = stubDrive();
       vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const first = mockResponse();
@@ -429,6 +429,8 @@ describe('intake controller', () => {
       expect(stored?.size).toBe(pdfBytes.length);
       expect(stored?.status).toBe('failed');
       expect(stored?.error).toMatch(/Gemini API key/);
+      expect(stored?.driveFileId).toBeTruthy();
+      expect(drive.uploads.map((upload) => upload.name)).toEqual(['Abrechnung.pdf', 'Abrechnung.pdf.json']);
 
       const second = mockResponse();
       await handleGoogleSync(params({
@@ -438,11 +440,15 @@ describe('intake controller', () => {
         body: { providerName: 'Stadtwerke' },
       }));
 
-      // A failed document is retried on the next sync, reusing the same record.
+      // A failed document is retried on the next sync, reusing the same record
+      // and its existing Drive copy instead of uploading a duplicate.
       const secondPayload = JSON.parse(second.body()) as { processed: { status: string; documentId: string }[] };
       expect(secondPayload.processed[0].status).toBe('failed');
       expect(secondPayload.processed[0].documentId).toBe(firstPayload.processed[0].documentId);
       expect(await ProviderDocument.countDocuments({ userId: ownerId })).toBe(1);
+      const retried = await ProviderDocument.findOne({ userId: ownerId }).lean();
+      expect(retried?.driveFileId).toBe(stored?.driveFileId);
+      expect(drive.uploads).toHaveLength(2);
     });
 
     it('does not process a successfully parsed document twice', async () => {
@@ -553,6 +559,8 @@ describe('intake controller', () => {
     });
 
     it('marks the account for reconnection when Google rejects the refresh token', async () => {
+      // Drive is healthy here; only the Gmail call reports the dead token.
+      stubDrive();
       stubGmail({
         listError: Object.assign(new Error('invalid_grant'), {
           response: { data: { error: 'invalid_grant' } },
@@ -571,6 +579,105 @@ describe('intake controller', () => {
       expect(response.res.statusCode).toBe(409);
       const owner = await User.findById(ownerId).lean();
       expect(owner?.google?.status).toBe('reconnect_required');
+    });
+  });
+
+  describe('handleIntakeArchive', () => {
+    async function createDocument(overrides: Record<string, unknown> = {}) {
+      return ProviderDocument.create({
+        userId: ownerId,
+        providerName: 'Stadtwerke',
+        source: 'gmail',
+        gmailMessageId: 'msg-1',
+        gmailAttachmentId: 'att-1',
+        fileName: 'Abrechnung.pdf',
+        mimeType: 'application/pdf',
+        receivedAt: new Date('2024-02-10'),
+        sha256: `sha-${Math.random()}`,
+        status: 'failed',
+        ...overrides,
+      });
+    }
+
+    beforeEach(async () => {
+      await User.findByIdAndUpdate(ownerId, {
+        $set: {
+          'google.refreshToken': encrypt('refresh-token'),
+          'google.status': 'ok',
+        },
+      });
+    });
+
+    it('requires a connected Google account', async () => {
+      const response = mockResponse();
+
+      await handleIntakeArchive(params({ res: response.res, userId: otherId, method: 'POST' }));
+
+      expect(response.res.statusCode).toBe(401);
+    });
+
+    it('re-fetches the original from Gmail and stores the Drive link', async () => {
+      stubGmail({ files: [{ name: 'Abrechnung.pdf', mimeType: 'application/pdf', bytes: pdfBytes }] });
+      const drive = stubDrive();
+      const document = await createDocument({ extracted: { readings: [{ date: '2024-01-01', value: 500 }] } });
+      const response = mockResponse();
+
+      await handleIntakeArchive(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        body: { documentId: document._id.toString() },
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const payload = JSON.parse(response.body()) as { archived: number; failed: number };
+      expect(payload.archived).toBe(1);
+
+      const stored = await ProviderDocument.findById(document._id).lean();
+      expect(stored?.driveFileId).toBeTruthy();
+      expect(stored?.driveWebLink).toContain('drive.example');
+      expect(stored?.sidecarDriveId).toBeTruthy();
+      expect(drive.uploads.map((upload) => upload.name)).toEqual(['Abrechnung.pdf', 'Abrechnung.pdf.json']);
+    });
+
+    it('archives only documents that have no Drive copy yet', async () => {
+      stubGmail({ files: [{ name: 'Abrechnung.pdf', mimeType: 'application/pdf', bytes: pdfBytes }] });
+      stubDrive();
+      await createDocument({ driveFileId: 'already-there', driveWebLink: 'https://drive.example/existing' });
+      await createDocument({ fileName: 'lastgang.csv', mimeType: 'text/csv', extracted: undefined });
+      const response = mockResponse();
+
+      await handleIntakeArchive(params({ res: response.res, userId: ownerId, method: 'POST', body: {} }));
+
+      expect(response.res.statusCode).toBe(200);
+      const payload = JSON.parse(response.body()) as { archived: number; documents: { fileName: string }[] };
+      expect(payload.archived).toBe(1);
+      expect(payload.documents.map((entry) => entry.fileName)).toEqual(['lastgang.csv']);
+      expect(await ProviderDocument.countDocuments({ userId: ownerId, driveFileId: { $exists: true } })).toBe(2);
+    });
+
+    it('keeps documents private to their owner', async () => {
+      await User.findByIdAndUpdate(otherId, {
+        $set: { 'google.refreshToken': encrypt('refresh-token'), 'google.status': 'ok' },
+      });
+      stubGmail();
+      stubDrive();
+      const document = await createDocument();
+      const response = mockResponse();
+
+      await handleIntakeArchive(params({
+        res: response.res,
+        userId: otherId,
+        method: 'POST',
+        body: { documentId: document._id.toString() },
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const payload = JSON.parse(response.body()) as { archived: number; failed: number };
+      expect(payload.archived).toBe(0);
+      expect(payload.failed).toBe(1);
+      const stored = await ProviderDocument.findById(document._id).lean();
+      expect(stored?.driveFileId).toBeUndefined();
     });
   });
 

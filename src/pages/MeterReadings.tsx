@@ -1,7 +1,8 @@
 import { Component, createResource, For, Show, createSignal } from 'solid-js';
-import { useParams, A } from '@solidjs/router';
+import { useParams, useSearchParams, A } from '@solidjs/router';
 import { calculateDeltas } from '../lib/consumption';
 import { useToast } from '../context/ToastContext';
+import type { ToastType } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 
@@ -16,12 +17,14 @@ interface Reading {
   date: Date;
   value: number;
   delta?: number;
+  source?: string;
 }
 
 interface ApiReading {
   _id: string;
   value: number;
   date: string | Date;
+  source?: string;
 }
 
 const fetchMeterReadings = async (id: string) => {
@@ -46,9 +49,21 @@ const ReadingTableRow: Component<{
   reading: Reading;
   unit: string;
   isDeleting: boolean;
+  highlighted: boolean;
   onDelete: (id: string) => void;
 }> = (props) => (
-  <tr class="hover:bg-base-200/30 transition-colors">
+  <tr
+    class="hover:bg-base-200/30 transition-colors"
+    classList={{
+      'bg-primary/10': props.highlighted,
+      'outline outline-2 -outline-offset-2 outline-primary/50': props.highlighted,
+    }}
+    ref={(element) => {
+      if (props.highlighted) {
+        setTimeout(() => element.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 0);
+      }
+    }}
+  >
     <td class="p-6 text-center">
       <span class="font-mono font-bold opacity-60">
         {props.reading.date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}
@@ -56,7 +71,12 @@ const ReadingTableRow: Component<{
       <div class="text-[10px] font-black opacity-30 uppercase">{props.reading.date.getFullYear()}</div>
     </td>
     <td class="p-6">
-      <span class="text-xl font-black">{props.reading.value.toLocaleString()}</span>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xl font-black">{props.reading.value.toLocaleString()}</span>
+        <Show when={props.reading.source === 'provider'}>
+          <span class="badge badge-primary badge-outline badge-sm font-black text-[9px] uppercase tracking-widest">provider</span>
+        </Show>
+      </div>
     </td>
      <td class="p-6">
        <Show when={(props.reading.delta ?? 0) > 0} fallback={<span class="badge badge-ghost opacity-30 font-black text-[10px]">INITIAL</span>}>
@@ -80,7 +100,7 @@ const ReadingTableRow: Component<{
 
 interface DeletionOptions {
   id: string;
-  toast: { showToast: (msg: string, type: string, action?: { label: string; onClick: () => void }) => void };
+  toast: { showToast: (msg: string, type?: ToastType, action?: { label: string; onClick: () => void }) => void };
   setPendingDeletions: (v: (prev: Set<string>) => Set<string>) => void;
   setDeleting: (v: string | null) => void;
   refetch: () => void;
@@ -131,10 +151,25 @@ const handleReadingDeletion = async (options: DeletionOptions) => {
 
 const MeterReadings: Component = () => {
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const [data, { refetch }] = createResource(() => params.id, fetchMeterReadings);
   const [deleting, setDeleting] = createSignal<string | null>(null);
   const [pendingDeletions, setPendingDeletions] = createSignal<Set<string>>(new Set());
   const toast = useToast();
+
+  /** `?highlight=<readingId|YYYY-MM-DD>` marks the datapoint the user came for. */
+  const highlightTarget = () => {
+    const raw = searchParams.highlight;
+    return Array.isArray(raw) ? raw[0] : raw;
+  };
+
+  const isHighlighted = (reading: Reading) => {
+    const target = highlightTarget();
+    if (!target) {
+      return false;
+    }
+    return reading._id === target || reading.date.toISOString().slice(0, 10) === target;
+  };
 
   const filteredReadings = () => {
     const d = data();
@@ -198,6 +233,7 @@ const MeterReadings: Component = () => {
                         reading={reading} 
                         unit={data()?.meter.unit || ''} 
                         isDeleting={deleting() === reading._id} 
+                        highlighted={isHighlighted(reading)}
                         onDelete={onDelete} 
                       />
                     )}

@@ -1,7 +1,8 @@
-import { Component, For, Show, createSignal, onMount } from 'solid-js';
+import { Component, For, Show, createEffect, createSignal, onMount } from 'solid-js';
 import { A } from '@solidjs/router';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import type { IBillComparison, IIntakeItem, IProvider, IProviderDocument } from '../types/models';
 
@@ -59,6 +60,20 @@ const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateStri
 
 const formatAmount = (value: number | null | undefined, currency = 'EUR') =>
   value === null || value === undefined ? '—' : `${value.toFixed(2)} ${currency}`;
+
+/** Drive copy of an ingested document, when it has been archived. */
+const driveLink = (document: IProviderDocument): string | undefined =>
+  document.driveWebLink
+  || (document.driveFileId ? `https://drive.google.com/file/d/${document.driveFileId}/view` : undefined);
+
+/** Meter + reading the staged item belongs to, with the datapoint highlighted. */
+const readingLink = (item: IIntakeItem): string | undefined => {
+  if (item.kind !== 'reading' || !item.meterId) {
+    return undefined;
+  }
+  const target = item.matchedReadingId ?? item.date?.slice(0, 10);
+  return `/meters/${item.meterId}/readings${target ? `?highlight=${encodeURIComponent(target)}` : ''}`;
+};
 
 const ProviderSettings: Component<{
   provider: IProvider;
@@ -171,6 +186,16 @@ const ItemRow: Component<{ item: IIntakeItem; onAccept: (item: IIntakeItem) => v
           <Show when={props.item.note}>
             <p class="mt-1 text-[11px] font-bold opacity-60">{props.item.note}</p>
           </Show>
+          <Show when={readingLink(props.item)}>
+            {(href) => (
+              <A
+                href={href()}
+                class="mt-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
+              >
+                <Icon name="external-link" class="h-3 w-3" /> View reading
+              </A>
+            )}
+          </Show>
         </div>
         <StatusBadge status={props.item.status} />
       </div>
@@ -199,8 +224,49 @@ const ItemRow: Component<{ item: IIntakeItem; onAccept: (item: IIntakeItem) => v
   );
 };
 
+const GoogleConnection: Component = () => {
+  const auth = useAuth();
+  const connected = () => auth.user()?.google && auth.user()?.google?.status !== 'reconnect_required';
+
+  return (
+    <section class="card bg-base-100 shadow-xl border border-base-content/5 mb-8">
+      <div class="card-body p-6 md:p-8">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-black tracking-tight">Google account</h2>
+            <p class="text-sm font-bold opacity-50 mt-1 max-w-xl">
+              Link Google to pull provider bills from Gmail and archive the documents to Drive.
+            </p>
+            <Show when={auth.user()?.google?.email}>
+              <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">{auth.user()?.google?.email}</p>
+            </Show>
+          </div>
+          {/* rel="external" keeps @solidjs/router from intercepting these:
+              they are API redirects, not client-side routes. */}
+          <Show when={!auth.user()?.google}>
+            <a href="/api/google/connect" rel="external" class="btn btn-primary btn-md rounded-2xl font-black text-base shadow-xl shadow-primary/20 w-full md:w-auto"><Icon name="google" class="h-5 w-5 mr-2" /> Connect Google</a>
+          </Show>
+          <Show when={auth.user()?.google?.status === 'reconnect_required'}>
+            <div class="flex flex-col items-start md:items-end gap-2">
+              <p class="text-sm font-bold text-warning">⚠ Google authorization expired</p>
+              <a href="/api/google/connect" rel="external" class="btn btn-warning btn-sm rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-warning/20"><Icon name="refresh" class="h-4 w-4 mr-1" /> Reconnect Google</a>
+            </div>
+          </Show>
+          <Show when={connected()}>
+            <div class="flex flex-col items-start md:items-end gap-2">
+              <p class="text-sm font-bold text-success">✓ Google connected</p>
+              <a href="/api/google/connect" rel="external" class="btn btn-ghost btn-sm rounded-xl font-black text-xs uppercase tracking-widest text-base-content/60 hover:text-primary"><Icon name="refresh" class="h-3 w-3 mr-1" /> Reconnect</a>
+            </div>
+          </Show>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const Intake: Component = () => {
   const toast = useToast();
+  const auth = useAuth();
   const [providers, setProviders] = createSignal<IProvider[]>([]);
   const [items, setItems] = createSignal<IIntakeItem[]>([]);
   const [documents, setDocuments] = createSignal<IProviderDocument[]>([]);
@@ -209,6 +275,8 @@ const Intake: Component = () => {
   const [syncing, setSyncing] = createSignal<string | null>(null);
   const [lastSync, setLastSync] = createSignal<SyncResponse | null>(null);
   const [loading, setLoading] = createSignal(true);
+  const [archiving, setArchiving] = createSignal<string | null>(null);
+  const [autoArchiveTried, setAutoArchiveTried] = createSignal(false);
 
   const loadProviders = async () => {
     const data = await api<{ providers: IProvider[] }>('/api/providers');
@@ -242,7 +310,72 @@ const Intake: Component = () => {
     }
   };
 
+  onMount(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('google') === 'connected') {
+      toast.showToast('Google connected successfully!', 'success');
+      url.searchParams.delete('google');
+      window.history.replaceState({}, '', url.toString());
+      auth.revalidate();
+    }
+  });
+
   onMount(() => { void loadAll(); });
+
+  /**
+   * Archive to Drive. Passing no id archives every ingested document that has
+   * no Drive copy yet; the server skips the ones that already have one.
+   */
+  const archiveDocuments = async (documentId?: string, silent = false) => {
+    setArchiving(documentId ?? 'all');
+    try {
+      const result = await api<{ archived: number; failed: number }>(
+        '/api/intake/documents/archive',
+        sendJson('POST', documentId ? { documentId } : {}),
+      );
+      if (result.archived > 0) {
+        toast.showToast(
+          `${result.archived} document${result.archived === 1 ? '' : 's'} archived to Drive`,
+          'success',
+        );
+      }
+      if (result.failed > 0 && !silent) {
+        toast.showToast(
+          `${result.failed} document${result.failed === 1 ? '' : 's'} could not be archived`,
+          'warning',
+        );
+      }
+      await loadDocuments();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not archive to Drive';
+      if (!silent) {
+        toast.showToast(message, message.includes('expired') || message.includes('connect') ? 'warning' : 'error');
+      }
+      if (message.includes('expired')) {
+        auth.revalidate();
+      }
+    } finally {
+      setArchiving(null);
+    }
+  };
+
+  // Documents ingested before archiving existed get their Drive copy on first
+  // visit; afterwards they carry a link and this stops.
+  createEffect(() => {
+    if (autoArchiveTried() || loading() || !auth.user()) {
+      return;
+    }
+    if (auth.user()?.google?.status !== 'ok') {
+      setAutoArchiveTried(true);
+      return;
+    }
+    if (!documents().some((document) => !driveLink(document))) {
+      setAutoArchiveTried(true);
+      return;
+    }
+    setAutoArchiveTried(true);
+    void archiveDocuments(undefined, true);
+  });
 
   const saveSettings = async (
     provider: IProvider,
@@ -306,6 +439,8 @@ const Intake: Component = () => {
       </Show>
 
       <Show when={!loading()}>
+        <GoogleConnection />
+
         <section class="card bg-base-100 shadow-xl border border-base-content/5 mb-8">
           <div class="card-body p-6 md:p-8">
             <div class="flex items-center justify-between gap-4">
@@ -446,7 +581,19 @@ const Intake: Component = () => {
 
         <section class="card bg-base-100 shadow-xl border border-base-content/5">
           <div class="card-body p-6 md:p-8">
-            <h2 class="text-lg font-black tracking-tight">Recent documents</h2>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h2 class="text-lg font-black tracking-tight">Recent documents</h2>
+              <Show when={documents().some((document) => !driveLink(document))}>
+                <button
+                  class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                  disabled={archiving() !== null}
+                  onClick={() => void archiveDocuments()}
+                >
+                  <Icon name="refresh" class={`h-3 w-3 mr-1 ${archiving() === 'all' ? 'animate-spin' : ''}`} />
+                  {archiving() === 'all' ? 'Archiving…' : 'Archive to Drive'}
+                </button>
+              </Show>
+            </div>
             <Show when={documents().length > 0} fallback={
               <p class="mt-2 text-sm font-bold opacity-50">Nothing ingested yet.</p>
             }>
@@ -467,15 +614,29 @@ const Intake: Component = () => {
                           </Show>
                         </div>
                         <div class="flex items-center gap-2">
-                          <Show when={document.driveWebLink}>
-                            <a
-                              href={document.driveWebLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
-                            >
-                              <Icon name="external-link" class="h-3 w-3" />
-                            </a>
+                          <Show
+                            when={driveLink(document)}
+                            fallback={
+                              <button
+                                class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                                disabled={archiving() !== null}
+                                onClick={() => void archiveDocuments(document._id)}
+                              >
+                                <Icon name="export" class="h-3 w-3 mr-1" />
+                                {archiving() === document._id ? 'Saving…' : 'Save to Drive'}
+                              </button>
+                            }
+                          >
+                            {(link) => (
+                              <a
+                                href={link()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest text-primary"
+                              >
+                                <Icon name="external-link" class="h-3 w-3 mr-1" /> Drive
+                              </a>
+                            )}
                           </Show>
                           <StatusBadge status={document.status} />
                         </div>

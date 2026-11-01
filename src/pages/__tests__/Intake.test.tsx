@@ -2,9 +2,12 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { Router, Route } from '@solidjs/router';
 import Intake from '../Intake';
+import { AuthProvider } from '../../context/AuthContext';
 import { ToastProvider } from '../../context/ToastContext';
 
 global.fetch = vi.fn();
+
+const session = { _id: 'u1', name: 'Chris', email: 'chris@example.com' };
 
 const providers = [
   {
@@ -48,7 +51,10 @@ interface Call {
   body?: string;
 }
 
-function mockApi(overrides: Record<string, (call: Call) => unknown> = {}) {
+function mockApi(
+  overrides: Record<string, (call: Call) => unknown> = {},
+  sessionUser: Record<string, unknown> = session,
+) {
   const calls: Call[] = [];
   (fetch as unknown as { mockImplementation: (fn: unknown) => void }).mockImplementation(async (input: string, init?: RequestInit) => {
     const call: Call = { url: String(input), method: init?.method ?? 'GET', body: init?.body as string | undefined };
@@ -57,6 +63,7 @@ function mockApi(overrides: Record<string, (call: Call) => unknown> = {}) {
     const payload = handler
       ? handler(call)
       : {
+          '/api/session': sessionUser,
           '/api/providers': { providers },
           '/api/intake/items': { items },
           '/api/intake/documents': { documents },
@@ -71,9 +78,11 @@ const renderIntake = () =>
   render(() => (
     <Router>
       <Route path="/" component={() => (
-        <ToastProvider>
-          <Intake />
-        </ToastProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Intake />
+          </ToastProvider>
+        </AuthProvider>
       )} />
     </Router>
   ));
@@ -191,5 +200,95 @@ describe('Intake page', () => {
     const sync = calls.find((call) => call.url === '/api/intake/sync');
     expect(JSON.parse(sync?.body ?? '{}')).toEqual({ providerName: 'Stadtwerke' });
     expect(await screen.findByText(/last sync/i)).toBeTruthy();
+  });
+
+  it('links a staged reading to the datapoint on the meter readings page', async () => {
+    mockApi();
+    renderIntake();
+
+    const link = await screen.findByRole('link', { name: /view reading/i });
+
+    // i1 has a meter but no matched reading, so the date is the highlight target.
+    expect(link.getAttribute('href')).toBe('/meters/m1/readings?highlight=2024-01-01');
+  });
+
+  it('links archived documents to their Drive copy', async () => {
+    mockApi({
+      'GET /api/intake/documents': () => ({
+        documents: [
+          { ...documents[0], driveWebLink: 'https://drive.google.com/file/d/full-link/view' },
+          { ...documents[1], driveFileId: 'id-only' },
+        ],
+      }),
+    });
+    renderIntake();
+
+    const links = await screen.findAllByRole('link', { name: /^drive$/i });
+
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      'https://drive.google.com/file/d/full-link/view',
+      'https://drive.google.com/file/d/id-only/view',
+    ]);
+    expect(links.every((link) => link.getAttribute('target') === '_blank')).toBe(true);
+  });
+
+  it('archives a document that has no Drive copy yet', async () => {
+    const calls = mockApi({
+      'POST /api/intake/documents/archive': () => ({ archived: 1, failed: 0, documents: [] }),
+    });
+    renderIntake();
+    await screen.findByText('lastgang.csv');
+
+    const saveButtons = screen.getAllByRole('button', { name: /save to drive/i });
+    fireEvent.click(saveButtons[0]);
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.method === 'POST' && call.url === '/api/intake/documents/archive')).toBe(true);
+    });
+    const archive = calls.find((call) => call.url === '/api/intake/documents/archive');
+    expect(JSON.parse(archive?.body ?? '{}')).toEqual({ documentId: 'd1' });
+  });
+});
+
+/**
+ * @solidjs/router intercepts same-origin anchor clicks client-side. These links
+ * point at an API redirect, so they must opt out with rel="external" — without
+ * it the URL changes but no request is made and the page goes blank.
+ */
+describe('Intake — Google connection', () => {
+  afterEach(() => {
+    cleanup();
+    (fetch as unknown as { mockReset: () => void }).mockReset();
+  });
+
+  it('offers the connect link and opts it out of client-side routing', async () => {
+    mockApi();
+    renderIntake();
+
+    const link = await screen.findByRole('link', { name: /connect google/i });
+
+    expect(link.getAttribute('href')).toBe('/api/google/connect');
+    expect(link.getAttribute('rel')).toBe('external');
+  });
+
+  it('asks for a reconnect when the authorization expired', async () => {
+    mockApi({}, { ...session, google: { status: 'reconnect_required' } });
+    renderIntake();
+
+    const expired = await screen.findByRole('link', { name: /reconnect google/i });
+    expect(expired.getAttribute('rel')).toBe('external');
+    expect(expired.getAttribute('href')).toBe('/api/google/connect');
+  });
+
+  it('shows the connected state and lets the account reconnect', async () => {
+    mockApi({}, { ...session, google: { status: 'ok', email: 'chris@example.com' } });
+    renderIntake();
+
+    expect(await screen.findByText(/google connected/i)).toBeTruthy();
+    expect(screen.getByText('chris@example.com')).toBeTruthy();
+
+    const connected = screen.getByRole('link', { name: /^reconnect$/i });
+    expect(connected.getAttribute('rel')).toBe('external');
+    expect(connected.getAttribute('href')).toBe('/api/google/connect');
   });
 });
