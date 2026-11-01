@@ -155,7 +155,7 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
       const receivedAt = msgRes.data.internalDate ? new Date(Number(msgRes.data.internalDate)) : new Date();
       for (const att of attachments) {
         if (!att.attachmentId || att.inlineData) continue;
-        const attRes = await gmail.users.attachments.get({ userId: 'me', messageId: m.id, id: att.attachmentId });
+        const attRes = await gmail.users.messages.attachments.get({ userId: 'me', messageId: m.id, id: att.attachmentId });
         if (!attRes.data.data) continue;
 
         const buffer = Buffer.from(attRes.data.data, 'base64');
