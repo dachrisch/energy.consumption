@@ -251,9 +251,10 @@ describe('Intake page', () => {
     await screen.findByText('lastgang.csv');
 
     const saveButtons = screen.getAllByRole('button', { name: /save to drive/i });
-    // Only parsed documents are archived; the failed one offers no action.
+    // Only parsed documents are archived; the failed one offers a retry instead.
     expect(saveButtons).toHaveLength(1);
-    expect(screen.getByText('bill.pdf').closest('li')?.querySelector('button')).toBeNull();
+    const failedRow = screen.getByText('bill.pdf').closest('li');
+    expect(failedRow?.querySelector('button')?.textContent).toMatch(/retry/i);
     fireEvent.click(saveButtons[0]);
 
     await waitFor(() => {
@@ -277,6 +278,25 @@ describe('Intake page', () => {
     fireEvent.click(screen.getByRole('button', { name: /save to drive/i }));
 
     expect(await screen.findByText(/Original is no longer available in Gmail/)).toBeTruthy();
+  });
+
+  it('retries a failed document through the retry endpoint', async () => {
+    const calls = mockApi({
+      'POST /api/intake/documents/d2/retry': () => ({
+        document: { _id: 'd2', fileName: 'bill.pdf', status: 'parsed', driveWebLink: 'https://drive.example/bill' },
+        result: { status: 'parsed' },
+      }),
+    });
+    renderIntake();
+    await screen.findByText('bill.pdf');
+
+    const row = screen.getByText('bill.pdf').closest('li');
+    fireEvent.click(row?.querySelector('button') as HTMLButtonElement);
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.method === 'POST' && call.url === '/api/intake/documents/d2/retry')).toBe(true);
+    });
+    expect(await screen.findByText(/bill\.pdf parsed/)).toBeTruthy();
   });
 });
 

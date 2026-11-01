@@ -77,6 +77,30 @@ function billPeriodEnd(extracted: unknown): string | undefined {
   return bill?.periodEnd;
 }
 
+/** Meters and readings the pipeline reconciles against, scoped to the user. */
+async function pipelineRefs(userId: string): Promise<{
+  meters: { _id: string; meterNumber: string; unit?: string }[];
+  readings: { _id: string; meterId: string; date: Date; value: number }[];
+}> {
+  const [meterDocs, readingDocs] = await Promise.all([
+    Meter.find({}).setOptions({ userId }).lean(),
+    Reading.find({}).setOptions({ userId }).lean(),
+  ]);
+  return {
+    meters: meterDocs.map((meter) => ({
+      _id: meter._id.toString(),
+      meterNumber: meter.meterNumber,
+      unit: meter.unit,
+    })),
+    readings: readingDocs.map((reading) => ({
+      _id: reading._id.toString(),
+      meterId: reading.meterId.toString(),
+      date: reading.date,
+      value: reading.value,
+    })),
+  };
+}
+
 export async function handleConnect({ res, userId }: RouteParams): Promise<void> {
   if (!isGoogleConfigured()) {
     res.statusCode = 501;
@@ -171,15 +195,7 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
     const messages = listRes.data.messages ?? [];
 
     // Everything the pipeline needs, fetched once per sync.
-    const meters = (await Meter.find({}).setOptions({ userId }).lean())
-      .map((meter) => ({ _id: meter._id.toString(), meterNumber: meter.meterNumber, unit: meter.unit }));
-    const readings = (await Reading.find({}).setOptions({ userId }).lean())
-      .map((reading) => ({
-        _id: reading._id.toString(),
-        meterId: reading.meterId.toString(),
-        date: reading.date,
-        value: reading.value,
-      }));
+    const { meters, readings } = await pipelineRefs(userId);
 
     const processed: ProcessedAttachment[] = [];
     for (const m of messages) {
@@ -675,5 +691,108 @@ export async function handleIntakeArchive({ req, res, userId }: RouteParams): Pr
     }
     console.error('Drive archive error:', error);
     res.statusCode = 500; res.end(JSON.stringify({ error: 'Drive archive failed' }));
+  }
+}
+
+/**
+ * `POST /api/intake/documents/<id>/retry` → download the original again and run
+ * the pipeline on it. Sync only sees mail inside its search window, so a
+ * document that failed before a fix (mime type, extractor) could never be
+ * reprocessed; this uses the stored Gmail ids instead.
+ */
+export async function handleIntakeDocumentAction({ req, res, userId, url }: RouteParams): Promise<void> {
+  const segments = url.pathname.split('/').filter(Boolean);
+  const documentId = segments[3];
+  const action = segments[4];
+  if (req.method !== 'POST' || !documentId || action !== 'retry') {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Not found' })); return;
+  }
+
+  const account = await getUserGoogleAccount(userId);
+  if (!account) {
+    res.statusCode = 401; res.end(JSON.stringify({ error: 'Google not connected' })); return;
+  }
+  const document = await ProviderDocument.findOne({ _id: documentId, userId })
+    .setOptions({ userId })
+    .lean();
+  if (!document) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Document not found' })); return;
+  }
+  if (document.source !== 'gmail' || !document.gmailMessageId || !document.gmailAttachmentId) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: 'The original is not available in Gmail' }));
+    return;
+  }
+
+  try {
+    const context = await archiveContextFor(userId, account);
+    const attachment = await context.gmail.users.messages.attachments.get({
+      userId: 'me',
+      messageId: document.gmailMessageId,
+      id: document.gmailAttachmentId,
+    });
+    if (!attachment.data.data) {
+      res.statusCode = 502;
+      res.end(JSON.stringify({ error: 'Gmail returned no attachment bytes' }));
+      return;
+    }
+    const buffer = decodeBase64Url(attachment.data.data);
+    // Re-resolve the type: the stored one may be what made the first run fail.
+    const mimeType = resolveMimeType(document.mimeType, document.fileName, buffer);
+    const provider = await resolveProvider(userId, document.providerName ?? '');
+    const { meters, readings } = await pipelineRefs(userId);
+
+    await ProviderDocument.findByIdAndUpdate(document._id, {
+      $set: { status: 'new', mimeType },
+      $unset: { error: '' },
+    }).setOptions({ userId });
+
+    const result = await processDocument({
+      document: {
+        _id: document._id.toString(),
+        mimeType,
+        fileName: document.fileName,
+        receivedAt: document.receivedAt ?? new Date(),
+        size: document.size,
+        buffer,
+        status: 'new',
+      },
+      provider: { name: provider?.name ?? document.providerName ?? 'Unknown', defaultUnit: provider?.unit },
+      userId,
+      meters,
+      readings,
+      apiKey: account.googleApiKey,
+      drive: context.drive,
+      rootFolderId: context.rootFolderId,
+    });
+
+    if (result.status === 'failed') {
+      await ProviderDocument.findByIdAndUpdate(document._id, {
+        $set: { status: 'failed', error: result.error ?? 'processing failed' },
+      }).setOptions({ userId });
+    }
+
+    const updated = await ProviderDocument.findById(document._id).setOptions({ userId }).lean();
+    res.statusCode = 200;
+    res.end(JSON.stringify({
+      document: {
+        _id: updated?._id,
+        fileName: updated?.fileName,
+        mimeType: updated?.mimeType,
+        status: updated?.status,
+        error: updated?.error,
+        driveWebLink: updated?.driveWebLink,
+      },
+      result: { status: result.status, error: result.error, intakeItemIds: result.intakeItemIds },
+    }));
+  } catch (error) {
+    if (isInvalidGrant(error)) {
+      await markReconnectRequired(userId);
+      res.statusCode = 409;
+      res.end(JSON.stringify({ error: 'Google authorization expired; reconnect required', reconnect: true }));
+      return;
+    }
+    console.error('Document retry failed:', error);
+    res.statusCode = 500; res.end(JSON.stringify({ error: 'Document retry failed' }));
   }
 }
