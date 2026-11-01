@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.20.1](https://github.com/dachrisch/energy.consumption/compare/v3.20.0...v3.20.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **intake:** archive only parsed documents and fix the mobile document row ([1c8417e](https://github.com/dachrisch/energy.consumption/commit/1c8417e827ffbf397f3241f4c418ff9b819e842b))
+* **intake:** archive only parsed documents and keep the document rows responsive ([30bd82f](https://github.com/dachrisch/energy.consumption/commit/30bd82fb27a786a27f8ba39be8e933f56ea741ad))
+
 ## [3.20.0](https://github.com/dachrisch/energy.consumption/compare/v3.19.3...v3.20.0) (2026-11-01)
 
 
