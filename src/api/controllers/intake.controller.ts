@@ -15,7 +15,7 @@ import {
   exchangeCode, clientForRefreshToken, createOAuthClient, isInvalidGrant,
   decryptRefreshToken, encryptRefreshToken, markReconnectRequired,
 } from '../../lib/google/oauth';
-import { gmailFor, buildProviderQuery, collectAttachments, collectTextBody, headerValue } from '../../lib/google/gmail';
+import { gmailFor, buildProviderQuery, collectAttachments, collectTextBody, headerValue, resolveMimeType } from '../../lib/google/gmail';
 import { driveFor, ensureFolder } from '../../lib/google/drive';
 import { processDocument } from '../../lib/intake/processDocument';
 import { computeVariance, expectedCostForBill, periodDays } from '../../lib/intake/reconcile';
@@ -98,6 +98,19 @@ export async function handleCallback({ res, url }: RouteParams): Promise<void> {
   }
 }
 
+/** Put a previously failed document back to `new` so the pipeline runs it again. */
+async function resetFailedDocument(
+  userId: string,
+  documentId: mongoose.Types.ObjectId,
+  mimeType: string,
+): Promise<{ _id: mongoose.Types.ObjectId }> {
+  await ProviderDocument.updateOne(
+    { _id: documentId },
+    { $set: { status: 'new', mimeType }, $unset: { error: 1 } },
+  ).setOptions({ userId });
+  return { _id: documentId };
+}
+
 export async function handleGoogleSync({ req, res, userId }: RouteParams): Promise<void> {
   const account = await getUserGoogleAccount(userId);
   if (!account) {
@@ -160,34 +173,38 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
 
         const buffer = Buffer.from(attRes.data.data, 'base64');
         const sha = crypto.createHash('sha256').update(buffer).digest('hex');
+        const mimeType = resolveMimeType(att.mimeType, att.fileName, buffer);
         const exists = await ProviderDocument.findOne({ userId, sha256: sha }).setOptions({ userId }).lean();
-        if (exists) {
+        // Failed documents are retried (e.g. after a format fix); anything else is done.
+        if (exists && exists.status !== 'failed') {
           processed.push({ messageId: m.id, attachment: att.fileName, status: 'already_processed', documentId: exists._id.toString() });
           continue;
         }
 
-        const doc = await ProviderDocument.create({
-          userId,
-          providerName: provider.name,
-          source: 'gmail',
-          gmailMessageId: m.id,
-          gmailAttachmentId: att.attachmentId,
-          fileName: att.fileName,
-          mimeType: att.mimeType,
-          size: att.size ?? buffer.length,
-          receivedAt,
-          from: fromAddr,
-          subject,
-          sha256: sha,
-          status: 'new',
-        });
+        const doc = exists
+          ? await resetFailedDocument(userId, exists._id, mimeType)
+          : await ProviderDocument.create({
+            userId,
+            providerName: provider.name,
+            source: 'gmail',
+            gmailMessageId: m.id,
+            gmailAttachmentId: att.attachmentId,
+            fileName: att.fileName,
+            mimeType,
+            size: att.size ?? buffer.length,
+            receivedAt,
+            from: fromAddr,
+            subject,
+            sha256: sha,
+            status: 'new',
+          });
 
         // One failing document must not abort the batch.
         try {
           const result = await processDocument({
             document: {
               _id: doc._id.toString(),
-              mimeType: att.mimeType,
+              mimeType,
               fileName: att.fileName,
               receivedAt,
               size: att.size ?? buffer.length,

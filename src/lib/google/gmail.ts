@@ -156,3 +156,42 @@ export function headerValue(payload: GmailPayload | null | undefined, name: stri
 export function isSupported(mimeType: string): boolean {
   return (SUPPORTED_MIME_TYPES as readonly string[]).includes(mimeType);
 }
+
+/** Labels mail clients use when they don't know (or don't say) what a file is. */
+const GENERIC_MIME_TYPES = new Set([
+  '',
+  'application/octet-stream',
+  'binary/octet-stream',
+  'application/x-download',
+  'application/download',
+  'application/force-download',
+]);
+
+const MIME_BY_EXTENSION: Record<string, string> = {
+  pdf: 'application/pdf',
+  csv: 'text/csv',
+  txt: 'text/plain',
+  html: 'text/html',
+  htm: 'text/html',
+  xml: 'application/xml',
+  xls: 'application/vnd.ms-excel',
+};
+
+const PDF_SIGNATURE = Buffer.from('%PDF-');
+
+/**
+ * Some providers (e.g. SWM) attach bills as `application/octet-stream`. When the
+ * declared type is generic, infer the real one from the file's signature or its
+ * extension. A specific declared type is always kept.
+ */
+export function resolveMimeType(declared: string | null | undefined, fileName: string, content?: Buffer): string {
+  const type = (declared ?? '').trim().toLowerCase();
+  if (!GENERIC_MIME_TYPES.has(type)) {
+    return type;
+  }
+  if (content && content.subarray(0, PDF_SIGNATURE.length).equals(PDF_SIGNATURE)) {
+    return 'application/pdf';
+  }
+  const extension = fileName.toLowerCase().split('.').pop() ?? '';
+  return MIME_BY_EXTENSION[extension] ?? (type || 'application/octet-stream');
+}

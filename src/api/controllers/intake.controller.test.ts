@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { google } from 'googleapis';
@@ -437,9 +438,75 @@ describe('intake controller', () => {
         body: { providerName: 'Stadtwerke' },
       }));
 
-      const secondPayload = JSON.parse(second.body()) as { processed: { status: string }[] };
-      expect(secondPayload.processed[0].status).toBe('already_processed');
+      // A failed document is retried on the next sync, reusing the same record.
+      const secondPayload = JSON.parse(second.body()) as { processed: { status: string; documentId: string }[] };
+      expect(secondPayload.processed[0].status).toBe('failed');
+      expect(secondPayload.processed[0].documentId).toBe(firstPayload.processed[0].documentId);
       expect(await ProviderDocument.countDocuments({ userId: ownerId })).toBe(1);
+    });
+
+    it('does not process a successfully parsed document twice', async () => {
+      stubGmail({ files: [{ name: 'lastgang.csv', mimeType: 'text/csv', bytes: csvBytes }] });
+      stubDrive();
+      const sync = async () => {
+        const response = mockResponse();
+        await handleGoogleSync(params({
+          res: response.res, userId: ownerId, method: 'POST', body: { providerName: 'Stadtwerke' },
+        }));
+        return JSON.parse(response.body()) as { processed: { status: string }[] };
+      };
+
+      expect((await sync()).processed[0].status).toBe('parsed');
+      expect((await sync()).processed[0].status).toBe('already_processed');
+      expect(await IntakeItem.countDocuments({ userId: ownerId })).toBe(2);
+    });
+
+    it('treats a .pdf sent as application/octet-stream as a PDF', async () => {
+      stubGmail({ files: [{ name: 'Rechnung_433876866.pdf', mimeType: 'application/octet-stream', bytes: pdfBytes }] });
+      stubDrive();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const response = mockResponse();
+
+      await handleGoogleSync(params({
+        res: response.res, userId: ownerId, method: 'POST', body: { providerName: 'Stadtwerke' },
+      }));
+
+      const payload = JSON.parse(response.body()) as { processed: { status: string; error?: string }[] };
+      // It gets past the format gate and reaches PDF extraction (which needs a Gemini key).
+      expect(payload.processed[0].error).not.toBe('unsupported format');
+      expect(payload.processed[0].error).toMatch(/Gemini API key/);
+      const stored = await ProviderDocument.findOne({ userId: ownerId }).lean();
+      expect(stored?.mimeType).toBe('application/pdf');
+    });
+
+    it('retries a document that failed earlier and clears the old error', async () => {
+      await ProviderDocument.create({
+        userId: ownerId,
+        providerName: 'Stadtwerke',
+        source: 'gmail',
+        fileName: 'lastgang.csv',
+        mimeType: 'application/octet-stream',
+        size: csvBytes.length,
+        receivedAt: new Date(),
+        sha256: crypto.createHash('sha256').update(csvBytes).digest('hex'),
+        status: 'failed',
+        error: 'unsupported format',
+      });
+      stubGmail({ files: [{ name: 'lastgang.csv', mimeType: 'application/octet-stream', bytes: csvBytes }] });
+      stubDrive();
+      const response = mockResponse();
+
+      await handleGoogleSync(params({
+        res: response.res, userId: ownerId, method: 'POST', body: { providerName: 'Stadtwerke' },
+      }));
+
+      const payload = JSON.parse(response.body()) as { processed: { status: string }[] };
+      expect(payload.processed[0].status).toBe('parsed');
+      expect(await ProviderDocument.countDocuments({ userId: ownerId })).toBe(1);
+      const stored = await ProviderDocument.findOne({ userId: ownerId }).lean();
+      expect(stored?.status).toBe('parsed');
+      expect(stored?.mimeType).toBe('text/csv');
+      expect(stored?.error).toBeUndefined();
     });
 
     it('extracts a CSV attachment into IntakeItems and archives it to Drive', async () => {
