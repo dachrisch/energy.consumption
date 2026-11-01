@@ -739,9 +739,12 @@ describe('intake controller', () => {
   });
 
   describe('providers (derived from contracts)', () => {
+    let meterCounter = 0;
+
     async function createContract(overrides: Record<string, unknown> = {}) {
+      meterCounter += 1;
       const meter = await Meter.create({
-        name: 'Strom', meterNumber: `1-234-56${Math.floor(Math.random() * 9)}`, type: 'power', unit: 'kWh', userId: ownerId,
+        name: 'Strom', meterNumber: `1-234-${600 + meterCounter}`, type: 'power', unit: 'kWh', userId: ownerId,
       });
       return Contract.create({
         providerName: 'Stadtwerke',
