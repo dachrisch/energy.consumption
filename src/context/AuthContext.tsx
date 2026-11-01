@@ -6,6 +6,12 @@ interface User {
   name: string;
   email: string;
   googleApiKey?: string;
+  google?: {
+    sub?: string;
+    email?: string;
+    connectedAt?: string;
+    status?: 'ok' | 'reconnect_required';
+  };
 }
 
 interface AuthContextType {

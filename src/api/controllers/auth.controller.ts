@@ -10,6 +10,15 @@ export async function handleSession(res: ApiResponse, userId: string) {
   if (user && user.googleApiKey) {
     user.googleApiKey = decrypt(user.googleApiKey);
   }
+  // Sanitize google subdoc: remove encrypted refresh token
+  if (user?.google) {
+    user.google = {
+      sub: user.google.sub,
+      email: user.google.email,
+      connectedAt: user.google.connectedAt,
+      status: user.google.status,
+    };
+  }
   res.end(JSON.stringify(user));
 }
 

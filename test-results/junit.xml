@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="116" failures="0" errors="0" time="21.239254486">
+    <testsuite name="src/api/__tests__/contracts.test.ts" timestamp="2026-11-01T11:47:11.019Z" hostname="delly" tests="2" failures="0" errors="0" skipped="0" time="2.457967765">
+        <testcase classname="src/api/__tests__/contracts.test.ts" name="Contract Model &amp; Validation &gt; creates a contract with correct field mapping" time="0.047831787">
+        </testcase>
+        <testcase classname="src/api/__tests__/contracts.test.ts" name="Contract Model &amp; Validation &gt; enforces required fields in contract model" time="0.004967072">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/api/__tests__/export-import-cycle.test.ts" timestamp="2026-11-01T11:47:11.023Z" hostname="delly" tests="6" failures="0" errors="0" skipped="0" time="3.411149513">
+        <testcase classname="src/api/__tests__/export-import-cycle.test.ts" name="Export/Import Cycle &gt; should export empty meters as valid empty array" time="0.107581107">
+        </testcase>
+        <testcase classname="src/api/__tests__/export-import-cycle.test.ts" name="Export/Import Cycle &gt; should export and re-import single meter with readings" time="0.050944302">
+        </testcase>
+        <testcase classname="src/api/__tests__/export-import-cycle.test.ts" name="Export/Import Cycle &gt; should export multiple meters correctly" time="0.023267788">
+        </testcase>
+        <testcase classname="src/api/__tests__/export-import-cycle.test.ts" name="Export/Import Cycle &gt; should export single meter when meterId specified" time="0.068436255">
+        </testcase>
+        <testcase classname="src/api/__tests__/export-import-cycle.test.ts" name="Export/Import Cycle &gt; should handle full backup export" time="0.047841575">
+        </testcase>
+        <testcase classname="src/api/__tests__/export-import-cycle.test.ts" name="Export/Import Cycle &gt; should round-trip through JSON stringify/parse" time="0.014988774">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/api/__tests__/import-with-meter-creation.test.ts" timestamp="2026-11-01T11:47:11.026Z" hostname="delly" tests="4" failures="0" errors="0" skipped="0" time="3.564097818">
+        <testcase classname="src/api/__tests__/import-with-meter-creation.test.ts" name="Import with Meter Creation &gt; should import readings for a created meter" time="0.195567652">
+        </testcase>
+        <testcase classname="src/api/__tests__/import-with-meter-creation.test.ts" name="Import with Meter Creation &gt; should import readings for existing meter without creating duplicate" time="0.011014486">
+        </testcase>
+        <testcase classname="src/api/__tests__/import-with-meter-creation.test.ts" name="Import with Meter Creation &gt; should handle re-importing exported data with meter recreation" time="0.018611732">
+        </testcase>
+        <testcase classname="src/api/__tests__/import-with-meter-creation.test.ts" name="Import with Meter Creation &gt; should handle readings for meters that might be deleted" time="0.026122203">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/api/__tests__/readings.test.ts" timestamp="2026-11-01T11:47:11.029Z" hostname="delly" tests="2" failures="0" errors="0" skipped="0" time="0.676450867">
+        <testcase classname="src/api/__tests__/readings.test.ts" name="Reading API Logic &gt; updates a reading correctly" time="0.009238339">
+        </testcase>
+        <testcase classname="src/api/__tests__/readings.test.ts" name="Reading API Logic &gt; deletes a reading correctly" time="0.007776148">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/api/controllers/reading.controller.test.ts" timestamp="2026-11-01T11:47:11.030Z" hostname="delly" tests="7" failures="0" errors="0" skipped="0" time="3.808126936">
+        <testcase classname="src/api/controllers/reading.controller.test.ts" name="Reading Controller - Export &gt; exports readings as JSON with nested format" time="0.071183639">
+        </testcase>
+        <testcase classname="src/api/controllers/reading.controller.test.ts" name="Reading Controller - Export &gt; exports empty readings when no data exists" time="0.008663325">
+        </testcase>
+        <testcase classname="src/api/controllers/reading.controller.test.ts" name="Reading Controller - Export &gt; handles multiple meters correctly" time="0.021111503">
+        </testcase>
+        <testcase classname="src/api/controllers/reading.controller.test.ts" name="Reading Controller - Export &gt; sorts readings by date" time="0.052445008">
+        </testcase>
+        <testcase classname="src/api/controllers/reading.controller.test.ts" name="Reading Controller - Export &gt; filters by meterId when provided" time="0.02247734">
+        </testcase>
+        <testcase classname="src/api/controllers/reading.controller.test.ts" name="Reading Controller - Export &gt; returns empty array when filtering by non-existent meterId" time="0.006697616">
+        </testcase>
+        <testcase classname="src/api/controllers/reading.controller.test.ts" name="Reading Controller - Full Backup Export &gt; exports full backup with exportDate, version, and data properties" time="0.082700311">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/UnifiedImportModal.test.tsx" timestamp="2026-11-01T11:47:11.033Z" hostname="delly" tests="5" failures="0" errors="0" skipped="0" time="0.162361921">
+        <testcase classname="src/components/UnifiedImportModal.test.tsx" name="UnifiedImportModal &gt; rendering &gt; should render when isOpen is true" time="0.13127032">
+        </testcase>
+        <testcase classname="src/components/UnifiedImportModal.test.tsx" name="UnifiedImportModal &gt; file upload &gt; should have file input element" time="0.009520014">
+        </testcase>
+        <testcase classname="src/components/UnifiedImportModal.test.tsx" name="UnifiedImportModal &gt; file upload &gt; should accept both JSON and CSV files" time="0.004442969">
+        </testcase>
+        <testcase classname="src/components/UnifiedImportModal.test.tsx" name="UnifiedImportModal &gt; modal actions &gt; should have cancel button in upload step" time="0.004449649">
+        </testcase>
+        <testcase classname="src/components/UnifiedImportModal.test.tsx" name="UnifiedImportModal &gt; empty meters state &gt; should show empty state when no meters exist on upload step" time="0.011717093">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/__tests__/ConsumptionChart.test.tsx" timestamp="2026-11-01T11:47:11.035Z" hostname="delly" tests="4" failures="0" errors="0" skipped="0" time="0.002698713">
+        <testcase classname="src/components/__tests__/ConsumptionChart.test.tsx" name="Chart Configuration &gt; should generate correct options for desktop" time="0.000725973">
+        </testcase>
+        <testcase classname="src/components/__tests__/ConsumptionChart.test.tsx" name="Chart Configuration &gt; should generate correct options for mobile" time="0.000359347">
+        </testcase>
+        <testcase classname="src/components/__tests__/ConsumptionChart.test.tsx" name="ConsumptionChart Responsiveness &gt; should detect mobile viewport (&lt; 768px)" time="0.000862218">
+        </testcase>
+        <testcase classname="src/components/__tests__/ConsumptionChart.test.tsx" name="ConsumptionChart Responsiveness &gt; should detect desktop viewport (&gt;= 768px)" time="0.000443599">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/__tests__/ContractTemplateCard.test.tsx" timestamp="2026-11-01T11:47:11.036Z" hostname="delly" tests="2" failures="0" errors="0" skipped="0" time="0.353288927">
+        <testcase classname="src/components/__tests__/ContractTemplateCard.test.tsx" name="ContractTemplateCard &gt; displays the correct missing date range" time="0.148336513">
+        </testcase>
+        <testcase classname="src/components/__tests__/ContractTemplateCard.test.tsx" name="ContractTemplateCard &gt; pre-fills the add link with gap dates" time="0.204575226">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/aggregates.test.ts" timestamp="2026-11-01T11:47:11.037Z" hostname="delly" tests="3" failures="0" errors="0" skipped="0" time="0.059634864">
+        <testcase classname="src/lib/__tests__/aggregates.test.ts" name="calculateAggregates &gt; should return zeros when no data is provided" time="0.018979201">
+        </testcase>
+        <testcase classname="src/lib/__tests__/aggregates.test.ts" name="calculateAggregates &gt; should correctly aggregate power and gas costs" time="0.039391913">
+        </testcase>
+        <testcase classname="src/lib/__tests__/aggregates.test.ts" name="calculateAggregates &gt; should calculate actual and prognosis for current year" time="0.000842093">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/consumption.test.ts" timestamp="2026-11-01T11:47:11.040Z" hostname="delly" tests="5" failures="0" errors="0" skipped="0" time="0.015166448">
+        <testcase classname="src/lib/__tests__/consumption.test.ts" name="Consumption Logic &gt; calculates deltas correctly between readings" time="0.007204436">
+        </testcase>
+        <testcase classname="src/lib/__tests__/consumption.test.ts" name="Consumption Logic &gt; handles meter resets gracefully" time="0.000618618">
+        </testcase>
+        <testcase classname="src/lib/__tests__/consumption.test.ts" name="interpolateValueAtDate &gt; interpolates correctly between two readings" time="0.001539498">
+        </testcase>
+        <testcase classname="src/lib/__tests__/consumption.test.ts" name="interpolateValueAtDate &gt; returns exact value if date matches reading" time="0.000607753">
+        </testcase>
+        <testcase classname="src/lib/__tests__/consumption.test.ts" name="interpolateValueAtDate &gt; returns null if date is out of range" time="0.000352051">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/csvParser.test.ts" timestamp="2026-11-01T11:47:11.042Z" hostname="delly" tests="6" failures="0" errors="0" skipped="0" time="0.035948938">
+        <testcase classname="src/lib/__tests__/csvParser.test.ts" name="CSV Parser &gt; parses simple CSV with comma delimiter" time="0.014771657">
+        </testcase>
+        <testcase classname="src/lib/__tests__/csvParser.test.ts" name="CSV Parser &gt; parses CSV with semicolon delimiter" time="0.000632056">
+        </testcase>
+        <testcase classname="src/lib/__tests__/csvParser.test.ts" name="CSV Parser &gt; parses CSV with space delimiter (user example format)" time="0.003577642">
+        </testcase>
+        <testcase classname="src/lib/__tests__/csvParser.test.ts" name="CSV Parser &gt; parses TSV (tab-separated) values (Excel/Sheets copy-paste)" time="0.00050883">
+        </testcase>
+        <testcase classname="src/lib/__tests__/csvParser.test.ts" name="CSV Parser &gt; handles European number formats correctly (quoted)" time="0.011496389">
+        </testcase>
+        <testcase classname="src/lib/__tests__/csvParser.test.ts" name="CSV Parser &gt; handles empty lines and whitespace" time="0.004452353">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/dateUtils.test.ts" timestamp="2026-11-01T11:47:11.043Z" hostname="delly" tests="7" failures="0" errors="0" skipped="0" time="0.006564402">
+        <testcase classname="src/lib/__tests__/dateUtils.test.ts" name="parseFlexibleDate &gt; parses DD.MM.YYYY (German format)" time="0.003865188">
+        </testcase>
+        <testcase classname="src/lib/__tests__/dateUtils.test.ts" name="parseFlexibleDate &gt; parses DD/MM/YYYY" time="0.000891757">
+        </testcase>
+        <testcase classname="src/lib/__tests__/dateUtils.test.ts" name="parseFlexibleDate &gt; parses ISO 8601 (YYYY-MM-DD)" time="0.000220689">
+        </testcase>
+        <testcase classname="src/lib/__tests__/dateUtils.test.ts" name="parseFlexibleDate &gt; returns null for empty string" time="0.000164655">
+        </testcase>
+        <testcase classname="src/lib/__tests__/dateUtils.test.ts" name="parseFlexibleDate &gt; returns null for garbage input" time="0.000121197">
+        </testcase>
+        <testcase classname="src/lib/__tests__/dateUtils.test.ts" name="parseFlexibleDate &gt; handles single-digit day and month" time="0.000391904">
+        </testcase>
+        <testcase classname="src/lib/__tests__/dateUtils.test.ts" name="parseFlexibleDate &gt; handles US locale for ambiguous dates" time="0.000281604">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/gapDetection.test.ts" timestamp="2026-11-01T11:47:11.045Z" hostname="delly" tests="4" failures="0" errors="0" skipped="0" time="0.016560238">
+        <testcase classname="src/lib/__tests__/gapDetection.test.ts" name="Gap Detection Utility &gt; detects a gap at the beginning (before first contract)" time="0.004091329">
+        </testcase>
+        <testcase classname="src/lib/__tests__/gapDetection.test.ts" name="Gap Detection Utility &gt; detects a gap in the middle (between contracts)" time="0.004575716">
+        </testcase>
+        <testcase classname="src/lib/__tests__/gapDetection.test.ts" name="Gap Detection Utility &gt; detects a gap at the end (after last contract)" time="0.000660117">
+        </testcase>
+        <testcase classname="src/lib/__tests__/gapDetection.test.ts" name="Gap Detection Utility &gt; returns no gaps when fully covered" time="0.004721495">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/numberUtils.test.ts" timestamp="2026-11-01T11:47:11.046Z" hostname="delly" tests="13" failures="0" errors="0" skipped="0" time="0.041740909">
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="Number Utils &gt; parses European format (dot thousands, comma decimal)" time="0.000691858">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="Number Utils &gt; parses US/UK format (comma thousands, dot decimal)" time="0.00043879">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="Number Utils &gt; parses simple numbers" time="0.000410221">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="Number Utils &gt; detects locale correctly from samples" time="0.000715558">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="Number Utils &gt; handles whitespace" time="0.036991237">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="Number Utils &gt; returns NaN for empty or invalid input" time="0.000406501">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="Number Utils &gt; defaults to EU locale when no locale provided" time="0.000253964">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="detectLocale &gt; detects EU from comma-decimal values" time="0.000223095">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="detectLocale &gt; detects EU from dot-thousands values" time="0.000226365">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="detectLocale &gt; detects EU from mixed EU separators" time="0.000171729">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="detectLocale &gt; detects US from dot-decimal values with comma thousands" time="0.000171957">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="detectLocale &gt; defaults to EU on plain integers" time="0.000164244">
+        </testcase>
+        <testcase classname="src/lib/__tests__/numberUtils.test.ts" name="detectLocale &gt; handles mixed EU dataset like the clipboard example" time="0.000184997">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/pricing.test.ts" timestamp="2026-11-01T11:47:11.051Z" hostname="delly" tests="3" failures="0" errors="0" skipped="0" time="0.011520671">
+        <testcase classname="src/lib/__tests__/pricing.test.ts" name="Pricing Library - Interval Cost &gt; calculates cost for a period within a single contract" time="0.010300868">
+        </testcase>
+        <testcase classname="src/lib/__tests__/pricing.test.ts" name="Pricing Library - Interval Cost &gt; calculates cost spanning multiple contracts" time="0.00047023">
+        </testcase>
+        <testcase classname="src/lib/__tests__/pricing.test.ts" name="Pricing Library - Interval Cost &gt; handles partial coverage (gaps)" time="0.000361931">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/projectionUtils.test.ts" timestamp="2026-11-01T11:47:11.051Z" hostname="delly" tests="2" failures="0" errors="0" skipped="0" time="0.003138443">
+        <testcase classname="src/lib/__tests__/projectionUtils.test.ts" name="Projection Utilities &gt; extrapolates consumption correctly based on last two readings" time="0.002255027">
+        </testcase>
+        <testcase classname="src/lib/__tests__/projectionUtils.test.ts" name="Projection Utilities &gt; returns empty array if less than 2 readings" time="0.000456938">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/readingService.test.ts" timestamp="2026-11-01T11:47:11.052Z" hostname="delly" tests="3" failures="0" errors="0" skipped="0" time="0.015812364">
+        <testcase classname="src/lib/__tests__/readingService.test.ts" name="Reading Service - Bulk Import &gt; processes valid readings successfully" time="0.008773156">
+        </testcase>
+        <testcase classname="src/lib/__tests__/readingService.test.ts" name="Reading Service - Bulk Import &gt; filters out readings for unowned meters" time="0.002000707">
+        </testcase>
+        <testcase classname="src/lib/__tests__/readingService.test.ts" name="Reading Service - Bulk Import &gt; skips duplicate readings (same meter and date)" time="0.001504137">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/recalculation.test.ts" timestamp="2026-11-01T11:47:11.052Z" hostname="delly" tests="1" failures="0" errors="0" skipped="0" time="2.951960646">
+        <testcase classname="src/lib/__tests__/recalculation.test.ts" name="Recalculation Service &gt; recalculates and stores stats correctly" time="0.122455788">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/__tests__/timeRangeCostCalculation.test.ts" timestamp="2026-11-01T11:47:11.053Z" hostname="delly" tests="2" failures="0" errors="0" skipped="0" time="0.002128337">
+        <testcase classname="src/lib/__tests__/timeRangeCostCalculation.test.ts" name="calculateConsumptionInRange &gt; sums consumption across a meter reset within the range" time="0.00112132">
+        </testcase>
+        <testcase classname="src/lib/__tests__/timeRangeCostCalculation.test.ts" name="calculateConsumptionInRange &gt; extrapolates from daily average when range is entirely beyond all readings" time="0.000693507">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/downloadHelper.test.ts" timestamp="2026-11-01T11:47:11.054Z" hostname="delly" tests="7" failures="0" errors="0" skipped="0" time="0.024720822">
+        <testcase classname="src/lib/downloadHelper.test.ts" name="downloadHelper &gt; downloadJson &gt; should create a JSON blob and initiate download" time="0.010388993">
+        </testcase>
+        <testcase classname="src/lib/downloadHelper.test.ts" name="downloadHelper &gt; downloadJson &gt; should stringify data with 2-space indentation" time="0.002044361">
+        </testcase>
+        <testcase classname="src/lib/downloadHelper.test.ts" name="downloadHelper &gt; downloadAsFile &gt; should create a download link and trigger click" time="0.001459847">
+        </testcase>
+        <testcase classname="src/lib/downloadHelper.test.ts" name="downloadHelper &gt; downloadAsFile &gt; should set the correct href on the link element" time="0.001117035">
+        </testcase>
+        <testcase classname="src/lib/downloadHelper.test.ts" name="downloadHelper &gt; downloadFromUrl &gt; should fetch from URL and download the blob" time="0.002030651">
+        </testcase>
+        <testcase classname="src/lib/downloadHelper.test.ts" name="downloadHelper &gt; downloadFromUrl &gt; should throw error when fetch returns not ok" time="0.003509699">
+        </testcase>
+        <testcase classname="src/lib/downloadHelper.test.ts" name="downloadHelper &gt; downloadFromUrl &gt; should throw error when network request fails" time="0.001052383">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/fileTypeDetector.test.ts" timestamp="2026-11-01T11:47:11.056Z" hostname="delly" tests="7" failures="0" errors="0" skipped="0" time="0.00170332">
+        <testcase classname="src/lib/fileTypeDetector.test.ts" name="detectFileType &gt; should detect JSON by .json extension" time="0.00043773">
+        </testcase>
+        <testcase classname="src/lib/fileTypeDetector.test.ts" name="detectFileType &gt; should detect CSV by .csv extension" time="0.000182659">
+        </testcase>
+        <testcase classname="src/lib/fileTypeDetector.test.ts" name="detectFileType &gt; should detect JSON from content starting with [" time="0.000159257">
+        </testcase>
+        <testcase classname="src/lib/fileTypeDetector.test.ts" name="detectFileType &gt; should detect JSON from content starting with {" time="0.000177909">
+        </testcase>
+        <testcase classname="src/lib/fileTypeDetector.test.ts" name="detectFileType &gt; should detect CSV by default when no extension or content match" time="0.000140114">
+        </testcase>
+        <testcase classname="src/lib/fileTypeDetector.test.ts" name="detectFileType &gt; should handle whitespace in content detection" time="0.000128877">
+        </testcase>
+        <testcase classname="src/lib/fileTypeDetector.test.ts" name="detectFileType &gt; should prefer extension over content when both are available" time="0.000114375">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/jsonParser.integration.test.ts" timestamp="2026-11-01T11:47:11.057Z" hostname="delly" tests="3" failures="0" errors="0" skipped="0" time="0.015558343">
+        <testcase classname="src/lib/jsonParser.integration.test.ts" name="JSON Parser - Export Format Integration &gt; should parse the exact export format returned by API" time="0.010215244">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.integration.test.ts" name="JSON Parser - Export Format Integration &gt; should work with JSON stringified export data" time="0.000965923">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.integration.test.ts" name="JSON Parser - Export Format Integration &gt; should handle multiple meters in export format" time="0.001217077">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/lib/jsonParser.test.ts" timestamp="2026-11-01T11:47:11.058Z" hostname="delly" tests="13" failures="0" errors="0" skipped="0" time="0.017266515">
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseNestedFormat &gt; should parse a valid nested JSON structure with meters and readings" time="0.006031138">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseNestedFormat &gt; should handle multiple meters with readings" time="0.000872298">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseNestedFormat &gt; should throw error if meters array is missing" time="0.001406143">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseNestedFormat &gt; should throw error if meter id is missing" time="0.000504005">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseNestedFormat &gt; should parse export format with array of { meter, readings }" time="0.001398561">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseNestedFormat &gt; should handle _id field as fallback for id" time="0.000408267">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseFlatFormat &gt; should parse a valid flat JSON array structure" time="0.000694331">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; parseFlatFormat &gt; should throw error if array contains invalid readings" time="0.000520654">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; validateJsonStructure &gt; should handle empty export array" time="0.000459408">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; validateJsonStructure &gt; should identify nested format correctly" time="0.000512037">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; validateJsonStructure &gt; should identify flat format correctly" time="0.000248737">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; validateJsonStructure &gt; should identify export format as nested" time="0.00021155">
+        </testcase>
+        <testcase classname="src/lib/jsonParser.test.ts" name="JSON Parser &gt; validateJsonStructure &gt; should throw error for unknown format" time="0.000328942">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/models/__tests__/contracts.test.ts" timestamp="2026-11-01T11:47:11.060Z" hostname="delly" tests="1" failures="0" errors="0" skipped="0" time="2.472945683">
+        <testcase classname="src/models/__tests__/contracts.test.ts" name="Contract Model Validation &gt; detects overlapping contract periods" time="0.11474432">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/models/__tests__/isolation.test.ts" timestamp="2026-11-01T11:47:11.060Z" hostname="delly" tests="2" failures="0" errors="0" skipped="0" time="0.934574758">
+        <testcase classname="src/models/__tests__/isolation.test.ts" name="User Isolation Middleware &gt; filters find queries by userId when provided in options" time="0.079275492">
+        </testcase>
+        <testcase classname="src/models/__tests__/isolation.test.ts" name="User Isolation Middleware &gt; does not filter if userId is not provided in options (for internal use)" time="0.008948415">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/pages/__tests__/Meters.test.tsx" timestamp="2026-11-01T11:47:11.061Z" hostname="delly" tests="2" failures="0" errors="0" skipped="0" time="0.176166325">
+        <testcase classname="src/pages/__tests__/Meters.test.tsx" name="Meters Page &gt; uses single-column layout when there is only one meter" time="0.142704759">
+        </testcase>
+        <testcase classname="src/pages/__tests__/Meters.test.tsx" name="Meters Page &gt; uses a 2-column grid layout on medium screens when there are multiple meters" time="0.033094779">
+        </testcase>
+    </testsuite>
+</testsuites>
