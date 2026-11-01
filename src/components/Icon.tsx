@@ -21,7 +21,9 @@ type IconType =
   | 'delete'
   | 'arrow-up'
   | 'arrow-down'
-  | 'external-link';
+  | 'external-link'
+  | 'google'
+  | 'refresh';
 
 interface IconProps extends JSX.SvgSVGAttributes<SVGSVGElement> {
   name: IconType;
@@ -50,7 +52,9 @@ const Icon: Component<IconProps> = (props) => {
     'delete': <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />,
     'arrow-up': <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />,
     'arrow-down': <path fill-rule="evenodd" d="M14.707 12.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd" />,
-    'external-link': <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    'external-link': <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />,
+    'google': <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.479A9 9 0 1111.521 3 5.5 5.5 0 0012 3c3.31 0 6 2.69 6 6a5.5 5.5 0 01-4.5 5.479M21 12.479V12a9 9 0 00-9-9 9 9 0 00-9 9h0a9 9 0 009 9 9 9 0 009-9v.479" />,
+    'refresh': <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />,
   };
 
   return (

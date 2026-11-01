@@ -1,10 +1,15 @@
 import mongoose from 'mongoose';
 import { applyPreFilter } from './sessionFilter';
 
+export const READING_SOURCES = ['manual', 'ocr', 'import', 'provider'] as const;
+
 const readingSchema = new mongoose.Schema({
   meterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meter', required: true },
   value: { type: Number, required: true },
   date: { type: Date, required: true },
+  source: { type: String, enum: READING_SOURCES, default: 'manual' },
+  /** Set when the value was confirmed by (or came from) a provider document. */
+  providerDocId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProviderDocument' },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
