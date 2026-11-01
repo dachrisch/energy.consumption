@@ -235,9 +235,6 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
               buffer,
               textBody,
               status: 'new',
-              driveFileId: exists?.driveFileId ?? undefined,
-              driveWebLink: exists?.driveWebLink ?? undefined,
-              sidecarDriveId: exists?.sidecarDriveId ?? undefined,
             },
             provider: { name: provider.name, defaultUnit: provider.unit },
             userId,
@@ -535,6 +532,12 @@ export interface ArchiveOutcome {
   error?: string;
 }
 
+/** Documents whose facts we could read. Only those are archived to Drive. */
+const ARCHIVABLE_DOCUMENT_STATUSES = ['parsed', 'needs_review', 'imported'] as const;
+
+const isArchivable = (status: string): boolean =>
+  (ARCHIVABLE_DOCUMENT_STATUSES as readonly string[]).includes(status);
+
 /**
  * Archive one already-stored document. The bytes are not kept in Mongo, so the
  * original is re-fetched from Gmail using the ids stored at sync time.
@@ -557,6 +560,14 @@ async function archiveStoredDocument(
       status: 'already_archived',
       driveFileId: document.driveFileId,
       driveWebLink: document.driveWebLink,
+    };
+  }
+  if (!isArchivable(document.status)) {
+    return {
+      documentId,
+      fileName: document.fileName,
+      status: 'failed',
+      error: 'Only parsed documents are archived to Drive',
     };
   }
   if (!document.gmailMessageId || !document.gmailAttachmentId) {
@@ -631,6 +642,7 @@ export async function handleIntakeArchive({ req, res, userId }: RouteParams): Pr
       ids = [documentId];
     } else {
       const pending = await ProviderDocument.find({
+        status: { $in: [...ARCHIVABLE_DOCUMENT_STATUSES] },
         driveFileId: { $exists: false },
         gmailMessageId: { $exists: true },
         gmailAttachmentId: { $exists: true },
