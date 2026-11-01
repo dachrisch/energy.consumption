@@ -7,7 +7,7 @@ import { handleOcrScan } from './controllers/ocr.controller';
 import { handleAggregatedRoutes } from './controllers/dashboard.controller';
 import {
   handleIntakeSync, handleIntakeVerify, handleConnect, handleCallback, handleIntakeItems,
-  handleIntakeItemAction, handleIntakeBills, handleIntakeDocuments, handleProviders,
+  handleIntakeItemAction, handleIntakeBills, handleIntakeDocuments, handleIntakeArchive, handleProviders,
 } from './controllers/intake.controller';
 
 export async function router(params: RouteParams) {
@@ -94,6 +94,9 @@ export async function router(params: RouteParams) {
     },
     '/api/intake/documents': async () => {
       if (req.method === 'GET') { await handleIntakeDocuments(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); }
+    },
+    '/api/intake/documents/archive': async () => {
+      if (req.method === 'POST') { await handleIntakeArchive(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); }
     },
     '/api/providers': async () => handleProviders(params),
   };

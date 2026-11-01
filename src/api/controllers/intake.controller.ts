@@ -15,9 +15,14 @@ import {
   exchangeCode, clientForRefreshToken, createOAuthClient, isInvalidGrant,
   decryptRefreshToken, encryptRefreshToken, markReconnectRequired,
 } from '../../lib/google/oauth';
-import { gmailFor, buildProviderQuery, collectAttachments, collectTextBody, headerValue, resolveMimeType } from '../../lib/google/gmail';
-import { driveFor, ensureFolder } from '../../lib/google/drive';
-import { processDocument } from '../../lib/intake/processDocument';
+import {
+  gmailFor, buildProviderQuery, collectAttachments, collectTextBody, decodeBase64Url,
+  headerValue, resolveMimeType,
+} from '../../lib/google/gmail';
+import type { GmailClientLike } from '../../lib/google/gmail';
+import { archiveDocument, driveFor, ensureFolder } from '../../lib/google/drive';
+import type { DriveClientLike } from '../../lib/google/drive';
+import { folderYear, processDocument } from '../../lib/intake/processDocument';
 import { computeVariance, expectedCostForBill, periodDays } from '../../lib/intake/reconcile';
 import { findActiveOrLastContract } from '../../lib/pricing';
 
@@ -44,6 +49,32 @@ async function getUserGoogleAccount(userId: string): Promise<{ refresh: string; 
     const googleApiKey = user.googleApiKey ? decrypt(user.googleApiKey) : undefined;
     return { refresh, sub: user.google.sub ?? '', googleApiKey, rootFolderId: user.google?.rootFolderId };
   } catch { return null; }
+}
+
+type GoogleAccount = NonNullable<Awaited<ReturnType<typeof getUserGoogleAccount>>>;
+
+interface ArchiveContext {
+  gmail: GmailClientLike;
+  drive: DriveClientLike;
+  rootFolderId: string;
+}
+
+/** Gmail + Drive clients for one request, with the archive root ensured. */
+async function archiveContextFor(userId: string, account: GoogleAccount): Promise<ArchiveContext> {
+  const client = clientForRefreshToken(account.refresh);
+  const drive = driveFor(client);
+  let rootFolderId = account.rootFolderId;
+  if (!rootFolderId) {
+    rootFolderId = await ensureFolder(drive, 'Energy Monitor');
+    await User.findByIdAndUpdate(userId, { $set: { 'google.rootFolderId': rootFolderId } });
+  }
+  return { gmail: gmailFor(client), drive, rootFolderId };
+}
+
+/** Extracted fields live in a Mixed column; only the bill period is needed here. */
+function billPeriodEnd(extracted: unknown): string | undefined {
+  const bill = (extracted as { bill?: { periodEnd?: string } } | null)?.bill;
+  return bill?.periodEnd;
 }
 
 export async function handleConnect({ res, userId }: RouteParams): Promise<void> {
@@ -91,7 +122,7 @@ export async function handleCallback({ res, url }: RouteParams): Promise<void> {
     if (!updated) {
       res.statusCode = 400; res.end(JSON.stringify({ error: 'Unknown user in OAuth state' })); return;
     }
-    res.statusCode = 302; res.setHeader('Location', '/profile?google=connected'); res.end('');
+    res.statusCode = 302; res.setHeader('Location', '/intake?google=connected'); res.end('');
   } catch (e) {
     console.error('Google OAuth exchange failed:', e);
     res.statusCode = 502; res.end(JSON.stringify({ error: 'Google exchange failed' }));
@@ -134,9 +165,7 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
     return;
   }
   try {
-    const client = clientForRefreshToken(account.refresh);
-    const gmail = gmailFor(client);
-    const drive = driveFor(client);
+    const { gmail, drive, rootFolderId } = await archiveContextFor(userId, account);
     const query = buildProviderQuery({ senders: provider.senders ?? [], subjectHints: provider.subjectHints ?? [], gmailQuery: provider.gmailQuery ?? null });
     const listRes = await gmail.users.messages.list({ userId: 'me', q: query, maxResults: 20 });
     const messages = listRes.data.messages ?? [];
@@ -151,11 +180,6 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
         date: reading.date,
         value: reading.value,
       }));
-    let rootFolderId = account.rootFolderId;
-    if (!rootFolderId) {
-      rootFolderId = await ensureFolder(drive, 'Energy Monitor');
-      await User.findByIdAndUpdate(userId, { $set: { 'google.rootFolderId': rootFolderId } });
-    }
 
     const processed: ProcessedAttachment[] = [];
     for (const m of messages) {
@@ -211,6 +235,9 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
               buffer,
               textBody,
               status: 'new',
+              driveFileId: exists?.driveFileId ?? undefined,
+              driveWebLink: exists?.driveWebLink ?? undefined,
+              sidecarDriveId: exists?.sidecarDriveId ?? undefined,
             },
             provider: { name: provider.name, defaultUnit: provider.unit },
             userId,
@@ -497,4 +524,144 @@ export async function handleIntakeDocuments({ res, userId, url }: RouteParams): 
     .limit(limit)
     .lean();
   res.statusCode = 200; res.end(JSON.stringify({ documents, count: documents.length }));
+}
+
+export interface ArchiveOutcome {
+  documentId: string;
+  fileName?: string;
+  status: 'archived' | 'already_archived' | 'failed';
+  driveFileId?: string;
+  driveWebLink?: string;
+  error?: string;
+}
+
+/**
+ * Archive one already-stored document. The bytes are not kept in Mongo, so the
+ * original is re-fetched from Gmail using the ids stored at sync time.
+ */
+async function archiveStoredDocument(
+  userId: string,
+  documentId: string,
+  context: ArchiveContext,
+): Promise<ArchiveOutcome> {
+  const document = await ProviderDocument.findOne({ _id: documentId, userId })
+    .setOptions({ userId })
+    .lean();
+  if (!document) {
+    return { documentId, status: 'failed', error: 'Document not found' };
+  }
+  if (document.driveWebLink || document.driveFileId) {
+    return {
+      documentId,
+      fileName: document.fileName,
+      status: 'already_archived',
+      driveFileId: document.driveFileId,
+      driveWebLink: document.driveWebLink,
+    };
+  }
+  if (!document.gmailMessageId || !document.gmailAttachmentId) {
+    return {
+      documentId,
+      fileName: document.fileName,
+      status: 'failed',
+      error: 'Original is no longer available in Gmail',
+    };
+  }
+
+  try {
+    const attachment = await context.gmail.users.messages.attachments.get({
+      userId: 'me',
+      messageId: document.gmailMessageId,
+      id: document.gmailAttachmentId,
+    });
+    if (!attachment.data.data) {
+      return { documentId, fileName: document.fileName, status: 'failed', error: 'Gmail returned no attachment bytes' };
+    }
+    const archived = await archiveDocument(context.drive, {
+      rootFolderId: context.rootFolderId,
+      providerName: document.providerName ?? 'Unfiled',
+      year: folderYear(billPeriodEnd(document.extracted), document.receivedAt ?? new Date()),
+      fileName: document.fileName,
+      mimeType: document.mimeType,
+      buffer: decodeBase64Url(attachment.data.data),
+      extracted: document.extracted ?? { error: document.error ?? 'no extracted fields' },
+    });
+    await ProviderDocument.findByIdAndUpdate(document._id, {
+      $set: {
+        driveFileId: archived.fileId,
+        driveWebLink: archived.webLink,
+        sidecarDriveId: archived.sidecarId,
+      },
+    }).setOptions({ userId });
+    return {
+      documentId,
+      fileName: document.fileName,
+      status: 'archived',
+      driveFileId: archived.fileId,
+      driveWebLink: archived.webLink,
+    };
+  } catch (error) {
+    return {
+      documentId,
+      fileName: document.fileName,
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Drive archive failed',
+    };
+  }
+}
+
+const ARCHIVE_BATCH_LIMIT = 25;
+
+/**
+ * `POST /api/intake/documents/archive` → archive one document (`documentId`)
+ * or every ingested document that has no Drive copy yet (newest first).
+ */
+export async function handleIntakeArchive({ req, res, userId }: RouteParams): Promise<void> {
+  const account = await getUserGoogleAccount(userId);
+  if (!account) {
+    res.statusCode = 401; res.end(JSON.stringify({ error: 'Google not connected' })); return;
+  }
+  const body = (req.body ?? {}) as { documentId?: unknown };
+  const documentId = sanitizeString(body.documentId ?? undefined);
+
+  try {
+    const context = await archiveContextFor(userId, account);
+    let ids: string[];
+    if (documentId) {
+      ids = [documentId];
+    } else {
+      const pending = await ProviderDocument.find({
+        driveFileId: { $exists: false },
+        gmailMessageId: { $exists: true },
+        gmailAttachmentId: { $exists: true },
+      })
+        .setOptions({ userId })
+        .sort({ receivedAt: -1 })
+        .limit(ARCHIVE_BATCH_LIMIT)
+        .lean();
+      ids = pending.map((document) => document._id.toString());
+    }
+
+    const documents: ArchiveOutcome[] = [];
+    for (const id of ids) {
+      documents.push(await archiveStoredDocument(userId, id, context));
+    }
+    const failed = documents.filter((document) => document.status === 'failed');
+    res.statusCode = 200;
+    res.end(JSON.stringify({
+      archived: documents.filter((document) => document.status === 'archived').length,
+      alreadyArchived: documents.filter((document) => document.status === 'already_archived').length,
+      failed: failed.length,
+      documents,
+    }));
+  } catch (error) {
+    if (isInvalidGrant(error)) {
+      await markReconnectRequired(userId);
+      res.statusCode = 409;
+      res.end(JSON.stringify({ error: 'Google authorization expired; reconnect required', reconnect: true }));
+      return;
+    }
+    console.error('Drive archive error:', error);
+    res.statusCode = 500; res.end(JSON.stringify({ error: 'Drive archive failed' }));
+  }
 }

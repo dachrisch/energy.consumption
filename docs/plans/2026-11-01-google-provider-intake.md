@@ -79,12 +79,12 @@ extracted fields, so re-processing never needs Gmail again.
 
 ## In-app flow
 
-Profile page now has a **Google Connectivity** card:
+The intake page (`/intake`) has a **Google account** card:
 - Not connected → "Connect Google" button (redirects to `/api/google/connect`).
 - Connected → green status + "Reconnect".
 - Authorization expired (password change) → warning + "Reconnect Google".
 
-On return, `?google=connected` shows a toast and the session revalidates.
+On return, `/intake?google=connected` shows a toast and the session revalidates.
 
 ## Environment
 
@@ -116,9 +116,14 @@ POST /api/intake/sync
 - Documents that were already processed are skipped, so a retried sync is a
   no-op on top of the existing `sha256` dedupe.
 - A document that fails extraction is recorded as `failed` with its error and
-  does not abort the rest of the batch.
+  does not abort the rest of the batch — it is still archived to Drive, because
+  the original was taken in even when its facts cannot be read.
 - The Drive root folder (`Energy Monitor`) is created lazily and cached on
   `User.google.rootFolderId`; `google.lastSyncAt` is stamped per sync.
+- `POST /api/intake/documents/archive` backfills the Drive copy for documents
+  ingested before archiving existed: with `{ documentId }` it archives one, with
+  an empty body every document that has no Drive copy yet (newest 25). The bytes
+  are re-fetched from Gmail via the stored message/attachment ids.
 - The per-user Gemini key is decrypted before it is handed to the extractor;
   without one, PDFs fail with a readable message while CSV/HTML/text still work.
 - Variance is never stored: `/api/intake/bills` derives expected cost and
@@ -136,16 +141,20 @@ pipeline:
   empty state links to `/contracts/add`.
 - **Staged items** — pending/conflict `IntakeItem`s with value, date, meter
   number and the reconciliation note; Accept promotes into `Reading`/`Bill`,
-  Reject dismisses. A toggle reveals already-decided items.
+  Reject dismisses. A toggle reveals already-decided items. Each reading links to
+  `/meters/:id/readings?highlight=<readingId|YYYY-MM-DD>`, which highlights and
+  scrolls to that datapoint.
 - **Bills vs. contract** — billed amount, contract-expected amount and variance,
   straight from `GET /api/intake/bills`.
-- **Recent documents** — status, subject, error text and a Drive link.
+- **Recent documents** — status, subject, error text and a **Drive** link. Missing
+  copies are archived automatically on first visit (when Google is connected)
+  and can be retried with **Save to Drive** / **Archive to Drive**.
 
 Supporting endpoints: `GET /api/providers` (derived view) and
 `PATCH /api/providers` (settings → all contracts of that provider), plus
-`GET /api/intake/documents`. The settings payload is zod-validated
-(`providerSettingsSchema`, `.strict()`) and every query is scoped with
-`.setOptions({ userId })`.
+`GET /api/intake/documents` and `POST /api/intake/documents/archive`. The
+settings payload is zod-validated (`providerSettingsSchema`, `.strict()`) and
+every query is scoped with `.setOptions({ userId })`.
 
 ### Remaining
 

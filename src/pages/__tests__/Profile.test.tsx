@@ -11,6 +11,7 @@ interface SessionUser {
   _id: string;
   name: string;
   email: string;
+  googleApiKey?: string;
   google?: { status?: 'ok' | 'reconnect_required' };
 }
 
@@ -34,39 +35,26 @@ function renderProfile(session: SessionUser) {
 
 const session: SessionUser = { _id: 'u1', name: 'Chris', email: 'chris@example.com' };
 
-/**
- * @solidjs/router intercepts same-origin anchor clicks client-side. These links
- * point at an API redirect, so they must opt out with rel="external" — without
- * it the URL changes but no request is made and the page goes blank.
- */
-describe('Profile — Google connectivity links', () => {
+describe('Profile — Google settings', () => {
   afterEach(() => {
     cleanup();
     (fetch as unknown as { mockReset: () => void }).mockReset();
   });
 
-  it('opts the connect link out of client-side routing', async () => {
-    renderProfile(session);
+  it('keeps the Gemini API key field', async () => {
+    renderProfile({ ...session, googleApiKey: 'AIza-key' });
 
-    const link = await screen.findByRole('link', { name: /connect google/i });
-
-    expect(link.getAttribute('href')).toBe('/api/google/connect');
-    expect(link.getAttribute('rel')).toBe('external');
+    expect(await screen.findByText(/google gemini api key/i)).toBeTruthy();
+    expect(screen.getByPlaceholderText(/AIza/i)).toBeTruthy();
   });
 
-  it('opts the reconnect links out of client-side routing too', async () => {
-    renderProfile({ ...session, google: { status: 'reconnect_required' } });
-
-    const expired = await screen.findByRole('link', { name: /reconnect google/i });
-    expect(expired.getAttribute('rel')).toBe('external');
-    expect(expired.getAttribute('href')).toBe('/api/google/connect');
-  });
-
-  it('uses the same opt-out when the account is already connected', async () => {
+  it('no longer hosts the Google account connection', async () => {
     renderProfile({ ...session, google: { status: 'ok' } });
 
-    const connected = await screen.findByRole('link', { name: /^reconnect$/i });
-    expect(connected.getAttribute('rel')).toBe('external');
-    expect(connected.getAttribute('href')).toBe('/api/google/connect');
+    await screen.findByText(/google gemini api key/i);
+
+    expect(screen.queryByText(/google connectivity/i)).toBeNull();
+    expect(screen.queryByRole('link', { name: /connect google/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /reconnect/i })).toBeNull();
   });
 });

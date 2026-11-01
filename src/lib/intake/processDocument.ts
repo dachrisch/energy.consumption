@@ -19,6 +19,10 @@ export interface ProcessableDocument {
   textBody?: string;
   /** Already-processed documents are skipped so a retried sync is a no-op. */
   status?: string;
+  /** Existing Drive archive of a document being retried; reused, not duplicated. */
+  driveFileId?: string;
+  driveWebLink?: string;
+  sidecarDriveId?: string;
 }
 
 /** Providers are the contracts' provider names; only the name and unit matter here. */
@@ -146,7 +150,7 @@ export function planIntake(
   return { items, bill };
 }
 
-function folderYear(periodEnd: string | undefined, receivedAt: Date): number {
+export function folderYear(periodEnd: string | undefined, receivedAt: Date): number {
   const basis = periodEnd ? new Date(periodEnd) : new Date(receivedAt);
   return Number.isNaN(basis.getTime()) ? new Date(receivedAt).getUTCFullYear() : basis.getUTCFullYear();
 }
@@ -172,9 +176,6 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
   if (document.status && ALREADY_PROCESSED.has(document.status)) {
     return { status: 'skipped', intakeItemIds: [] };
   }
-  if (!isSupported(document.mimeType)) {
-    return failed('unsupported format');
-  }
   if (document.size && document.size > MAX_ATTACHMENT_BYTES) {
     return failed('attachment too large');
   }
@@ -182,34 +183,41 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
     return failed('no document bytes available');
   }
 
-  let extracted: ExtractedDocument;
-  try {
-    extracted = await extractDocument({
-      mimeType: document.mimeType,
-      buffer: document.buffer,
-      textBody: document.textBody,
-      unitHint: provider.defaultUnit,
-      apiKey,
-    });
-  } catch (error) {
-    return failed(error instanceof Error ? error.message : 'extraction failed');
+  // Extraction failures still archive the original: the document was taken in,
+  // so it belongs in the user's Drive even when we cannot read its facts.
+  let extracted: ExtractedDocument | undefined;
+  let extractionError: string | undefined;
+  if (!isSupported(document.mimeType)) {
+    extractionError = 'unsupported format';
+  } else {
+    try {
+      extracted = await extractDocument({
+        mimeType: document.mimeType,
+        buffer: document.buffer,
+        textBody: document.textBody,
+        unitHint: provider.defaultUnit,
+        apiKey,
+      });
+    } catch (error) {
+      extractionError = error instanceof Error ? error.message : 'extraction failed';
+    }
   }
 
-  const plan = planIntake(extracted, meters, readings);
+  const plan = extracted ? planIntake(extracted, meters, readings) : undefined;
 
-  let driveFileId: string | undefined;
-  let driveWebLink: string | undefined;
-  let sidecarDriveId: string | undefined;
-  if (drive && rootFolderId) {
+  let driveFileId = document.driveFileId;
+  let driveWebLink = document.driveWebLink;
+  let sidecarDriveId = document.sidecarDriveId;
+  if (!driveFileId && drive && rootFolderId) {
     try {
       const archived = await archiveDocument(drive, {
         rootFolderId,
         providerName: provider.name,
-        year: folderYear(extracted.bill?.periodEnd, document.receivedAt),
+        year: folderYear(extracted?.bill?.periodEnd, document.receivedAt),
         fileName: document.fileName,
         mimeType: document.mimeType,
         buffer: document.buffer,
-        extracted,
+        extracted: extracted ?? { error: extractionError },
       });
       driveFileId = archived.fileId;
       driveWebLink = archived.webLink;
@@ -218,6 +226,29 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
       // A Drive hiccup must not throw the extracted facts away.
       console.warn(`Drive archive failed for ${document.fileName}:`, error);
     }
+  }
+
+  if (!extracted || !plan) {
+    // Without Drive ids there is nothing to persist that the caller does not
+    // already know: the sync controller stores the failure itself.
+    if (driveFileId) {
+      await ProviderDocument.findByIdAndUpdate(document._id, {
+        $set: {
+          status: 'failed',
+          error: extractionError ?? 'extraction failed',
+          processedAt: new Date(),
+          driveFileId,
+          driveWebLink,
+          sidecarDriveId,
+        },
+      }).setOptions({ userId });
+    }
+    return {
+      status: 'failed',
+      intakeItemIds: [],
+      error: extractionError,
+      ...(driveFileId ? { driveFileId, driveWebLink, sidecarDriveId } : {}),
+    };
   }
 
   const intakeItemIds: string[] = [];

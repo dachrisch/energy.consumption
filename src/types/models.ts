@@ -101,6 +101,7 @@ export interface IProviderDocument {
   subject?: string;
   from?: string;
   receivedAt?: string;
+  driveFileId?: string;
   driveWebLink?: string;
   error?: string;
 }
