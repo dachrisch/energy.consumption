@@ -45,6 +45,11 @@ const bills = [
   },
 ];
 
+const meters = [
+  { _id: 'm1', name: 'Therme', meterNumber: 'SWM 600044', type: 'gas', unit: 'm³' },
+  { _id: 'm2', name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh' },
+];
+
 interface Call {
   url: string;
   method: string;
@@ -64,6 +69,7 @@ function mockApi(
       ? handler(call)
       : {
           '/api/session': sessionUser,
+          '/api/meters': meters,
           '/api/providers': { providers },
           '/api/intake/items': { items },
           '/api/intake/documents': { documents },
@@ -168,6 +174,27 @@ describe('Intake page', () => {
       subjectHints: [],
       gmailQuery: null,
     });
+  });
+
+  it('lets the user link an unknown-meter item to an existing meter', async () => {
+    const calls = mockApi({
+      'POST /api/intake/items/i2/link': () => ({
+        item: { ...items[1], meterId: 'm1', status: 'pending' },
+      }),
+    });
+    renderIntake();
+    await screen.findByText('620 kWh');
+
+    const select = await screen.findByRole('combobox', { name: /link meter/i });
+    fireEvent.change(select, { target: { value: 'm1' } });
+    fireEvent.click(screen.getByRole('button', { name: /^link$/i }));
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.method === 'POST' && call.url === '/api/intake/items/i2/link')).toBe(true);
+    });
+    const link = calls.find((call) => call.url === '/api/intake/items/i2/link');
+    expect(JSON.parse(link?.body ?? '{}')).toEqual({ meterId: 'm1' });
+    expect(await screen.findByText(/meter linked/i)).toBeTruthy();
   });
 
   it('points at contracts when no provider exists yet', async () => {

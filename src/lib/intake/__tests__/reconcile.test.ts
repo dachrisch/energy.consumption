@@ -40,6 +40,18 @@ describe('findMeterByNumber', () => {
     expect(findMeterByNumber(meters, '0000987')?._id).toBe('m2');
   });
 
+  it('matches when the stored meter carries a provider prefix', () => {
+    const prefixed = [{ _id: 'm3', meterNumber: 'SWM 600044', unit: 'm³' }];
+    expect(findMeterByNumber(prefixed, '600044')?._id).toBe('m3');
+    expect(findMeterByNumber(prefixed, '600 044')?._id).toBe('m3');
+    expect(findMeterByNumber(meters, '600044')).toBeUndefined();
+  });
+
+  it('does not match on short digit fragments', () => {
+    const prefixed = [{ _id: 'm3', meterNumber: 'SWM 600044', unit: 'm³' }];
+    expect(findMeterByNumber(prefixed, '044')).toBeUndefined();
+  });
+
   it('returns undefined for unknown or empty numbers', () => {
     expect(findMeterByNumber(meters, '999')).toBeUndefined();
     expect(findMeterByNumber(meters, '')).toBeUndefined();

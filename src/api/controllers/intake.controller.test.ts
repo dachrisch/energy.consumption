@@ -19,8 +19,8 @@ import { decrypt, encrypt } from '../../lib/encryption';
 import { signState, verifyState } from '../../lib/google/oauth';
 import {
   handleCallback, handleConnect, handleGoogleSync, handleIntakeArchive, handleIntakeBills,
-  handleIntakeDocumentAction, handleIntakeDocuments, handleIntakeItemAction, handleIntakeItems,
-  handleProviders,
+  handleIntakeDocumentAction, handleIntakeDocuments, handleIntakeItemAction, handleIntakeItemLink,
+  handleIntakeItems, handleProviders,
 } from './intake.controller';
 import type { ApiRequest, ApiResponse, RouteParams } from '../utils';
 
@@ -558,6 +558,35 @@ describe('intake controller', () => {
       expect(owner?.google?.lastSyncAt).toBeInstanceOf(Date);
     });
 
+    it('links pending items whose number matches a stored meter with a provider prefix', async () => {
+      await Meter.updateMany({}, { $set: { meterNumber: 'SWM 600044' } }).setOptions({ userId: ownerId });
+      stubGmail({ files: [{ name: 'lastgang.csv', mimeType: 'text/csv', bytes: csvBytes }] });
+      stubDrive();
+      await IntakeItem.create({
+        documentId: new mongoose.Types.ObjectId(),
+        kind: 'reading',
+        date: new Date('2023-12-01'),
+        value: 100,
+        meterNumber: '600044',
+        status: 'pending',
+        userId: ownerId,
+      });
+      const response = mockResponse();
+
+      await handleGoogleSync(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        body: { providerName: 'Stadtwerke' },
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const payload = JSON.parse(response.body()) as { linked: number };
+      expect(payload.linked).toBe(1);
+      const linked = await IntakeItem.findOne({ userId: ownerId, meterNumber: '600044' }).lean();
+      expect(linked?.meterId).toBeTruthy();
+    });
+
     it('marks the account for reconnection when Google rejects the refresh token', async () => {
       // Drive is healthy here; only the Gmail call reports the dead token.
       stubDrive();
@@ -817,6 +846,51 @@ describe('intake controller', () => {
       const payload = JSON.parse(pending.body()) as { count: number; items: { status: string }[] };
       expect(payload.count).toBe(1);
       expect(payload.items[0].status).toBe('pending');
+    });
+
+    it('links an unknown-meter item to a meter and reclassifies it', async () => {
+      const meter = await createMeter();
+      const item = await createItem();
+      await Reading.create({
+        meterId: meter._id, date: new Date('2024-01-01'), value: 510, source: 'manual', userId: ownerId,
+      });
+      const response = mockResponse();
+
+      await handleIntakeItemLink(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/link`,
+        body: { meterId: meter._id.toString() },
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const updated = await IntakeItem.findById(item._id).lean();
+      expect(String(updated?.meterId)).toBe(meter._id.toString());
+      // The provider value (500) disagrees with the existing 510 on that date.
+      expect(updated?.status).toBe('conflict');
+      expect(updated?.matchedReadingId).toBeTruthy();
+      expect(updated?.note).toContain('510');
+    });
+
+    it('refuses to link an item to another user\'s meter', async () => {
+      const meter = await Meter.create({
+        name: 'Other', meterNumber: '9-999-999', type: 'power', unit: 'kWh', userId: otherId,
+      });
+      const item = await createItem();
+      const response = mockResponse();
+
+      await handleIntakeItemLink(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/items/${item._id.toString()}/link`,
+        body: { meterId: meter._id.toString() },
+      }));
+
+      expect(response.res.statusCode).toBe(404);
+      const stored = await IntakeItem.findById(item._id).lean();
+      expect(stored?.meterId).toBeUndefined();
     });
 
     it('promotes an accepted reading with source "provider"', async () => {

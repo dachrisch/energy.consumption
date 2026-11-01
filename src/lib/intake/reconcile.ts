@@ -42,6 +42,10 @@ function withoutLeadingZeros(value: string): string {
   return value.replace(/^0+/, '');
 }
 
+function digitsOnly(value: string | null | undefined): string {
+  return (value ?? '').replace(/\D/g, '');
+}
+
 export function findMeterByNumber<T extends MeterLike>(
   meters: T[],
   meterNumber: string | null | undefined,
@@ -55,10 +59,22 @@ export function findMeterByNumber<T extends MeterLike>(
     return exact;
   }
   const loose = withoutLeadingZeros(wanted);
-  return meters.find((m) => {
+  const looselyEqual = meters.find((m) => {
     const candidate = withoutLeadingZeros(normalizeMeterNumber(m.meterNumber));
     return candidate === loose;
   });
+  if (looselyEqual) {
+    return looselyEqual;
+  }
+  // Users store the meter with the provider's prefix ("SWM 600044") while the
+  // bill prints just the number ("600044"): compare the digit runs.
+  const wantedDigits = withoutLeadingZeros(digitsOnly(meterNumber));
+  if (wantedDigits.length < 4) {
+    return undefined;
+  }
+  return meters.find(
+    (m) => withoutLeadingZeros(digitsOnly(m.meterNumber)) === wantedDigits,
+  );
 }
 
 export function daysBetween(a: Date | string, b: Date | string): number {
