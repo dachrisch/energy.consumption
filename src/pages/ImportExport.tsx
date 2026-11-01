@@ -3,9 +3,10 @@ import { useToast, ToastType } from '../context/ToastContext';
 import UnifiedImportModal from '../components/UnifiedImportModal';
 import ExportModal from '../components/ExportModal';
 import Icon from '../components/Icon';
+import PageHeader from '../components/PageHeader';
 
 const ImportCard: Component<{ onImport: () => void }> = (props) => (
-  <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
+  <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
     <div class="card-body p-8">
       <div class="flex items-center gap-4 mb-4">
         <div class="bg-primary/10 p-4 rounded-2xl">
@@ -25,7 +26,7 @@ const ImportCard: Component<{ onImport: () => void }> = (props) => (
 
       <button
         onClick={props.onImport}
-        class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full"
+        class="btn btn-primary btn-lg rounded-xl font-black text-lg h-16 shadow-sm shadow-primary/20 w-full"
       >
         <Icon name="add" class="h-6 w-6" />
         Import Data
@@ -44,7 +45,7 @@ const ImportCard: Component<{ onImport: () => void }> = (props) => (
 );
 
 const ExportCard: Component<{ onExport: () => void }> = (props) => (
-  <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
+  <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
     <div class="card-body p-8">
       <div class="flex items-center gap-4 mb-4">
         <div class="bg-secondary/10 p-4 rounded-2xl">
@@ -64,7 +65,7 @@ const ExportCard: Component<{ onExport: () => void }> = (props) => (
 
       <button
         onClick={props.onExport}
-        class="btn btn-secondary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-secondary/20 w-full"
+        class="btn btn-secondary btn-lg rounded-xl font-black text-lg h-16 shadow-sm shadow-secondary/20 w-full"
       >
         <Icon name="export" class="h-6 w-6" />
         Export Data
@@ -83,7 +84,7 @@ const ExportCard: Component<{ onExport: () => void }> = (props) => (
 );
 
 const DataManagementInfo: Component = () => (
-  <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
+  <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
     <div class="card-body p-8">
       <h3 class="text-xl font-black tracking-tight mb-4">About Data Management</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -216,12 +217,13 @@ const ImportExport: Component = () => {
 
   return (
     <div class="p-6 md:p-10 lg:p-12 max-w-4xl mx-auto space-y-10 flex-1">
-      <div>
-        <h1 class="text-4xl font-black tracking-tighter mb-3">Import / Export</h1>
-        <p class="text-base-content/60 font-bold text-lg">Manage your energy consumption data.</p>
-      </div>
+      <PageHeader
+        eyebrow="Data"
+        title="Import / export"
+        subtitle="Back up everything you have entered, or restore an earlier export."
+      />
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <ImportCard onImport={() => setShowImportModal(true)} />
         <ExportCard onExport={() => setShowExportModal(true)} />
       </div>

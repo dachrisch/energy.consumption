@@ -5,6 +5,7 @@ import { findContractGaps, Gap } from '../lib/gapDetection';
 import ContractTemplateCard from '../components/ContractTemplateCard';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
+import PageHeader from '../components/PageHeader';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -33,30 +34,30 @@ const ContractHeader: Component<{
   meters: Meter[];
   onMeterChange: (id: string) => void;
 }> = (props) => (
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div>
-      <h1 class="text-4xl font-black tracking-tighter">Utility Contracts</h1>
-      <p class="text-base-content/60 font-bold text-lg">Manage your energy provider pricing.</p>
-    </div>
-    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-      <Show when={props.meters.length > 0}>
-        <select 
-          class="select select-bordered rounded-2xl bg-base-200 border-none font-bold text-sm h-12"
-          value={props.meterId || ''}
-          onChange={(e) => props.onMeterChange(e.currentTarget.value)}
-        >
-          <option value="">All Meters</option>
-          <For each={props.meters}>
-            {(m: Meter) => <option value={m._id}>{m.name}</option>}
-          </For>
-        </select>
-      </Show>
-      <A href="/contracts/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm h-12">
-        <Icon name="add" class="h-5 w-5" />
-        Add Contract
-      </A>
-    </div>
-  </div>
+  <PageHeader
+    eyebrow="Contracts"
+    title="Utility contracts"
+    subtitle="Provider pricing and validity, per meter."
+    actions={
+      <>
+        <Show when={props.meters.length > 0}>
+          <select
+            class="select select-bordered select-sm h-10 rounded-xl border border-base-content/10 bg-base-100 font-bold"
+            value={props.meterId || ''}
+            onChange={(e) => props.onMeterChange(e.currentTarget.value)}
+          >
+            <option value="">All meters</option>
+            <For each={props.meters}>
+              {(m: Meter) => <option value={m._id}>{m.name}</option>}
+            </For>
+          </select>
+        </Show>
+        <A href="/contracts/add" class="btn btn-primary btn-sm rounded-xl font-bold">
+          <Icon name="add" class="h-4 w-4" /> Add contract
+        </A>
+      </>
+    }
+  />
 );
 
 const ContractCard: Component<{
@@ -67,30 +68,30 @@ const ContractCard: Component<{
   
   return (
     <div 
-      class="card bg-base-100 shadow-xl border border-base-content/5 overflow-hidden hover:border-primary/30 transition-all hover:shadow-2xl"
+      class="card bg-base-100 border border-base-content/5 shadow-sm overflow-hidden hover:border-primary/30 transition-all hover:shadow-md"
     >
-      <div class="card-body p-8">
-        <div class="flex justify-between items-start mb-6">
-          <div class="p-3 rounded-2xl bg-primary/10 text-primary">
-             <Icon name="contract" class="h-6 w-6" />
+      <div class="card-body p-6 md:p-7">
+        <div class="flex justify-between items-start mb-5">
+          <div class="p-2.5 rounded-xl bg-primary/10 text-primary">
+             <Icon name="contract" class="h-5 w-5" />
           </div>
           <div class="text-right">
-            <p class="text-xs font-black uppercase tracking-widest opacity-40">Validity Period</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-40">Validity period</p>
             <p class="font-bold text-sm">
-              {new Date(props.contract.startDate).toLocaleDateString()} - 
+              {new Date(props.contract.startDate).toLocaleDateString()} – 
               {props.contract.endDate ? new Date(props.contract.endDate).toLocaleDateString() : 'Present'}
             </p>
           </div>
         </div>
 
         <h3 class="text-2xl font-black tracking-tight mb-1">{props.contract.providerName}</h3>
-        <div class="mb-6 flex flex-col gap-2">
+        <div class="mb-5 flex flex-col gap-2">
           <div>
-            <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Linked to Meter</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Linked to meter</p>
             <div class="flex items-center gap-2">
                 <A 
                   href={`/meters/${props.contract.meterId?._id}`} 
-                  class="btn btn-ghost btn-xs rounded-lg font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-3 h-8 lowercase"
+                  class="btn btn-ghost btn-xs rounded-xl font-bold bg-base-200/50 hover:bg-primary/10 hover:text-primary px-3 h-8"
                 >
                   {props.contract.meterId?.name || 'Unknown Meter'}
                 </A>
@@ -106,11 +107,11 @@ const ContractCard: Component<{
 
         <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
           <div>
-            <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Base Price</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Base Price</p>
             <p class="text-xl font-black">€{props.contract.basePrice.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">/mo</span></p>
           </div>
           <div>
-            <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Working Price</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Working Price</p>
             <p class="text-xl font-black">€{props.contract.workingPrice.toFixed(4)}<span class="text-xs font-bold opacity-40 ml-1">/{props.contract.meterId.type === 'power' ? 'kWh' : 'm³'}</span></p>
           </div>
         </div>
@@ -118,19 +119,19 @@ const ContractCard: Component<{
         <div class="flex justify-end gap-1 mt-6 pt-4 border-t border-base-content/5">
           <A 
             href={`/contracts/${props.contract._id}/edit`} 
-            class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" 
+            class="btn btn-ghost btn-xs rounded-xl font-bold opacity-40 hover:opacity-100 hover:bg-base-200" 
             title="Edit Contract"
           >
             <Icon name="edit" class="h-4 w-4" />
-            <span class="text-[10px] uppercase tracking-tighter">Edit</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Edit</span>
           </A>
           <button 
             onClick={() => props.onDelete(props.contract._id)} 
-            class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" 
+            class="btn btn-ghost btn-xs rounded-xl font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" 
             title="Delete Contract"
           >
             <Icon name="delete" class="h-4 w-4" />
-            <span class="text-[10px] uppercase tracking-tighter">Delete</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Delete</span>
           </button>
         </div>
       </div>

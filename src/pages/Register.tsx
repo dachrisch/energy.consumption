@@ -54,7 +54,7 @@ const RegisterForm: Component<RegisterFormProps> = (props) => (
       />
     </div>
     <div class="form-control mt-6 w-full">
-      <button type="submit" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full">
+      <button type="submit" class="btn btn-primary btn-lg rounded-xl font-black text-lg h-16 shadow-sm shadow-primary/20 w-full">
         Create Account
       </button>
     </div>
@@ -101,7 +101,7 @@ const Register: Component = () => {
           </p>
         </div>
 
-        <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden w-full">
+        <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden w-full">
           <div class="card-body p-8 md:p-12 w-full">
             <Show 
               when={isSignupAllowed} 
@@ -110,7 +110,7 @@ const Register: Component = () => {
                   <p class="font-bold text-lg opacity-60 mb-8">
                     We are not accepting new registrations at this time.
                   </p>
-                  <A href="/login" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full">
+                  <A href="/login" class="btn btn-primary btn-lg rounded-xl font-black text-lg h-16 shadow-sm shadow-primary/20 w-full">
                     Sign In
                   </A>
                 </div>

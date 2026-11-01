@@ -40,7 +40,7 @@ const Login: Component = () => {
           <p class="text-base-content/60 font-bold text-lg mt-2">Access your energy control center.</p>
         </div>
 
-        <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden w-full">
+        <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden w-full">
           <div class="card-body p-8 md:p-12 w-full">
             <form onSubmit={handleLogin} class="space-y-8 w-full">
               <div class="form-control w-full flex flex-col gap-2">
@@ -70,7 +70,7 @@ const Login: Component = () => {
                 />
               </div>
               <div class="form-control mt-6 w-full">
-                <button type="submit" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full">
+                <button type="submit" class="btn btn-primary btn-lg rounded-xl font-black text-lg h-16 shadow-sm shadow-primary/20 w-full">
                   Sign In
                 </button>
               </div>

@@ -89,7 +89,7 @@ const CostBreakdown: Component<{ result: TimeRangeCostResult }> = (props) => {
       <div class="divider my-2" />
       <div class="flex items-center justify-between p-4 bg-primary/10 rounded-xl border border-primary/20">
         <div class="flex-1">
-          <p class="text-xs font-black uppercase tracking-widest opacity-60">Total Cost</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider opacity-60">Total Cost</p>
           <p class="text-xs opacity-60 mt-1">
             {formatDate(props.result.startDate)} – {formatDate(props.result.endDate)}
           </p>
@@ -145,7 +145,7 @@ const Controls: Component<{
             <For each={row}>
               {(preset) => (
                 <button
-                  class={`btn btn-sm rounded-lg font-bold ${props.activePreset === preset.id ? 'btn-primary' : 'btn-outline opacity-60 hover:opacity-100'}`}
+                  class={`btn btn-sm rounded-xl font-bold ${props.activePreset === preset.id ? 'btn-primary' : 'btn-outline opacity-60 hover:opacity-100'}`}
                   onClick={() => props.onApplyPreset(preset.id, preset.getRange)}
                 >
                   {preset.label}
@@ -330,7 +330,7 @@ const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
 
 
   return (
-    <div class="card bg-base-100 shadow-xl border rounded-3xl w-full overflow-hidden">
+    <div class="card bg-base-100 shadow-sm border rounded-3xl w-full overflow-hidden">
       <CardHeader 
         isOpen={isOpen()} 
         startDate={startDate()} 

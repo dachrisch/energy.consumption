@@ -4,6 +4,7 @@ import { findContractGaps } from '../lib/gapDetection';
 import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
+import PageHeader from '../components/PageHeader';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 
 const fetchDashboardData = async () => {
@@ -42,17 +43,17 @@ const MeterCard: Component<MeterCardProps> = (props) => {
   
   return (
     <div 
-      class="card bg-base-100 shadow-xl border border-base-content/5 hover:border-primary/30 transition-all group overflow-hidden hover:shadow-2xl cursor-pointer"
+      class="card bg-base-100 border border-base-content/5 shadow-sm hover:border-primary/30 transition-all group overflow-hidden hover:shadow-md cursor-pointer"
       onClick={() => props.navigate(`/meters/${props.meter._id}`)}
     >
-      <div class="card-body p-8">
+      <div class="card-body p-6 md:p-7">
         
-        <div class="flex justify-between items-start mb-6">
-          <div class="p-3 rounded-2xl bg-primary/10 text-primary">
-             <Icon name="meter" class="h-6 w-6" />
+        <div class="flex justify-between items-start mb-5">
+          <div class="p-2.5 rounded-xl bg-primary/10 text-primary">
+             <Icon name="meter" class="h-5 w-5" />
           </div>
           <div class="text-right">
-            <p class="text-xs font-black uppercase tracking-widest opacity-40">Meter Number</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-40">Meter number</p>
             <p class="font-mono text-sm font-bold">{props.meter.meterNumber}</p>
           </div>
         </div>
@@ -76,14 +77,14 @@ const MeterCard: Component<MeterCardProps> = (props) => {
 
         <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
           <div>
-            <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Consumption</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Consumption</p>
             <p class="text-xl font-black">{stats().dailyAverage.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">{props.meter.unit}/day</span></p>
             <Show when={stats().dailyCost > 0}>
               <p class="text-[10px] font-bold text-success mt-0.5">€{stats().dailyCost.toFixed(2)}/day</p>
             </Show>
           </div>
           <div>
-            <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Yearly Cost</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Yearly Cost</p>
             <Show when={hasContract() && !hasGaps()} fallback={<p class="text-xs font-bold opacity-20 mt-1">N/A</p>}>
               <p class="text-xl font-black text-primary">€{Math.round(stats().estimatedYearlyCost)}</p>
             </Show>
@@ -95,12 +96,12 @@ const MeterCard: Component<MeterCardProps> = (props) => {
             class={`border-2 border-dashed p-4 rounded-2xl mt-6 flex flex-col items-center text-center gap-2 group transition-all cursor-default ${hasGaps() ? 'bg-base-200/30 border-base-content/10 hover:border-primary/30' : 'bg-warning/5 border-warning/20 hover:border-warning/40'}`}
             onClick={(e) => e.stopPropagation()}
           >
-             <p class={`text-[10px] font-black uppercase tracking-widest leading-none ${hasGaps() ? 'text-primary' : 'text-warning'}`}>
+             <p class={`text-[10px] font-bold uppercase tracking-wider leading-none ${hasGaps() ? 'text-primary' : 'text-warning'}`}>
                 {hasGaps() ? `${gaps().length} Coverage Gap${gaps().length > 1 ? 's' : ''}` : 'Pricing Missing'}
               </p>
               <A 
                 href={`/contracts/add?meterId=${props.meter._id}${hasGaps() ? `&startDate=${formatDateForURL(gaps()[0].startDate)}&endDate=${formatDateForURL(gaps()[0].endDate)}` : ''}`} 
-                class={`btn btn-xs rounded-lg font-black px-4 shadow-lg ${hasGaps() ? 'btn-primary shadow-primary/20' : 'btn-warning shadow-warning/20'}`}
+                class={`btn btn-xs rounded-xl font-black px-4 shadow-lg ${hasGaps() ? 'btn-primary shadow-primary/20' : 'btn-warning shadow-warning/20'}`}
               >
                 {hasGaps() ? 'Fill First Gap' : 'Add Contract'}
               </A>
@@ -110,11 +111,11 @@ const MeterCard: Component<MeterCardProps> = (props) => {
         <div class="flex justify-between items-center mt-6 pt-4 border-t border-base-content/5">
             <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Log Reading</A>
             <div class="flex gap-1">
-                <A href={`/meters/${props.meter._id}/edit`} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Meter" onClick={(e) => e.stopPropagation()}>
+                <A href={`/meters/${props.meter._id}/edit`} class="btn btn-ghost btn-xs rounded-xl font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Meter" onClick={(e) => e.stopPropagation()}>
                     <Icon name="edit" class="h-4 w-4" />
                     <span class="text-[10px] uppercase tracking-tighter">Edit</span>
                 </A>
-                <button onClick={(e) => {e.stopPropagation(); props.onDelete(props.meter._id);}} class="btn btn-ghost btn-xs rounded-lg font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" title="Delete Meter">
+                <button onClick={(e) => {e.stopPropagation(); props.onDelete(props.meter._id);}} class="btn btn-ghost btn-xs rounded-xl font-bold opacity-40 hover:opacity-100 hover:bg-error/10 hover:text-error" title="Delete Meter">
                     <Icon name="delete" class="h-4 w-4" />
                     <span class="text-[10px] uppercase tracking-tighter">Delete</span>
                 </button>
@@ -150,19 +151,17 @@ const Meters: Component = () => {
 
 
    return (
-     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
-       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-         <div>
-           <h1 class="text-4xl font-black tracking-tighter">Your Meters</h1>
-           <p class="text-base-content/60 font-bold">Manage your utility meters and infrastructure.</p>
-         </div>
-          <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-            <A href="/meters/add" class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8 text-sm">
-              <Icon name="add" class="h-5 w-5" />
-              Add Meter
-            </A>
-          </div>
-       </div>
+     <div class="p-4 md:p-10 max-w-6xl mx-auto space-y-6 flex-1 min-w-0 w-full">
+       <PageHeader
+         eyebrow="Meters"
+         title="Your meters"
+         subtitle="Manage your utility meters and infrastructure."
+         actions={
+           <A href="/meters/add" class="btn btn-primary btn-sm rounded-xl font-bold">
+             <Icon name="add" class="h-4 w-4" /> Add meter
+           </A>
+         }
+       />
 
       <Show when={!data.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <div data-testid="meters-grid" class={`grid grid-cols-1 gap-6 ${(data()?.meters?.length ?? 0) > 1 ? 'md:grid-cols-2' : ''}`}>

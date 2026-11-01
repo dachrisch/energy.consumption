@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from '@solidjs/router';
 import { useToast, ToastType } from '../context/ToastContext';
 import FormInput from '../components/FormInput';
 import FormSelect from '../components/FormSelect';
+import PageHeader from '../components/PageHeader';
 
 interface Meter { _id: string; name: string; meterNumber: string; type: string; }
 interface Contract { _id: string; providerName: string; startDate: string; endDate?: string; basePrice: number; workingPrice: number; meterId: string | { _id: string }; }
@@ -55,10 +56,14 @@ const AddContract: Component = () => {
   createEffect(() => { const m = meters()?.find(met => met._id === meterId()); if (m) { setType(m.type); } });
   const onSubmit = (e: Event) => { e.preventDefault(); handleContractSubmit({ isEdit: isEdit(), contractId: params.id, data: { providerName: providerName(), startDate: new Date(startDate()), endDate: endDate() ? new Date(endDate()) : null, basePrice: Number(basePrice()), workingPrice: Number(workingPrice()), meterId: meterId() }, toast, navigate }); };
   return (<div class="p-6 md:p-10 lg:p-12 max-w-2xl mx-auto flex-1 flex flex-col justify-center"><Show when={!isEdit() || !contract.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
-    <h1 class="text-4xl font-black tracking-tighter mb-10">{isEdit() ? 'Edit' : 'Add'} Contract</h1>
-    <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden"><div class="card-body p-8 md:p-12"><form onSubmit={onSubmit} class="space-y-8">
+    <PageHeader
+      eyebrow="Contracts"
+      title={`${isEdit() ? 'Edit' : 'Add'} contract`}
+      subtitle="Provider, validity period and pricing for one meter."
+    />
+    <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden"><div class="card-body p-8 md:p-12"><form onSubmit={onSubmit} class="space-y-8">
       <ContractFormFields providerName={providerName()} setProviderName={setProviderName} startDate={startDate()} setStartDate={setStartDate} endDate={endDate()} setEndDate={setEndDate} basePrice={basePrice()} setBasePrice={setBasePrice} workingPrice={workingPrice()} setWorkingPrice={setWorkingPrice} meterId={meterId()} setMeterId={setMeterId} meters={meters() || []} type={type()} />
-      <div class="card-actions justify-end pt-6"><button type="button" onClick={() => navigate('/contracts')} class="btn btn-ghost btn-lg px-10 font-bold rounded-2xl">Cancel</button><button type="submit" class="btn btn-primary btn-lg px-12 font-black rounded-2xl shadow-xl shadow-primary/20">{isEdit() ? 'Update' : 'Save'}</button></div>
+      <div class="card-actions justify-end pt-6"><button type="button" onClick={() => navigate('/contracts')} class="btn btn-ghost btn-lg px-10 font-bold rounded-xl">Cancel</button><button type="submit" class="btn btn-primary btn-lg px-12 font-black rounded-xl shadow-sm shadow-primary/20">{isEdit() ? 'Update' : 'Save'}</button></div>
     </form></div></div></Show></div>);
 };
 

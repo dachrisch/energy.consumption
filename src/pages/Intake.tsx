@@ -1,8 +1,9 @@
 import { Component, For, Show, createEffect, createSignal, onMount } from 'solid-js';
-import type { JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
+import PageHeader from '../components/PageHeader';
+import SectionCard from '../components/SectionCard';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { findMeterByNumber } from '../lib/intake/reconcile';
@@ -130,27 +131,7 @@ const BillMobileRow: Component<{ bill: IBillComparison }> = (props) => (
   </li>
 );
 
-const Section: Component<{
-  title: string;
-  hint?: string;
-  actions?: JSX.Element;
-  children: JSX.Element;
-}> = (props) => (
-  <section class="rounded-3xl border border-base-content/5 bg-base-100 p-5 shadow-sm md:p-7">
-    <header class="flex flex-wrap items-start justify-between gap-3">
-      <div class="min-w-0">
-        <h2 class="text-base font-black tracking-tight">{props.title}</h2>
-        <Show when={props.hint}>
-          <p class="mt-0.5 text-xs font-bold opacity-50">{props.hint}</p>
-        </Show>
-      </div>
-      <Show when={props.actions}>
-        <div class="flex flex-wrap items-center gap-2">{props.actions}</div>
-      </Show>
-    </header>
-    {props.children}
-  </section>
-);
+const Section = SectionCard;
 
 const ProviderCard: Component<{
   provider: IProvider;
@@ -733,14 +714,11 @@ const Intake: Component = () => {
 
   return (
     <div class="mx-auto w-full max-w-5xl p-4 md:p-10">
-      <header class="mb-6 md:mb-8">
-        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Intake</p>
-        <h1 class="mt-1 text-3xl font-black tracking-tighter md:text-4xl">Provider mail</h1>
-        <p class="mt-1 max-w-xl text-sm font-bold opacity-50">
-          Bills and meter readings pulled from Gmail, staged for your decision. Nothing here
-          overwrites what you entered.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Intake"
+        title="Provider mail"
+        subtitle="Bills and meter readings pulled from Gmail, staged for your decision. Nothing here overwrites what you entered."
+      />
 
       <Show when={loading()}>
         <div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary" /></div>

@@ -190,21 +190,21 @@ const MeterReadings: Component = () => {
          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
            <div>
              <div class="flex items-center gap-3 mb-2">
-               <A href={`/meters/${data()?.meter._id}`} class="btn btn-ghost btn-xs rounded-lg font-black uppercase tracking-widest opacity-40 hover:opacity-100 px-0">
+               <A href={`/meters/${data()?.meter._id}`} class="btn btn-ghost btn-xs rounded-xl font-black uppercase tracking-widest opacity-40 hover:opacity-100 px-0">
                  ← {data()?.meter.name}
                </A>
              </div>
-             <h1 class="text-5xl font-black tracking-tighter">Reading History</h1>
+             <h1 class="text-3xl font-black tracking-tighter md:text-4xl">Reading history</h1>
            </div>
            
             <div class="flex gap-3 flex-wrap">
-              <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">
+              <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-xl shadow-sm shadow-primary/20 px-8">
                 Add New Entry
               </A>
             </div>
          </div>
 
-        <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
+        <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
           <Show when={filteredReadings().length > 0} fallback={
             <div class="p-8">
               <EmptyState 
