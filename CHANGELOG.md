@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.18.1](https://github.com/dachrisch/energy.consumption/compare/v3.18.0...v3.18.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **profile:** let the Google connect links reach the API ([0a4a36c](https://github.com/dachrisch/energy.consumption/commit/0a4a36c7f4a3d59526bf3d6edee4b8b859f58ff7))
+* **profile:** let the Google connect links reach the API ([0453a1d](https://github.com/dachrisch/energy.consumption/commit/0453a1dab1ed68766ab6769096f853d3bf84efad))
+
 ## [3.18.0](https://github.com/dachrisch/energy.consumption/compare/v3.17.1...v3.18.0) (2026-11-01)
 
 
