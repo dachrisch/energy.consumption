@@ -119,15 +119,16 @@ function stubGmail(options: { messages?: { id: string }[]; listError?: Error; fi
             },
           },
         }),
-      },
-      attachments: {
-        get: vi.fn(async ({ id }: { id: string }) => {
-          const file = attachmentsById.get(id);
-          if (!file) {
-            throw new Error(`unknown attachment ${id}`);
-          }
-          return { data: { data: file.bytes.toString('base64'), size: file.bytes.length } };
-        }),
+        // Same nesting as googleapis: users.messages.attachments.get
+        attachments: {
+          get: vi.fn(async ({ id }: { id: string }) => {
+            const file = attachmentsById.get(id);
+            if (!file) {
+              throw new Error(`unknown attachment ${id}`);
+            }
+            return { data: { data: file.bytes.toString('base64'), size: file.bytes.length } };
+          }),
+        },
       },
     },
   };

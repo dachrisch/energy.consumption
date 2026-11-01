@@ -32,13 +32,14 @@ export interface GmailClientLike {
         id: string;
         format?: string;
       }): Promise<{ data: GmailMessage }>;
-    };
-    attachments: {
-      get(params: {
-        userId: string;
-        messageId: string;
-        id: string;
-      }): Promise<{ data: { data?: string | null; size?: number | null } }>;
+      // googleapis nests this under messages: users.messages.attachments.get
+      attachments: {
+        get(params: {
+          userId: string;
+          messageId: string;
+          id: string;
+        }): Promise<{ data: { data?: string | null; size?: number | null } }>;
+      };
     };
   };
 }
