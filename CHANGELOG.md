@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.20.2](https://github.com/dachrisch/energy.consumption/compare/v3.20.1...v3.20.2) (2026-11-01)
+
+
+### Bug Fixes
+
+* **intake:** keep the bill summary readable on phones and explain archive failures ([faaa25d](https://github.com/dachrisch/energy.consumption/commit/faaa25d4ab45226895b174a86c3a616662cb9dcd))
+* **intake:** readable bill summary on phones + archive failure reasons ([956a422](https://github.com/dachrisch/energy.consumption/commit/956a422415e2ab3d9fc1db284d14649854b8399c))
+
 ## [3.20.1](https://github.com/dachrisch/energy.consumption/compare/v3.20.0...v3.20.1) (2026-11-01)
 
 
