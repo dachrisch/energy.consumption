@@ -178,19 +178,21 @@ const Profile: Component = () => {
                 {/* Google Account Link — in-app connect via redirect */}
                 <div class="mt-6 bg-base-200 rounded-3xl p-6 border border-base-content/5">
                   <div class="text-sm font-bold mb-2">Google Connectivity</div>
+                  {/* rel="external" keeps @solidjs/router from intercepting these:
+                      they are API redirects, not client-side routes. */}
                   <Show when={!auth.user()?.google}>
                     <p class="text-sm opacity-60 mb-4 font-bold">Link your Google account to pull provider bills and archive them to Drive.</p>
-                    <a href="/api/google/connect" class="btn btn-primary btn-md rounded-2xl font-black text-base shadow-xl shadow-primary/20 w-full md:w-auto"><Icon name="google" class="h-5 w-5 mr-2" /> Connect Google</a>
+                    <a href="/api/google/connect" rel="external" class="btn btn-primary btn-md rounded-2xl font-black text-base shadow-xl shadow-primary/20 w-full md:w-auto"><Icon name="google" class="h-5 w-5 mr-2" /> Connect Google</a>
                   </Show>
                   <Show when={auth.user()?.google?.status === 'reconnect_required'}>
                     <p class="text-sm font-bold text-warning mb-2">⚠ Google authorization expired</p>
                     <p class="text-xs opacity-50 mb-3">The refresh token is no longer valid. Click to reconnect.</p>
-                    <a href="/api/google/connect" class="btn btn-warning btn-sm rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-warning/20" onClick={(e: MouseEvent) => { e.preventDefault(); window.location.href = '/api/google/connect'; }}><Icon name="refresh" class="h-4 w-4 mr-1" /> Reconnect Google</a>
+                    <a href="/api/google/connect" rel="external" class="btn btn-warning btn-sm rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-warning/20"><Icon name="refresh" class="h-4 w-4 mr-1" /> Reconnect Google</a>
                   </Show>
                   <Show when={auth.user()?.google && auth.user()?.google?.status !== 'reconnect_required'}>
                     <p class="text-sm font-bold text-success mb-2">✓ Google connected</p>
                     <p class="text-xs opacity-50 mb-3">Intake from Gmail + archive to Drive is active.</p>
-                    <a href="/api/google/connect" class="btn btn-ghost btn-sm rounded-xl font-black text-xs uppercase tracking-widest text-base-content/60 hover:text-primary" onClick={(e: MouseEvent) => { e.preventDefault(); window.location.href = '/api/google/connect'; }}><Icon name="refresh" class="h-3 w-3 mr-1" /> Reconnect</a>
+                    <a href="/api/google/connect" rel="external" class="btn btn-ghost btn-sm rounded-xl font-black text-xs uppercase tracking-widest text-base-content/60 hover:text-primary"><Icon name="refresh" class="h-3 w-3 mr-1" /> Reconnect</a>
                   </Show>
                 </div>
               </div>
