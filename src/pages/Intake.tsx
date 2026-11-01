@@ -1,9 +1,11 @@
 import { Component, For, Show, createEffect, createSignal, onMount } from 'solid-js';
+import type { JSX } from 'solid-js';
 import { A } from '@solidjs/router';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { findMeterByNumber } from '../lib/intake/reconcile';
 import type { IBillComparison, IIntakeItem, IMeter, IProvider, IProviderDocument } from '../types/models';
 
 interface SyncEntry {
@@ -38,7 +40,7 @@ function sendJson(method: string, body: unknown): RequestInit {
   };
 }
 
-const statusBadge: Record<string, string> = {
+const statusTone: Record<string, string> = {
   pending: 'badge-warning',
   agrees: 'badge-success',
   conflict: 'badge-error',
@@ -52,7 +54,9 @@ const statusBadge: Record<string, string> = {
 };
 
 const StatusBadge: Component<{ status: string }> = (props) => (
-  <span class={`badge badge-sm font-black uppercase tracking-widest text-[9px] whitespace-nowrap shrink-0 ${statusBadge[props.status] ?? 'badge-ghost'}`}>
+  <span
+    class={`badge badge-sm shrink-0 whitespace-nowrap rounded-full font-bold ${statusTone[props.status] ?? 'badge-ghost'}`}
+  >
     {props.status.replace('_', ' ')}
   </span>
 );
@@ -99,25 +103,25 @@ const varianceClass = (variance: IBillComparison['variance']) =>
   (variance?.absolute ?? 0) > 0 ? 'text-error' : 'text-success';
 
 const BillMobileRow: Component<{ bill: IBillComparison }> = (props) => (
-  <li class="rounded-2xl bg-base-200 p-4">
+  <li class="rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
     <p class="text-[11px] font-bold opacity-50">
-      {formatDate(props.bill.periodStart)} → {formatDate(props.bill.periodEnd)}
+      {formatDate(props.bill.periodStart)} – {formatDate(props.bill.periodEnd)}
     </p>
     <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
       <div>
-        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Consumption</dt>
+        <dt class="text-[10px] font-bold uppercase tracking-wider opacity-40">Consumption</dt>
         <dd class="text-sm font-black">{props.bill.consumption ?? '—'} {props.bill.unit ?? ''}</dd>
       </div>
       <div>
-        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Billed</dt>
+        <dt class="text-[10px] font-bold uppercase tracking-wider opacity-40">Billed</dt>
         <dd class="text-sm font-black">{formatAmount(props.bill.amountGross, props.bill.currency)}</dd>
       </div>
       <div>
-        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Expected</dt>
+        <dt class="text-[10px] font-bold uppercase tracking-wider opacity-40">Expected</dt>
         <dd class="text-sm font-black">{formatAmount(props.bill.expected, props.bill.currency)}</dd>
       </div>
       <div>
-        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Variance</dt>
+        <dt class="text-[10px] font-bold uppercase tracking-wider opacity-40">Variance</dt>
         <dd class={`text-sm font-black ${varianceClass(props.bill.variance)}`}>
           <VarianceValue variance={props.bill.variance} />
         </dd>
@@ -126,7 +130,29 @@ const BillMobileRow: Component<{ bill: IBillComparison }> = (props) => (
   </li>
 );
 
-const ProviderSettings: Component<{
+const Section: Component<{
+  title: string;
+  hint?: string;
+  actions?: JSX.Element;
+  children: JSX.Element;
+}> = (props) => (
+  <section class="rounded-3xl border border-base-content/5 bg-base-100 p-5 shadow-sm md:p-7">
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h2 class="text-base font-black tracking-tight">{props.title}</h2>
+        <Show when={props.hint}>
+          <p class="mt-0.5 text-xs font-bold opacity-50">{props.hint}</p>
+        </Show>
+      </div>
+      <Show when={props.actions}>
+        <div class="flex flex-wrap items-center gap-2">{props.actions}</div>
+      </Show>
+    </header>
+    {props.children}
+  </section>
+);
+
+const ProviderCard: Component<{
   provider: IProvider;
   syncing: boolean;
   onSave: (provider: IProvider, settings: { senders: string[]; subjectHints: string[]; gmailQuery: string | null }) => void;
@@ -140,51 +166,71 @@ const ProviderSettings: Component<{
   const toList = (value: string) => value.split(/[,\n]/).map((entry) => entry.trim()).filter(Boolean);
 
   return (
-    <div class="flex flex-col gap-3 rounded-2xl border border-base-content/5 bg-base-200 p-4">
+    <div class="rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
       <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="font-black tracking-tight">{props.provider.name}</p>
-          <p class="font-mono text-[11px] opacity-50">
+        <div class="min-w-0">
+          <p class="truncate font-black tracking-tight">{props.provider.name}</p>
+          <p class="truncate font-mono text-[11px] opacity-50">
             {props.provider.senders.join(', ') || 'no sender addresses yet'}
-          </p>
-          <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-1">
-            {props.provider.contractCount} contract{props.provider.contractCount === 1 ? '' : 's'}
-            <Show when={props.provider.unit}><span> · {props.provider.unit}</span></Show>
           </p>
         </div>
         <button
-          class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+          class="btn btn-ghost btn-xs shrink-0 rounded-lg font-bold"
           onClick={() => setOpen((value) => !value)}
         >
-          <Icon name="settings" class="h-3 w-3 mr-1" /> {open() ? 'Close' : 'Mail settings'}
+          <Icon name="settings" class="h-3.5 w-3.5" />
+          <span class="hidden sm:inline">Mail settings</span>
+          <span class="sr-only sm:hidden">Mail settings</span>
         </button>
       </div>
 
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <span class="rounded-full bg-base-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider opacity-60">
+          {props.provider.contractCount} contract{props.provider.contractCount === 1 ? '' : 's'}
+        </span>
+        <Show when={props.provider.unit}>
+          <span class="rounded-full bg-base-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider opacity-60">
+            {props.provider.unit}
+          </span>
+        </Show>
+        <button
+          class="btn btn-primary btn-sm ml-auto rounded-xl font-bold"
+          disabled={props.syncing || props.provider.senders.length === 0}
+          onClick={() => props.onSync(props.provider)}
+        >
+          <Icon name="refresh" class={`h-3.5 w-3.5 ${props.syncing ? 'animate-spin' : ''}`} />
+          {props.syncing ? 'Syncing…' : 'Sync now'}
+        </button>
+      </div>
+      <Show when={props.provider.senders.length === 0}>
+        <p class="mt-2 text-[11px] font-bold text-warning">Add sender addresses to enable syncing.</p>
+      </Show>
+
       <Show when={open()}>
-        <div class="space-y-2 rounded-xl bg-base-100 p-3">
+        <div class="mt-3 space-y-2 rounded-2xl bg-base-100 p-3">
           <input
-            class="input input-xs input-bordered w-full rounded-lg font-mono text-[11px]"
+            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
             placeholder="Sender addresses, comma separated"
             value={senders()}
             onInput={(event) => setSenders(event.currentTarget.value)}
           />
           <input
-            class="input input-xs input-bordered w-full rounded-lg font-mono text-[11px]"
+            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
             placeholder="Subject hints (optional)"
             value={subjectHints()}
             onInput={(event) => setSubjectHints(event.currentTarget.value)}
           />
           <input
-            class="input input-xs input-bordered w-full rounded-lg font-mono text-[11px]"
+            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
             placeholder="Raw Gmail query (optional, wins over senders)"
             value={gmailQuery()}
             onInput={(event) => setGmailQuery(event.currentTarget.value)}
           />
-          <p class="text-[10px] font-bold opacity-40 uppercase tracking-widest">
+          <p class="text-[10px] font-bold uppercase tracking-wider opacity-40">
             Stored on every contract of this provider.
           </p>
           <button
-            class="btn btn-primary btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+            class="btn btn-primary btn-sm w-full rounded-xl font-bold"
             onClick={() => props.onSave(props.provider, {
               senders: toList(senders()),
               subjectHints: toList(subjectHints()),
@@ -195,154 +241,213 @@ const ProviderSettings: Component<{
           </button>
         </div>
       </Show>
-
-      <div class="flex gap-2">
-        <button
-          class="btn btn-primary btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
-          disabled={props.syncing || props.provider.senders.length === 0}
-          onClick={() => props.onSync(props.provider)}
-        >
-          <Icon name="refresh" class="h-3 w-3 mr-1" /> {props.syncing ? 'Syncing…' : 'Sync now'}
-        </button>
-        <Show when={props.provider.senders.length === 0}>
-          <span class="self-center text-[10px] font-bold uppercase tracking-widest opacity-40">
-            add senders first
-          </span>
-        </Show>
-      </div>
     </div>
   );
 };
 
-const ItemRow: Component<{
+const ItemCard: Component<{
   item: IIntakeItem;
-  meters: IMeter[];
+  hasMeters: boolean;
   onAccept: (item: IIntakeItem) => void;
   onReject: (item: IIntakeItem) => void;
-  onLink: (item: IIntakeItem, meterId: string) => void;
+  onLinkRequest: (item: IIntakeItem) => void;
 }> = (props) => {
-  const [selectedMeter, setSelectedMeter] = createSignal('');
   const decidable = () => props.item.status === 'pending' || props.item.status === 'conflict';
   return (
-    <div class="rounded-2xl border border-base-content/5 bg-base-200 p-4">
+    <div class="rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
       <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="font-black tracking-tight">
-            {props.item.kind === 'reading'
-              ? `${props.item.value ?? '—'} ${props.item.unit ?? ''}`
-              : formatAmount(props.item.amountGross, props.item.currency)}
-            <span class="ml-2 text-[11px] font-bold opacity-40 uppercase tracking-widest">{props.item.kind}</span>
+        <div class="min-w-0">
+          <p class="flex flex-wrap items-baseline gap-2">
+            <span class="text-xl font-black tracking-tight">
+              {props.item.kind === 'reading'
+                ? `${props.item.value ?? '—'} ${props.item.unit ?? ''}`
+                : formatAmount(props.item.amountGross, props.item.currency)}
+            </span>
+            <span class="text-[10px] font-bold uppercase tracking-wider opacity-40">{props.item.kind}</span>
           </p>
-          <p class="text-[11px] font-bold opacity-50">
+          <p class="mt-0.5 text-[11px] font-bold opacity-50">
             {props.item.kind === 'reading'
               ? formatDate(props.item.date)
-              : `${formatDate(props.item.periodStart)} → ${formatDate(props.item.periodEnd)}`}
+              : `${formatDate(props.item.periodStart)} – ${formatDate(props.item.periodEnd)}`}
             <Show when={props.item.meterNumber}>
-              <span class="font-mono"> · meter {props.item.meterNumber}</span>
+              <span class="font-mono"> · {props.item.meterNumber}</span>
             </Show>
           </p>
-          <Show when={props.item.note}>
-            <p class="mt-1 text-[11px] font-bold opacity-60">{props.item.note}</p>
-          </Show>
-          <Show when={readingLink(props.item)}>
-            {(href) => (
-              <A
-                href={href()}
-                class="mt-2 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
-              >
-                <Icon name="external-link" class="h-3 w-3" /> View reading
-              </A>
-            )}
-          </Show>
         </div>
         <StatusBadge status={props.item.status} />
       </div>
-      <Show when={decidable()}>
-        <div class="mt-3 flex flex-wrap items-center gap-2">
+
+      <Show when={props.item.note}>
+        <p class="mt-2 text-[11px] font-bold opacity-60">{props.item.note}</p>
+      </Show>
+
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <Show when={decidable()}>
           <button
-            class="btn btn-success btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+            class="btn btn-success btn-sm rounded-xl font-bold"
             onClick={() => props.onAccept(props.item)}
           >
             Accept
           </button>
           <button
-            class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+            class="btn btn-ghost btn-sm rounded-xl font-bold"
             onClick={() => props.onReject(props.item)}
           >
             Reject
           </button>
           <Show when={!props.item.meterId}>
             <Show
-              when={props.meters.length > 0}
+              when={props.hasMeters}
               fallback={
-                <A href="/meters/add" class="link link-warning text-[10px] font-bold uppercase tracking-widest">
-                  no meters yet — add one first
+                <A href="/meters/add" class="btn btn-outline btn-warning btn-sm rounded-xl font-bold">
+                  Add a meter
                 </A>
               }
             >
-              <label class="sr-only" for={`link-meter-${props.item._id}`}>Link meter</label>
-              <select
-                id={`link-meter-${props.item._id}`}
-                class="select select-xs select-bordered rounded-lg font-bold max-w-[13rem]"
-                value={selectedMeter()}
-                onChange={(event) => setSelectedMeter(event.currentTarget.value)}
-              >
-                <option value="">Link meter…</option>
-                <For each={props.meters}>
-                  {(meter) => <option value={meter._id}>{meter.name} · {meter.meterNumber}</option>}
-                </For>
-              </select>
               <button
-                class="btn btn-primary btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
-                disabled={!selectedMeter()}
-                onClick={() => props.onLink(props.item, selectedMeter())}
+                class="btn btn-outline btn-primary btn-sm rounded-xl font-bold"
+                onClick={() => props.onLinkRequest(props.item)}
               >
-                Link
+                <Icon name="meter" class="h-3.5 w-3.5" /> Link meter
               </button>
             </Show>
           </Show>
-        </div>
-      </Show>
+        </Show>
+        <Show when={readingLink(props.item)}>
+          {(href) => (
+            <A href={href()} class="btn btn-ghost btn-sm rounded-xl font-bold text-primary">
+              View reading <Icon name="external-link" class="h-3.5 w-3.5" />
+            </A>
+          )}
+        </Show>
+      </div>
     </div>
   );
 };
 
-const GoogleConnection: Component = () => {
-  const auth = useAuth();
-  const connected = () => auth.user()?.google && auth.user()?.google?.status !== 'reconnect_required';
+const LinkMeterSheet: Component<{
+  item: IIntakeItem | null;
+  meters: IMeter[];
+  linking: boolean;
+  onClose: () => void;
+  onSelect: (meterId: string) => void;
+}> = (props) => {
+  const suggested = () => {
+    const item = props.item;
+    return item ? findMeterByNumber(props.meters, item.meterNumber) : undefined;
+  };
+  const ordered = () => {
+    const match = suggested();
+    return match ? [match, ...props.meters.filter((meter) => meter._id !== match._id)] : props.meters;
+  };
 
   return (
-    <section class="card bg-base-100 shadow-xl border border-base-content/5 mb-8">
-      <div class="card-body p-6 md:p-8">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-black tracking-tight">Google account</h2>
-            <p class="text-sm font-bold opacity-50 mt-1 max-w-xl">
-              Link Google to pull provider bills from Gmail and archive the documents to Drive.
+    <Show when={props.item}>
+      <div class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+        <div class="modal-box overflow-hidden rounded-t-3xl border border-base-content/5 p-0 sm:rounded-3xl">
+          <div class="px-5 pb-2 pt-5">
+            <p class="text-[10px] font-black uppercase tracking-[0.18em] opacity-40">Link meter</p>
+            <h3 class="mt-1 text-lg font-black tracking-tight">
+              {props.item?.kind === 'reading'
+                ? `${props.item?.value ?? '—'} ${props.item?.unit ?? ''}`
+                : formatAmount(props.item?.amountGross, props.item?.currency)}
+              <span class="ml-2 text-sm font-bold opacity-40">{formatDate(props.item?.date ?? props.item?.periodStart)}</span>
+            </h3>
+            <p class="text-xs font-bold opacity-50">
+              Meter number <span class="font-mono">{props.item?.meterNumber ?? '—'}</span>
             </p>
-            <Show when={auth.user()?.google?.email}>
-              <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">{auth.user()?.google?.email}</p>
-            </Show>
           </div>
-          {/* rel="external" keeps @solidjs/router from intercepting these:
-              they are API redirects, not client-side routes. */}
-          <Show when={!auth.user()?.google}>
-            <a href="/api/google/connect" rel="external" class="btn btn-primary btn-md rounded-2xl font-black text-base shadow-xl shadow-primary/20 w-full md:w-auto"><Icon name="google" class="h-5 w-5 mr-2" /> Connect Google</a>
-          </Show>
-          <Show when={auth.user()?.google?.status === 'reconnect_required'}>
-            <div class="flex flex-col items-start md:items-end gap-2">
-              <p class="text-sm font-bold text-warning">⚠ Google authorization expired</p>
-              <a href="/api/google/connect" rel="external" class="btn btn-warning btn-sm rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-warning/20"><Icon name="refresh" class="h-4 w-4 mr-1" /> Reconnect Google</a>
-            </div>
-          </Show>
-          <Show when={connected()}>
-            <div class="flex flex-col items-start md:items-end gap-2">
-              <p class="text-sm font-bold text-success">✓ Google connected</p>
-              <a href="/api/google/connect" rel="external" class="btn btn-ghost btn-sm rounded-xl font-black text-xs uppercase tracking-widest text-base-content/60 hover:text-primary"><Icon name="refresh" class="h-3 w-3 mr-1" /> Reconnect</a>
-            </div>
-          </Show>
+
+          <ul class="max-h-[55vh] space-y-1 overflow-y-auto px-3 pb-3">
+            <For each={ordered()}>
+              {(meter) => {
+                const isMatch = () => meter._id === suggested()?._id;
+                return (
+                  <li>
+                    <button
+                      class="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-base-200 disabled:opacity-50"
+                      disabled={props.linking}
+                      onClick={() => props.onSelect(meter._id)}
+                    >
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-base-200">
+                        <Icon name={meter.type} class="h-4 w-4" />
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block truncate font-bold">{meter.name}</span>
+                        <span class="block truncate font-mono text-[11px] opacity-50">
+                          {meter.meterNumber} · {meter.unit}
+                        </span>
+                      </span>
+                      <Show when={isMatch()}>
+                        <span class="badge badge-success badge-sm rounded-full font-bold">match</span>
+                      </Show>
+                    </button>
+                  </li>
+                );
+              }}
+            </For>
+            <Show when={props.meters.length === 0}>
+              <li class="px-3 py-8 text-center text-sm font-bold opacity-50">
+                No meters yet. <A href="/meters/add" class="link link-primary">Add one</A> first.
+              </li>
+            </Show>
+          </ul>
+
+          <div class="border-t border-base-content/5 p-3">
+            <button class="btn btn-ghost w-full rounded-2xl font-bold" onClick={props.onClose}>
+              Cancel
+            </button>
+          </div>
         </div>
+        <div class="modal-backdrop bg-base-content/30" onClick={props.onClose} />
       </div>
+    </Show>
+  );
+};
+
+const GoogleStatus: Component = () => {
+  const auth = useAuth();
+  const expired = () => auth.user()?.google?.status === 'reconnect_required';
+  const connected = () => Boolean(auth.user()?.google) && !expired();
+
+  return (
+    <section class="flex flex-wrap items-center gap-3 rounded-2xl border border-base-content/5 bg-base-100 px-4 py-3 shadow-sm">
+      <span
+        class={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${connected() ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}
+      >
+        <Icon name="google" class="h-4 w-4" />
+      </span>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-bold">
+          {connected()
+            ? 'Google connected'
+            : expired()
+              ? 'Google authorization expired'
+              : 'Google not connected'}
+        </p>
+        <p class="truncate text-[11px] font-bold opacity-50">
+          {connected()
+            ? auth.user()?.google?.email ?? 'Gmail + Drive'
+            : 'Connect to pull provider bills and archive them to Drive.'}
+        </p>
+      </div>
+      {/* rel="external" keeps @solidjs/router from intercepting these:
+          they are API redirects, not client-side routes. */}
+      <Show when={!auth.user()?.google}>
+        <a href="/api/google/connect" rel="external" class="btn btn-primary btn-sm rounded-xl font-bold">
+          <Icon name="google" class="h-4 w-4" /> Connect Google
+        </a>
+      </Show>
+      <Show when={expired()}>
+        <a href="/api/google/connect" rel="external" class="btn btn-warning btn-sm rounded-xl font-bold">
+          <Icon name="refresh" class="h-3.5 w-3.5" /> Reconnect Google
+        </a>
+      </Show>
+      <Show when={connected()}>
+        <a href="/api/google/connect" rel="external" class="btn btn-ghost btn-sm rounded-xl font-bold opacity-60">
+          <Icon name="refresh" class="h-3.5 w-3.5" /> Reconnect
+        </a>
+      </Show>
     </section>
   );
 };
@@ -357,10 +462,13 @@ const Intake: Component = () => {
   const [bills, setBills] = createSignal<IBillComparison[]>([]);
   const [showDecided, setShowDecided] = createSignal(false);
   const [syncing, setSyncing] = createSignal<string | null>(null);
+  const [syncingAll, setSyncingAll] = createSignal(false);
   const [lastSync, setLastSync] = createSignal<SyncResponse | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [archiving, setArchiving] = createSignal<string | null>(null);
   const [retrying, setRetrying] = createSignal<string | null>(null);
+  const [linkTarget, setLinkTarget] = createSignal<IIntakeItem | null>(null);
+  const [linking, setLinking] = createSignal(false);
   const [autoArchiveTried, setAutoArchiveTried] = createSignal(false);
 
   const loadProviders = async () => {
@@ -574,6 +682,22 @@ const Intake: Component = () => {
     }
   };
 
+  const syncAll = async () => {
+    const ready = providers().filter((provider) => provider.senders.length > 0 || provider.gmailQuery);
+    if (ready.length === 0) {
+      toast.showToast('Add sender addresses to a provider first', 'warning');
+      return;
+    }
+    setSyncingAll(true);
+    try {
+      for (const provider of ready) {
+        await handleSync(provider);
+      }
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
   const decide = async (item: IIntakeItem, action: 'accept' | 'reject') => {
     try {
       await api(`/api/intake/items/${item._id}/${action}`, { method: 'POST' });
@@ -585,12 +709,14 @@ const Intake: Component = () => {
   };
 
   const linkItem = async (item: IIntakeItem, meterId: string) => {
+    setLinking(true);
     try {
       // Linking can auto-verify the item against that meter's readings.
       const { item: updated } = await api<{ item: IIntakeItem }>(
         `/api/intake/items/${item._id}/link`,
         sendJson('POST', { meterId }),
       );
+      setLinkTarget(null);
       toast.showToast(
         updated.status === 'pending' ? 'Meter linked' : `Meter linked · ${updated.status}`,
         'success',
@@ -598,15 +724,21 @@ const Intake: Component = () => {
       await Promise.all([loadItems(), loadBills()]);
     } catch (error) {
       toast.showToast(error instanceof Error ? error.message : 'Could not link the meter', 'error');
+    } finally {
+      setLinking(false);
     }
   };
 
+  const syncableCount = () => providers().filter((provider) => provider.senders.length > 0 || provider.gmailQuery).length;
+
   return (
-    <div class="p-4 md:p-10 max-w-6xl mx-auto w-full">
-      <header class="mb-8">
-        <h1 class="text-3xl md:text-4xl font-black tracking-tighter">Provider intake</h1>
-        <p class="text-sm font-bold opacity-50 mt-1">
-          Bills and meter readings pulled from provider mail, staged for your decision. Nothing here overwrites what you entered.
+    <div class="mx-auto w-full max-w-5xl p-4 md:p-10">
+      <header class="mb-6 md:mb-8">
+        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Intake</p>
+        <h1 class="mt-1 text-3xl font-black tracking-tighter md:text-4xl">Provider mail</h1>
+        <p class="mt-1 max-w-xl text-sm font-bold opacity-50">
+          Bills and meter readings pulled from Gmail, staged for your decision. Nothing here
+          overwrites what you entered.
         </p>
       </header>
 
@@ -615,27 +747,39 @@ const Intake: Component = () => {
       </Show>
 
       <Show when={!loading()}>
-        <GoogleConnection />
+        <div class="space-y-5">
+          <GoogleStatus />
 
-        <section class="card bg-base-100 shadow-xl border border-base-content/5 mb-8">
-          <div class="card-body p-6 md:p-8">
-            <div class="flex items-center justify-between gap-4">
-              <h2 class="text-lg font-black tracking-tight">Providers</h2>
-              <span class="text-[10px] font-black uppercase tracking-widest opacity-40">Gmail · Drive</span>
-            </div>
-            <Show when={providers().length > 0} fallback={
-              <div class="mt-2 text-sm font-bold opacity-50">
-                <p>
+          <Section
+            title="Providers"
+            hint="Mail settings live on your contracts."
+            actions={
+              <Show when={providers().length > 0}>
+                <button
+                  class="btn btn-primary btn-sm rounded-xl font-bold"
+                  disabled={syncing() !== null || syncingAll() || syncableCount() === 0}
+                  onClick={() => void syncAll()}
+                >
+                  <Icon name="refresh" class={`h-3.5 w-3.5 ${syncingAll() ? 'animate-spin' : ''}`} />
+                  {syncingAll() ? 'Syncing…' : 'Sync all'}
+                </button>
+              </Show>
+            }
+          >
+            <Show
+              when={providers().length > 0}
+              fallback={
+                <div class="mt-4 rounded-2xl border border-dashed border-base-content/10 p-4 text-sm font-bold opacity-50">
                   Providers come from your contracts — there is no separate provider to create.
                   <A href="/contracts/add" class="link link-primary ml-1">Add a contract</A> and its
                   provider shows up here with its mail settings.
-                </p>
-              </div>
-            }>
+                </div>
+              }
+            >
               <div class="mt-4 grid gap-3 md:grid-cols-2">
                 <For each={providers()}>
                   {(provider) => (
-                    <ProviderSettings
+                    <ProviderCard
                       provider={provider}
                       syncing={syncing() === provider.name}
                       onSave={saveSettings}
@@ -648,18 +792,21 @@ const Intake: Component = () => {
 
             <Show when={lastSync()}>
               {(result) => (
-                <div class="mt-4 rounded-2xl bg-base-200 p-4">
-                  <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2">
+                <div class="mt-4 rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
+                  <p class="text-[10px] font-black uppercase tracking-wider opacity-40">
                     Last sync · {result().provider} · {result().count} document{result().count === 1 ? '' : 's'}
                     <Show when={result().linked}><span> · {result().linked} linked</span></Show>
                   </p>
-                  <Show when={result().processed.length > 0} fallback={<p class="text-xs font-bold opacity-50">No new mail matched.</p>}>
-                    <ul class="space-y-1">
+                  <Show
+                    when={result().processed.length > 0}
+                    fallback={<p class="mt-2 text-xs font-bold opacity-50">No new mail matched.</p>}
+                  >
+                    <ul class="mt-2 space-y-1.5">
                       <For each={result().processed}>
                         {(entry) => (
                           <li class="flex flex-wrap items-center gap-2 text-[11px] font-bold">
                             <StatusBadge status={entry.status} />
-                            <span class="font-mono opacity-70 break-all">{entry.attachment}</span>
+                            <span class="break-all font-mono opacity-70">{entry.attachment}</span>
                             <Show when={entry.error}><span class="opacity-50">{entry.error}</span></Show>
                           </li>
                         )}
@@ -669,54 +816,55 @@ const Intake: Component = () => {
                 </div>
               )}
             </Show>
-          </div>
-        </section>
+          </Section>
 
-        <section class="card bg-base-100 shadow-xl border border-base-content/5 mb-8">
-          <div class="card-body p-6 md:p-8">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <h2 class="text-lg font-black tracking-tight">Staged items</h2>
-              <label class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60">
+          <Section
+            title="Staged items"
+            hint="Provider values never overwrite your readings — they wait here."
+            actions={
+              <label class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider opacity-60">
                 <input
                   type="checkbox"
                   class="toggle toggle-xs"
                   checked={showDecided()}
                   onChange={(event) => { setShowDecided(event.currentTarget.checked); void loadItems(); }}
                 />
-                show decided
+                Show decided
               </label>
-            </div>
-            <Show when={items().length > 0} fallback={
-              <div class="mt-4">
-                <EmptyState
-                  title="Nothing staged"
-                  description="Run a sync on a provider and anything recognised will show up here for review."
-                />
-              </div>
-            }>
+            }
+          >
+            <Show
+              when={items().length > 0}
+              fallback={
+                <div class="mt-4">
+                  <EmptyState
+                    title="Nothing staged"
+                    description="Run a sync on a provider and anything recognised will show up here for review."
+                  />
+                </div>
+              }
+            >
               <div class="mt-4 grid gap-3 md:grid-cols-2">
                 <For each={items()}>
                   {(item) => (
-                    <ItemRow
+                    <ItemCard
                       item={item}
-                      meters={meters()}
-                      onAccept={(entry) => decide(entry, 'accept')}
-                      onReject={(entry) => decide(entry, 'reject')}
-                      onLink={(entry, meterId) => void linkItem(entry, meterId)}
+                      hasMeters={meters().length > 0}
+                      onAccept={(entry) => void decide(entry, 'accept')}
+                      onReject={(entry) => void decide(entry, 'reject')}
+                      onLinkRequest={setLinkTarget}
                     />
                   )}
                 </For>
               </div>
             </Show>
-          </div>
-        </section>
+          </Section>
 
-        <section class="card bg-base-100 shadow-xl border border-base-content/5 mb-8">
-          <div class="card-body p-6 md:p-8">
-            <h2 class="text-lg font-black tracking-tight">Bills vs. contract</h2>
-            <Show when={bills().length > 0} fallback={
-              <p class="mt-2 text-sm font-bold opacity-50">No billed periods yet.</p>
-            }>
+          <Section title="Bills vs. contract" hint="Billed amount against what your contract rates expect.">
+            <Show
+              when={bills().length > 0}
+              fallback={<p class="mt-3 text-sm font-bold opacity-50">No billed periods yet.</p>}
+            >
               {/* Stacked on phones: five columns do not fit a 360px card. */}
               <ul class="mt-4 space-y-2 md:hidden" data-testid="bills-stacked">
                 <For each={bills()}>{(bill) => <BillMobileRow bill={bill} />}</For>
@@ -724,7 +872,7 @@ const Intake: Component = () => {
               <div class="mt-4 hidden overflow-x-auto md:block">
                 <table class="table table-sm">
                   <thead>
-                    <tr class="text-[10px] uppercase tracking-widest opacity-50">
+                    <tr class="text-[10px] uppercase tracking-wider opacity-50">
                       <th>Period</th>
                       <th class="text-right">Consumption</th>
                       <th class="text-right">Billed</th>
@@ -735,8 +883,8 @@ const Intake: Component = () => {
                   <tbody>
                     <For each={bills()}>
                       {(bill) => (
-                        <tr class="font-bold text-xs">
-                          <td>{formatDate(bill.periodStart)} → {formatDate(bill.periodEnd)}</td>
+                        <tr class="text-xs font-bold">
+                          <td>{formatDate(bill.periodStart)} – {formatDate(bill.periodEnd)}</td>
                           <td class="text-right">{bill.consumption ?? '—'} {bill.unit ?? ''}</td>
                           <td class="text-right">{formatAmount(bill.amountGross, bill.currency)}</td>
                           <td class="text-right">{formatAmount(bill.expected, bill.currency)}</td>
@@ -750,64 +898,65 @@ const Intake: Component = () => {
                 </table>
               </div>
             </Show>
-          </div>
-        </section>
+          </Section>
 
-        <section class="card bg-base-100 shadow-xl border border-base-content/5">
-          <div class="card-body p-6 md:p-8">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <h2 class="text-lg font-black tracking-tight">Recent documents</h2>
-              <div class="flex flex-wrap items-center gap-2">
+          <Section
+            title="Recent documents"
+            hint="Parsed files are archived to Drive automatically."
+            actions={
+              <>
                 <Show when={documents().some((document) => document.status === 'failed')}>
                   <button
-                    class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                    class="btn btn-ghost btn-sm rounded-xl font-bold"
                     disabled={retrying() !== null || archiving() !== null}
                     onClick={() => void retryFailedDocuments()}
                   >
-                    <Icon name="refresh" class={`h-3 w-3 mr-1 ${retrying() ? 'animate-spin' : ''}`} />
+                    <Icon name="refresh" class={`h-3.5 w-3.5 ${retrying() ? 'animate-spin' : ''}`} />
                     {retrying() ? 'Retrying…' : 'Retry failed'}
                   </button>
                 </Show>
                 <Show when={documents().some(needsArchive)}>
                   <button
-                    class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                    class="btn btn-ghost btn-sm rounded-xl font-bold"
                     disabled={archiving() !== null || retrying() !== null}
                     onClick={() => void archiveDocuments()}
                   >
-                    <Icon name="refresh" class={`h-3 w-3 mr-1 ${archiving() === 'all' ? 'animate-spin' : ''}`} />
+                    <Icon name="export" class={`h-3.5 w-3.5 ${archiving() === 'all' ? 'animate-pulse' : ''}`} />
                     {archiving() === 'all' ? 'Archiving…' : 'Archive to Drive'}
                   </button>
                 </Show>
-              </div>
-            </div>
-            <Show when={documents().length > 0} fallback={
-              <p class="mt-2 text-sm font-bold opacity-50">Nothing ingested yet.</p>
-            }>
+              </>
+            }
+          >
+            <Show
+              when={documents().length > 0}
+              fallback={<p class="mt-3 text-sm font-bold opacity-50">Nothing ingested yet.</p>}
+            >
               <ul class="mt-4 space-y-2">
                 <For each={documents()}>
                   {(document) => (
-                    <li class="rounded-2xl bg-base-200 p-4">
+                    <li class="rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
                       <div class="flex items-start justify-between gap-3">
-                        <p class="min-w-0 flex-1 font-mono text-xs font-bold break-all">{document.fileName}</p>
+                        <p class="min-w-0 flex-1 break-all font-mono text-xs font-bold">{document.fileName}</p>
                         <StatusBadge status={document.status} />
                       </div>
-                      <p class="mt-1 text-[11px] font-bold opacity-50 break-words">
+                      <p class="mt-1 break-words text-[11px] font-bold opacity-50">
                         {formatDate(document.receivedAt)}
                         <Show when={document.providerName}><span> · {document.providerName}</span></Show>
                         <Show when={document.subject}><span> · {document.subject}</span></Show>
                       </p>
                       <Show when={document.error}>
-                        <p class="mt-1 text-[11px] font-bold text-error break-words">{document.error}</p>
+                        <p class="mt-1 break-words text-[11px] font-bold text-error">{document.error}</p>
                       </Show>
                       <Show when={document.status === 'failed' || driveLink(document) || needsArchive(document)}>
                         <div class="mt-3 flex flex-wrap items-center gap-2">
                           <Show when={document.status === 'failed'}>
                             <button
-                              class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                              class="btn btn-ghost btn-sm rounded-xl font-bold"
                               disabled={retrying() !== null || archiving() !== null}
                               onClick={() => void retryDocument(document)}
                             >
-                              <Icon name="refresh" class={`h-3 w-3 mr-1 ${retrying() === document._id ? 'animate-spin' : ''}`} />
+                              <Icon name="refresh" class={`h-3.5 w-3.5 ${retrying() === document._id ? 'animate-spin' : ''}`} />
                               {retrying() === document._id ? 'Retrying…' : 'Retry'}
                             </button>
                           </Show>
@@ -817,19 +966,19 @@ const Intake: Component = () => {
                                 href={link()}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest text-primary"
+                                class="btn btn-ghost btn-sm rounded-xl font-bold text-primary"
                               >
-                                <Icon name="external-link" class="h-3 w-3 mr-1" /> Drive
+                                <Icon name="external-link" class="h-3.5 w-3.5" /> Drive
                               </a>
                             )}
                           </Show>
                           <Show when={needsArchive(document)}>
                             <button
-                              class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                              class="btn btn-ghost btn-sm rounded-xl font-bold"
                               disabled={archiving() !== null || retrying() !== null}
                               onClick={() => void archiveDocuments(document._id)}
                             >
-                              <Icon name="export" class="h-3 w-3 mr-1" />
+                              <Icon name="export" class="h-3.5 w-3.5" />
                               {archiving() === document._id ? 'Saving…' : 'Save to Drive'}
                             </button>
                           </Show>
@@ -840,8 +989,21 @@ const Intake: Component = () => {
                 </For>
               </ul>
             </Show>
-          </div>
-        </section>
+          </Section>
+        </div>
+
+        <LinkMeterSheet
+          item={linkTarget()}
+          meters={meters()}
+          linking={linking()}
+          onClose={() => setLinkTarget(null)}
+          onSelect={(meterId) => {
+            const item = linkTarget();
+            if (item) {
+              void linkItem(item, meterId);
+            }
+          }}
+        />
       </Show>
     </div>
   );

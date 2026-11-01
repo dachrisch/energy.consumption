@@ -40,7 +40,7 @@ const formatDateRange = (readings: Reading[]): string => {
   const first = firstDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   const last = lastDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   
-  return `${first} → ${last}`;
+  return `${first} – ${last}`;
 };
 
 const fetchModalData = async () => {
