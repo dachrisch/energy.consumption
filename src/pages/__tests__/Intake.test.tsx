@@ -185,9 +185,9 @@ describe('Intake page', () => {
     renderIntake();
     await screen.findByText('620 kWh');
 
-    const select = await screen.findByRole('combobox', { name: /link meter/i });
-    fireEvent.change(select, { target: { value: 'm1' } });
-    fireEvent.click(screen.getByRole('button', { name: /^link$/i }));
+    // One button opens the picker; the meter is chosen there, not inline.
+    fireEvent.click(screen.getByRole('button', { name: /link meter/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Therme/i }));
 
     await waitFor(() => {
       expect(calls.some((call) => call.method === 'POST' && call.url === '/api/intake/items/i2/link')).toBe(true);
