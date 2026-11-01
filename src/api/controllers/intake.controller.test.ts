@@ -429,8 +429,9 @@ describe('intake controller', () => {
       expect(stored?.size).toBe(pdfBytes.length);
       expect(stored?.status).toBe('failed');
       expect(stored?.error).toMatch(/Gemini API key/);
-      expect(stored?.driveFileId).toBeTruthy();
-      expect(drive.uploads.map((upload) => upload.name)).toEqual(['Abrechnung.pdf', 'Abrechnung.pdf.json']);
+      // Only parsed documents are archived; a failed one stays out of Drive.
+      expect(stored?.driveFileId).toBeUndefined();
+      expect(drive.uploads).toHaveLength(0);
 
       const second = mockResponse();
       await handleGoogleSync(params({
@@ -440,15 +441,12 @@ describe('intake controller', () => {
         body: { providerName: 'Stadtwerke' },
       }));
 
-      // A failed document is retried on the next sync, reusing the same record
-      // and its existing Drive copy instead of uploading a duplicate.
+      // A failed document is retried on the next sync, reusing the same record.
       const secondPayload = JSON.parse(second.body()) as { processed: { status: string; documentId: string }[] };
       expect(secondPayload.processed[0].status).toBe('failed');
       expect(secondPayload.processed[0].documentId).toBe(firstPayload.processed[0].documentId);
       expect(await ProviderDocument.countDocuments({ userId: ownerId })).toBe(1);
-      const retried = await ProviderDocument.findOne({ userId: ownerId }).lean();
-      expect(retried?.driveFileId).toBe(stored?.driveFileId);
-      expect(drive.uploads).toHaveLength(2);
+      expect(drive.uploads).toHaveLength(0);
     });
 
     it('does not process a successfully parsed document twice', async () => {
@@ -594,7 +592,7 @@ describe('intake controller', () => {
         mimeType: 'application/pdf',
         receivedAt: new Date('2024-02-10'),
         sha256: `sha-${Math.random()}`,
-        status: 'failed',
+        status: 'parsed',
         ...overrides,
       });
     }
@@ -654,6 +652,27 @@ describe('intake controller', () => {
       expect(payload.archived).toBe(1);
       expect(payload.documents.map((entry) => entry.fileName)).toEqual(['lastgang.csv']);
       expect(await ProviderDocument.countDocuments({ userId: ownerId, driveFileId: { $exists: true } })).toBe(2);
+    });
+
+    it('refuses to archive documents that were not parsed', async () => {
+      stubGmail({ files: [{ name: 'Abrechnung.pdf', mimeType: 'application/pdf', bytes: pdfBytes }] });
+      const drive = stubDrive();
+      const document = await createDocument({ status: 'failed', error: 'unsupported format' });
+      const response = mockResponse();
+
+      await handleIntakeArchive(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        body: { documentId: document._id.toString() },
+      }));
+
+      const payload = JSON.parse(response.body()) as { archived: number; failed: number; documents: { error: string }[] };
+      expect(payload.archived).toBe(0);
+      expect(payload.failed).toBe(1);
+      expect(payload.documents[0].error).toMatch(/Only parsed documents/);
+      expect(drive.uploads).toHaveLength(0);
+      expect((await ProviderDocument.findById(document._id).lean())?.driveFileId).toBeUndefined();
     });
 
     it('keeps documents private to their owner', async () => {

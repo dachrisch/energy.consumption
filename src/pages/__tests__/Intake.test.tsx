@@ -240,6 +240,9 @@ describe('Intake page', () => {
     await screen.findByText('lastgang.csv');
 
     const saveButtons = screen.getAllByRole('button', { name: /save to drive/i });
+    // Only parsed documents are archived; the failed one offers no action.
+    expect(saveButtons).toHaveLength(1);
+    expect(screen.getByText('bill.pdf').closest('li')?.querySelector('button')).toBeNull();
     fireEvent.click(saveButtons[0]);
 
     await waitFor(() => {

@@ -51,7 +51,7 @@ const statusBadge: Record<string, string> = {
 };
 
 const StatusBadge: Component<{ status: string }> = (props) => (
-  <span class={`badge badge-sm font-black uppercase tracking-widest text-[9px] ${statusBadge[props.status] ?? 'badge-ghost'}`}>
+  <span class={`badge badge-sm font-black uppercase tracking-widest text-[9px] whitespace-nowrap shrink-0 ${statusBadge[props.status] ?? 'badge-ghost'}`}>
     {props.status.replace('_', ' ')}
   </span>
 );
@@ -65,6 +65,12 @@ const formatAmount = (value: number | null | undefined, currency = 'EUR') =>
 const driveLink = (document: IProviderDocument): string | undefined =>
   document.driveWebLink
   || (document.driveFileId ? `https://drive.google.com/file/d/${document.driveFileId}/view` : undefined);
+
+/** Only documents we could extract are archived to Drive. */
+const ARCHIVABLE_STATUSES = new Set<IProviderDocument['status']>(['parsed', 'needs_review', 'imported']);
+
+const needsArchive = (document: IProviderDocument): boolean =>
+  ARCHIVABLE_STATUSES.has(document.status) && !driveLink(document);
 
 /** Meter + reading the staged item belongs to, with the datapoint highlighted. */
 const readingLink = (item: IIntakeItem): string | undefined => {
@@ -369,7 +375,7 @@ const Intake: Component = () => {
       setAutoArchiveTried(true);
       return;
     }
-    if (!documents().some((document) => !driveLink(document))) {
+    if (!documents().some(needsArchive)) {
       setAutoArchiveTried(true);
       return;
     }
@@ -583,7 +589,7 @@ const Intake: Component = () => {
           <div class="card-body p-6 md:p-8">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <h2 class="text-lg font-black tracking-tight">Recent documents</h2>
-              <Show when={documents().some((document) => !driveLink(document))}>
+              <Show when={documents().some(needsArchive)}>
                 <button
                   class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
                   disabled={archiving() !== null}
@@ -602,18 +608,19 @@ const Intake: Component = () => {
                   {(document) => (
                     <li class="rounded-2xl bg-base-200 p-4">
                       <div class="flex items-start justify-between gap-3">
-                        <div>
-                          <p class="font-mono text-xs font-bold">{document.fileName}</p>
-                          <p class="text-[11px] font-bold opacity-50">
-                            {formatDate(document.receivedAt)}
-                            <Show when={document.providerName}><span> · {document.providerName}</span></Show>
-                            <Show when={document.subject}><span> · {document.subject}</span></Show>
-                          </p>
-                          <Show when={document.error}>
-                            <p class="mt-1 text-[11px] font-bold text-error">{document.error}</p>
-                          </Show>
-                        </div>
-                        <div class="flex items-center gap-2">
+                        <p class="min-w-0 flex-1 font-mono text-xs font-bold break-all">{document.fileName}</p>
+                        <StatusBadge status={document.status} />
+                      </div>
+                      <p class="mt-1 text-[11px] font-bold opacity-50 break-words">
+                        {formatDate(document.receivedAt)}
+                        <Show when={document.providerName}><span> · {document.providerName}</span></Show>
+                        <Show when={document.subject}><span> · {document.subject}</span></Show>
+                      </p>
+                      <Show when={document.error}>
+                        <p class="mt-1 text-[11px] font-bold text-error break-words">{document.error}</p>
+                      </Show>
+                      <Show when={driveLink(document) || needsArchive(document)}>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
                           <Show
                             when={driveLink(document)}
                             fallback={
@@ -638,9 +645,8 @@ const Intake: Component = () => {
                               </a>
                             )}
                           </Show>
-                          <StatusBadge status={document.status} />
                         </div>
-                      </div>
+                      </Show>
                     </li>
                   )}
                 </For>

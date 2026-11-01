@@ -19,10 +19,6 @@ export interface ProcessableDocument {
   textBody?: string;
   /** Already-processed documents are skipped so a retried sync is a no-op. */
   status?: string;
-  /** Existing Drive archive of a document being retried; reused, not duplicated. */
-  driveFileId?: string;
-  driveWebLink?: string;
-  sidecarDriveId?: string;
 }
 
 /** Providers are the contracts' provider names; only the name and unit matter here. */
@@ -183,8 +179,8 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
     return failed('no document bytes available');
   }
 
-  // Extraction failures still archive the original: the document was taken in,
-  // so it belongs in the user's Drive even when we cannot read its facts.
+  // Only documents we could actually read are archived: Drive stores the
+  // provider bills we understand, not every attachment the mail matched.
   let extracted: ExtractedDocument | undefined;
   let extractionError: string | undefined;
   if (!isSupported(document.mimeType)) {
@@ -204,20 +200,23 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
   }
 
   const plan = extracted ? planIntake(extracted, meters, readings) : undefined;
+  if (!extracted || !plan) {
+    return failed(extractionError ?? 'extraction failed');
+  }
 
-  let driveFileId = document.driveFileId;
-  let driveWebLink = document.driveWebLink;
-  let sidecarDriveId = document.sidecarDriveId;
-  if (!driveFileId && drive && rootFolderId) {
+  let driveFileId: string | undefined;
+  let driveWebLink: string | undefined;
+  let sidecarDriveId: string | undefined;
+  if (drive && rootFolderId) {
     try {
       const archived = await archiveDocument(drive, {
         rootFolderId,
         providerName: provider.name,
-        year: folderYear(extracted?.bill?.periodEnd, document.receivedAt),
+        year: folderYear(extracted.bill?.periodEnd, document.receivedAt),
         fileName: document.fileName,
         mimeType: document.mimeType,
         buffer: document.buffer,
-        extracted: extracted ?? { error: extractionError },
+        extracted,
       });
       driveFileId = archived.fileId;
       driveWebLink = archived.webLink;
@@ -226,29 +225,6 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
       // A Drive hiccup must not throw the extracted facts away.
       console.warn(`Drive archive failed for ${document.fileName}:`, error);
     }
-  }
-
-  if (!extracted || !plan) {
-    // Without Drive ids there is nothing to persist that the caller does not
-    // already know: the sync controller stores the failure itself.
-    if (driveFileId) {
-      await ProviderDocument.findByIdAndUpdate(document._id, {
-        $set: {
-          status: 'failed',
-          error: extractionError ?? 'extraction failed',
-          processedAt: new Date(),
-          driveFileId,
-          driveWebLink,
-          sidecarDriveId,
-        },
-      }).setOptions({ userId });
-    }
-    return {
-      status: 'failed',
-      intakeItemIds: [],
-      error: extractionError,
-      ...(driveFileId ? { driveFileId, driveWebLink, sidecarDriveId } : {}),
-    };
   }
 
   const intakeItemIds: string[] = [];
