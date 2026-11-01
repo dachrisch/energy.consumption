@@ -8,6 +8,7 @@ import {
   decodeBase64Url,
   headerValue,
   isSupported,
+  resolveMimeType,
 } from '../gmail';
 import type { GmailPayload } from '../gmail';
 
@@ -177,6 +178,29 @@ describe('attachment support', () => {
     expect(isSupported('text/csv')).toBe(true);
     expect(isSupported('image/png')).toBe(false);
     expect(SUPPORTED_MIME_TYPES).not.toContain('application/zip');
+  });
+
+  it('reads a PDF sent as a generic binary by its .pdf name', () => {
+    expect(resolveMimeType('application/octet-stream', 'Rechnung_433876866.pdf')).toBe('application/pdf');
+    expect(resolveMimeType('application/octet-stream', 'BILL.PDF')).toBe('application/pdf');
+  });
+
+  it('recognises a PDF by its %PDF signature when the name gives no hint', () => {
+    expect(resolveMimeType('application/octet-stream', 'download', Buffer.from('%PDF-1.7 ...'))).toBe('application/pdf');
+    expect(resolveMimeType('', 'download', Buffer.from('%PDF-1.4'))).toBe('application/pdf');
+  });
+
+  it('maps other known extensions behind a generic type', () => {
+    expect(resolveMimeType('application/octet-stream', 'lastgang.csv')).toBe('text/csv');
+    expect(resolveMimeType('application/octet-stream', 'export.xml')).toBe('application/xml');
+    expect(resolveMimeType('application/octet-stream', 'werte.xls')).toBe('application/vnd.ms-excel');
+  });
+
+  it('keeps a specific declared type and leaves unknown binaries alone', () => {
+    expect(resolveMimeType('application/pdf', 'odd-name.csv')).toBe('application/pdf');
+    expect(resolveMimeType('image/png', 'scan.pdf')).toBe('image/png');
+    expect(resolveMimeType('application/octet-stream', 'photo.jpg', Buffer.from([0xff, 0xd8, 0xff])))
+      .toBe('application/octet-stream');
   });
 
   it('caps downloads at 15 MiB', () => {
