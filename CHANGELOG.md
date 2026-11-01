@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.23.0](https://github.com/dachrisch/energy.consumption/compare/v3.22.0...v3.23.0) (2026-11-01)
+
+
+### Features
+
+* **ui:** intake redesign + link-meter picker + Sync all ([79e3fb2](https://github.com/dachrisch/energy.consumption/commit/79e3fb23b7ed9d540c67a28d8c4178980ee75297))
+* **ui:** redesign intake and replace the inline link controls with a picker ([20202a6](https://github.com/dachrisch/energy.consumption/commit/20202a65eae52abf88f3940ed66342ff5ebf4155))
+
 ## [3.22.0](https://github.com/dachrisch/energy.consumption/compare/v3.21.0...v3.22.0) (2026-11-01)
 
 
