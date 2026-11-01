@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.20.3](https://github.com/dachrisch/energy.consumption/compare/v3.20.2...v3.20.3) (2026-11-01)
+
+
+### Bug Fixes
+
+* **drive:** stream binary uploads so archiving actually works ([4d7c6d4](https://github.com/dachrisch/energy.consumption/commit/4d7c6d47e0bb342eeff13d84065d006043adb1b3))
+* **drive:** stream binary uploads so archiving works ([499bfdb](https://github.com/dachrisch/energy.consumption/commit/499bfdb58b75e5f419d2b0b9bb6b9b4aae951a42))
+
 ## [3.20.2](https://github.com/dachrisch/energy.consumption/compare/v3.20.1...v3.20.2) (2026-11-01)
 
 
