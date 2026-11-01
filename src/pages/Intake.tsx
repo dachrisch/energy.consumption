@@ -81,6 +81,50 @@ const readingLink = (item: IIntakeItem): string | undefined => {
   return `/meters/${item.meterId}/readings${target ? `?highlight=${encodeURIComponent(target)}` : ''}`;
 };
 
+const VarianceValue: Component<{ variance: IBillComparison['variance'] }> = (props) => (
+  <Show when={props.variance} fallback="—">
+    {(variance) => (
+      <>
+        {variance().absolute.toFixed(2)}
+        <Show when={variance().percent !== null}>
+          <span class="opacity-50"> ({variance().percent?.toFixed(1)}%)</span>
+        </Show>
+      </>
+    )}
+  </Show>
+);
+
+const varianceClass = (variance: IBillComparison['variance']) =>
+  (variance?.absolute ?? 0) > 0 ? 'text-error' : 'text-success';
+
+const BillMobileRow: Component<{ bill: IBillComparison }> = (props) => (
+  <li class="rounded-2xl bg-base-200 p-4">
+    <p class="text-[11px] font-bold opacity-50">
+      {formatDate(props.bill.periodStart)} → {formatDate(props.bill.periodEnd)}
+    </p>
+    <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
+      <div>
+        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Consumption</dt>
+        <dd class="text-sm font-black">{props.bill.consumption ?? '—'} {props.bill.unit ?? ''}</dd>
+      </div>
+      <div>
+        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Billed</dt>
+        <dd class="text-sm font-black">{formatAmount(props.bill.amountGross, props.bill.currency)}</dd>
+      </div>
+      <div>
+        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Expected</dt>
+        <dd class="text-sm font-black">{formatAmount(props.bill.expected, props.bill.currency)}</dd>
+      </div>
+      <div>
+        <dt class="text-[9px] font-black uppercase tracking-widest opacity-40">Variance</dt>
+        <dd class={`text-sm font-black ${varianceClass(props.bill.variance)}`}>
+          <VarianceValue variance={props.bill.variance} />
+        </dd>
+      </div>
+    </dl>
+  </li>
+);
+
 const ProviderSettings: Component<{
   provider: IProvider;
   syncing: boolean;
@@ -335,7 +379,11 @@ const Intake: Component = () => {
   const archiveDocuments = async (documentId?: string, silent = false) => {
     setArchiving(documentId ?? 'all');
     try {
-      const result = await api<{ archived: number; failed: number }>(
+      const result = await api<{
+        archived: number;
+        failed: number;
+        documents?: { fileName?: string; status: string; error?: string }[];
+      }>(
         '/api/intake/documents/archive',
         sendJson('POST', documentId ? { documentId } : {}),
       );
@@ -346,8 +394,9 @@ const Intake: Component = () => {
         );
       }
       if (result.failed > 0 && !silent) {
+        const reason = result.documents?.find((entry) => entry.status === 'failed')?.error;
         toast.showToast(
-          `${result.failed} document${result.failed === 1 ? '' : 's'} could not be archived`,
+          `${result.failed} document${result.failed === 1 ? '' : 's'} could not be archived${reason ? `: ${reason}` : ''}`,
           'warning',
         );
       }
@@ -486,9 +535,9 @@ const Intake: Component = () => {
                     <ul class="space-y-1">
                       <For each={result().processed}>
                         {(entry) => (
-                          <li class="flex items-center gap-2 text-[11px] font-bold">
+                          <li class="flex flex-wrap items-center gap-2 text-[11px] font-bold">
                             <StatusBadge status={entry.status} />
-                            <span class="font-mono opacity-70">{entry.attachment}</span>
+                            <span class="font-mono opacity-70 break-all">{entry.attachment}</span>
                             <Show when={entry.error}><span class="opacity-50">{entry.error}</span></Show>
                           </li>
                         )}
@@ -544,7 +593,11 @@ const Intake: Component = () => {
             <Show when={bills().length > 0} fallback={
               <p class="mt-2 text-sm font-bold opacity-50">No billed periods yet.</p>
             }>
-              <div class="mt-4 overflow-x-auto">
+              {/* Stacked on phones: five columns do not fit a 360px card. */}
+              <ul class="mt-4 space-y-2 md:hidden" data-testid="bills-stacked">
+                <For each={bills()}>{(bill) => <BillMobileRow bill={bill} />}</For>
+              </ul>
+              <div class="mt-4 hidden overflow-x-auto md:block">
                 <table class="table table-sm">
                   <thead>
                     <tr class="text-[10px] uppercase tracking-widest opacity-50">
@@ -563,17 +616,8 @@ const Intake: Component = () => {
                           <td class="text-right">{bill.consumption ?? '—'} {bill.unit ?? ''}</td>
                           <td class="text-right">{formatAmount(bill.amountGross, bill.currency)}</td>
                           <td class="text-right">{formatAmount(bill.expected, bill.currency)}</td>
-                          <td class={`text-right ${(bill.variance?.absolute ?? 0) > 0 ? 'text-error' : 'text-success'}`}>
-                            <Show when={bill.variance} fallback="—">
-                              {(variance) => (
-                                <>
-                                  {variance().absolute.toFixed(2)}
-                                  <Show when={variance().percent !== null}>
-                                    <span class="opacity-50"> ({variance().percent?.toFixed(1)}%)</span>
-                                  </Show>
-                                </>
-                              )}
-                            </Show>
+                          <td class={`text-right ${varianceClass(bill.variance)}`}>
+                            <VarianceValue variance={bill.variance} />
                           </td>
                         </tr>
                       )}

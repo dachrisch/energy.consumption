@@ -108,9 +108,20 @@ describe('Intake page', () => {
     mockApi();
     renderIntake();
 
-    expect(await screen.findByText('50.00 EUR')).toBeTruthy();
-    expect(screen.getByText('65.48 EUR')).toBeTruthy();
-    expect(screen.getByText(/\(-23\.6%\)/)).toBeTruthy();
+    // The stacked mobile list and the desktop table both render the values.
+    expect((await screen.findAllByText('50.00 EUR')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('65.48 EUR').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\(-23\.6%\)/).length).toBeGreaterThan(0);
+  });
+
+  it('stacks the billed period so the values stay readable on phones', async () => {
+    mockApi();
+    renderIntake();
+
+    const stacked = await screen.findByTestId('bills-stacked');
+    expect(stacked.textContent).toContain('50.00 EUR');
+    expect(stacked.textContent).toContain('65.48 EUR');
+    expect(stacked.textContent).toContain('100 kWh');
   });
 
   it('asks for the staged items only, unless decided items are requested', async () => {
@@ -250,6 +261,22 @@ describe('Intake page', () => {
     });
     const archive = calls.find((call) => call.url === '/api/intake/documents/archive');
     expect(JSON.parse(archive?.body ?? '{}')).toEqual({ documentId: 'd1' });
+  });
+
+  it('explains why a parsed document could not be archived', async () => {
+    mockApi({
+      'POST /api/intake/documents/archive': () => ({
+        archived: 0,
+        failed: 1,
+        documents: [{ documentId: 'd1', status: 'failed', error: 'Original is no longer available in Gmail' }],
+      }),
+    });
+    renderIntake();
+    await screen.findByText('lastgang.csv');
+
+    fireEvent.click(screen.getByRole('button', { name: /save to drive/i }));
+
+    expect(await screen.findByText(/Original is no longer available in Gmail/)).toBeTruthy();
   });
 });
 
