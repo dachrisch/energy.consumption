@@ -17,8 +17,8 @@ import { FOLDER_MIME } from '../../lib/google/drive';
 import { decrypt, encrypt } from '../../lib/encryption';
 import { signState, verifyState } from '../../lib/google/oauth';
 import {
-  handleCallback, handleConnect, handleGoogleSync, handleIntakeBills,
-  handleIntakeItemAction, handleIntakeItems,
+  handleCallback, handleConnect, handleGoogleSync, handleIntakeBills, handleIntakeDocuments,
+  handleIntakeItemAction, handleIntakeItems, handleProviderItem, handleProviders,
 } from './intake.controller';
 import type { ApiRequest, ApiResponse, RouteParams } from '../utils';
 
@@ -712,6 +712,152 @@ describe('intake controller', () => {
       };
       expect(payload.bills[0].expected).toBeNull();
       expect(payload.bills[0].variance).toBeNull();
+    });
+  });
+
+  describe('providers', () => {
+    const newProvider = (overrides: Record<string, unknown> = {}) => ({
+      name: 'Stadtwerke',
+      senders: ['rechnung@stadtwerke.example'],
+      subjectHints: ['Abrechnung'],
+      defaultUnit: 'kWh',
+      ...overrides,
+    });
+
+    it('creates a provider and lists it back', async () => {
+      const created = mockResponse();
+      await handleProviders(params({
+        res: created.res, userId: ownerId, method: 'POST', body: newProvider(),
+      }));
+
+      expect(created.res.statusCode).toBe(201);
+      const payload = JSON.parse(created.body()) as { provider: { name: string; senders: string[] } };
+      expect(payload.provider).toMatchObject({ name: 'Stadtwerke', senders: ['rechnung@stadtwerke.example'] });
+
+      const list = mockResponse();
+      await handleProviders(params({ res: list.res, userId: ownerId }));
+      expect(JSON.parse(list.body()).count).toBe(1);
+    });
+
+    it('validates the provider payload', async () => {
+      const missingName = mockResponse();
+      await handleProviders(params({ res: missingName.res, userId: ownerId, method: 'POST', body: { senders: [] } }));
+      expect(missingName.res.statusCode).toBe(400);
+
+      const unknownField = mockResponse();
+      await handleProviders(params({
+        res: unknownField.res, userId: ownerId, method: 'POST', body: { ...newProvider(), userId: otherId },
+      }));
+      expect(unknownField.res.statusCode).toBe(400);
+    });
+
+    it('rejects a duplicate name for the same user but not for another user', async () => {
+      await Provider.create({ ...newProvider(), userId: ownerId });
+
+      const duplicate = mockResponse();
+      await handleProviders(params({ res: duplicate.res, userId: ownerId, method: 'POST', body: newProvider() }));
+      expect(duplicate.res.statusCode).toBe(409);
+
+      const otherUser = mockResponse();
+      await handleProviders(params({ res: otherUser.res, userId: otherId, method: 'POST', body: newProvider() }));
+      expect(otherUser.res.statusCode).toBe(201);
+    });
+
+    it('keeps provider lists per user', async () => {
+      await Provider.create({ ...newProvider(), userId: otherId });
+
+      const list = mockResponse();
+      await handleProviders(params({ res: list.res, userId: ownerId }));
+      expect(JSON.parse(list.body()).count).toBe(0);
+    });
+
+    it('updates and deletes a provider, scoped to its owner', async () => {
+      const provider = await Provider.create({ ...newProvider(), userId: ownerId });
+
+      const updated = mockResponse();
+      await handleProviderItem(params({
+        res: updated.res,
+        userId: ownerId,
+        method: 'PATCH',
+        url: `/api/providers/${provider._id.toString()}`,
+        body: { senders: ['neu@stadtwerke.example'], defaultUnit: 'm³' },
+      }));
+      expect(updated.res.statusCode).toBe(200);
+      const stored = await Provider.findById(provider._id).lean();
+      expect(stored?.senders).toEqual(['neu@stadtwerke.example']);
+      expect(stored?.defaultUnit).toBe('m³');
+
+      const foreign = mockResponse();
+      await handleProviderItem(params({
+        res: foreign.res,
+        userId: otherId,
+        method: 'DELETE',
+        url: `/api/providers/${provider._id.toString()}`,
+      }));
+      expect(foreign.res.statusCode).toBe(404);
+
+      const deleted = mockResponse();
+      await handleProviderItem(params({
+        res: deleted.res,
+        userId: ownerId,
+        method: 'DELETE',
+        url: `/api/providers/${provider._id.toString()}`,
+      }));
+      expect(deleted.res.statusCode).toBe(200);
+      expect(await Provider.countDocuments({ userId: ownerId })).toBe(0);
+    });
+
+    it('rejects malformed ids and unsupported methods', async () => {
+      const malformed = mockResponse();
+      await handleProviderItem(params({
+        res: malformed.res, userId: ownerId, method: 'PATCH', url: '/api/providers/not-an-id', body: {},
+      }));
+      expect(malformed.res.statusCode).toBe(404);
+
+      const provider = await Provider.create({ ...newProvider(), userId: ownerId });
+      const unsupported = mockResponse();
+      await handleProviderItem(params({
+        res: unsupported.res,
+        userId: ownerId,
+        method: 'PUT',
+        url: `/api/providers/${provider._id.toString()}`,
+      }));
+      expect(unsupported.res.statusCode).toBe(405);
+
+      expect((await Provider.countDocuments({ userId: ownerId }))).toBe(1);
+    });
+  });
+
+  describe('documents', () => {
+    it('lists the newest documents first, capped by limit, per user', async () => {
+      await ProviderDocument.create([
+        {
+          userId: ownerId, source: 'gmail', fileName: 'old.csv', mimeType: 'text/csv',
+          sha256: 'a', receivedAt: new Date('2024-01-01'), status: 'parsed',
+        },
+        {
+          userId: ownerId, source: 'gmail', fileName: 'new.csv', mimeType: 'text/csv',
+          sha256: 'b', receivedAt: new Date('2024-06-01'), status: 'failed', error: 'boom',
+        },
+        {
+          userId: otherId, source: 'gmail', fileName: 'other.csv', mimeType: 'text/csv',
+          sha256: 'c', receivedAt: new Date('2024-07-01'),
+        },
+      ]);
+
+      const response = mockResponse();
+      await handleIntakeDocuments(params({ res: response.res, userId: ownerId, url: '/api/intake/documents' }));
+      const payload = JSON.parse(response.body()) as {
+        count: number;
+        documents: { fileName: string; error?: string }[];
+      };
+      expect(payload.count).toBe(2);
+      expect(payload.documents[0].fileName).toBe('new.csv');
+      expect(payload.documents[0].error).toBe('boom');
+
+      const limited = mockResponse();
+      await handleIntakeDocuments(params({ res: limited.res, userId: ownerId, url: '/api/intake/documents?limit=1' }));
+      expect(JSON.parse(limited.body()).count).toBe(1);
     });
   });
 });

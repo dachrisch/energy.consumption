@@ -47,3 +47,67 @@ export interface IUser {
   updatedAt?: string;
   stats?: Record<string, unknown>;
 }
+
+/** Provider configured for the Gmail/Drive intake. */
+export interface IProvider {
+  _id: string;
+  name: string;
+  senders: string[];
+  subjectHints: string[];
+  gmailQuery?: string | null;
+  portalUrl?: string | null;
+  defaultUnit?: string | null;
+  userId: string;
+}
+
+export type IntakeStatus = 'pending' | 'agrees' | 'conflict' | 'accepted' | 'rejected';
+
+/** One extracted fact staged for the user to accept or reject. */
+export interface IIntakeItem {
+  _id: string;
+  documentId: string;
+  kind: 'reading' | 'bill';
+  meterNumber?: string;
+  meterId?: string;
+  date?: string;
+  value?: number;
+  unit?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  consumption?: number;
+  amountGross?: number;
+  amountNet?: number;
+  currency?: string;
+  matchedReadingId?: string;
+  confidence?: number;
+  status: IntakeStatus;
+  note?: string;
+  createdAt?: string;
+}
+
+export interface IProviderDocument {
+  _id: string;
+  fileName: string;
+  mimeType: string;
+  status: 'new' | 'parsed' | 'needs_review' | 'imported' | 'failed';
+  subject?: string;
+  from?: string;
+  receivedAt?: string;
+  driveWebLink?: string;
+  error?: string;
+}
+
+/** A bill next to what the contract rates would have charged. */
+export interface IBillComparison {
+  _id: string;
+  meterId: string;
+  periodStart?: string;
+  periodEnd?: string;
+  consumption?: number;
+  unit?: string;
+  amountGross?: number;
+  amountNet?: number;
+  currency?: string;
+  expected: number | null;
+  variance: { absolute: number; percent: number | null } | null;
+}

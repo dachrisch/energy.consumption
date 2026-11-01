@@ -55,6 +55,18 @@ export const contractSchema = z.object({
 
 export const contractUpdateSchema = contractSchema.partial().strict();
 
+// Provider (Google intake) Schemas
+export const providerSchema = z.object({
+  name: z.string().min(1, 'Provider name is required').max(120),
+  senders: z.array(z.string().trim().min(3)).max(20).optional(),
+  subjectHints: z.array(z.string().trim().min(1)).max(20).optional(),
+  gmailQuery: z.string().trim().max(300).nullable().optional(),
+  portalUrl: z.string().trim().max(300).nullable().optional(),
+  defaultUnit: z.string().trim().max(20).nullable().optional(),
+}).strict();
+
+export const providerUpdateSchema = providerSchema.partial().strict();
+
 // Unified Export Schema
 export const unifiedExportSchema = z.object({
   exportDate: z.string().datetime(),
