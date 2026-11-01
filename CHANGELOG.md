@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.19.1](https://github.com/dachrisch/energy.consumption/compare/v3.19.0...v3.19.1) (2026-11-01)
+
+
+### Miscellaneous Chores
+
+* release 3.19.1 ([9beb6ec](https://github.com/dachrisch/energy.consumption/commit/9beb6ec25c362c2b2e461f1552c47d94861ca594))
+
 ## [3.19.0](https://github.com/dachrisch/energy.consumption/compare/v3.18.1...v3.19.0) (2026-11-01)
 
 
