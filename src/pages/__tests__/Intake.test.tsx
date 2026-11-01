@@ -7,7 +7,15 @@ import { ToastProvider } from '../../context/ToastContext';
 global.fetch = vi.fn();
 
 const providers = [
-  { _id: 'p1', name: 'Stadtwerke', senders: ['rechnung@stadtwerke.example'], subjectHints: [], defaultUnit: 'kWh', userId: 'u1' },
+  {
+    name: 'Stadtwerke',
+    senders: ['rechnung@stadtwerke.example'],
+    subjectHints: ['Abrechnung'],
+    gmailQuery: null,
+    unit: 'kWh',
+    contractCount: 1,
+    meterIds: ['m1'],
+  },
 ];
 
 const items = [
@@ -80,20 +88,20 @@ describe('Intake page', () => {
     mockApi();
     renderIntake();
 
-    expect(await screen.findByText('Stadtwerke')).toBeInTheDocument();
-    expect(screen.getByText('500 kWh')).toBeInTheDocument();
-    expect(screen.getByText('620 kWh')).toBeInTheDocument();
-    expect(screen.getByText('lastgang.csv')).toBeInTheDocument();
-    expect(screen.getByText('PDF extraction needs a Gemini API key')).toBeInTheDocument();
+    expect(await screen.findByText('Stadtwerke')).toBeTruthy();
+    expect(screen.getByText('500 kWh')).toBeTruthy();
+    expect(screen.getByText('620 kWh')).toBeTruthy();
+    expect(screen.getByText('lastgang.csv')).toBeTruthy();
+    expect(screen.getByText('PDF extraction needs a Gemini API key')).toBeTruthy();
   });
 
   it('shows the metered variance next to the billed amount', async () => {
     mockApi();
     renderIntake();
 
-    expect(await screen.findByText('50.00 EUR')).toBeInTheDocument();
-    expect(screen.getByText('65.48 EUR')).toBeInTheDocument();
-    expect(screen.getByText(/\(-23\.6%\)/)).toBeInTheDocument();
+    expect(await screen.findByText('50.00 EUR')).toBeTruthy();
+    expect(screen.getByText('65.48 EUR')).toBeTruthy();
+    expect(screen.getByText(/\(-23\.6%\)/)).toBeTruthy();
   });
 
   it('asks for the staged items only, unless decided items are requested', async () => {
@@ -109,24 +117,46 @@ describe('Intake page', () => {
     });
   });
 
-  it('creates a provider with the senders split into a list', async () => {
+  it('saves mail settings for a provider through the PATCH endpoint', async () => {
     const calls = mockApi({
-      'POST /api/providers': () => ({ provider: { _id: 'p2', name: 'Netz AG', senders: ['a@b.example'], subjectHints: [], defaultUnit: 'kWh' } }),
+      'PATCH /api/providers': () => ({
+        provider: {
+          name: 'Stadtwerke',
+          senders: ['a@b.example', 'c@d.example'],
+          subjectHints: [],
+          gmailQuery: null,
+          contractCount: 1,
+          meterIds: ['m1'],
+        },
+        contractsUpdated: 1,
+      }),
     });
     renderIntake();
     await screen.findByText('Stadtwerke');
+    expect(screen.getByText(/1 contract/)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /add provider/i }));
-    fireEvent.input(screen.getByPlaceholderText(/provider name/i), { target: { value: 'Netz AG' } });
+    fireEvent.click(screen.getByRole('button', { name: /mail settings/i }));
     fireEvent.input(screen.getByPlaceholderText(/sender addresses/i), { target: { value: 'a@b.example, c@d.example' } });
-    fireEvent.click(screen.getByRole('button', { name: /save provider/i }));
+    fireEvent.input(screen.getByPlaceholderText(/subject hints/i), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
 
-    await waitFor(() => expect(calls.some((call) => call.method === 'POST' && call.url === '/api/providers')).toBe(true));
-    const post = calls.find((call) => call.method === 'POST' && call.url === '/api/providers');
-    expect(JSON.parse(post?.body ?? '{}')).toMatchObject({
-      name: 'Netz AG',
+    await waitFor(() => expect(calls.some((call) => call.method === 'PATCH' && call.url === '/api/providers')).toBe(true));
+    const patch = calls.find((call) => call.method === 'PATCH' && call.url === '/api/providers');
+    expect(JSON.parse(patch?.body ?? '{}')).toEqual({
+      providerName: 'Stadtwerke',
       senders: ['a@b.example', 'c@d.example'],
+      subjectHints: [],
+      gmailQuery: null,
     });
+  });
+
+  it('points at contracts when no provider exists yet', async () => {
+    mockApi({ 'GET /api/providers': () => ({ providers: [], count: 0 }) });
+    renderIntake();
+
+    expect(await screen.findByText(/providers come from your contracts/i)).toBeTruthy();
+    const link = screen.getByRole('link', { name: /add a contract/i });
+    expect(link.getAttribute('href')).toBe('/contracts/add');
   });
 
   it('accepts a staged item through the accept endpoint', async () => {
@@ -160,6 +190,6 @@ describe('Intake page', () => {
     });
     const sync = calls.find((call) => call.url === '/api/intake/sync');
     expect(JSON.parse(sync?.body ?? '{}')).toEqual({ providerName: 'Stadtwerke' });
-    expect(await screen.findByText(/last sync/i)).toBeInTheDocument();
+    expect(await screen.findByText(/last sync/i)).toBeTruthy();
   });
 });

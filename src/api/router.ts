@@ -7,7 +7,7 @@ import { handleOcrScan } from './controllers/ocr.controller';
 import { handleAggregatedRoutes } from './controllers/dashboard.controller';
 import {
   handleIntakeSync, handleIntakeVerify, handleConnect, handleCallback, handleIntakeItems,
-  handleIntakeItemAction, handleIntakeBills, handleIntakeDocuments, handleProviders, handleProviderItem,
+  handleIntakeItemAction, handleIntakeBills, handleIntakeDocuments, handleProviders,
 } from './controllers/intake.controller';
 
 export async function router(params: RouteParams) {
@@ -109,7 +109,6 @@ export async function router(params: RouteParams) {
   if (path.startsWith('/api/readings/')) { return handleReadingItem(params); }
   if (path.startsWith('/api/contracts/')) { return handleContractItem(params); }
   if (path.startsWith('/api/intake/items/')) { return handleIntakeItemAction(params); }
-  if (path.startsWith('/api/providers/')) { return handleProviderItem(params); }
 
   res.statusCode = 404;
   res.end(JSON.stringify({ error: 'Not Found' }));

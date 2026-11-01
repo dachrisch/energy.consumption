@@ -55,7 +55,10 @@ In your app (local dev, port 3000 by default):
    - The code is exchanged for an **offline refresh token** (stored encrypted on the User doc).
    - `User.google` gets: `sub`, `email`, `refreshTokenEnc`, `scopes[]`, `connectedAt`.
 
-3. **Sync** — `POST /api/intake/sync` with `{ "providerName": "Your Provider Name" }`
+3. **Sync** — add a contract for the provider first (providers are the contracts'
+   `providerName`; their mail settings live on the contract), set the sender
+   addresses on `/intake`, then `POST /api/intake/sync` with
+   `{ "providerName": "Your Provider Name" }`
    - Uses the stored refresh token to query Gmail for the provider's mail.
    - Attachments are archived to Drive under `Energy Monitor/<provider>/<year>/`.
    - A JSON sidecar with extracted fields is also stored.

@@ -6,7 +6,6 @@ import {
   describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi,
 } from 'vitest';
 import User from '../../models/User';
-import Provider from '../../models/Provider';
 import ProviderDocument from '../../models/ProviderDocument';
 import IntakeItem from '../../models/IntakeItem';
 import Bill from '../../models/Bill';
@@ -18,7 +17,7 @@ import { decrypt, encrypt } from '../../lib/encryption';
 import { signState, verifyState } from '../../lib/google/oauth';
 import {
   handleCallback, handleConnect, handleGoogleSync, handleIntakeBills, handleIntakeDocuments,
-  handleIntakeItemAction, handleIntakeItems, handleProviderItem, handleProviders,
+  handleIntakeItemAction, handleIntakeItems, handleProviders,
 } from './intake.controller';
 import type { ApiRequest, ApiResponse, RouteParams } from '../utils';
 
@@ -193,7 +192,6 @@ describe('intake controller', () => {
   afterEach(async () => {
     vi.restoreAllMocks();
     await User.deleteMany({});
-    await Provider.deleteMany({});
     await ProviderDocument.deleteMany({});
     await IntakeItem.deleteMany({});
     await Bill.deleteMany({});
@@ -337,11 +335,19 @@ describe('intake controller', () => {
           'google.status': 'ok',
         },
       });
-      await Provider.create({
-        userId: ownerId,
-        name: 'Stadtwerke',
+      const meter = await Meter.create({
+        name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
+      });
+      await Contract.create({
+        providerName: 'Stadtwerke',
+        startDate: new Date('2024-01-01'),
+        endDate: null,
+        basePrice: 12,
+        workingPrice: 0.3,
+        meterId: meter._id,
         senders: ['rechnung@stadtwerke.example'],
         subjectHints: [],
+        userId: ownerId,
       });
     });
 
@@ -371,6 +377,23 @@ describe('intake controller', () => {
         body: { providerName: 'Unknown' },
       }));
       expect(unknown.res.statusCode).toBe(404);
+    });
+
+    it('refuses to sync a provider without sender addresses', async () => {
+      await Contract.updateMany({}, { $set: { senders: [], subjectHints: [], gmailQuery: null } }).setOptions({ userId: ownerId });
+      const gmail = stubGmail();
+      const response = mockResponse();
+
+      await handleGoogleSync(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        body: { providerName: 'Stadtwerke' },
+      }));
+
+      expect(response.res.statusCode).toBe(400);
+      expect(response.body()).toContain('Add sender addresses');
+      expect(gmail.users.messages.list).not.toHaveBeenCalled();
     });
 
     it('records a failed document when extraction cannot run, and is idempotent', async () => {
@@ -715,116 +738,132 @@ describe('intake controller', () => {
     });
   });
 
-  describe('providers', () => {
-    const newProvider = (overrides: Record<string, unknown> = {}) => ({
-      name: 'Stadtwerke',
-      senders: ['rechnung@stadtwerke.example'],
-      subjectHints: ['Abrechnung'],
-      defaultUnit: 'kWh',
-      ...overrides,
+  describe('providers (derived from contracts)', () => {
+    let meterCounter = 0;
+
+    async function createContract(overrides: Record<string, unknown> = {}) {
+      meterCounter += 1;
+      const meter = await Meter.create({
+        name: 'Strom', meterNumber: `1-234-${600 + meterCounter}`, type: 'power', unit: 'kWh', userId: ownerId,
+      });
+      return Contract.create({
+        providerName: 'Stadtwerke',
+        startDate: new Date('2024-01-01'),
+        endDate: null,
+        basePrice: 12,
+        workingPrice: 0.3,
+        meterId: meter._id,
+        senders: ['rechnung@stadtwerke.example'],
+        subjectHints: ['Abrechnung'],
+        userId: ownerId,
+        ...overrides,
+      });
+    }
+
+    it('is derived from the contracts, one entry per provider name', async () => {
+      await createContract();
+      await createContract({ startDate: new Date('2024-06-01'), senders: ['neu@stadtwerke.example'] });
+      await createContract({ providerName: 'Netz AG', senders: ['info@netz.example'] });
+
+      const response = mockResponse();
+      await handleProviders(params({ res: response.res, userId: ownerId }));
+
+      const payload = JSON.parse(response.body()) as {
+        count: number;
+        providers: { name: string; senders: string[]; contractCount: number; unit?: string }[];
+      };
+      expect(payload.count).toBe(2);
+      const stadtwerke = payload.providers.find((provider) => provider.name === 'Stadtwerke');
+      expect(stadtwerke?.contractCount).toBe(2);
+      // Settings are read as the union over the provider's contracts.
+      expect(stadtwerke?.senders).toEqual(['neu@stadtwerke.example', 'rechnung@stadtwerke.example']);
+      expect(stadtwerke?.unit).toBe('kWh');
     });
 
-    it('creates a provider and lists it back', async () => {
-      const created = mockResponse();
+    it('has no providers before a contract exists', async () => {
+      const response = mockResponse();
+      await handleProviders(params({ res: response.res, userId: ownerId }));
+
+      expect(JSON.parse(response.body()).count).toBe(0);
+    });
+
+    it('does not leak another user\'s providers', async () => {
+      const foreignMeter = await Meter.create({
+        name: 'Gas', meterNumber: '9-999', type: 'gas', unit: 'm³', userId: otherId,
+      });
+      await Contract.create({
+        providerName: 'Fremd AG',
+        startDate: new Date('2024-01-01'),
+        endDate: null,
+        basePrice: 1,
+        workingPrice: 1,
+        meterId: foreignMeter._id,
+        senders: ['x@fremd.example'],
+        userId: otherId,
+      });
+
+      const response = mockResponse();
+      await handleProviders(params({ res: response.res, userId: ownerId }));
+      expect(JSON.parse(response.body()).count).toBe(0);
+    });
+
+    it('writes mail settings onto every contract of that provider', async () => {
+      const first = await createContract();
+      const second = await createContract({ startDate: new Date('2024-06-01') });
+
+      const response = mockResponse();
       await handleProviders(params({
-        res: created.res, userId: ownerId, method: 'POST', body: newProvider(),
+        res: response.res,
+        userId: ownerId,
+        method: 'PATCH',
+        body: {
+          providerName: 'Stadtwerke',
+          senders: ['mail@stadtwerke.example'],
+          subjectHints: ['Jahresabrechnung'],
+          gmailQuery: null,
+        },
       }));
 
-      expect(created.res.statusCode).toBe(201);
-      const payload = JSON.parse(created.body()) as { provider: { name: string; senders: string[] } };
-      expect(payload.provider).toMatchObject({ name: 'Stadtwerke', senders: ['rechnung@stadtwerke.example'] });
+      expect(response.res.statusCode).toBe(200);
+      const payload = JSON.parse(response.body()) as { contractsUpdated: number; provider: { senders: string[] } };
+      expect(payload.contractsUpdated).toBe(2);
+      expect(payload.provider.senders).toEqual(['mail@stadtwerke.example']);
 
-      const list = mockResponse();
-      await handleProviders(params({ res: list.res, userId: ownerId }));
-      expect(JSON.parse(list.body()).count).toBe(1);
+      const stored = await Contract.find({ providerName: 'Stadtwerke' }).setOptions({ userId: ownerId }).lean();
+      expect(stored).toHaveLength(2);
+      expect(stored.every((contract) => contract.senders[0] === 'mail@stadtwerke.example')).toBe(true);
+      expect([first, second].every((contract) => contract.senders.length === 1)).toBe(true);
     });
 
-    it('validates the provider payload', async () => {
+    it('validates the settings payload and unknown providers', async () => {
+      await createContract();
+
       const missingName = mockResponse();
-      await handleProviders(params({ res: missingName.res, userId: ownerId, method: 'POST', body: { senders: [] } }));
+      await handleProviders(params({
+        res: missingName.res, userId: ownerId, method: 'PATCH',
+        body: { senders: [], subjectHints: [] },
+      }));
       expect(missingName.res.statusCode).toBe(400);
 
       const unknownField = mockResponse();
       await handleProviders(params({
-        res: unknownField.res, userId: ownerId, method: 'POST', body: { ...newProvider(), userId: otherId },
+        res: unknownField.res, userId: ownerId, method: 'PATCH',
+        body: { providerName: 'Stadtwerke', senders: [], subjectHints: [], userId: otherId },
       }));
       expect(unknownField.res.statusCode).toBe(400);
+
+      const unknownProvider = mockResponse();
+      await handleProviders(params({
+        res: unknownProvider.res, userId: ownerId, method: 'PATCH',
+        body: { providerName: 'Niemand', senders: [], subjectHints: [] },
+      }));
+      expect(unknownProvider.res.statusCode).toBe(404);
     });
 
-    it('rejects a duplicate name for the same user but not for another user', async () => {
-      await Provider.create({ ...newProvider(), userId: ownerId });
-
-      const duplicate = mockResponse();
-      await handleProviders(params({ res: duplicate.res, userId: ownerId, method: 'POST', body: newProvider() }));
-      expect(duplicate.res.statusCode).toBe(409);
-
-      const otherUser = mockResponse();
-      await handleProviders(params({ res: otherUser.res, userId: otherId, method: 'POST', body: newProvider() }));
-      expect(otherUser.res.statusCode).toBe(201);
-    });
-
-    it('keeps provider lists per user', async () => {
-      await Provider.create({ ...newProvider(), userId: otherId });
-
-      const list = mockResponse();
-      await handleProviders(params({ res: list.res, userId: ownerId }));
-      expect(JSON.parse(list.body()).count).toBe(0);
-    });
-
-    it('updates and deletes a provider, scoped to its owner', async () => {
-      const provider = await Provider.create({ ...newProvider(), userId: ownerId });
-
-      const updated = mockResponse();
-      await handleProviderItem(params({
-        res: updated.res,
-        userId: ownerId,
-        method: 'PATCH',
-        url: `/api/providers/${provider._id.toString()}`,
-        body: { senders: ['neu@stadtwerke.example'], defaultUnit: 'm³' },
-      }));
-      expect(updated.res.statusCode).toBe(200);
-      const stored = await Provider.findById(provider._id).lean();
-      expect(stored?.senders).toEqual(['neu@stadtwerke.example']);
-      expect(stored?.defaultUnit).toBe('m³');
-
-      const foreign = mockResponse();
-      await handleProviderItem(params({
-        res: foreign.res,
-        userId: otherId,
-        method: 'DELETE',
-        url: `/api/providers/${provider._id.toString()}`,
-      }));
-      expect(foreign.res.statusCode).toBe(404);
-
-      const deleted = mockResponse();
-      await handleProviderItem(params({
-        res: deleted.res,
-        userId: ownerId,
-        method: 'DELETE',
-        url: `/api/providers/${provider._id.toString()}`,
-      }));
-      expect(deleted.res.statusCode).toBe(200);
-      expect(await Provider.countDocuments({ userId: ownerId })).toBe(0);
-    });
-
-    it('rejects malformed ids and unsupported methods', async () => {
-      const malformed = mockResponse();
-      await handleProviderItem(params({
-        res: malformed.res, userId: ownerId, method: 'PATCH', url: '/api/providers/not-an-id', body: {},
-      }));
-      expect(malformed.res.statusCode).toBe(404);
-
-      const provider = await Provider.create({ ...newProvider(), userId: ownerId });
-      const unsupported = mockResponse();
-      await handleProviderItem(params({
-        res: unsupported.res,
-        userId: ownerId,
-        method: 'PUT',
-        url: `/api/providers/${provider._id.toString()}`,
-      }));
-      expect(unsupported.res.statusCode).toBe(405);
-
-      expect((await Provider.countDocuments({ userId: ownerId }))).toBe(1);
+    it('rejects unsupported methods', async () => {
+      const response = mockResponse();
+      await handleProviders(params({ res: response.res, userId: ownerId, method: 'DELETE' }));
+      expect(response.res.statusCode).toBe(405);
     });
   });
 

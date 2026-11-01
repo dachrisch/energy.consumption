@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
 import User from '../../models/User';
-import Provider from '../../models/Provider';
 import ProviderDocument from '../../models/ProviderDocument';
 import IntakeItem from '../../models/IntakeItem';
 import Bill from '../../models/Bill';
@@ -9,7 +8,7 @@ import Reading from '../../models/Reading';
 import Meter from '../../models/Meter';
 import Contract from '../../models/Contract';
 import { RouteParams, sanitizeString } from '../utils';
-import { formatZodError, providerSchema, providerUpdateSchema } from '../validation';
+import { formatZodError, providerSettingsSchema } from '../validation';
 import { decrypt } from '../../lib/encryption';
 import {
   GOOGLE_SCOPES, isGoogleConfigured, buildConsentUrl, signState, verifyState,
@@ -108,9 +107,18 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
   if (!providerName) {
     res.statusCode = 400; res.end(JSON.stringify({ error: 'providerName required' })); return;
   }
-  const provider = await Provider.findOne({ userId, name: providerName }).setOptions({ userId }).lean();
+  const provider = await resolveProvider(userId, providerName);
   if (!provider) {
-    res.statusCode = 404; res.end(JSON.stringify({ error: 'Unknown provider' })); return;
+    res.statusCode = 404;
+    res.end(JSON.stringify({ error: `No contract for provider "${providerName}" — add one first` }));
+    return;
+  }
+  // Without senders (or an explicit query) the search would match every
+  // attachment in the mailbox instead of this provider's mail.
+  if (provider.senders.length === 0 && !provider.gmailQuery) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: `Add sender addresses for "${providerName}" before syncing` }));
+    return;
   }
   try {
     const client = clientForRefreshToken(account.refresh);
@@ -160,7 +168,7 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
 
         const doc = await ProviderDocument.create({
           userId,
-          providerId: provider._id,
+          providerName: provider.name,
           source: 'gmail',
           gmailMessageId: m.id,
           gmailAttachmentId: att.attachmentId,
@@ -187,7 +195,7 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
               textBody,
               status: 'new',
             },
-            provider: { _id: provider._id.toString(), name: provider.name, defaultUnit: provider.defaultUnit ?? undefined },
+            provider: { name: provider.name, defaultUnit: provider.unit },
             userId,
             meters,
             readings,
@@ -299,7 +307,7 @@ export async function handleIntakeItemAccept({ res, userId, url }: RouteParams):
     } else {
       await Bill.create({
         meterId: item.meterId,
-        providerId: item.providerId,
+        providerName: item.providerName,
         documentId: item.documentId,
         periodStart: item.periodStart,
         periodEnd: item.periodEnd,
@@ -390,73 +398,76 @@ export async function handleIntakeBills({ res, userId }: RouteParams): Promise<v
   res.statusCode = 200; res.end(JSON.stringify({ bills: rows, count: rows.length }));
 }
 
-/** Path segment after `/<segment>/`, e.g. the id in `/api/providers/<id>`. */
-function idAfterSegment(pathname: string, segment: string): string | null {
-  const segments = pathname.split('/').filter(Boolean);
-  const index = segments.indexOf(segment);
-  const id = index === -1 ? undefined : segments[index + 1];
-  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-    return null;
-  }
-  return id;
+export interface ProviderView {
+  name: string;
+  senders: string[];
+  subjectHints: string[];
+  gmailQuery: string | null;
+  unit?: string;
+  contractCount: number;
+  meterIds: string[];
 }
 
-/** Providers configure which mail a sync looks for. */
+/**
+ * A provider is the `providerName` of the user's contracts — there is no
+ * provider collection. Mail settings are read as the union over that
+ * provider's contracts, so editing any one of them cannot hide the others.
+ */
+async function resolveProvider(userId: string, providerName: string): Promise<ProviderView | null> {
+  const [contracts, meters] = await Promise.all([
+    Contract.find({ providerName }).setOptions({ userId }).sort({ startDate: -1 }).lean(),
+    Meter.find({}).setOptions({ userId }).lean(),
+  ]);
+  if (contracts.length === 0) {
+    return null;
+  }
+  const units = new Map(meters.map((meter) => [meter._id.toString(), meter.unit]));
+  const meterIds = [...new Set(contracts.map((contract) => contract.meterId.toString()))];
+  const newestQuery = contracts.find((contract) => contract.gmailQuery)?.gmailQuery ?? null;
+  // Sorted so the derived view does not depend on the contracts' start dates.
+  const union = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
+  return {
+    name: providerName,
+    senders: union(contracts.flatMap((contract) => contract.senders ?? [])),
+    subjectHints: union(contracts.flatMap((contract) => contract.subjectHints ?? [])),
+    gmailQuery: newestQuery,
+    unit: units.get(meterIds[0]),
+    contractCount: contracts.length,
+    meterIds,
+  };
+}
+
+/** Providers derived from the user's contracts, with their mail settings. */
 export async function handleProviders({ req, res, userId }: RouteParams): Promise<void> {
   if (req.method === 'GET') {
-    const providers = await Provider.find({}).setOptions({ userId }).sort({ name: 1 }).lean();
+    const contracts = await Contract.find({}).setOptions({ userId }).sort({ startDate: -1 }).lean();
+    const names = [...new Set(contracts.map((contract) => contract.providerName))].sort((a, b) => a.localeCompare(b));
+    const providers = (await Promise.all(names.map((name) => resolveProvider(userId, name))))
+      .filter((provider): provider is ProviderView => provider !== null);
     res.statusCode = 200; res.end(JSON.stringify({ providers, count: providers.length }));
     return;
   }
-  if (req.method !== 'POST') {
+
+  if (req.method !== 'PATCH') {
     res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); return;
   }
 
-  const result = providerSchema.safeParse(req.body);
+  const result = providerSettingsSchema.safeParse(req.body);
   if (!result.success) {
     res.statusCode = 400; res.end(JSON.stringify({ error: formatZodError(result.error) })); return;
   }
-  const existing = await Provider.findOne({ name: result.data.name }).setOptions({ userId }).lean();
-  if (existing) {
-    res.statusCode = 409; res.end(JSON.stringify({ error: `Provider "${result.data.name}" already exists` })); return;
-  }
-  const provider = await Provider.create({ ...result.data, userId });
-  res.statusCode = 201; res.end(JSON.stringify({ provider }));
-}
-
-export async function handleProviderItem({ req, res, userId, url }: RouteParams): Promise<void> {
-  const id = idAfterSegment(url.pathname, 'providers');
-  if (!id) {
-    res.statusCode = 404; res.end(JSON.stringify({ error: 'Provider not found' })); return;
-  }
-
-  if (req.method === 'PATCH') {
-    const result = providerUpdateSchema.safeParse(req.body);
-    if (!result.success) {
-      res.statusCode = 400; res.end(JSON.stringify({ error: formatZodError(result.error) })); return;
-    }
-    const provider = await Provider.findOneAndUpdate(
-      { _id: id },
-      { $set: result.data },
-      { new: true, runValidators: true },
-    ).setOptions({ userId }).lean();
-    if (!provider) {
-      res.statusCode = 404; res.end(JSON.stringify({ error: 'Provider not found' })); return;
-    }
-    res.statusCode = 200; res.end(JSON.stringify({ provider }));
+  const { providerName, senders, subjectHints, gmailQuery } = result.data;
+  const updated = await Contract.updateMany(
+    { providerName },
+    { $set: { senders, subjectHints, gmailQuery: gmailQuery ?? null } },
+  ).setOptions({ userId });
+  if (updated.matchedCount === 0) {
+    res.statusCode = 404;
+    res.end(JSON.stringify({ error: `No contract for provider "${providerName}"` }));
     return;
   }
-
-  if (req.method === 'DELETE') {
-    const deleted = await Provider.findOneAndDelete({ _id: id }).setOptions({ userId }).lean();
-    if (!deleted) {
-      res.statusCode = 404; res.end(JSON.stringify({ error: 'Provider not found' })); return;
-    }
-    res.statusCode = 200; res.end(JSON.stringify({ provider: { _id: id }, deleted: true }));
-    return;
-  }
-
-  res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' }));
+  const provider = await resolveProvider(userId, providerName);
+  res.statusCode = 200; res.end(JSON.stringify({ provider, contractsUpdated: updated.modifiedCount }));
 }
 
 /** Most recent ingested documents, for the intake page's document list. */

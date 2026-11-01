@@ -16,7 +16,7 @@ export const INTAKE_STATUSES = ['pending', 'agrees', 'conflict', 'accepted', 're
 
 const intakeItemSchema = new mongoose.Schema({
   documentId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProviderDocument', required: true },
-  providerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider' },
+  providerName: { type: String },
   kind: { type: String, enum: ['reading', 'bill'], required: true },
   meterNumber: { type: String },
   meterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meter' },

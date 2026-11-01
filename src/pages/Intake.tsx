@@ -1,4 +1,5 @@
 import { Component, For, Show, createSignal, onMount } from 'solid-js';
+import { A } from '@solidjs/router';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import { useToast } from '../context/ToastContext';
@@ -59,134 +60,93 @@ const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateStri
 const formatAmount = (value: number | null | undefined, currency = 'EUR') =>
   value === null || value === undefined ? '—' : `${value.toFixed(2)} ${currency}`;
 
-const ProviderForm: Component<{ onCreated: (provider: IProvider) => void }> = (props) => {
-  const toast = useToast();
+const ProviderSettings: Component<{
+  provider: IProvider;
+  syncing: boolean;
+  onSave: (provider: IProvider, settings: { senders: string[]; subjectHints: string[]; gmailQuery: string | null }) => void;
+  onSync: (provider: IProvider) => void;
+}> = (props) => {
   const [open, setOpen] = createSignal(false);
-  const [saving, setSaving] = createSignal(false);
-  const [name, setName] = createSignal('');
-  const [senders, setSenders] = createSignal('');
-  const [subjectHints, setSubjectHints] = createSignal('');
-  const [defaultUnit, setDefaultUnit] = createSignal('kWh');
-  const [gmailQuery, setGmailQuery] = createSignal('');
+  const [senders, setSenders] = createSignal(props.provider.senders.join(', '));
+  const [subjectHints, setSubjectHints] = createSignal(props.provider.subjectHints.join(', '));
+  const [gmailQuery, setGmailQuery] = createSignal(props.provider.gmailQuery ?? '');
 
   const toList = (value: string) => value.split(/[,\n]/).map((entry) => entry.trim()).filter(Boolean);
 
-  const submit = async (event: Event) => {
-    event.preventDefault();
-    setSaving(true);
-    try {
-      const { provider } = await api<{ provider: IProvider }>('/api/providers', sendJson('POST', {
-        name: name().trim(),
-        senders: toList(senders()),
-        subjectHints: toList(subjectHints()),
-        defaultUnit: defaultUnit().trim() || null,
-        gmailQuery: gmailQuery().trim() || null,
-      }));
-      toast.showToast(`${provider.name} added`, 'success');
-      props.onCreated(provider);
-      setName(''); setSenders(''); setSubjectHints(''); setGmailQuery('');
-      setOpen(false);
-    } catch (error) {
-      toast.showToast(error instanceof Error ? error.message : 'Could not add provider', 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <div class="mt-4">
-      <Show when={open()} fallback={
-        <button class="btn btn-primary btn-sm rounded-xl font-black text-xs uppercase tracking-widest" onClick={() => setOpen(true)}>
-          <Icon name="add" class="h-4 w-4 mr-1" /> Add provider
+    <div class="flex flex-col gap-3 rounded-2xl border border-base-content/5 bg-base-200 p-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="font-black tracking-tight">{props.provider.name}</p>
+          <p class="font-mono text-[11px] opacity-50">
+            {props.provider.senders.join(', ') || 'no sender addresses yet'}
+          </p>
+          <p class="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-1">
+            {props.provider.contractCount} contract{props.provider.contractCount === 1 ? '' : 's'}
+            <Show when={props.provider.unit}><span> · {props.provider.unit}</span></Show>
+          </p>
+        </div>
+        <button
+          class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <Icon name="settings" class="h-3 w-3 mr-1" /> {open() ? 'Close' : 'Mail settings'}
         </button>
-      }>
-        <form class="bg-base-200 rounded-2xl p-5 space-y-3" onSubmit={submit}>
+      </div>
+
+      <Show when={open()}>
+        <div class="space-y-2 rounded-xl bg-base-100 p-3">
           <input
-            class="input input-sm input-bordered w-full rounded-xl font-bold"
-            placeholder="Provider name (e.g. Stadtwerke)"
-            value={name()}
-            onInput={(event) => setName(event.currentTarget.value)}
-            required
-          />
-          <input
-            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
+            class="input input-xs input-bordered w-full rounded-lg font-mono text-[11px]"
             placeholder="Sender addresses, comma separated"
             value={senders()}
             onInput={(event) => setSenders(event.currentTarget.value)}
           />
           <input
-            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
-            placeholder="Subject hints (optional), comma separated"
+            class="input input-xs input-bordered w-full rounded-lg font-mono text-[11px]"
+            placeholder="Subject hints (optional)"
             value={subjectHints()}
             onInput={(event) => setSubjectHints(event.currentTarget.value)}
           />
-          <div class="flex gap-3">
-            <input
-              class="input input-sm input-bordered w-28 rounded-xl font-bold"
-              placeholder="Unit"
-              value={defaultUnit()}
-              onInput={(event) => setDefaultUnit(event.currentTarget.value)}
-            />
-            <input
-              class="input input-sm input-bordered flex-1 rounded-xl font-mono text-xs"
-              placeholder="Raw Gmail query (optional, wins over senders)"
-              value={gmailQuery()}
-              onInput={(event) => setGmailQuery(event.currentTarget.value)}
-            />
-          </div>
-          <div class="flex gap-2">
-            <button type="submit" class="btn btn-primary btn-sm rounded-xl font-black text-xs uppercase tracking-widest" disabled={saving()}>
-              {saving() ? 'Saving…' : 'Save provider'}
-            </button>
-            <button type="button" class="btn btn-ghost btn-sm rounded-xl font-black text-xs uppercase tracking-widest" onClick={() => setOpen(false)}>
-              Cancel
-            </button>
-          </div>
+          <input
+            class="input input-xs input-bordered w-full rounded-lg font-mono text-[11px]"
+            placeholder="Raw Gmail query (optional, wins over senders)"
+            value={gmailQuery()}
+            onInput={(event) => setGmailQuery(event.currentTarget.value)}
+          />
           <p class="text-[10px] font-bold opacity-40 uppercase tracking-widest">
-            A sync searches Gmail for mail from these senders with attachments; the unit is a fallback when the document names none.
+            Stored on every contract of this provider.
           </p>
-        </form>
+          <button
+            class="btn btn-primary btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+            onClick={() => props.onSave(props.provider, {
+              senders: toList(senders()),
+              subjectHints: toList(subjectHints()),
+              gmailQuery: gmailQuery().trim() || null,
+            })}
+          >
+            Save
+          </button>
+        </div>
       </Show>
+
+      <div class="flex gap-2">
+        <button
+          class="btn btn-primary btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+          disabled={props.syncing || props.provider.senders.length === 0}
+          onClick={() => props.onSync(props.provider)}
+        >
+          <Icon name="refresh" class="h-3 w-3 mr-1" /> {props.syncing ? 'Syncing…' : 'Sync now'}
+        </button>
+        <Show when={props.provider.senders.length === 0}>
+          <span class="self-center text-[10px] font-bold uppercase tracking-widest opacity-40">
+            add senders first
+          </span>
+        </Show>
+      </div>
     </div>
   );
 };
-
-const ProviderRow: Component<{
-  provider: IProvider;
-  syncing: boolean;
-  onSync: (provider: IProvider) => void;
-  onDelete: (provider: IProvider) => void;
-}> = (props) => (
-  <div class="flex flex-col gap-3 rounded-2xl border border-base-content/5 bg-base-200 p-4">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <p class="font-black tracking-tight">{props.provider.name}</p>
-        <p class="font-mono text-[11px] opacity-50">{props.provider.senders.join(', ') || 'no senders configured'}</p>
-        <Show when={props.provider.gmailQuery}>
-          <p class="font-mono text-[11px] opacity-40 mt-1">query: {props.provider.gmailQuery}</p>
-        </Show>
-      </div>
-      <span class="badge badge-sm badge-ghost font-black uppercase tracking-widest text-[9px]">
-        {props.provider.defaultUnit ?? 'no unit'}
-      </span>
-    </div>
-    <div class="flex gap-2">
-      <button
-        class="btn btn-primary btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
-        disabled={props.syncing}
-        onClick={() => props.onSync(props.provider)}
-      >
-        <Icon name="refresh" class="h-3 w-3 mr-1" /> {props.syncing ? 'Syncing…' : 'Sync now'}
-      </button>
-      <button
-        class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest text-error hover:bg-error/10"
-        onClick={() => props.onDelete(props.provider)}
-      >
-        <Icon name="delete" class="h-3 w-3 mr-1" /> Remove
-      </button>
-    </div>
-  </div>
-);
 
 const ItemRow: Component<{ item: IIntakeItem; onAccept: (item: IIntakeItem) => void; onReject: (item: IIntakeItem) => void }> = (props) => {
   const decidable = () => props.item.status === 'pending' || props.item.status === 'conflict';
@@ -284,26 +244,24 @@ const Intake: Component = () => {
 
   onMount(() => { void loadAll(); });
 
-  const handleCreated = (provider: IProvider) => {
-    setProviders((current) => [...current, provider].sort((a, b) => a.name.localeCompare(b.name)));
-    void loadDocuments();
-  };
-
-  const handleDelete = async (provider: IProvider) => {
-    if (!(await toast.confirm(`Remove provider "${provider.name}"? Documents already ingested are kept.`))) {
-      return;
-    }
+  const saveSettings = async (
+    provider: IProvider,
+    settings: { senders: string[]; subjectHints: string[]; gmailQuery: string | null },
+  ) => {
     try {
-      await api(`/api/providers/${provider._id}`, { method: 'DELETE' });
-      toast.showToast(`${provider.name} removed`, 'success');
-      await loadProviders();
+      const { provider: saved } = await api<{ provider: IProvider }>('/api/providers', sendJson('PATCH', {
+        providerName: provider.name,
+        ...settings,
+      }));
+      setProviders((current) => current.map((entry) => (entry.name === saved.name ? saved : entry)));
+      toast.showToast(`${saved.name} mail settings saved`, 'success');
     } catch (error) {
-      toast.showToast(error instanceof Error ? error.message : 'Could not remove provider', 'error');
+      toast.showToast(error instanceof Error ? error.message : 'Could not save provider settings', 'error');
     }
   };
 
   const handleSync = async (provider: IProvider) => {
-    setSyncing(provider._id);
+    setSyncing(provider.name);
     try {
       const result = await api<SyncResponse>('/api/intake/sync', sendJson('POST', { providerName: provider.name }));
       setLastSync(result);
@@ -355,24 +313,27 @@ const Intake: Component = () => {
               <span class="text-[10px] font-black uppercase tracking-widest opacity-40">Gmail · Drive</span>
             </div>
             <Show when={providers().length > 0} fallback={
-              <p class="text-sm font-bold opacity-50 mt-2">
-                Add a provider to start: the name labels its Drive folder, the senders tell the sync which mail to look for.
-              </p>
+              <div class="mt-2 text-sm font-bold opacity-50">
+                <p>
+                  Providers come from your contracts — there is no separate provider to create.
+                  <A href="/contracts/add" class="link link-primary ml-1">Add a contract</A> and its
+                  provider shows up here with its mail settings.
+                </p>
+              </div>
             }>
               <div class="mt-4 grid gap-3 md:grid-cols-2">
                 <For each={providers()}>
                   {(provider) => (
-                    <ProviderRow
+                    <ProviderSettings
                       provider={provider}
-                      syncing={syncing() === provider._id}
+                      syncing={syncing() === provider.name}
+                      onSave={saveSettings}
                       onSync={handleSync}
-                      onDelete={handleDelete}
                     />
                   )}
                 </For>
               </div>
             </Show>
-            <ProviderForm onCreated={handleCreated} />
 
             <Show when={lastSync()}>
               {(result) => (
@@ -498,6 +459,7 @@ const Intake: Component = () => {
                           <p class="font-mono text-xs font-bold">{document.fileName}</p>
                           <p class="text-[11px] font-bold opacity-50">
                             {formatDate(document.receivedAt)}
+                            <Show when={document.providerName}><span> · {document.providerName}</span></Show>
                             <Show when={document.subject}><span> · {document.subject}</span></Show>
                           </p>
                           <Show when={document.error}>
