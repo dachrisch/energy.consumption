@@ -1,25 +1,48 @@
 import crypto from 'crypto';
+import mongoose from 'mongoose';
 import User from '../../models/User';
 import Provider from '../../models/Provider';
 import ProviderDocument from '../../models/ProviderDocument';
+import IntakeItem from '../../models/IntakeItem';
+import Bill from '../../models/Bill';
+import Reading from '../../models/Reading';
+import Meter from '../../models/Meter';
+import Contract from '../../models/Contract';
 import { RouteParams, sanitizeString } from '../utils';
+import { decrypt } from '../../lib/encryption';
 import {
   GOOGLE_SCOPES, isGoogleConfigured, buildConsentUrl, signState, verifyState,
   exchangeCode, clientForRefreshToken, createOAuthClient, isInvalidGrant,
   decryptRefreshToken, encryptRefreshToken, markReconnectRequired,
 } from '../../lib/google/oauth';
-import { gmailFor, buildProviderQuery, collectAttachments, headerValue } from '../../lib/google/gmail';
+import { gmailFor, buildProviderQuery, collectAttachments, collectTextBody, headerValue } from '../../lib/google/gmail';
+import { driveFor, ensureFolder } from '../../lib/google/drive';
+import { processDocument } from '../../lib/intake/processDocument';
+import { computeVariance, expectedCostForBill, periodDays } from '../../lib/intake/reconcile';
+import { findActiveOrLastContract } from '../../lib/pricing';
 
 function callbackUrl(): string {
   return process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:3000/api/google/callback';
 }
 
-async function getUserGoogleAccount(userId: string): Promise<{ refresh: string; sub: string } | null> {
+interface ProcessedAttachment {
+  messageId: string;
+  attachment: string;
+  documentId?: string;
+  status: string;
+  intakeItemIds?: string[];
+  billId?: string;
+  driveFileId?: string;
+  error?: string;
+}
+
+async function getUserGoogleAccount(userId: string): Promise<{ refresh: string; sub: string; googleApiKey?: string; rootFolderId?: string } | null> {
   const user = await User.findById(userId).lean();
   if (!user?.google?.refreshToken) { return null; }
   try {
     const refresh = decryptRefreshToken(user.google.refreshToken);
-    return { refresh, sub: user.google.sub ?? '' };
+    const googleApiKey = user.googleApiKey ? decrypt(user.googleApiKey) : undefined;
+    return { refresh, sub: user.google.sub ?? '', googleApiKey, rootFolderId: user.google?.rootFolderId };
   } catch { return null; }
 }
 
@@ -43,9 +66,6 @@ export async function handleCallback({ res, url }: RouteParams): Promise<void> {
     res.statusCode = 400; res.end(JSON.stringify({ error: 'Missing code or state' })); return;
   }
 
-  // The state token is the only trustworthy binding between the browser coming
-  // back from Google and the account that started the flow: it is signed and
-  // expires in 10 minutes. Never fall back to the current session instead.
   let stateUserId: string;
   try {
     stateUserId = verifyState(state);
@@ -53,6 +73,9 @@ export async function handleCallback({ res, url }: RouteParams): Promise<void> {
     res.statusCode = 403; res.end(JSON.stringify({ error: 'Invalid state' })); return;
   }
 
+  // The state token is the only trustworthy binding between the browser coming
+  // back from Google and the account that started the flow: it is signed and
+  // expires in 10 minutes. Never fall back to the current session instead.
   try {
     const result = await exchangeCode(code, callbackUrl());
     const updated = await User.findByIdAndUpdate(stateUserId, {
@@ -88,52 +111,121 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
   if (!provider) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Unknown provider' })); return;
   }
-  // Build OAuth client and check it works; on invalid_grant mark reconnect.
   try {
     const client = clientForRefreshToken(account.refresh);
     const gmail = gmailFor(client);
+    const drive = driveFor(client);
     const query = buildProviderQuery({ senders: provider.senders ?? [], subjectHints: provider.subjectHints ?? [], gmailQuery: provider.gmailQuery ?? null });
     const listRes = await gmail.users.messages.list({ userId: 'me', q: query, maxResults: 20 });
     const messages = listRes.data.messages ?? [];
-    const processed = [];
+
+    // Everything the pipeline needs, fetched once per sync.
+    const meters = (await Meter.find({}).setOptions({ userId }).lean())
+      .map((meter) => ({ _id: meter._id.toString(), meterNumber: meter.meterNumber, unit: meter.unit }));
+    const readings = (await Reading.find({}).setOptions({ userId }).lean())
+      .map((reading) => ({
+        _id: reading._id.toString(),
+        meterId: reading.meterId.toString(),
+        date: reading.date,
+        value: reading.value,
+      }));
+    let rootFolderId = account.rootFolderId;
+    if (!rootFolderId) {
+      rootFolderId = await ensureFolder(drive, 'Energy Monitor');
+      await User.findByIdAndUpdate(userId, { $set: { 'google.rootFolderId': rootFolderId } });
+    }
+
+    const processed: ProcessedAttachment[] = [];
     for (const m of messages) {
       if (!m.id) continue;
       const msgRes = await gmail.users.messages.get({ userId: 'me', id: m.id, format: 'full' });
       const attachments = (msgRes.data.payload ? collectAttachments(msgRes.data.payload) : []);
+      const textBody = collectTextBody(msgRes.data.payload ?? null);
       const fromAddr = headerValue(msgRes.data.payload ?? null, 'From');
       const subject = headerValue(msgRes.data.payload ?? null, 'Subject');
       const receivedAt = msgRes.data.internalDate ? new Date(Number(msgRes.data.internalDate)) : new Date();
       for (const att of attachments) {
-        if (att.attachmentId && !att.inlineData) {
-          const attRes = await gmail.users.attachments.get({ userId: 'me', messageId: m.id, id: att.attachmentId });
-          if (attRes.data.data) {
-            const buffer = Buffer.from(attRes.data.data, 'base64');
-            const sha = crypto.createHash('sha256').update(buffer).digest('hex');
-            const exists = await ProviderDocument.findOne({ userId, sha256: sha }).setOptions({ userId }).lean();
-            if (exists) {
-              processed.push({ messageId: m.id, attachment: att.fileName, status: 'already_processed', documentId: exists._id });
-              continue;
-            }
-            const doc = await ProviderDocument.create({
-              userId,
-              providerId: provider._id,
-              source: 'gmail',
-              gmailMessageId: m.id,
-              gmailAttachmentId: att.attachmentId,
-              fileName: att.fileName,
+        if (!att.attachmentId || att.inlineData) continue;
+        const attRes = await gmail.users.attachments.get({ userId: 'me', messageId: m.id, id: att.attachmentId });
+        if (!attRes.data.data) continue;
+
+        const buffer = Buffer.from(attRes.data.data, 'base64');
+        const sha = crypto.createHash('sha256').update(buffer).digest('hex');
+        const exists = await ProviderDocument.findOne({ userId, sha256: sha }).setOptions({ userId }).lean();
+        if (exists) {
+          processed.push({ messageId: m.id, attachment: att.fileName, status: 'already_processed', documentId: exists._id.toString() });
+          continue;
+        }
+
+        const doc = await ProviderDocument.create({
+          userId,
+          providerId: provider._id,
+          source: 'gmail',
+          gmailMessageId: m.id,
+          gmailAttachmentId: att.attachmentId,
+          fileName: att.fileName,
+          mimeType: att.mimeType,
+          size: att.size ?? buffer.length,
+          receivedAt,
+          from: fromAddr,
+          subject,
+          sha256: sha,
+          status: 'new',
+        });
+
+        // One failing document must not abort the batch.
+        try {
+          const result = await processDocument({
+            document: {
+              _id: doc._id.toString(),
               mimeType: att.mimeType,
-              size: att.size ?? buffer.length,
+              fileName: att.fileName,
               receivedAt,
-              from: fromAddr,
-              subject,
-              sha256: sha,
+              size: att.size ?? buffer.length,
+              buffer,
+              textBody,
               status: 'new',
-            });
-            processed.push({ messageId: m.id, attachment: att.fileName, status: 'stored', documentId: doc._id.toString() });
+            },
+            provider: { _id: provider._id.toString(), name: provider.name, defaultUnit: provider.defaultUnit ?? undefined },
+            userId,
+            meters,
+            readings,
+            apiKey: account.googleApiKey,
+            drive,
+            rootFolderId,
+          });
+          processed.push({
+            messageId: m.id,
+            attachment: att.fileName,
+            documentId: doc._id.toString(),
+            status: result.status,
+            intakeItemIds: result.intakeItemIds,
+            billId: result.billId,
+            driveFileId: result.driveFileId,
+            error: result.error,
+          });
+          if (result.status === 'failed') {
+            await ProviderDocument.findByIdAndUpdate(doc._id, {
+              $set: { status: 'failed', error: result.error ?? 'processing failed' },
+            }).setOptions({ userId });
           }
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : 'processing failed';
+          await ProviderDocument.findByIdAndUpdate(doc._id, {
+            $set: { status: 'failed', error: reason },
+          }).setOptions({ userId });
+          processed.push({
+            messageId: m.id,
+            attachment: att.fileName,
+            documentId: doc._id.toString(),
+            status: 'failed',
+            error: reason,
+          });
         }
       }
     }
+
+    await User.findByIdAndUpdate(userId, { $set: { 'google.lastSyncAt': new Date() } });
     res.statusCode = 200; res.end(JSON.stringify({ processed, count: processed.length, provider: providerName }));
   } catch (e) {
     if (isInvalidGrant(e)) {
@@ -150,4 +242,149 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
 export { handleGoogleSync as handleIntakeSync };
 export async function handleIntakeVerify({ res }: RouteParams): Promise<void> {
   res.statusCode = 200; res.end(JSON.stringify({ status: 'verify endpoint ready — retry after sync' }));
+}
+
+/** `/api/intake/items/<id>/<action>` → the id segment, or null. */
+function intakeItemId(pathname: string): string | null {
+  const segments = pathname.split('/').filter(Boolean);
+  const index = segments.indexOf('items');
+  const id = index === -1 ? undefined : segments[index + 1];
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  return id;
+}
+
+export async function handleIntakeItems({ res, userId, url }: RouteParams): Promise<void> {
+  const statusParam = url.searchParams.get('status');
+  const query: { userId: string; status?: { $in: string[] } } = { userId };
+  if (statusParam) {
+    const statuses = statusParam.split(',').map((status) => status.trim()).filter(Boolean);
+    if (statuses.length > 0) {
+      query.status = { $in: statuses };
+    }
+  }
+  const items = await IntakeItem.find(query).setOptions({ userId }).lean();
+  res.statusCode = 200; res.end(JSON.stringify({ items, count: items.length }));
+}
+
+export async function handleIntakeItemAccept({ res, userId, url }: RouteParams): Promise<void> {
+  const id = intakeItemId(url.pathname);
+  if (!id) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
+  }
+  const item = await IntakeItem.findOne({ _id: id, userId }).setOptions({ userId }).lean();
+  if (!item) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
+  }
+  if (item.status !== 'pending' && item.status !== 'conflict') {
+    res.statusCode = 409; res.end(JSON.stringify({ error: `Item already ${item.status}` })); return;
+  }
+  // Unknown meter: the user must create/link one first, never auto-create.
+  if (!item.meterId) {
+    res.statusCode = 409; res.end(JSON.stringify({ error: 'Unknown meter number — create meter first' })); return;
+  }
+
+  try {
+    if (item.kind === 'reading') {
+      await Reading.create({
+        meterId: item.meterId,
+        date: item.date,
+        value: item.value,
+        source: 'provider',
+        providerDocId: item.documentId,
+        userId,
+      });
+    } else {
+      await Bill.create({
+        meterId: item.meterId,
+        providerId: item.providerId,
+        documentId: item.documentId,
+        periodStart: item.periodStart,
+        periodEnd: item.periodEnd,
+        consumption: item.consumption,
+        unit: item.unit,
+        amountGross: item.amountGross,
+        amountNet: item.amountNet,
+        currency: item.currency ?? 'EUR',
+        userId,
+      });
+    }
+  } catch (error) {
+    if ((error as { code?: number }).code === 11000) {
+      res.statusCode = 409; res.end(JSON.stringify({ error: 'A reading already exists for this date' })); return;
+    }
+    throw error;
+  }
+
+  await IntakeItem.findByIdAndUpdate(id, { $set: { status: 'accepted' } }).setOptions({ userId });
+  res.statusCode = 200; res.end(JSON.stringify({ item: { id, status: 'accepted' } }));
+}
+
+export async function handleIntakeItemReject({ res, userId, url }: RouteParams): Promise<void> {
+  const id = intakeItemId(url.pathname);
+  if (!id) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
+  }
+  const item = await IntakeItem.findOne({ _id: id, userId }).setOptions({ userId }).lean();
+  if (!item) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
+  }
+  await IntakeItem.findByIdAndUpdate(id, { $set: { status: 'rejected' } }).setOptions({ userId });
+  res.statusCode = 200; res.end(JSON.stringify({ item: { id, status: 'rejected' } }));
+}
+
+/** Dispatch `/api/intake/items/<id>/accept|reject`. */
+export async function handleIntakeItemAction(params: RouteParams): Promise<void> {
+  const { req, res, url } = params;
+  if (req.method !== 'POST') {
+    res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); return;
+  }
+  if (!intakeItemId(url.pathname)) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
+  }
+  if (url.pathname.endsWith('/accept')) {
+    return handleIntakeItemAccept(params);
+  }
+  if (url.pathname.endsWith('/reject')) {
+    return handleIntakeItemReject(params);
+  }
+  res.statusCode = 404; res.end(JSON.stringify({ error: 'Not found' }));
+}
+
+/**
+ * Bills against what the contract rates would have charged — the data behind
+ * the comparison view. Variance is derived here, never stored.
+ */
+export async function handleIntakeBills({ res, userId }: RouteParams): Promise<void> {
+  const [bills, contracts] = await Promise.all([
+    Bill.find({}).setOptions({ userId }).lean(),
+    Contract.find({}).setOptions({ userId }).lean(),
+  ]);
+
+  const rows = bills.map((bill) => {
+    const meterContracts = contracts
+      .filter((contract) => String(contract.meterId) === String(bill.meterId))
+      .map((contract) => ({
+        basePrice: contract.basePrice,
+        workingPrice: contract.workingPrice,
+        startDate: contract.startDate,
+        endDate: contract.endDate ?? null,
+      }));
+    const at = bill.periodEnd ?? new Date();
+    const contract = findActiveOrLastContract(meterContracts, new Date(at));
+    const days = periodDays(
+      bill.periodStart?.toISOString(),
+      bill.periodEnd?.toISOString(),
+    );
+    const expected = contract && bill.consumption !== undefined && days > 0
+      ? expectedCostForBill(contract, bill.consumption, days)
+      : null;
+    const variance = expected !== null && bill.amountGross !== undefined
+      ? computeVariance(bill.amountGross, expected)
+      : null;
+    return { ...bill, expected, variance };
+  });
+
+  res.statusCode = 200; res.end(JSON.stringify({ bills: rows, count: rows.length }));
 }
