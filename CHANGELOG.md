@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.20.0](https://github.com/dachrisch/energy.consumption/compare/v3.19.3...v3.20.0) (2026-11-01)
+
+
+### Features
+
+* **intake:** Google connection, Drive archiving and reading links ([2ed7350](https://github.com/dachrisch/energy.consumption/commit/2ed73500893194265ef3c54134e02077106a8887))
+* **intake:** host Google connection, archive documents to Drive, link readings ([3fc20af](https://github.com/dachrisch/energy.consumption/commit/3fc20af9719f88461301199f4b53a275b26c7cdf))
+
 ## [3.19.3](https://github.com/dachrisch/energy.consumption/compare/v3.19.2...v3.19.3) (2026-11-01)
 
 
