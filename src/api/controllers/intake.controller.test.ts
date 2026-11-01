@@ -776,7 +776,7 @@ describe('intake controller', () => {
       const stadtwerke = payload.providers.find((provider) => provider.name === 'Stadtwerke');
       expect(stadtwerke?.contractCount).toBe(2);
       // Settings are read as the union over the provider's contracts.
-      expect(stadtwerke?.senders).toEqual(['rechnung@stadtwerke.example', 'neu@stadtwerke.example']);
+      expect(stadtwerke?.senders).toEqual(['neu@stadtwerke.example', 'rechnung@stadtwerke.example']);
       expect(stadtwerke?.unit).toBe('kWh');
     });
 

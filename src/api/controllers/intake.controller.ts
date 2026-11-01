@@ -424,10 +424,12 @@ async function resolveProvider(userId: string, providerName: string): Promise<Pr
   const units = new Map(meters.map((meter) => [meter._id.toString(), meter.unit]));
   const meterIds = [...new Set(contracts.map((contract) => contract.meterId.toString()))];
   const newestQuery = contracts.find((contract) => contract.gmailQuery)?.gmailQuery ?? null;
+  // Sorted so the derived view does not depend on the contracts' start dates.
+  const union = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
   return {
     name: providerName,
-    senders: [...new Set(contracts.flatMap((contract) => contract.senders ?? []))],
-    subjectHints: [...new Set(contracts.flatMap((contract) => contract.subjectHints ?? []))],
+    senders: union(contracts.flatMap((contract) => contract.senders ?? [])),
+    subjectHints: union(contracts.flatMap((contract) => contract.subjectHints ?? [])),
     gmailQuery: newestQuery,
     unit: units.get(meterIds[0]),
     contractCount: contracts.length,
