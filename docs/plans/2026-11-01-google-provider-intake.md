@@ -1,7 +1,8 @@
 # Google Provider Intake — Design
 
-Date: 2026-11-01 · Status: Phase 1 (#720) and the Phase 2 backend (#723) are
-merged; the intake/comparison UI and background sync are still open.
+Date: 2026-11-01 · Status: Phase 1 (#720), the Phase 2 backend (#723) and the
+`/intake` page are merged; meter linking from the page and background sync are
+still open.
 
 ## Goal
 
@@ -117,12 +118,31 @@ POST /api/intake/sync
 - Variance is never stored: `/api/intake/bills` derives expected cost and
   variance from the meter's contract on read.
 
+### In-app flow
+
+`/intake` (nav: **Intake**, plus a dropdown entry) is the human side of the
+pipeline:
+
+- **Providers** — add (name, sender addresses, subject hints, unit, optional raw
+  Gmail query), remove, and **Sync now** per provider. The last sync's per-file
+  result (`parsed` / `failed` + reason) is shown inline.
+- **Staged items** — pending/conflict `IntakeItem`s with value, date, meter
+  number and the reconciliation note; Accept promotes into `Reading`/`Bill`,
+  Reject dismisses. A toggle reveals already-decided items.
+- **Bills vs. contract** — billed amount, contract-expected amount and variance,
+  straight from `GET /api/intake/bills`.
+- **Recent documents** — status, subject, error text and a Drive link.
+
+Supporting endpoints: `GET/POST /api/providers`, `PATCH/DELETE /api/providers/:id`,
+`GET /api/intake/documents`. Provider payloads are zod-validated
+(`providerSchema`, `.strict()`), name collisions return 409, and every query is
+scoped with `.setOptions({ userId })`.
+
 ### Remaining
 
 | Item | Notes |
 |---|---|
-| Intake list UI | A card listing `GET /api/intake/items?status=pending,conflict` with Accept/Reject and a "create meter" shortcut for items whose meter number is unknown. Endpoints exist and are tested; only the SolidJS view is missing. |
-| Bill comparison UI | `GET /api/intake/bills` already returns billed, expected and variance per bill. The card must reuse that data instead of recomputing the formula (the earlier `BillComparisonCard` duplicated it and hardcoded a non-EUR currency). |
+| Meter linking from the intake page | Accepting an item whose meter number is unknown returns 409 and the page says so, but there is no "create meter" shortcut yet — the user has to go to `/meters/add` first. `meterNumber` is on the item, so pre-filling is straightforward. |
 | Background sync (step 5) | Scheduled `POST /api/intake/sync` per connected user via the existing Ofelia/cron setup, guarded by `google.lastSyncAt` (15 min) and switched to Gmail `history.list` with `google.lastHistoryId` instead of a full search. |
 
 ### Test coverage
@@ -136,6 +156,11 @@ POST /api/intake/sync
   sha256 idempotency, item listing/filtering, accept/reject rules (unknown
   meter, double accept, duplicate meter/date, cross-user 404, malformed id,
   wrong method) and the bill variance numbers.
+- Provider CRUD and the document list are covered in the same memory-mongo
+  suite (create/validate/duplicate/isolate/update/delete, newest-first + limit).
+- `src/pages/__tests__/Intake.test.tsx` renders the page against a mocked API:
+  providers/items/documents, the bills variance row, the status filter, provider
+  creation (senders split into a list), item acceptance and a sync run.
 - No E2E for Drive/Gemini: both are injectable (`DriveClientLike`,
   `extractDocument`), so unit coverage is the contract; a live smoke test stays
   manual via `HOWTO_GOOGLE_CREDS.md`.

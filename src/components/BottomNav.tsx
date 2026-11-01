@@ -19,6 +19,11 @@ const BottomNav: Component = () => {
       name: 'Meters', 
       path: '/meters', 
       icon: <Icon name="meter" class="h-6 w-6" />
+    },
+    {
+      name: 'Intake',
+      path: '/intake',
+      icon: <Icon name="import" class="h-6 w-6" />
     }
   ];
 

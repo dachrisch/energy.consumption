@@ -9,6 +9,7 @@ import Reading from '../../models/Reading';
 import Meter from '../../models/Meter';
 import Contract from '../../models/Contract';
 import { RouteParams, sanitizeString } from '../utils';
+import { formatZodError, providerSchema, providerUpdateSchema } from '../validation';
 import { decrypt } from '../../lib/encryption';
 import {
   GOOGLE_SCOPES, isGoogleConfigured, buildConsentUrl, signState, verifyState,
@@ -387,4 +388,85 @@ export async function handleIntakeBills({ res, userId }: RouteParams): Promise<v
   });
 
   res.statusCode = 200; res.end(JSON.stringify({ bills: rows, count: rows.length }));
+}
+
+/** Path segment after `/<segment>/`, e.g. the id in `/api/providers/<id>`. */
+function idAfterSegment(pathname: string, segment: string): string | null {
+  const segments = pathname.split('/').filter(Boolean);
+  const index = segments.indexOf(segment);
+  const id = index === -1 ? undefined : segments[index + 1];
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  return id;
+}
+
+/** Providers configure which mail a sync looks for. */
+export async function handleProviders({ req, res, userId }: RouteParams): Promise<void> {
+  if (req.method === 'GET') {
+    const providers = await Provider.find({}).setOptions({ userId }).sort({ name: 1 }).lean();
+    res.statusCode = 200; res.end(JSON.stringify({ providers, count: providers.length }));
+    return;
+  }
+  if (req.method !== 'POST') {
+    res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); return;
+  }
+
+  const result = providerSchema.safeParse(req.body);
+  if (!result.success) {
+    res.statusCode = 400; res.end(JSON.stringify({ error: formatZodError(result.error) })); return;
+  }
+  const existing = await Provider.findOne({ name: result.data.name }).setOptions({ userId }).lean();
+  if (existing) {
+    res.statusCode = 409; res.end(JSON.stringify({ error: `Provider "${result.data.name}" already exists` })); return;
+  }
+  const provider = await Provider.create({ ...result.data, userId });
+  res.statusCode = 201; res.end(JSON.stringify({ provider }));
+}
+
+export async function handleProviderItem({ req, res, userId, url }: RouteParams): Promise<void> {
+  const id = idAfterSegment(url.pathname, 'providers');
+  if (!id) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Provider not found' })); return;
+  }
+
+  if (req.method === 'PATCH') {
+    const result = providerUpdateSchema.safeParse(req.body);
+    if (!result.success) {
+      res.statusCode = 400; res.end(JSON.stringify({ error: formatZodError(result.error) })); return;
+    }
+    const provider = await Provider.findOneAndUpdate(
+      { _id: id },
+      { $set: result.data },
+      { new: true, runValidators: true },
+    ).setOptions({ userId }).lean();
+    if (!provider) {
+      res.statusCode = 404; res.end(JSON.stringify({ error: 'Provider not found' })); return;
+    }
+    res.statusCode = 200; res.end(JSON.stringify({ provider }));
+    return;
+  }
+
+  if (req.method === 'DELETE') {
+    const deleted = await Provider.findOneAndDelete({ _id: id }).setOptions({ userId }).lean();
+    if (!deleted) {
+      res.statusCode = 404; res.end(JSON.stringify({ error: 'Provider not found' })); return;
+    }
+    res.statusCode = 200; res.end(JSON.stringify({ provider: { _id: id }, deleted: true }));
+    return;
+  }
+
+  res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' }));
+}
+
+/** Most recent ingested documents, for the intake page's document list. */
+export async function handleIntakeDocuments({ res, userId, url }: RouteParams): Promise<void> {
+  const requested = Number(url.searchParams.get('limit') ?? 25);
+  const limit = Number.isFinite(requested) && requested > 0 ? Math.min(requested, 100) : 25;
+  const documents = await ProviderDocument.find({})
+    .setOptions({ userId })
+    .sort({ receivedAt: -1 })
+    .limit(limit)
+    .lean();
+  res.statusCode = 200; res.end(JSON.stringify({ documents, count: documents.length }));
 }
