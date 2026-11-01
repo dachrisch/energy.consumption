@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.19.2](https://github.com/dachrisch/energy.consumption/compare/v3.19.1...v3.19.2) (2026-11-01)
+
+
+### Bug Fixes
+
+* **intake:** fetch Gmail attachments via users.messages.attachments ([#733](https://github.com/dachrisch/energy.consumption/issues/733)) ([dfd544d](https://github.com/dachrisch/energy.consumption/commit/dfd544d105119ac772a62545e464cf19cccec81e))
+
 ## [3.19.1](https://github.com/dachrisch/energy.consumption/compare/v3.19.0...v3.19.1) (2026-11-01)
 
 
