@@ -150,13 +150,18 @@ pipeline:
 - **Recent documents** — status, subject, error text and a **Drive** link for
   parsed documents. Missing copies are archived automatically on first visit
   (when Google is connected) and can be retried with **Save to Drive** /
-  **Archive to Drive**; the row stacks on small screens.
+  **Archive to Drive**; the row stacks on small screens. Failed documents offer
+  **Retry** (and **Retry failed** retries the whole list): the original is
+  re-downloaded from Gmail by its stored message/attachment ids and the pipeline
+  runs again, so documents that failed before a mime/extractor fix are not stuck
+  outside the sync's search window.
 
 Supporting endpoints: `GET /api/providers` (derived view) and
 `PATCH /api/providers` (settings → all contracts of that provider), plus
-`GET /api/intake/documents` and `POST /api/intake/documents/archive`. The
-settings payload is zod-validated (`providerSettingsSchema`, `.strict()`) and
-every query is scoped with `.setOptions({ userId })`.
+`GET /api/intake/documents` and `POST /api/intake/documents/archive`, plus
+`POST /api/intake/documents/<id>/retry`. The settings payload is zod-validated
+(`providerSettingsSchema`, `.strict()`) and every query is scoped with
+`.setOptions({ userId })`.
 
 ### Remaining
 

@@ -326,6 +326,7 @@ const Intake: Component = () => {
   const [lastSync, setLastSync] = createSignal<SyncResponse | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [archiving, setArchiving] = createSignal<string | null>(null);
+  const [retrying, setRetrying] = createSignal<string | null>(null);
   const [autoArchiveTried, setAutoArchiveTried] = createSignal(false);
 
   const loadProviders = async () => {
@@ -411,6 +412,70 @@ const Intake: Component = () => {
       }
     } finally {
       setArchiving(null);
+    }
+  };
+
+  /**
+   * Re-run the pipeline on a stored document. Sync only sees mail inside its
+   * search window, so this is the way to reprocess a document that failed
+   * before a fix (mime resolution, extractor) or to retry a flaky run.
+   */
+  const retryDocument = async (document: IProviderDocument, quiet = false) => {
+    setRetrying(document._id);
+    try {
+      const response = await api<{ document: { status: string; error?: string } }>(
+        `/api/intake/documents/${document._id}/retry`,
+        { method: 'POST' },
+      );
+      const updated = response.document;
+      if (!quiet) {
+        if (updated.status === 'parsed') {
+          toast.showToast(`${document.fileName} parsed`, 'success');
+        } else {
+          toast.showToast(`${document.fileName}: ${updated.error ?? updated.status}`, 'warning');
+        }
+        await Promise.all([loadItems(), loadDocuments(), loadBills()]);
+      }
+      return updated;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not retry the document';
+      if (!quiet) {
+        toast.showToast(message, message.includes('expired') ? 'warning' : 'error');
+      }
+      if (message.includes('expired')) {
+        auth.revalidate();
+      }
+      return undefined;
+    } finally {
+      setRetrying(null);
+    }
+  };
+
+  const retryFailedDocuments = async () => {
+    const failed = documents().filter((document) => document.status === 'failed');
+    if (failed.length === 0) {
+      return;
+    }
+    const reasons = new Set<string>();
+    let parsed = 0;
+    for (const document of failed) {
+      const updated = await retryDocument(document, true);
+      if (updated?.status === 'parsed') {
+        parsed += 1;
+      } else if (updated?.error) {
+        reasons.add(updated.error);
+      }
+    }
+    await Promise.all([loadItems(), loadDocuments(), loadBills()]);
+    if (parsed > 0) {
+      toast.showToast(`${parsed} document${parsed === 1 ? '' : 's'} parsed`, 'success');
+    }
+    if (parsed < failed.length) {
+      const reason = [...reasons][0];
+      toast.showToast(
+        `${failed.length - parsed} still failed${reason ? `: ${reason}` : ''}`,
+        'warning',
+      );
     }
   };
 
@@ -633,16 +698,28 @@ const Intake: Component = () => {
           <div class="card-body p-6 md:p-8">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <h2 class="text-lg font-black tracking-tight">Recent documents</h2>
-              <Show when={documents().some(needsArchive)}>
-                <button
-                  class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
-                  disabled={archiving() !== null}
-                  onClick={() => void archiveDocuments()}
-                >
-                  <Icon name="refresh" class={`h-3 w-3 mr-1 ${archiving() === 'all' ? 'animate-spin' : ''}`} />
-                  {archiving() === 'all' ? 'Archiving…' : 'Archive to Drive'}
-                </button>
-              </Show>
+              <div class="flex flex-wrap items-center gap-2">
+                <Show when={documents().some((document) => document.status === 'failed')}>
+                  <button
+                    class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                    disabled={retrying() !== null || archiving() !== null}
+                    onClick={() => void retryFailedDocuments()}
+                  >
+                    <Icon name="refresh" class={`h-3 w-3 mr-1 ${retrying() ? 'animate-spin' : ''}`} />
+                    {retrying() ? 'Retrying…' : 'Retry failed'}
+                  </button>
+                </Show>
+                <Show when={documents().some(needsArchive)}>
+                  <button
+                    class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                    disabled={archiving() !== null || retrying() !== null}
+                    onClick={() => void archiveDocuments()}
+                  >
+                    <Icon name="refresh" class={`h-3 w-3 mr-1 ${archiving() === 'all' ? 'animate-spin' : ''}`} />
+                    {archiving() === 'all' ? 'Archiving…' : 'Archive to Drive'}
+                  </button>
+                </Show>
+              </div>
             </div>
             <Show when={documents().length > 0} fallback={
               <p class="mt-2 text-sm font-bold opacity-50">Nothing ingested yet.</p>
@@ -663,21 +740,19 @@ const Intake: Component = () => {
                       <Show when={document.error}>
                         <p class="mt-1 text-[11px] font-bold text-error break-words">{document.error}</p>
                       </Show>
-                      <Show when={driveLink(document) || needsArchive(document)}>
+                      <Show when={document.status === 'failed' || driveLink(document) || needsArchive(document)}>
                         <div class="mt-3 flex flex-wrap items-center gap-2">
-                          <Show
-                            when={driveLink(document)}
-                            fallback={
-                              <button
-                                class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
-                                disabled={archiving() !== null}
-                                onClick={() => void archiveDocuments(document._id)}
-                              >
-                                <Icon name="export" class="h-3 w-3 mr-1" />
-                                {archiving() === document._id ? 'Saving…' : 'Save to Drive'}
-                              </button>
-                            }
-                          >
+                          <Show when={document.status === 'failed'}>
+                            <button
+                              class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                              disabled={retrying() !== null || archiving() !== null}
+                              onClick={() => void retryDocument(document)}
+                            >
+                              <Icon name="refresh" class={`h-3 w-3 mr-1 ${retrying() === document._id ? 'animate-spin' : ''}`} />
+                              {retrying() === document._id ? 'Retrying…' : 'Retry'}
+                            </button>
+                          </Show>
+                          <Show when={driveLink(document)}>
                             {(link) => (
                               <a
                                 href={link()}
@@ -688,6 +763,16 @@ const Intake: Component = () => {
                                 <Icon name="external-link" class="h-3 w-3 mr-1" /> Drive
                               </a>
                             )}
+                          </Show>
+                          <Show when={needsArchive(document)}>
+                            <button
+                              class="btn btn-ghost btn-xs rounded-lg font-black text-[10px] uppercase tracking-widest"
+                              disabled={archiving() !== null || retrying() !== null}
+                              onClick={() => void archiveDocuments(document._id)}
+                            >
+                              <Icon name="export" class="h-3 w-3 mr-1" />
+                              {archiving() === document._id ? 'Saving…' : 'Save to Drive'}
+                            </button>
                           </Show>
                         </div>
                       </Show>

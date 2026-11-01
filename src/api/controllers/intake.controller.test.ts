@@ -19,7 +19,8 @@ import { decrypt, encrypt } from '../../lib/encryption';
 import { signState, verifyState } from '../../lib/google/oauth';
 import {
   handleCallback, handleConnect, handleGoogleSync, handleIntakeArchive, handleIntakeBills,
-  handleIntakeDocuments, handleIntakeItemAction, handleIntakeItems, handleProviders,
+  handleIntakeDocumentAction, handleIntakeDocuments, handleIntakeItemAction, handleIntakeItems,
+  handleProviders,
 } from './intake.controller';
 import type { ApiRequest, ApiResponse, RouteParams } from '../utils';
 
@@ -698,6 +699,78 @@ describe('intake controller', () => {
       expect(payload.failed).toBe(1);
       const stored = await ProviderDocument.findById(document._id).lean();
       expect(stored?.driveFileId).toBeUndefined();
+    });
+  });
+
+  describe('handleIntakeDocumentAction — retry', () => {
+    async function createFailedDocument(overrides: Record<string, unknown> = {}) {
+      return ProviderDocument.create({
+        userId: ownerId,
+        providerName: 'Stadtwerke',
+        source: 'gmail',
+        gmailMessageId: 'msg-1',
+        gmailAttachmentId: 'att-1',
+        fileName: 'Abrechnung.pdf',
+        mimeType: 'application/octet-stream',
+        size: pdfBytes.length,
+        receivedAt: new Date('2024-02-10'),
+        sha256: `sha-${Math.random()}`,
+        status: 'failed',
+        error: 'unsupported format',
+        ...overrides,
+      });
+    }
+
+    beforeEach(async () => {
+      await User.findByIdAndUpdate(ownerId, {
+        $set: {
+          'google.refreshToken': encrypt('refresh-token'),
+          'google.status': 'ok',
+        },
+      });
+    });
+
+    it('re-resolves the mime type so a PDF sent as octet-stream is read', async () => {
+      stubGmail();
+      stubDrive();
+      const document = await createFailedDocument();
+      const response = mockResponse();
+
+      await handleIntakeDocumentAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'POST',
+        url: `/api/intake/documents/${document._id.toString()}/retry`,
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const stored = await ProviderDocument.findById(document._id).lean();
+      expect(stored?.mimeType).toBe('application/pdf');
+      // No Gemini key in this test: the PDF now reaches extraction instead of
+      // being rejected as an unsupported format.
+      expect(stored?.status).toBe('failed');
+      expect(stored?.error).toMatch(/Gemini API key/);
+    });
+
+    it('keeps documents private to their owner', async () => {
+      await User.findByIdAndUpdate(otherId, {
+        $set: { 'google.refreshToken': encrypt('refresh-token'), 'google.status': 'ok' },
+      });
+      stubGmail();
+      stubDrive();
+      const document = await createFailedDocument();
+      const response = mockResponse();
+
+      await handleIntakeDocumentAction(params({
+        res: response.res,
+        userId: otherId,
+        method: 'POST',
+        url: `/api/intake/documents/${document._id.toString()}/retry`,
+      }));
+
+      expect(response.res.statusCode).toBe(404);
+      const stored = await ProviderDocument.findById(document._id).lean();
+      expect(stored?.status).toBe('failed');
     });
   });
 
