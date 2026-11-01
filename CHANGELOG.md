@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.21.0](https://github.com/dachrisch/energy.consumption/compare/v3.20.3...v3.21.0) (2026-11-01)
+
+
+### Features
+
+* **intake:** retry a stored document by its Gmail ids ([58416ef](https://github.com/dachrisch/energy.consumption/commit/58416ef99442fd9bb79fd7241072b10f96df0c04))
+* **intake:** retry old failed documents by their Gmail ids ([0d5930a](https://github.com/dachrisch/energy.consumption/commit/0d5930a91187834d46056acdde20fb2cf6a977e0))
+
 ## [3.20.3](https://github.com/dachrisch/energy.consumption/compare/v3.20.2...v3.20.3) (2026-11-01)
 
 
