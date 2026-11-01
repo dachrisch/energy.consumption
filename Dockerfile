@@ -1,5 +1,5 @@
 # Build stage
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 # Accept version as build argument
 ARG VITE_BUILD_VERSION=dev
@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:24-alpine
+FROM node:26-alpine
 
 WORKDIR /app
 
