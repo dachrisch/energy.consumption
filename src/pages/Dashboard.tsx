@@ -9,6 +9,7 @@ import { Chart, Title, Tooltip, Legend, Colors, BarElement, CategoryScale, Linea
 import { Bar } from 'solid-chartjs';
 import Icon from '../components/Icon';
 import EmptyState from '../components/EmptyState';
+import PageHeader from '../components/PageHeader';
 import TimeRangeCostCard from '../components/TimeRangeCostCard';
 
 Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
@@ -33,20 +34,28 @@ const fetchDashboardData = async () => {
 };
 
 const DashboardHeader: Component<{ onImport: () => void }> = (p) => (
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div><h1 class="text-4xl font-black tracking-tighter">Financial Cockpit</h1><p class="text-base-content/60 font-bold">Aggregated insights.</p></div>
-    <div class="flex gap-2"><button class="btn btn-ghost btn-md rounded-2xl" onClick={p.onImport}>Import</button>
-      <A href="/add-reading" class="btn btn-primary btn-md rounded-2xl shadow-xl px-8 text-sm"><Icon name="add" class="h-5 w-5" />Quick Add</A></div>
-  </div>
+  <PageHeader
+    eyebrow="Dashboard"
+    title="Financial cockpit"
+    subtitle="Aggregated insights across your meters and contracts."
+    actions={
+      <>
+        <button class="btn btn-ghost btn-sm rounded-xl font-bold" onClick={p.onImport}>Import</button>
+        <A href="/add-reading" class="btn btn-primary btn-sm rounded-xl font-bold">
+          <Icon name="add" class="h-4 w-4" /> Quick add
+        </A>
+      </>
+    }
+  />
 );
 
 const TrendValue: Component<{ current: number, previous: number }> = (p) => {
   const diff = () => p.current - p.previous;
   const pct = () => p.previous > 0 ? (diff() / p.previous) * 100 : 0;
   const isUp = () => diff() > 0;
-  return (<Show when={p.previous > 0}><div class={`text-[10px] font-black flex items-center gap-1 mt-1 ${isUp() ? 'text-error/80' : 'text-success/90'} overflow-hidden whitespace-nowrap`}>
-    <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class={`h-3 w-3 flex-shrink-0 ${isUp() ? '' : 'rotate-180'}`} />
-    <span class="truncate">{isUp() ? '+' : '-'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(pct()).toFixed(1)}%)</span>
+  return (<Show when={p.previous > 0}><div class={`text-[11px] font-bold flex items-center gap-1 mt-1 ${isUp() ? 'text-rose-300' : 'text-emerald-300'} overflow-hidden whitespace-nowrap`}>
+    <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class="h-3 w-3 flex-shrink-0" />
+    <span class="truncate">{isUp() ? '+' : '−'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(pct()).toFixed(1)}%)</span>
   </div></Show>);
 };
 
@@ -294,17 +303,17 @@ const Dashboard: Component = () => {
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             <Show when={data()}>{(_d) => <>
-              <div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
-                <div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="meter" class="h-10 w-10" /></div>
-                <h3 class="text-lg font-black uppercase opacity-40">Meter Management</h3>
-                <p class="text-sm font-bold opacity-60">Manage your individual meters, history and infrastructure in the new section.</p>
-                <A href="/meters" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Meters</A>
+              <div class="card bg-base-100 border border-base-content/5 shadow-sm p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
+                <div class="bg-base-200 p-4 rounded-2xl text-base-content/30"><Icon name="meter" class="h-10 w-10" /></div>
+                <h3 class="text-lg font-black tracking-tight">Meter management</h3>
+                <p class="text-sm font-bold opacity-60">Manage your individual meters, history and infrastructure.</p>
+                <A href="/meters" class="btn btn-outline btn-wide rounded-xl font-bold">Go to meters</A>
               </div>
-              <div class="card bg-base-100 shadow-xl border p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
-                <div class="bg-base-200 p-4 rounded-2xl text-base-content/20"><Icon name="contract" class="h-10 w-10" /></div>
-                <h3 class="text-lg font-black uppercase opacity-40">Contract Management</h3>
-                <p class="text-sm font-bold opacity-60">Manage your energy provider pricing, active contracts and historical gaps.</p>
-                <A href="/contracts" class="btn btn-outline btn-wide rounded-2xl border-2 font-black">Go to Contracts</A>
+              <div class="card bg-base-100 border border-base-content/5 shadow-sm p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
+                <div class="bg-base-200 p-4 rounded-2xl text-base-content/30"><Icon name="contract" class="h-10 w-10" /></div>
+                <h3 class="text-lg font-black tracking-tight">Contract management</h3>
+                <p class="text-sm font-bold opacity-60">Manage provider pricing, active contracts and historical gaps.</p>
+                <A href="/contracts" class="btn btn-outline btn-wide rounded-xl font-bold">Go to contracts</A>
               </div>
             </>}</Show>
           </div>

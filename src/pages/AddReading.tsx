@@ -2,6 +2,7 @@ import { Component, createSignal, createResource, Show, createEffect, For } from
 import { useNavigate, useParams } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import PageHeader from '../components/PageHeader';
 import Icon from '../components/Icon';
 
 interface Meter { _id: string; name: string; meterNumber: string; unit: string; }
@@ -10,7 +11,7 @@ interface ScanResult { value: number; meterId: string; meterName: string; type: 
 const fetchMeters = async () => (await fetch('/api/meters')).json();
 
 const EntrySelection: Component<{ isScanning: boolean; googleApiKey?: string; hasMeters: boolean; onScan: (e: Event) => void; onEnterManually: () => void; onAddMeter: () => void; }> = (props) => (
-  <div class="card bg-base-100 shadow-2xl border border-base-content/5 p-12 rounded-3xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+  <div class="card bg-base-100 shadow-sm border border-base-content/5 p-12 rounded-3xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
     <div class="bg-primary/10 p-6 rounded-3xl w-24 h-24 flex items-center justify-center mx-auto text-primary"><Icon name="add" class="h-12 w-12" /></div>
     <div>
       <h2 class="text-3xl font-black tracking-tighter">New Reading</h2>
@@ -18,15 +19,15 @@ const EntrySelection: Component<{ isScanning: boolean; googleApiKey?: string; ha
       <div class="flex flex-col gap-4 mt-10 items-center">
         <div class="w-full max-w-xs text-center flex flex-col gap-3">
           <div class="flex gap-3"><div class="flex-1"><input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input-start" onChange={props.onScan} disabled={!props.googleApiKey} />
-              <label for="photo-input-start" class="btn btn-primary btn-lg rounded-2xl w-full gap-3 shadow-xl shadow-primary/20 h-20 text-xl font-black" classList={{ 'btn-disabled': !props.googleApiKey }}>
+              <label for="photo-input-start" class="btn btn-primary btn-lg rounded-xl w-full gap-3 shadow-sm shadow-primary/20 h-20 text-xl font-black" classList={{ 'btn-disabled': !props.googleApiKey }}>
                 <Show when={props.isScanning} fallback={<><Icon name="camera" class="h-8 w-8" /> Scan Photo</>}><span class="loading loading-spinner loading-md"></span></Show>
               </label></div>
             <div class="md:hidden"><input type="file" accept="image/*" class="hidden" id="photo-upload-start" onChange={props.onScan} disabled={!props.googleApiKey} />
-              <label for="photo-upload-start" class="btn btn-secondary btn-lg rounded-2xl h-20 w-20 p-0 shadow-xl shadow-secondary/10" classList={{ 'btn-disabled': !props.googleApiKey }} title="Upload from storage"><Icon name="image" class="h-8 w-8" /></label></div></div>
+              <label for="photo-upload-start" class="btn btn-secondary btn-lg rounded-xl h-20 w-20 p-0 shadow-sm shadow-secondary/10" classList={{ 'btn-disabled': !props.googleApiKey }} title="Upload from storage"><Icon name="image" class="h-8 w-8" /></label></div></div>
           {!props.googleApiKey && <p class="text-[10px] font-black uppercase text-warning mt-1 tracking-widest opacity-80 animate-in fade-in slide-in-from-top-1">⚠️ AI Scanning requires a Google API Key</p>}
         </div>
         <div class="divider text-[10px] font-black opacity-20 uppercase tracking-widest">or</div>
-        <button onClick={props.hasMeters ? props.onEnterManually : props.onAddMeter} class="btn btn-ghost btn-lg rounded-2xl opacity-60 hover:opacity-100 font-black tracking-tight">{props.hasMeters ? 'Enter Manually' : 'Register First Meter'}</button>
+        <button onClick={props.hasMeters ? props.onEnterManually : props.onAddMeter} class="btn btn-ghost btn-lg rounded-xl opacity-60 hover:opacity-100 font-black tracking-tight">{props.hasMeters ? 'Enter Manually' : 'Register First Meter'}</button>
       </div>
     </div>
   </div>
@@ -39,11 +40,11 @@ const ReadingValueInput: Component<{ unit: string; value: string; onInput: (v: s
 
 const ReadingPhotoActions: Component<{ googleApiKey?: string; isScanning: boolean; onScan: (e: Event) => void; }> = (props) => (
   <div class="flex gap-2"><div class="relative"><input type="file" accept="image/*" capture="environment" class="hidden" id="photo-input" onChange={props.onScan} disabled={!props.googleApiKey} />
-      <label for="photo-input" class="btn btn-primary h-20 w-20 rounded-2xl flex flex-col gap-1 items-center justify-center p-0 shadow-lg shadow-primary/20" classList={{ 'btn-disabled': !props.googleApiKey }} title={props.googleApiKey ? "Take a photo" : "API Key required"}>
+      <label for="photo-input" class="btn btn-primary h-20 w-20 rounded-xl flex flex-col gap-1 items-center justify-center p-0 shadow-lg shadow-primary/20" classList={{ 'btn-disabled': !props.googleApiKey }} title={props.googleApiKey ? "Take a photo" : "API Key required"}>
         <Show when={props.isScanning} fallback={<><Icon name="camera" class="h-8 w-8" /><span class="text-[10px] font-black uppercase tracking-tighter">Scan</span></>}><span class="loading loading-spinner loading-md"></span></Show>
       </label></div>
     <div class="md:hidden"><input type="file" accept="image/*" class="hidden" id="photo-upload" onChange={props.onScan} disabled={!props.googleApiKey} />
-      <label for="photo-upload" class="btn btn-secondary h-20 w-20 rounded-2xl flex flex-col gap-1 items-center justify-center p-0 shadow-lg shadow-secondary/10" classList={{ 'btn-disabled': !props.googleApiKey }} title="Upload from storage"><Icon name="image" class="h-8 w-8" /><span class="text-[10px] font-black uppercase tracking-tighter">Album</span></label></div></div>
+      <label for="photo-upload" class="btn btn-secondary h-20 w-20 rounded-xl flex flex-col gap-1 items-center justify-center p-0 shadow-lg shadow-secondary/10" classList={{ 'btn-disabled': !props.googleApiKey }} title="Upload from storage"><Icon name="image" class="h-8 w-8" /><span class="text-[10px] font-black uppercase tracking-tighter">Album</span></label></div></div>
 );
 
 const MeterMismatchBanner: Component<{ detectedName: string; onResolve: (useDetected: boolean) => void; }> = (props) => (
@@ -57,7 +58,7 @@ const MeterMismatchBanner: Component<{ detectedName: string; onResolve: (useDete
 
 const ReadingForm: Component<{ meters: Meter[]; selectedMeterId: string; setSelectedMeterId: (id: string) => void; value: string; setValue: (v: string) => void; date: string; setDate: (v: string) => void; isScanning: boolean; scanPreview: string | null; setScanPreview: (v: string | null) => void; pendingScan: ScanResult | null; googleApiKey?: string; onScan: (e: Event) => void; onResolveMismatch: (useDetected: boolean) => void; onSubmit: (e: Event) => void; onCancel: () => void; onAddMeter: () => void; }> = (props) => {
   const selectedMeter = () => props.meters.find(m => m._id === props.selectedMeterId);
-  return (<div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden"><div class="card-body p-8 md:p-12"><form onSubmit={props.onSubmit} class="space-y-8">
+  return (<div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden"><div class="card-body p-8 md:p-12"><form onSubmit={props.onSubmit} class="space-y-8">
     <div class="form-control w-full flex flex-col gap-2"><label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Select Meter</span></label>
       <select class="select select-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={props.selectedMeterId} onChange={(e) => e.currentTarget.value === 'NEW_METER' ? props.onAddMeter() : props.setSelectedMeterId(e.currentTarget.value)} required>
         <option value="" disabled>Choose a meter...</option><For each={props.meters}>{(meter) => <option value={meter._id}>{meter.name} ({meter.meterNumber})</option>}</For>
@@ -67,14 +68,20 @@ const ReadingForm: Component<{ meters: Meter[]; selectedMeterId: string; setSele
           {!props.scanPreview && <ReadingPhotoActions googleApiKey={props.googleApiKey} isScanning={props.isScanning} onScan={props.onScan} />}</div>
         {!props.googleApiKey && <p class="text-[10px] font-black uppercase text-warning mt-1 text-right tracking-widest opacity-80 px-1">⚠️ AI Scan requires Key</p>}
         {props.pendingScan && <MeterMismatchBanner detectedName={props.pendingScan!.meterName} onResolve={props.onResolveMismatch} />}
-        {props.scanPreview && <div class="mt-2 flex justify-center"><div class="relative"><img src={props.scanPreview!} class="h-24 w-auto rounded-lg border-2 border-primary/20 shadow-md" /><button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => props.setScanPreview(null)}>✕</button></div></div>}</div>)}</Show>
+        {props.scanPreview && <div class="mt-2 flex justify-center"><div class="relative"><img src={props.scanPreview!} class="h-24 w-auto rounded-xl border-2 border-primary/20 shadow-md" /><button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => props.setScanPreview(null)}>✕</button></div></div>}</div>)}</Show>
     <div class="form-control w-full flex flex-col gap-2"><label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Date</span></label>
       <input type="date" class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={props.date} onInput={(e) => props.setDate(e.currentTarget.value)} required /></div>
-    <div class="card-actions justify-end pt-6"><button type="button" onClick={props.onCancel} class="btn btn-ghost btn-lg px-10 font-bold rounded-2xl">Cancel</button>
-      <button type="submit" class="btn btn-primary btn-lg px-12 font-black rounded-2xl shadow-xl shadow-primary/20">Save Reading</button></div></form></div></div>);
+    <div class="card-actions justify-end pt-6"><button type="button" onClick={props.onCancel} class="btn btn-ghost btn-lg px-10 font-bold rounded-xl">Cancel</button>
+      <button type="submit" class="btn btn-primary btn-lg px-12 font-black rounded-xl shadow-sm shadow-primary/20">Save Reading</button></div></form></div></div>);
 };
 
-const ReadingPageHeader: Component = () => (<div class="mb-10 text-center md:text-left"><h1 class="text-4xl font-black tracking-tighter">Add Reading</h1><p class="text-base-content/60 font-bold text-lg">Record consumption.</p></div>);
+const ReadingPageHeader: Component = () => (
+  <PageHeader
+    eyebrow="Readings"
+    title="Add reading"
+    subtitle="Record a meter value, or scan a photo with AI."
+  />
+);
 
 const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target?.result as string); reader.onerror = () => reject(new Error('Read failed')); reader.readAsDataURL(file); });
 

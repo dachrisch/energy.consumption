@@ -3,6 +3,7 @@ import { useNavigate } from '@solidjs/router';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { getVersion, getVersionLink, isDevVersion } from '../lib/version';
+import PageHeader from '../components/PageHeader';
 import Icon from '../components/Icon';
 
 interface ProfileFormProps {
@@ -21,12 +22,12 @@ const ProfileForm: Component<ProfileFormProps> = (props) => (
   <form onSubmit={props.onSubmit} class="space-y-8 w-full">
     <div class="form-control w-full flex flex-col gap-2">
       <label class="px-1">
-        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Full Name</span>
+        <span class="label-text text-[11px] font-bold uppercase tracking-wider opacity-50">Full Name</span>
       </label>
       <input
         type="text"
         placeholder="Your Name"
-        class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+        class="input input-bordered h-12 w-full rounded-xl bg-base-200/50 border border-base-content/10 font-bold text-base focus:ring-2 focus:ring-primary px-4"
         value={props.name}
         onInput={(e) => props.setName(e.currentTarget.value)}
         required
@@ -35,12 +36,12 @@ const ProfileForm: Component<ProfileFormProps> = (props) => (
 
     <div class="form-control w-full flex flex-col gap-2">
       <label class="px-1">
-        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Email Address</span>
+        <span class="label-text text-[11px] font-bold uppercase tracking-wider opacity-50">Email Address</span>
       </label>
       <input
         type="email"
         placeholder="email@example.com"
-        class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+        class="input input-bordered h-12 w-full rounded-xl bg-base-200/50 border border-base-content/10 font-bold text-base focus:ring-2 focus:ring-primary px-4"
         value={props.email}
         onInput={(e) => props.setEmail(e.currentTarget.value)}
         required
@@ -49,12 +50,12 @@ const ProfileForm: Component<ProfileFormProps> = (props) => (
 
     <div class="form-control w-full flex flex-col gap-2">
       <label class="px-1">
-        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">New Password (leave blank to keep current)</span>
+        <span class="label-text text-[11px] font-bold uppercase tracking-wider opacity-50">New Password (leave blank to keep current)</span>
       </label>
       <input
         type="password"
         placeholder="••••••••"
-        class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+        class="input input-bordered h-12 w-full rounded-xl bg-base-200/50 border border-base-content/10 font-bold text-base focus:ring-2 focus:ring-primary px-4"
         value={props.password}
         onInput={(e) => props.setPassword(e.currentTarget.value)}
       />
@@ -62,13 +63,13 @@ const ProfileForm: Component<ProfileFormProps> = (props) => (
 
     <div class="form-control w-full flex flex-col gap-2">
       <label class="px-1 flex justify-between items-end">
-        <span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Google Gemini API Key</span>
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Get Key</a>
+        <span class="label-text text-[11px] font-bold uppercase tracking-wider opacity-50">Google Gemini API Key</span>
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] font-bold uppercase tracking-wider text-primary hover:underline">Get Key</a>
       </label>
       <input
         type="password"
         placeholder="AIza..."
-        class="input input-bordered h-14 w-full rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6"
+        class="input input-bordered h-12 w-full rounded-xl bg-base-200/50 border border-base-content/10 font-bold text-base focus:ring-2 focus:ring-primary px-4"
         value={props.googleApiKey}
         onInput={(e) => props.setGoogleApiKey(e.currentTarget.value)}
       />
@@ -76,7 +77,7 @@ const ProfileForm: Component<ProfileFormProps> = (props) => (
     </div>
 
     <div class="form-control mt-6 w-full">
-      <button type="submit" class="btn btn-primary btn-lg rounded-2xl font-black text-lg h-16 shadow-xl shadow-primary/20 w-full">
+      <button type="submit" class="btn btn-primary btn-lg rounded-xl font-black text-lg h-16 shadow-sm shadow-primary/20 w-full">
         Update Account
       </button>
     </div>
@@ -152,12 +153,13 @@ const Profile: Component = () => {
       <Show when={!auth.loading()} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
         <Show when={auth.user()}>
           <>
-            <div class="mb-10">
-              <h1 class="text-4xl font-black tracking-tighter">Profile Settings</h1>
-              <p class="text-base-content/60 font-bold text-lg mt-2">Manage your account identity and security.</p>
-            </div>
+            <PageHeader
+              eyebrow="Account"
+              title="Profile settings"
+              subtitle="Manage your account identity and security."
+            />
 
-            <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
+            <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
               <div class="card-body p-8 md:p-12">
                 <ProfileForm 
                   name={name()} setName={setName}

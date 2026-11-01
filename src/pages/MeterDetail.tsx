@@ -39,12 +39,12 @@ const MeterDetailHeader: Component<{ meter: Meter }> = (props) => {
           </div>
           <span class="font-black text-xs uppercase tracking-[0.2em] opacity-40">{props.meter.meterNumber}</span>
         </div>
-        <h1 class="text-3xl md:text-5xl font-black tracking-tighter break-words">{props.meter.name}</h1>
+        <h1 class="text-3xl md:text-4xl font-black tracking-tighter break-words">{props.meter.name}</h1>
       </div>
       
       <div class="flex gap-3">
-        <A href={`/meters/${props.meter._id}/readings`} class="btn btn-ghost btn-md rounded-2xl border border-base-content/10 font-bold px-8">View History</A>
-        <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-2xl shadow-xl shadow-primary/20 px-8">Log Reading</A>
+        <A href={`/meters/${props.meter._id}/readings`} class="btn btn-ghost btn-md rounded-xl border border-base-content/10 font-bold px-8">View History</A>
+        <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-xl shadow-sm shadow-primary/20 px-8">Log Reading</A>
       </div>
     </div>
   );
@@ -57,26 +57,32 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
   dailyCost: number;
   gaps?: Gap[];
 }, hasContracts: boolean }> = (props) => (
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="card bg-base-100 shadow-xl border border-base-content/5">
-      <div class="card-body p-8">
-        <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Daily Average</p>
-        <p class="text-3xl font-black">{props.stats.dailyAverage.toFixed(2)}<span class="text-sm font-bold opacity-40 ml-2">{props.meter.unit}/day</span></p>
+  <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6">
+    <div class="card bg-base-100 shadow-sm border border-base-content/5">
+      <div class="card-body p-5 md:p-8">
+        <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Daily Average</p>
+        <p class="text-2xl font-black md:text-3xl">
+          {props.stats.dailyAverage.toFixed(2)}
+          <span class="block text-xs font-bold opacity-40 sm:inline sm:ml-2">{props.meter.unit}/day</span>
+        </p>
         <Show when={props.stats.dailyCost > 0}>
           <p class="text-sm font-bold text-success mt-1">€{props.stats.dailyCost.toFixed(2)}/day</p>
         </Show>
       </div>
     </div>
-    <div class="card bg-base-100 shadow-xl border border-base-content/5">
-      <div class="card-body p-8">
-        <p class="text-[10px] font-black uppercase tracking-widest opacity-40 mb-1">Yearly Projection</p>
-        <p class="text-3xl font-black">{Math.round(props.stats.yearlyProjection).toLocaleString()}<span class="text-sm font-bold opacity-40 ml-2">{props.meter.unit}/year</span></p>
+    <div class="card bg-base-100 shadow-sm border border-base-content/5">
+      <div class="card-body p-5 md:p-8">
+        <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Yearly Projection</p>
+        <p class="text-2xl font-black md:text-3xl">
+          {Math.round(props.stats.yearlyProjection).toLocaleString()}
+          <span class="block text-xs font-bold opacity-40 sm:inline sm:ml-2">{props.meter.unit}/year</span>
+        </p>
       </div>
     </div>
     <Show when={props.hasContracts && (props.stats.gaps?.length ?? 0) === 0} fallback={
-      <div class="card bg-warning/10 text-warning border border-warning/20 shadow-xl shadow-warning/5">
-        <div class="card-body p-8">
-          <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Estimated Yearly Cost</p>
+      <div class="card col-span-2 bg-warning/10 text-warning border border-warning/20 shadow-sm md:col-span-1">
+        <div class="card-body p-5 md:p-8">
+          <p class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1">Estimated Yearly Cost</p>
           <p class="text-xs font-bold mb-4">
             {props.stats.gaps && props.stats.gaps.length > 0 ? 'Coverage gaps detected.' : 'No contract configured for this meter.'}
           </p>
@@ -89,13 +95,13 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
         </div>
       </div>
     }>
-      <div class="card bg-primary text-primary-content shadow-2xl shadow-primary/30 border-none relative overflow-hidden group">
+      <div class="card col-span-2 bg-primary text-primary-content shadow-sm shadow-primary/30 border-none relative overflow-hidden group md:col-span-1">
         <div class="card-body p-8 z-10">
-          <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
           <p class="text-4xl font-black tracking-tighter">€{props.stats.estimatedYearlyCost.toFixed(2)}</p>
           <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-            <span class="text-[10px] font-black uppercase tracking-widest opacity-60">Active Contract</span>
-            <A href={`/contracts?meterId=${props.meter._id}`} class="btn btn-xs btn-ghost bg-white/10 hover:bg-white/20 text-white rounded-lg border-none px-3 font-black">Manage</A>
+            <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Active Contract</span>
+            <A href={`/contracts?meterId=${props.meter._id}`} class="btn btn-xs btn-ghost bg-white/10 hover:bg-white/20 text-white rounded-xl border-none px-3 font-black">Manage</A>
           </div>
         </div>
         <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
@@ -118,10 +124,10 @@ const ConsumptionChartCard: Component<{
   projection: Array<{ date: string | Date, value: number }>,
   hasContracts: boolean 
 }> = (props) => (
-  <div class="card bg-base-100 shadow-2xl border border-base-content/5 overflow-hidden">
+  <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
     <div class="card-body p-8 md:p-12">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <h2 class="text-xl font-black uppercase tracking-widest opacity-20">Consumption Trend & Projection</h2>
+        <h2 class="text-sm font-bold uppercase tracking-[0.18em] opacity-40">Consumption trend & projection</h2>
       </div>
       <ConsumptionChart 
         readings={props.readings} 

@@ -35,8 +35,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ensure DaisyUI dropdowns and cards have a solid, readable background */
-.card, .dropdown-content, .navbar, select, option {
+/* Ensure DaisyUI dropdowns and selects have a solid, readable background.
+   Cards are intentionally excluded: theme cards (e.g. the primary summary
+   panel) need their own background. */
+.dropdown-content, .navbar, select, option {
   background-color: var(--color-base-100) !important;
   opacity: 1 !important;
 }

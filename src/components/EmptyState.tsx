@@ -95,7 +95,7 @@ const EmptyState: Component<EmptyStateProps> = (props) => {
              {props.icon || <InlineIcon />}
            </div>
            <div class="flex-1 min-w-0">
-             <div class={`text-sm font-bold uppercase tracking-wider ${classes.title}`}>{props.title}</div>
+             <div class={`text-sm font-bold ${classes.title}`}>{props.title}</div>
              {props.description && <div class="text-xs text-base-content/60">{props.description}</div>}
            </div>
            {actionElement}
@@ -104,7 +104,7 @@ const EmptyState: Component<EmptyStateProps> = (props) => {
      );
    }
 
-  const wideActionClasses = `btn btn-wide rounded-2xl font-black ${classes.button}`;
+  const wideActionClasses = `btn btn-wide rounded-xl font-bold ${classes.button}`;
   const wideActionElement = props.actionLink
     ? renderActionLink(props.actionLabel, props.actionLink, wideActionClasses)
     : renderActionButton(props.actionLabel, props.onAction, wideActionClasses);
@@ -115,7 +115,7 @@ const EmptyState: Component<EmptyStateProps> = (props) => {
          <div class={`p-6 rounded-full mb-4 ${classes.icon}`}>
            {props.icon || <DefaultIcon />}
          </div>
-         <h3 class={`text-xl font-black uppercase tracking-widest ${classes.title}`}>{props.title}</h3>
+         <h3 class={`text-xl font-black tracking-tight ${classes.title}`}>{props.title}</h3>
          <p class="text-base-content/60 font-bold mb-6 max-w-sm">{props.description}</p>
          {wideActionElement}
        </div>

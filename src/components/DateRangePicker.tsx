@@ -61,7 +61,7 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
         <div class="flex items-center gap-2">
           <Icon name="calendar" class="h-5 w-5 opacity-60" />
           <div class="flex-1 min-w-0">
-            <p class="text-xs font-black uppercase tracking-widest opacity-60 mb-1">Selected Period</p>
+            <p class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1">Selected Period</p>
             <p class="text-sm font-black">
               {formatDate(props.startDate)} – {formatDate(props.endDate)}
             </p>
@@ -82,7 +82,7 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
               <For each={PRESETS}>
                 {(preset) => (
                   <button
-                    class="btn btn-sm btn-outline rounded-lg font-bold"
+                    class="btn btn-sm btn-outline rounded-xl font-bold"
                     onClick={() => applyPreset(preset.days)}
                   >
                     {preset.label}
@@ -94,7 +94,7 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
             <div class="divider opacity-20 my-2" />
 
             <div class="space-y-3">
-              <p class="text-xs font-black uppercase tracking-widest opacity-60">Custom Range</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider opacity-60">Custom Range</p>
               
               <div class="space-y-2">
                 <label class="text-xs font-bold opacity-70">From</label>
@@ -120,7 +120,7 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
               </div>
             </div>
 
-            <button class="btn btn-primary w-full rounded-lg font-bold" onClick={() => setIsOpen(false)}>
+            <button class="btn btn-primary w-full rounded-xl font-bold" onClick={() => setIsOpen(false)}>
               Apply
             </button>
           </div>
