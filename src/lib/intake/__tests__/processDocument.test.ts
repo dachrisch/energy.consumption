@@ -31,7 +31,7 @@ function args(overrides: Partial<ProcessDocumentArgs> = {}): ProcessDocumentArgs
       receivedAt: new Date('2024-02-10'),
       buffer: Buffer.from('Datum;Wert\n01.01.2024;1000'),
     },
-    provider: { _id: 'p1', name: 'Stadtwerke', defaultUnit: 'kWh' },
+    provider: { name: 'Stadtwerke', defaultUnit: 'kWh' },
     userId: 'u1',
     meters,
     readings,

@@ -33,6 +33,10 @@ export interface IContract {
   basePrice: number;
   workingPrice: number;
   meterId: string;
+  /** Provider mail settings, shared by every contract of the same provider. */
+  senders?: string[];
+  subjectHints?: string[];
+  gmailQuery?: string | null;
   userId: string;
   createdAt?: string;
   updatedAt?: string;
@@ -48,16 +52,18 @@ export interface IUser {
   stats?: Record<string, unknown>;
 }
 
-/** Provider configured for the Gmail/Drive intake. */
+/**
+ * A provider is the `providerName` of a contract, not a collection of its own.
+ * The API derives this view from the user's contracts.
+ */
 export interface IProvider {
-  _id: string;
   name: string;
   senders: string[];
   subjectHints: string[];
-  gmailQuery?: string | null;
-  portalUrl?: string | null;
-  defaultUnit?: string | null;
-  userId: string;
+  gmailQuery: string | null;
+  unit?: string;
+  contractCount: number;
+  meterIds: string[];
 }
 
 export type IntakeStatus = 'pending' | 'agrees' | 'conflict' | 'accepted' | 'rejected';
@@ -67,6 +73,7 @@ export interface IIntakeItem {
   _id: string;
   documentId: string;
   kind: 'reading' | 'bill';
+  providerName?: string;
   meterNumber?: string;
   meterId?: string;
   date?: string;
@@ -87,6 +94,7 @@ export interface IIntakeItem {
 
 export interface IProviderDocument {
   _id: string;
+  providerName?: string;
   fileName: string;
   mimeType: string;
   status: 'new' | 'parsed' | 'needs_review' | 'imported' | 'failed';

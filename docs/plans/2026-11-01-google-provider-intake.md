@@ -41,12 +41,18 @@ first; the user (or an unambiguous match) promotes it.
 
 | Model | Purpose |
 |---|---|
-| `Provider` | name, senders, subject hints, optional raw Gmail query, default unit |
-| `ProviderDocument` | one ingested file; `sha256` makes sync idempotent; `driveFileId` + `sidecarDriveId` |
+| `Contract` | rates + period, **plus the provider's mail settings** (`senders`, `subjectHints`, `gmailQuery`). `providerName` is the provider identity. |
+| `ProviderDocument` | one ingested file; `sha256` makes sync idempotent; `driveFileId` + `sidecarDriveId`; `providerName` |
 | `IntakeItem` | one extracted fact: `pending`/`agrees`/`conflict`/`accepted`/`rejected` |
 | `Bill` | period consumption + billed amount vs what contract rates compute |
 | `User.google` | `sub`, `email`, `refreshToken` (encrypted), `scopes`, `status: ok\|reconnect_required` |
 | `Reading.source` | `manual\|ocr\|import\|provider`; `providerDocId` |
+
+There is no `Provider` collection: a provider *is* the `providerName` of the
+user's contracts, so its mail settings are stored on them. `GET /api/providers`
+returns the derived view (one entry per name, settings as the union over that
+provider's contracts); `PATCH /api/providers` writes the settings onto every
+contract of that provider.
 
 ## Extraction
 
@@ -96,7 +102,7 @@ What a sync does today:
 
 ```
 POST /api/intake/sync
-  → Gmail search (per Provider) → download attachment → sha256 dedupe
+  → Gmail search (per providerName from the contracts) → download attachment → sha256 dedupe
   → ProviderDocument
   → processDocument()          src/lib/intake/processDocument.ts
        guards → extract → Drive archive (+ JSON sidecar) → planIntake()
@@ -123,9 +129,11 @@ POST /api/intake/sync
 `/intake` (nav: **Intake**, plus a dropdown entry) is the human side of the
 pipeline:
 
-- **Providers** — add (name, sender addresses, subject hints, unit, optional raw
-  Gmail query), remove, and **Sync now** per provider. The last sync's per-file
-  result (`parsed` / `failed` + reason) is shown inline.
+- **Providers** — derived from the contracts (one entry per `providerName`), with
+  **Sync now** and an inline editor for the mail settings (sender addresses,
+  subject hints, optional raw Gmail query). Saving writes them onto every
+  contract of that provider; without a contract there is nothing to sync, so the
+  empty state links to `/contracts/add`.
 - **Staged items** — pending/conflict `IntakeItem`s with value, date, meter
   number and the reconciliation note; Accept promotes into `Reading`/`Bill`,
   Reject dismisses. A toggle reveals already-decided items.
@@ -133,10 +141,11 @@ pipeline:
   straight from `GET /api/intake/bills`.
 - **Recent documents** — status, subject, error text and a Drive link.
 
-Supporting endpoints: `GET/POST /api/providers`, `PATCH/DELETE /api/providers/:id`,
-`GET /api/intake/documents`. Provider payloads are zod-validated
-(`providerSchema`, `.strict()`), name collisions return 409, and every query is
-scoped with `.setOptions({ userId })`.
+Supporting endpoints: `GET /api/providers` (derived view) and
+`PATCH /api/providers` (settings → all contracts of that provider), plus
+`GET /api/intake/documents`. The settings payload is zod-validated
+(`providerSettingsSchema`, `.strict()`) and every query is scoped with
+`.setOptions({ userId })`.
 
 ### Remaining
 
@@ -156,8 +165,10 @@ scoped with `.setOptions({ userId })`.
   sha256 idempotency, item listing/filtering, accept/reject rules (unknown
   meter, double accept, duplicate meter/date, cross-user 404, malformed id,
   wrong method) and the bill variance numbers.
-- Provider CRUD and the document list are covered in the same memory-mongo
-  suite (create/validate/duplicate/isolate/update/delete, newest-first + limit).
+- Provider derivation and settings writes are covered in the same memory-mongo
+  suite (one entry per provider name, union of senders across its contracts,
+  per-user isolation, settings fan-out to every contract, validation, unknown
+  provider → 404), plus the document list (newest-first, limit, per-user).
 - `src/pages/__tests__/Intake.test.tsx` renders the page against a mocked API:
   providers/items/documents, the bills variance row, the status filter, provider
   creation (senders split into a list), item acceptance and a sync run.

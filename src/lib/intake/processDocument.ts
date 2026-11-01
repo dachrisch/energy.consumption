@@ -21,8 +21,8 @@ export interface ProcessableDocument {
   status?: string;
 }
 
+/** Providers are the contracts' provider names; only the name and unit matter here. */
 export interface ProviderRef {
-  _id: string;
   name: string;
   defaultUnit?: string;
 }
@@ -224,7 +224,7 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
   for (const item of plan.items) {
     const created = await IntakeItem.create({
       documentId: document._id,
-      providerId: provider._id,
+      providerName: provider.name,
       ...item,
       userId,
     });
@@ -237,7 +237,7 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
       ...plan.bill,
       periodStart: toDate(plan.bill.periodStart),
       periodEnd: toDate(plan.bill.periodEnd),
-      providerId: provider._id,
+      providerName: provider.name,
       documentId: document._id,
       userId,
     });

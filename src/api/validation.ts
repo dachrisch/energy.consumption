@@ -51,21 +51,25 @@ export const contractSchema = z.object({
   workingPrice: z.number().nonnegative(),
   startDate: z.string().pipe(z.coerce.date()),
   endDate: z.string().pipe(z.coerce.date()).nullable().optional(),
+  // Provider mail settings for the Google intake (see models/Contract.ts).
+  senders: z.array(z.string().trim().min(3)).max(20).optional(),
+  subjectHints: z.array(z.string().trim().min(1)).max(20).optional(),
+  gmailQuery: z.string().trim().max(300).nullable().optional(),
 }).strict();
 
 export const contractUpdateSchema = contractSchema.partial().strict();
 
-// Provider (Google intake) Schemas
-export const providerSchema = z.object({
-  name: z.string().min(1, 'Provider name is required').max(120),
-  senders: z.array(z.string().trim().min(3)).max(20).optional(),
-  subjectHints: z.array(z.string().trim().min(1)).max(20).optional(),
+/**
+ * Provider mail settings. Providers are not a collection of their own — they are
+ * the `providerName` of the user's contracts — so this is a write to every
+ * contract of that provider.
+ */
+export const providerSettingsSchema = z.object({
+  providerName: z.string().min(1, 'Provider name is required').max(120),
+  senders: z.array(z.string().trim().min(3)).max(20),
+  subjectHints: z.array(z.string().trim().min(1)).max(20),
   gmailQuery: z.string().trim().max(300).nullable().optional(),
-  portalUrl: z.string().trim().max(300).nullable().optional(),
-  defaultUnit: z.string().trim().max(20).nullable().optional(),
 }).strict();
-
-export const providerUpdateSchema = providerSchema.partial().strict();
 
 // Unified Export Schema
 export const unifiedExportSchema = z.object({

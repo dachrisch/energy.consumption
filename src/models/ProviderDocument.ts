@@ -9,7 +9,8 @@ export const DOCUMENT_STATUSES = ['new', 'parsed', 'needs_review', 'imported', '
  * `sha256` makes ingestion idempotent across repeated syncs.
  */
 const providerDocumentSchema = new mongoose.Schema({
-  providerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider' },
+  /** Contract provider this document was attributed to. */
+  providerName: { type: String },
   source: { type: String, enum: ['gmail', 'upload'], required: true },
   gmailMessageId: { type: String },
   gmailAttachmentId: { type: String },
