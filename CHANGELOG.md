@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.22.0](https://github.com/dachrisch/energy.consumption/compare/v3.21.0...v3.22.0) (2026-11-01)
+
+
+### Features
+
+* **intake:** match prefixed meter numbers and let the user link a meter ([bd89651](https://github.com/dachrisch/energy.consumption/commit/bd89651d167e7c171dccbc64235cb163817292e4))
+* **intake:** match provider-prefixed meter numbers and link meters by hand ([8837d62](https://github.com/dachrisch/energy.consumption/commit/8837d628a84184a8740e75cb95edeb591f47ed1d))
+
 ## [3.21.0](https://github.com/dachrisch/energy.consumption/compare/v3.20.3...v3.21.0) (2026-11-01)
 
 
