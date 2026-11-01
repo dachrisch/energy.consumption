@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.19.3](https://github.com/dachrisch/energy.consumption/compare/v3.19.2...v3.19.3) (2026-11-01)
+
+
+### Bug Fixes
+
+* **intake:** accept PDFs sent as application/octet-stream and retry failed documents ([#735](https://github.com/dachrisch/energy.consumption/issues/735)) ([fbc969f](https://github.com/dachrisch/energy.consumption/commit/fbc969f99cced333223a0b2abc7a5d6d3306990d))
+
 ## [3.19.2](https://github.com/dachrisch/energy.consumption/compare/v3.19.1...v3.19.2) (2026-11-01)
 
 
