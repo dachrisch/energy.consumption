@@ -23,6 +23,12 @@ app.config.timestamp_*.js
 # Temp
 gitignore
 
+# Generated test output (published as CI artifacts, never committed)
+test-results/junit.xml
+
+# Local tooling lockfile
+.opencode/package-lock.json
+
 # System Files
 .DS_Store
 Thumbs.db

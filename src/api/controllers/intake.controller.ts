@@ -1,63 +1,74 @@
+import crypto from 'crypto';
 import User from '../../models/User';
 import Provider from '../../models/Provider';
 import ProviderDocument from '../../models/ProviderDocument';
-import { sanitizeString } from '../utils';
-import { RouteParams } from '../utils';
-import { encrypt, decrypt } from '../../lib/encryption';
+import { RouteParams, sanitizeString } from '../utils';
 import {
-  isGoogleConfigured, googleCredentials, buildConsentUrl, signState, verifyState,
-  exchangeCode, clientForRefreshToken,
+  GOOGLE_SCOPES, isGoogleConfigured, buildConsentUrl, signState, verifyState,
+  exchangeCode, clientForRefreshToken, createOAuthClient, isInvalidGrant,
+  decryptRefreshToken, encryptRefreshToken, markReconnectRequired,
 } from '../../lib/google/oauth';
 import { gmailFor, buildProviderQuery, collectAttachments, headerValue } from '../../lib/google/gmail';
+
+function callbackUrl(): string {
+  return process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:3000/api/google/callback';
+}
 
 async function getUserGoogleAccount(userId: string): Promise<{ refresh: string; sub: string } | null> {
   const user = await User.findById(userId).lean();
   if (!user?.google?.refreshToken) { return null; }
   try {
-    const refresh = decrypt(user.google.refreshToken);
+    const refresh = decryptRefreshToken(user.google.refreshToken);
     return { refresh, sub: user.google.sub ?? '' };
   } catch { return null; }
 }
 
-export async function handleConnect(params: RouteParams): Promise<void> {
-  const { res, userId } = params;
+export async function handleConnect({ res, userId }: RouteParams): Promise<void> {
   if (!isGoogleConfigured()) {
     res.statusCode = 501;
     res.end(JSON.stringify({ error: 'GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set' }));
     return;
   }
   const state = signState(userId);
-  const redirectUri = process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:3000/api/google/callback';
-  const client = new (require('google-auth-library').OAuth2Client)(googleCredentials().clientId, googleCredentials().clientSecret);
+  const client = createOAuthClient();
   res.statusCode = 302;
-  res.setHeader('Location', buildConsentUrl(client, redirectUri, state));
-  res.end();
+  res.setHeader('Location', buildConsentUrl(client, callbackUrl(), state));
+  res.end('');
 }
 
-export async function handleCallback(params: RouteParams): Promise<void> {
-  const { req, res, userId } = params;
-  const { searchParams } = new URL(req.url);
-  const code = searchParams.get('code');
-  const state = searchParams.get('state');
+export async function handleCallback({ res, url }: RouteParams): Promise<void> {
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
   if (!code || !state) {
     res.statusCode = 400; res.end(JSON.stringify({ error: 'Missing code or state' })); return;
   }
-  try { verifyState(state); } catch { res.statusCode = 403; res.end(JSON.stringify({ error: 'Invalid state' })); return; }
-  const redirectUri = process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:3000/api/google/callback';
+
+  // The state token is the only trustworthy binding between the browser coming
+  // back from Google and the account that started the flow: it is signed and
+  // expires in 10 minutes. Never fall back to the current session instead.
+  let stateUserId: string;
   try {
-    const result = await exchangeCode(code, redirectUri);
-    await User.findByIdAndUpdate(userId, {
+    stateUserId = verifyState(state);
+  } catch {
+    res.statusCode = 403; res.end(JSON.stringify({ error: 'Invalid state' })); return;
+  }
+
+  try {
+    const result = await exchangeCode(code, callbackUrl());
+    const updated = await User.findByIdAndUpdate(stateUserId, {
       $set: {
         'google.sub': result.identity.sub ?? undefined,
         'google.email': result.identity.email ?? undefined,
-        'google.refreshToken': encrypt(result.refreshToken),
-        'google.scopes': result.identity.scopes ?? ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/drive.file'],
+        'google.refreshToken': encryptRefreshToken(result.refreshToken),
+        'google.scopes': result.identity.scopes.length > 0 ? result.identity.scopes : GOOGLE_SCOPES,
         'google.connectedAt': new Date(),
         'google.status': 'ok',
       },
     });
-    // Ensure root folder exists (lazy — first sync creates it)
-    res.statusCode = 302; res.setHeader('Location', '/profile?google=connected'); res.end();
+    if (!updated) {
+      res.statusCode = 400; res.end(JSON.stringify({ error: 'Unknown user in OAuth state' })); return;
+    }
+    res.statusCode = 302; res.setHeader('Location', '/profile?google=connected'); res.end('');
   } catch (e) {
     console.error('Google OAuth exchange failed:', e);
     res.statusCode = 502; res.end(JSON.stringify({ error: 'Google exchange failed' }));
@@ -73,7 +84,7 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
   if (!providerName) {
     res.statusCode = 400; res.end(JSON.stringify({ error: 'providerName required' })); return;
   }
-  const provider = await Provider.findOne({ userId, name: providerName }).lean();
+  const provider = await Provider.findOne({ userId, name: providerName }).setOptions({ userId }).lean();
   if (!provider) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Unknown provider' })); return;
   }
@@ -97,8 +108,8 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
           const attRes = await gmail.users.attachments.get({ userId: 'me', messageId: m.id, id: att.attachmentId });
           if (attRes.data.data) {
             const buffer = Buffer.from(attRes.data.data, 'base64');
-            const sha = require('crypto').createHash('sha256').update(buffer).digest('hex');
-            const exists = await ProviderDocument.findOne({ userId, sha256: sha }).lean();
+            const sha = crypto.createHash('sha256').update(buffer).digest('hex');
+            const exists = await ProviderDocument.findOne({ userId, sha256: sha }).setOptions({ userId }).lean();
             if (exists) {
               processed.push({ messageId: m.id, attachment: att.fileName, status: 'already_processed', documentId: exists._id });
               continue;
@@ -125,8 +136,8 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
     }
     res.statusCode = 200; res.end(JSON.stringify({ processed, count: processed.length, provider: providerName }));
   } catch (e) {
-    if (e instanceof Error && (e.message.includes('invalid_grant') || e.name === 'GoogleReconnectRequiredError')) {
-      await User.findByIdAndUpdate(userId, { $set: { 'google.status': 'reconnect_required' } });
+    if (isInvalidGrant(e)) {
+      await markReconnectRequired(userId);
       res.statusCode = 409; res.end(JSON.stringify({ error: 'Google authorization expired; reconnect required', reconnect: true }));
     } else {
       console.error('Google sync error:', e);

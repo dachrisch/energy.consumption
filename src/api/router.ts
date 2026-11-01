@@ -5,8 +5,7 @@ import { handleReadings, handleBulkReadings, handleReadingItem, exportReadingsAs
 import { handleContracts, handleContractItem } from './controllers/contract.controller';
 import { handleOcrScan } from './controllers/ocr.controller';
 import { handleAggregatedRoutes } from './controllers/dashboard.controller';
-import { handleIntakeSync, handleIntakeVerify } from './controllers/intake.controller';
-import { handleConnect, handleCallback } from './controllers/intake.controller';
+import { handleIntakeSync, handleIntakeVerify, handleConnect, handleCallback } from './controllers/intake.controller';
 
 export async function router(params: RouteParams) {
   const { req, res, userId, path } = params;
@@ -19,8 +18,12 @@ export async function router(params: RouteParams) {
     '/api/dashboard': async () => handleAggregatedRoutes(params),
     '/api/aggregates': async () => handleAggregatedRoutes(params),
     '/api/meters': async () => handleMeters(params),
-    '/api/google/connect': async () => { if (req.method === 'GET') { await handleConnect(req, res, userId); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); } },
-    '/api/google/callback': async () => { if (req.method === 'GET') { await handleCallback(req, res, userId); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); } },
+    '/api/google/connect': async () => {
+      if (req.method === 'GET') { await handleConnect(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); }
+    },
+    '/api/google/callback': async () => {
+      if (req.method === 'GET') { await handleCallback(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); }
+    },
     '/api/intake/sync': async () => { if (req.method === 'POST') { await handleIntakeSync(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); } },
     '/api/intake/verify': async () => { if (req.method === 'POST') { await handleIntakeVerify(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); } },
     '/api/readings': async () => handleReadings(params),

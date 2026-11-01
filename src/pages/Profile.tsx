@@ -82,7 +82,6 @@ const ProfileForm: Component<ProfileFormProps> = (props) => (
     </div>
 
      <div class="divider my-8 opacity-30"></div>
-     <div class="divider my-8 opacity-30"></div>
 
     <div class="text-center">
        <a
@@ -108,15 +107,6 @@ const Profile: Component = () => {
   const [email, setEmail] = createSignal('');
   const [password, setPassword] = createSignal('');
   const [googleApiKey, setGoogleApiKey] = createSignal('');
-
-  onMount(() => {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('google') === 'connected') {
-      toast.showToast('Google connected successfully!', 'success');
-      url.searchParams.delete('google');
-      window.history.replaceState({}, '', url.toString());
-    }
-  });
 
   onMount(() => {
     const url = new URL(window.location.href);

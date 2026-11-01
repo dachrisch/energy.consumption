@@ -93,9 +93,11 @@ export function buildConsentUrl(client: OAuth2Client, redirectUri: string, state
 
 /** Google signals a dead refresh token (revoked, password changed, expired). */
 export function isInvalidGrant(error: unknown): boolean {
-  const err = error as { response?: { data?: { error?: string } }; message?: string };
-  const code = err?.response?.data?.error;
-  if (code === 'invalid_grant') {
+  const err = error as { response?: { data?: { error?: string } }; message?: string; name?: string };
+  if (err?.name === 'GoogleReconnectRequiredError') {
+    return true;
+  }
+  if (err?.response?.data?.error === 'invalid_grant') {
     return true;
   }
   return typeof err?.message === 'string' && err.message.includes('invalid_grant');

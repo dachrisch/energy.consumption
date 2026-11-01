@@ -254,12 +254,87 @@ export async function extractDocument(args: ExtractDocumentArgs): Promise<Extrac
   return extractFromText(fromBody, args.unitHint);
 }
 
+/** Elements whose *content* is not human-readable text. */
+const BLOCKED_ELEMENTS = ['script', 'style'] as const;
+
+const NAMED_ENTITIES: Record<string, string> = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#39;': "'",
+  '&apos;': "'",
+};
+
+function isTagBoundary(char: string | undefined): boolean {
+  return char === undefined || char === '>' || char === '/' || /\s/.test(char);
+}
+
+/**
+ * Drop `<tag ...>...</tag >` (and unterminated leftovers) from HTML. Scans the
+ * string instead of using a regexp so variants such as `</script >`, which a
+ * naive `<\/script>` pattern misses, cannot leak tag content into the text.
+ */
+function removeElement(html: string, tagName: string): string {
+  const lower = html.toLowerCase();
+  const open = `<${tagName}`;
+  let out = '';
+  let cursor = 0;
+  for (;;) {
+    const start = lower.indexOf(open, cursor);
+    if (start === -1) {
+      return out + html.slice(cursor);
+    }
+    if (!isTagBoundary(lower[start + open.length])) {
+      // Part of a longer tag name, e.g. `<scripts>`; keep scanning.
+      out += html.slice(cursor, start + open.length);
+      cursor = start + open.length;
+      continue;
+    }
+    out += html.slice(cursor, start);
+    const closeStart = lower.indexOf(`</${tagName}`, start);
+    if (closeStart === -1) {
+      // Unterminated element: nothing after it can be trusted as text.
+      return out;
+    }
+    const closeEnd = lower.indexOf('>', closeStart);
+    if (closeEnd === -1) {
+      return out;
+    }
+    cursor = closeEnd + 1;
+  }
+}
+
+/** Replace every `<...>` with a space; a stray `<` without `>` stays as text. */
+function removeTags(html: string): string {
+  let out = '';
+  let cursor = 0;
+  for (;;) {
+    const start = html.indexOf('<', cursor);
+    if (start === -1) {
+      return out + html.slice(cursor);
+    }
+    const end = html.indexOf('>', start + 1);
+    if (end === -1) {
+      return out + html.slice(cursor);
+    }
+    out += `${html.slice(cursor, start)} `;
+    cursor = end + 1;
+  }
+}
+
+function decodeEntities(text: string): string {
+  return text.replace(/&(?:nbsp|amp|lt|gt|quot|apos|#39);/g, (entity) => NAMED_ENTITIES[entity] ?? entity);
+}
+
+/** Plain text of an HTML mail body: no tags, no script/style content. */
 export function stripHtml(html: string): string {
-  return html
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
+  let text = html;
+  for (const tag of BLOCKED_ELEMENTS) {
+    text = removeElement(text, tag);
+  }
+  return decodeEntities(removeTags(text))
     .replace(/\s+/g, ' ')
     .trim();
 }
