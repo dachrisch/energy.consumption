@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { Readable } from 'node:stream';
 import type { OAuth2Client } from 'google-auth-library';
 
 export interface DriveFileRef {
@@ -18,7 +19,7 @@ export interface DriveClientLike {
     }): Promise<{ data: { files?: DriveFileRef[] | null } }>;
     create(params: {
       requestBody: { name: string; parents?: string[]; mimeType?: string };
-      media: { mimeType: string; body: Buffer | string };
+      media: { mimeType: string; body: Buffer | string | Readable };
       fields?: string;
     }): Promise<{ data: { id?: string | null; webViewLink?: string | null } }>;
     get(
@@ -81,7 +82,12 @@ export async function uploadFile(
 ): Promise<{ id: string; webViewLink: string }> {
   const res = await drive.files.create({
     requestBody: { name: args.name, parents: [args.parentId] },
-    media: { mimeType: args.mimeType, body: args.body },
+    media: {
+      mimeType: args.mimeType,
+      // googleapis pipes the media body for multipart uploads, so a Buffer must
+      // be a Readable — a plain Buffer fails with "part.body.pipe is not a function".
+      body: typeof args.body === 'string' ? args.body : Readable.from([args.body]),
+    },
     fields: 'id, webViewLink',
   });
   const id = res.data.id;

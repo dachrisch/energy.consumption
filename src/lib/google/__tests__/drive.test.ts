@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { Readable } from 'node:stream';
 import {
   FOLDER_MIME,
   archiveDocument,
@@ -19,7 +20,7 @@ interface UploadRecord {
   id: string;
   name: string;
   mimeType: string;
-  body: Buffer | string;
+  body: Buffer | string | Readable;
   parentId: string;
 }
 
@@ -51,7 +52,7 @@ class FakeDrive implements DriveClientLike {
     },
     create: async (params: {
       requestBody: { name: string; parents?: string[]; mimeType?: string };
-      media: { mimeType: string; body: Buffer | string };
+      media: { mimeType: string; body: Buffer | string | Readable };
     }) => {
       const id = this.nextId();
       if (params.requestBody.mimeType === FOLDER_MIME) {
@@ -163,6 +164,28 @@ describe('uploadFile', () => {
       body: Buffer.from('%PDF'),
       parentId: 'folder-id',
     })).rejects.toThrow(/did not return an id/);
+  });
+
+  it('hands googleapis a readable stream for binary bodies', async () => {
+    const drive = new FakeDrive();
+
+    await uploadFile(drive, {
+      name: 'bill.pdf',
+      mimeType: 'application/pdf',
+      body: Buffer.from('%PDF-1.4 bill'),
+      parentId: 'folder-id',
+    });
+
+    // A raw Buffer fails inside googleapis with "part.body.pipe is not a function".
+    const body = drive.uploads[0].body;
+    expect(typeof body).not.toBe('string');
+    expect(Buffer.isBuffer(body)).toBe(false);
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of body as Readable) {
+      chunks.push(Buffer.from(chunk));
+    }
+    expect(Buffer.concat(chunks).toString()).toBe('%PDF-1.4 bill');
   });
 });
 

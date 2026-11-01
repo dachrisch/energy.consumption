@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { google } from 'googleapis';
+import type { Readable } from 'node:stream';
 import { OAuth2Client } from 'google-auth-library';
 import {
   describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi,
@@ -141,13 +142,13 @@ function stubGmail(options: { messages?: { id: string }[]; listError?: Error; fi
 function stubDrive() {
   let counter = 0;
   const folders: { id: string; name: string; parentId?: string }[] = [];
-  const uploads: { name: string; mimeType: string; body: Buffer | string }[] = [];
+  const uploads: { name: string; mimeType: string; body: Buffer | string | Readable }[] = [];
   const drive = {
     files: {
       list: vi.fn(async () => ({ data: { files: [] } })),
       create: vi.fn(async (request: {
         requestBody: { name: string; mimeType?: string; parents?: string[] };
-        media: { mimeType: string; body: Buffer | string };
+        media: { mimeType: string; body: Buffer | string | Readable };
       }) => {
         counter += 1;
         const id = `drive-${counter}`;
