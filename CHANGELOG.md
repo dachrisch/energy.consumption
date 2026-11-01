@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.17.0](https://github.com/dachrisch/energy.consumption/compare/v3.16.174...v3.17.0) (2026-11-01)
+
+
+### Features
+
+* Google provider intake (Gmail → Drive → consolidate) ([ae777ad](https://github.com/dachrisch/energy.consumption/commit/ae777adc4d18e93bd2728e171c7ce020e7012659))
+* google provider intake pipeline (gmail + drive) ([7c5c685](https://github.com/dachrisch/energy.consumption/commit/7c5c6856f89748150938d833864cbac23a3b8e45))
+
+
+### Bug Fixes
+
+* **google-intake:** pass RouteParams to OAuth handlers, bind callback to state user, add tests ([69cf5b0](https://github.com/dachrisch/energy.consumption/commit/69cf5b01122c58e8af57c0aaf163ab61dfebd2cb))
+
 ## [3.16.174](https://github.com/dachrisch/energy.consumption/compare/v3.16.173...v3.16.174) (2026-10-30)
 
 
