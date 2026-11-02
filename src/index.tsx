@@ -55,6 +55,7 @@ render(() => (
     <Route path="/meters/:id" component={() => <ProtectedRoute><MeterDetail /></ProtectedRoute>} />
     <Route path="/meters/:id/readings" component={() => <ProtectedRoute><MeterReadings /></ProtectedRoute>} />
     <Route path="/meters/:id/add-reading" component={() => <ProtectedRoute><AddReading /></ProtectedRoute>} />
+    <Route path="/meters/:id/readings/:readingId/edit" component={() => <ProtectedRoute><AddReading /></ProtectedRoute>} />
     <Route path="/contracts" component={() => <ProtectedRoute><Contracts /></ProtectedRoute>} />
     <Route path="/contracts/add" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
      <Route path="/contracts/:id/edit" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />

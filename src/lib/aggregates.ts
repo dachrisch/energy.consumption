@@ -1,4 +1,5 @@
-import { calculateDailyAverage, interpolateValueAtDate } from './consumption';
+import { calculateConsumptionBetween, calculateDailyAverage } from './consumption';
+import type { Reading as MeterReading } from './consumption';
 import { calculateIntervalCost, Contract } from './pricing';
 import { IMeter, IReading, IContract } from '../types/models';
 
@@ -47,18 +48,18 @@ interface YearStatsMapValue {
 interface ConsumptionSegment {
   startIndex: number;
   endIndex: number;
-  readings: { value: number; date: Date }[];
+  readings: MeterReading[];
 }
 
 /**
  * Detects meter resets by finding readings where the value decreases
  * @returns Array of indices where resets occur (pointing to the last reading before reset)
  */
-function detectMeterResets(readings: { value: number; date: Date }[]): number[] {
+function detectMeterResets(readings: MeterReading[]): number[] {
   const resetIndices: number[] = [];
   for (let i = 0; i < readings.length - 1; i++) {
-    if (readings[i + 1].value < readings[i].value) {
-      // Significant decrease suggests meter reset/replacement
+    // A recorded meter change, or an unmarked decrease, starts a new segment
+    if (readings[i + 1].kind === 'meterChange' || readings[i + 1].value < readings[i].value) {
       resetIndices.push(i);
     }
   }
@@ -69,7 +70,7 @@ function detectMeterResets(readings: { value: number; date: Date }[]): number[] 
  * Splits readings into continuous consumption segments separated by meter resets
  * @returns Array of segments, each containing a continuous series of readings
  */
-function splitReadingsIntoSegments(readings: { value: number; date: Date }[]): ConsumptionSegment[] {
+function splitReadingsIntoSegments(readings: MeterReading[]): ConsumptionSegment[] {
   const resetIndices = detectMeterResets(readings);
   const segments: ConsumptionSegment[] = [];
 
@@ -183,7 +184,7 @@ function updateYearlyStats(options: {
 }
 
 interface HistoryOptions {
-  meterReadings: { value: number; date: Date }[];
+  meterReadings: MeterReading[];
   meterContracts: Contract[];
   meterType: 'power' | 'gas';
   currentYear: number;
@@ -230,24 +231,20 @@ function calculateYtdCosts(params: {
   jan1Current: Date;
   jan1Prev: Date;
   todayPrevYear: Date;
-  meterReadings: { value: number; date: Date }[];
+  meterReadings: MeterReading[];
   meterContracts: Contract[];
 }) {
     const { now, jan1Current, jan1Prev, todayPrevYear, meterReadings, meterContracts } = params;
-    const valJan1Current = interpolateValueAtDate(jan1Current, meterReadings);
-    const valToday = interpolateValueAtDate(now, meterReadings) || (meterReadings.length > 0 ? meterReadings[meterReadings.length - 1].value : null);
-    const valJan1Prev = interpolateValueAtDate(jan1Prev, meterReadings);
-    const valTodayPrev = interpolateValueAtDate(todayPrevYear, meterReadings);
+    // Consumption is summed per physical meter segment, so a meter change never counts as usage
+    const currentConsumption = calculateConsumptionBetween(meterReadings, jan1Current, now);
+    const previousConsumption = calculateConsumptionBetween(meterReadings, jan1Prev, todayPrevYear);
 
-    let current = 0;
-    let previous = 0;
-
-    if (valJan1Current !== null && valToday !== null) {
-        current = calculateIntervalCost(jan1Current, now, valToday - valJan1Current, meterContracts);
-    }
-    if (valJan1Prev !== null && valTodayPrev !== null) {
-        previous = calculateIntervalCost(jan1Prev, todayPrevYear, valTodayPrev - valJan1Prev, meterContracts);
-    }
+    const current = currentConsumption > 0
+        ? calculateIntervalCost(jan1Current, now, currentConsumption, meterContracts)
+        : 0;
+    const previous = previousConsumption > 0
+        ? calculateIntervalCost(jan1Prev, todayPrevYear, previousConsumption, meterContracts)
+        : 0;
     return { current, previous };
 }
 
@@ -269,7 +266,7 @@ function getMeterContractsList(meterId: string, contracts: IContract[]): Contrac
     });
 }
 
-function calculateActiveYearlyCost(readings: { value: number; date: Date }[], meterContracts: Contract[], now: Date): number {
+function calculateActiveYearlyCost(readings: MeterReading[], meterContracts: Contract[], now: Date): number {
     let activeContract = meterContracts.find(c => {
         const start = c.startDate;
         const end = c.endDate || new Date('2099-12-31');
@@ -304,7 +301,7 @@ function calculateActiveYearlyCost(readings: { value: number; date: Date }[], me
 function getMeterReadingsList(meterId: string, readings: IReading[]) {
   return readings
     .filter((r) => r.meterId.toString() === meterId)
-    .map((r) => ({ value: r.value, date: new Date(r.date) }))
+    .map((r) => ({ value: r.value, date: new Date(r.date), kind: r.kind ?? 'regular' }))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
