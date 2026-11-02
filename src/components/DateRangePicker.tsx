@@ -1,5 +1,6 @@
 import { Component, createSignal, For } from 'solid-js';
-import { formatDate } from '../lib/timeRangeCostCalculation';
+import { formatDate } from '../lib/format';
+import { countDaysInclusive, lastNDaysRange } from '../lib/dateUtils';
 import Icon from './Icon';
 
 interface DateRangePickerProps {
@@ -39,18 +40,13 @@ const DateRangePicker: Component<DateRangePickerProps> = (props) => {
   };
 
   const applyPreset = (days: number) => {
-    const end = new Date(today);
-    const start = new Date(end);
-    start.setDate(start.getDate() - days);
+    const { start, end } = lastNDaysRange(days, today);
     props.onStartDateChange(start);
     props.onEndDateChange(end);
     setIsOpen(false);
   };
 
-  const daysDifference = () => {
-    const diff = props.endDate.getTime() - props.startDate.getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-  };
+  const daysDifference = () => countDaysInclusive(props.startDate, props.endDate);
 
   return (
     <div class="relative">

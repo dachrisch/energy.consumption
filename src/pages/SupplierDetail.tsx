@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { findMeterByNumber } from '../lib/intake/reconcile';
 import type { IBillComparison, IMeter, IProviderDocument, IStagedItem, ISupplier } from '../types/models';
+import { formatCurrency, formatDate as formatDisplayDate, formatFixed, formatPercent } from '../lib/format';
 
 interface SyncEntry {
   messageId: string;
@@ -72,10 +73,10 @@ const StatusBadge: Component<{ status: string }> = (props) => (
   </span>
 );
 
-const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString() : '—');
+const formatDate = (value?: string) => (value ? formatDisplayDate(value) : '—');
 
 const formatAmount = (value: number | null | undefined, currency = 'EUR') =>
-  value === null || value === undefined ? '—' : `${value.toFixed(2)} ${currency}`;
+  value === null || value === undefined ? '—' : (currency === 'EUR' ? formatCurrency(value) : `${formatFixed(value, 2)} ${currency}`);
 
 /** Drive copy of an ingested document, when it has been archived. */
 const driveLink = (document: IProviderDocument): string | undefined =>
@@ -101,9 +102,9 @@ const VarianceValue: Component<{ variance: IBillComparison['variance'] }> = (pro
   <Show when={props.variance} fallback="—">
     {(variance) => (
       <>
-        {variance().absolute.toFixed(2)}
+        {formatCurrency(variance().absolute)}
         <Show when={variance().percent !== null}>
-          <span class="opacity-50"> ({variance().percent?.toFixed(1)}%)</span>
+          <span class="opacity-50"> ({formatPercent(variance().percent ?? 0)})</span>
         </Show>
       </>
     )}
@@ -818,7 +819,7 @@ const SupplierDetail: Component = () => {
                             </A>
                             <span class="opacity-50">
                               {typeof contract.meterId === 'string' ? '' : contract.meterId?.name}
-                              {' · '}€{contract.basePrice.toFixed(2)}/mo · €{contract.workingPrice.toFixed(4)}
+                              {' · '}{formatCurrency(contract.basePrice)}/mo · {formatCurrency(contract.workingPrice, 4)}
                             </span>
                           </li>
                         )}

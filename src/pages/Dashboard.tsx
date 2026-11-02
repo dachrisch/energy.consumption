@@ -11,6 +11,7 @@ import Icon from '../components/Icon';
 import EmptyState from '../components/EmptyState';
 import PageHeader from '../components/PageHeader';
 import TimeRangeCostCard from '../components/TimeRangeCostCard';
+import { formatCurrency, formatPercent } from '../lib/format';
 
 Chart.register(Title, Tooltip, Legend, Colors, BarElement, CategoryScale, LinearScale);
 
@@ -55,7 +56,7 @@ const TrendValue: Component<{ current: number, previous: number }> = (p) => {
   const isUp = () => diff() > 0;
   return (<Show when={p.previous > 0}><div class={`text-[11px] font-bold flex items-center gap-1 mt-1 ${isUp() ? 'text-rose-300' : 'text-emerald-300'} overflow-hidden whitespace-nowrap`}>
     <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class="h-3 w-3 flex-shrink-0" />
-    <span class="truncate">{isUp() ? '+' : '−'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(pct()).toFixed(1)}%) <span class="opacity-70 font-medium">YTD vs. last year</span></span>
+    <span class="truncate">{isUp() ? '+' : '−'}{formatCurrency(Math.abs(diff()))} ({formatPercent(Math.abs(pct()))}) <span class="opacity-70 font-medium">YTD vs. last year</span></span>
   </div></Show>);
 };
 
@@ -144,7 +145,7 @@ const getChartOpts = (isMob: boolean) => ({
         label: (c: TooltipItem<'bar'>) => {
           const val = c.parsed[isMob ? 'x' : 'y'] || 0;
           if (val === 0) { return null; }
-          return `${c.dataset.label}: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val)}`;
+          return `${c.dataset.label}: ${formatCurrency(val)}`;
         }
       } 
     } 
@@ -170,7 +171,7 @@ const getChartOpts = (isMob: boolean) => ({
 const UtilityStats: Component<{ label: string, cost: number, current: number, previous: number }> = (p) => (
   <div class="min-w-0">
     <p class="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{p.label}</p>
-    <p class="text-xl font-black">€{Math.round(p.cost || 0)}</p>
+    <p class="text-xl font-black">{formatCurrency(p.cost || 0, 0)}</p>
     <TrendValue current={p.current} previous={p.previous} />
   </div>
 );
@@ -178,7 +179,7 @@ const UtilityStats: Component<{ label: string, cost: number, current: number, pr
 const SummaryHeader: Component<{ total: number, current: number, previous: number }> = (p) => (
   <>
     <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2 truncate">Projected Yearly Cost</p>
-    <h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-1">€{Math.round(p.total || 0)}</h2>
+    <h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-1">{formatCurrency(p.total || 0, 0)}</h2>
     <TrendValue current={p.current} previous={p.previous} />
   </>
 );

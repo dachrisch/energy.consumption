@@ -5,6 +5,7 @@ import ConsumptionChart from '../components/ConsumptionChart';
 import MeterTabs from '../components/MeterTabs';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import Icon from '../components/Icon';
+import { formatCurrency, formatDateRange, formatFixed, formatNumber } from '../lib/format';
 
 const fetchMeterData = async (id: string) => {
   const [meterRes, readingsRes, contractsRes] = await Promise.all([
@@ -80,7 +81,7 @@ const MeterContracts: Component<{ contracts: Contract[], meterId: string }> = (p
                       </A>
                     </Show>
                     <p class="mt-1 text-xs font-bold opacity-50">
-                      {new Date(contract.startDate).toLocaleDateString()} – {contract.endDate ? new Date(contract.endDate).toLocaleDateString() : 'Present'}
+                      {formatDateRange(contract.startDate, contract.endDate)}
                     </p>
                   </div>
                   <A
@@ -112,11 +113,11 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
       <div class="card-body p-5 md:p-8">
         <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Daily Average</p>
         <p class="text-2xl font-black md:text-3xl">
-          {props.stats.dailyAverage.toFixed(2)}
+          {formatFixed(props.stats.dailyAverage, 2)}
           <span class="block text-xs font-bold opacity-40 sm:inline sm:ml-2">{props.meter.unit}/day</span>
         </p>
         <Show when={props.stats.dailyCost > 0}>
-          <p class="text-sm font-bold text-success mt-1">€{props.stats.dailyCost.toFixed(2)}/day</p>
+          <p class="text-sm font-bold text-success mt-1">{formatCurrency(props.stats.dailyCost)}/day</p>
         </Show>
       </div>
     </div>
@@ -124,7 +125,7 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
       <div class="card-body p-5 md:p-8">
         <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Yearly Projection</p>
         <p class="text-2xl font-black md:text-3xl">
-          {Math.round(props.stats.yearlyProjection).toLocaleString()}
+          {formatNumber(Math.round(props.stats.yearlyProjection))}
           <span class="block text-xs font-bold opacity-40 sm:inline sm:ml-2">{props.meter.unit}/year</span>
         </p>
       </div>
@@ -148,7 +149,7 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
       <div class="card col-span-2 bg-primary text-primary-content shadow-sm shadow-primary/30 border-none relative overflow-hidden group md:col-span-1">
         <div class="card-body p-8 z-10">
           <p class="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1 text-primary-content/80">Estimated Yearly Cost</p>
-          <p class="text-4xl font-black tracking-tighter">€{props.stats.estimatedYearlyCost.toFixed(2)}</p>
+          <p class="text-4xl font-black tracking-tighter">{formatCurrency(props.stats.estimatedYearlyCost)}</p>
           <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
             <span class="text-[10px] font-bold uppercase tracking-wider opacity-60">Active Contract</span>
             <A href={`/contracts?meterId=${props.meter._id}`} class="btn btn-xs btn-ghost bg-white/10 hover:bg-white/20 text-white rounded-xl border-none px-3 font-black">Manage</A>

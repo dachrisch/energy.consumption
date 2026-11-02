@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import PageHeader from '../components/PageHeader';
 import Icon from '../components/Icon';
 import type { ReadingKind } from '../types/models';
+import { formatDate, formatNumber } from '../lib/format';
 
 interface Meter { _id: string; name: string; meterNumber: string; unit: string; stats?: { dailyAverage?: number }; }
 interface ExistingReading { _id: string; value: number; date: string; kind?: ReadingKind; }
@@ -41,7 +42,7 @@ export function checkReadingPlausibility(p: { value: number; date: string; previ
 const ReadingGuidance: Component<{ previous?: ExistingReading; unit: string; warning: ReadingWarning }> = (props) => (
   <div class="px-1 space-y-2">
     <Show when={props.previous}>{(prev) => (
-      <p class="text-sm font-bold opacity-60">Last reading: {prev().value.toLocaleString()} {props.unit} on {new Date(prev().date).toLocaleDateString()}</p>
+      <p class="text-sm font-bold opacity-60">Last reading: {formatNumber(prev().value, 3)} {props.unit} on {formatDate(prev().date)}</p>
     )}</Show>
     <Show when={props.warning === 'lower'}>
       <div role="status" class="alert alert-warning text-sm py-2 rounded-xl">

@@ -1,5 +1,6 @@
 import { Component, createSignal, Show, For, createEffect } from 'solid-js';
 import { Portal } from 'solid-js/web';
+import { formatDate } from '../lib/format';
 
 interface Meter {
   _id: string;
@@ -31,14 +32,14 @@ const formatDateRange = (readings: Reading[]): string => {
      return 'No data';
    }
    if (readings.length === 1) {
-     return new Date(readings[0].date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+     return formatDate(readings[0].date);
    }
   
   const firstDate = new Date(readings[0].date);
   const lastDate = new Date(readings[readings.length - 1].date);
   
-  const first = firstDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  const last = lastDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const first = formatDate(firstDate);
+  const last = formatDate(lastDate);
   
   return `${first} – ${last}`;
 };

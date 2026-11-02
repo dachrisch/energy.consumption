@@ -6,6 +6,7 @@ import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import PageHeader from '../components/PageHeader';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
+import { formatCurrency, formatFixed } from '../lib/format';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -81,15 +82,15 @@ const MeterCard: Component<MeterCardProps> = (props) => {
         <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Consumption</p>
-            <p class="text-xl font-black">{stats().dailyAverage.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">{props.meter.unit}/day</span></p>
+            <p class="text-xl font-black">{formatFixed(stats().dailyAverage, 2)}<span class="text-xs font-bold opacity-40 ml-1">{props.meter.unit}/day</span></p>
             <Show when={stats().dailyCost > 0}>
-              <p class="text-[10px] font-bold text-success mt-0.5">€{stats().dailyCost.toFixed(2)}/day</p>
+              <p class="text-[10px] font-bold text-success mt-0.5">{formatCurrency(stats().dailyCost)}/day</p>
             </Show>
           </div>
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Yearly Cost</p>
             <Show when={hasContract() && !hasGaps()} fallback={<p class="text-xs font-bold opacity-20 mt-1">N/A</p>}>
-              <p class="text-xl font-black text-primary">€{Math.round(stats().estimatedYearlyCost)}</p>
+              <p class="text-xl font-black text-primary">{formatCurrency(stats().estimatedYearlyCost, 0)}</p>
             </Show>
           </div>
         </div>

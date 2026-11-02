@@ -3,6 +3,7 @@ import { render, screen, cleanup } from '@solidjs/testing-library';
 import '@testing-library/jest-dom';
 import ContractTemplateCard from '../ContractTemplateCard';
 import { Router, Route } from '@solidjs/router';
+import { formatDate } from '../../lib/format';
 
 describe('ContractTemplateCard', () => {
   const gap = {
@@ -30,8 +31,8 @@ describe('ContractTemplateCard', () => {
     ));
 
     expect(screen.getByText(/Missing Coverage/i)).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(gap.startDate.toLocaleDateString()))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(gap.endDate.toLocaleDateString()))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(formatDate(gap.startDate)))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(formatDate(gap.endDate)))).toBeInTheDocument();
   });
 
   it('pre-fills the add link with gap dates', () => {

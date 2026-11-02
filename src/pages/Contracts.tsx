@@ -9,6 +9,7 @@ import Icon from '../components/Icon';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
 import FormInput from '../components/FormInput';
+import { formatCurrency, formatDateRange } from '../lib/format';
 
 interface Meter {
   _id: string;
@@ -136,8 +137,7 @@ const ContractCard: Component<{
           <div class="text-right">
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40">Validity period</p>
             <p class="font-bold text-sm">
-              {new Date(props.contract.startDate).toLocaleDateString()} – 
-              {props.contract.endDate ? new Date(props.contract.endDate).toLocaleDateString() : 'Present'}
+              {formatDateRange(props.contract.startDate, props.contract.endDate)}
             </p>
             <span class={`badge badge-sm rounded-full font-bold ${contractStatusTone[status()]}`}>{status()}</span>
           </div>
@@ -166,11 +166,11 @@ const ContractCard: Component<{
         <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Base Price</p>
-            <p class="text-xl font-black">€{props.contract.basePrice.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">/mo</span></p>
+            <p class="text-xl font-black">{formatCurrency(props.contract.basePrice)}<span class="text-xs font-bold opacity-40 ml-1">/mo</span></p>
           </div>
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Working Price</p>
-            <p class="text-xl font-black">€{props.contract.workingPrice.toFixed(4)}<span class="text-xs font-bold opacity-40 ml-1">/{props.contract.meterId.type === 'power' ? 'kWh' : 'm³'}</span></p>
+            <p class="text-xl font-black">{formatCurrency(props.contract.workingPrice, 4)}<span class="text-xs font-bold opacity-40 ml-1">/{props.contract.meterId.type === 'power' ? 'kWh' : 'm³'}</span></p>
           </div>
         </div>
 

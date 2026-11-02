@@ -7,6 +7,7 @@ import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import MeterTabs from '../components/MeterTabs';
 import type { ReadingKind } from '../types/models';
+import { formatDayMonth, formatNumber } from '../lib/format';
 
 interface Meter {
   _id: string;
@@ -66,7 +67,7 @@ const ReadingDeltaCell: Component<{ reading: Reading; unit: string }> = (props) 
       <Show when={status() === 'zero'}><span class="text-lg font-black opacity-60">+0 {props.unit}</span></Show>
       <Show when={status() === 'delta'}>
         <div class="flex items-center gap-2">
-          <span class="text-lg font-black">+{(props.reading.delta ?? 0).toLocaleString()}</span>
+          <span class="text-lg font-black">+{formatNumber(props.reading.delta ?? 0)}</span>
           <span class="text-[10px] font-bold opacity-40 uppercase tracking-tighter">{props.unit}</span>
         </div>
       </Show>
@@ -96,13 +97,13 @@ const ReadingTableRow: Component<{
   >
     <td class="p-6 text-center">
       <span class="font-mono font-bold opacity-60">
-        {props.reading.date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}
+        {formatDayMonth(props.reading.date)}
       </span>
       <div class="text-[10px] font-black opacity-30 uppercase">{props.reading.date.getFullYear()}</div>
     </td>
     <td class="p-6">
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-xl font-black">{props.reading.value.toLocaleString()}</span>
+        <span class="text-xl font-black">{formatNumber(props.reading.value, 3)}</span>
         <Show when={props.reading.source === 'provider'}>
           <span class="badge badge-primary badge-outline badge-sm font-black text-[9px] uppercase tracking-widest">provider</span>
         </Show>

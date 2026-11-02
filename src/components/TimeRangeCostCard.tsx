@@ -13,6 +13,8 @@ import TimeRangeChart from './TimeRangeChart';
 import MeterMultiSelect from './MeterMultiSelect';
 import DateRangePicker from './DateRangePicker';
 import Icon from './Icon';
+import { lastNDaysRange } from '../lib/dateUtils';
+import { formatQuantity } from '../lib/format';
 
 interface TimeRangeCostCardProps {
   meters: Meter[];
@@ -28,21 +30,9 @@ interface Preset {
 
 const PRESETS: Preset[][] = [
   [
-    { id: '7d', label: 'Last 7 days', getRange: (today) => {
-      const end = new Date(today); end.setHours(23, 59, 59, 999);
-      const start = new Date(end); start.setDate(start.getDate() - 7); start.setHours(0, 0, 0, 0);
-      return { start, end };
-    }},
-    { id: '30d', label: 'Last 30 days', getRange: (today) => {
-      const end = new Date(today); end.setHours(23, 59, 59, 999);
-      const start = new Date(end); start.setDate(start.getDate() - 30); start.setHours(0, 0, 0, 0);
-      return { start, end };
-    }},
-    { id: '90d', label: 'Last 90 days', getRange: (today) => {
-      const end = new Date(today); end.setHours(23, 59, 59, 999);
-      const start = new Date(end); start.setDate(start.getDate() - 90); start.setHours(0, 0, 0, 0);
-      return { start, end };
-    }},
+    { id: '7d', label: 'Last 7 days', getRange: (today) => lastNDaysRange(7, today) },
+    { id: '30d', label: 'Last 30 days', getRange: (today) => lastNDaysRange(30, today) },
+    { id: '90d', label: 'Last 90 days', getRange: (today) => lastNDaysRange(90, today) },
   ],
   [
     { id: 'lastYear', label: 'Last year', getRange: (today) => ({
@@ -74,7 +64,7 @@ const CostBreakdown: Component<{ result: TimeRangeCostResult }> = (props) => {
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-sm">{breakdown.meterName}</p>
                 <p class="text-xs opacity-60">
-                  {breakdown.consumption.toFixed(2)} {breakdown.unit}
+                  {formatQuantity(breakdown.consumption, breakdown.unit)}
                 </p>
               </div>
               <div class="text-right font-black">
@@ -266,12 +256,10 @@ const ChartSection: Component<{
 const TimeRangeCostCard: Component<TimeRangeCostCardProps> = (props) => {
   const today = new Date();
   today.setHours(23, 59, 59, 999);
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  thirtyDaysAgo.setHours(0, 0, 0, 0);
+  const initialRange = lastNDaysRange(30, today);
 
-  const [startDate, setStartDate] = createSignal(thirtyDaysAgo);
-  const [endDate, setEndDate] = createSignal(today);
+  const [startDate, setStartDate] = createSignal(initialRange.start);
+  const [endDate, setEndDate] = createSignal(initialRange.end);
   const [activePreset, setActivePreset] = createSignal<string>('30d');
 
   const applyPreset = (id: string, getRange: (today: Date) => { start: Date; end: Date }) => {

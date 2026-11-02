@@ -40,3 +40,24 @@ export const parseFlexibleDate = (val: string, locale: DateLocale = 'EU'): Date 
   const final = new Date(clean);
   return isNaN(final.getTime()) ? null : final;
 };
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+/** Calendar day index of a local date, independent of DST (23/25-hour days). */
+const calendarDayIndex = (date: Date): number =>
+  Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY;
+
+/** Number of calendar days from start to end, both inclusive (03.10.–02.11. → 31). */
+export function countDaysInclusive(start: Date, end: Date): number {
+  return calendarDayIndex(end) - calendarDayIndex(start) + 1;
+}
+
+/**
+ * "Last N days" ending today: exactly N calendar days including today,
+ * from local midnight N−1 days ago to the end of today.
+ */
+export function lastNDaysRange(days: number, today: Date = new Date()): { start: Date; end: Date } {
+  const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1), 0, 0, 0, 0);
+  return { start, end };
+}

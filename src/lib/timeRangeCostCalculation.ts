@@ -6,6 +6,7 @@ import {
 import { buildDailyRateSeries, buildRateProjection } from './consumptionChartData';
 import { calculateIntervalCost, Contract } from './pricing';
 import { IMeter, IReading, IContract } from '../types/models';
+import { formatCurrency as formatEuro, formatDate as formatDisplayDate } from './format';
 
 export type TimeRangeReading = Reading;
 
@@ -218,21 +219,12 @@ export function calculateTimeRangeCosts({
  * Format a cost value as EUR currency string
  */
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(Math.max(0, value));
+  return formatEuro(Math.max(0, value));
 }
 
 /**
  * Format a date for display (DD.MM.YYYY)
  */
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date);
+  return formatDisplayDate(date);
 }

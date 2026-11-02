@@ -4,6 +4,7 @@ import { Route, Router } from '@solidjs/router';
 import AddReading from '../AddReading';
 import { AuthProvider } from '../../context/AuthContext';
 import { ToastProvider } from '../../context/ToastContext';
+import { formatDate } from '../../lib/format';
 
 global.fetch = vi.fn();
 const mockedFetch = vi.mocked(global.fetch);
@@ -63,9 +64,9 @@ describe('Add and edit reading', () => {
     renderPage('/meters/m1/add-reading');
 
     const guidance = await screen.findByText(/Last reading:/);
-    expect(guidance.textContent).toContain((1000).toLocaleString());
+    expect(guidance.textContent).toContain('1.000');
     expect(guidance.textContent).toContain('kWh');
-    expect(guidance.textContent).toContain(new Date('2026-01-10T00:00:00.000Z').toLocaleDateString());
+    expect(guidance.textContent).toContain(formatDate('2026-01-10T00:00:00.000Z'));
   });
 
   it('warns without blocking when the value is lower than the last reading', async () => {

@@ -4,6 +4,7 @@ import { Router, Route } from '@solidjs/router';
 import SupplierDetail from '../SupplierDetail';
 import { AuthProvider } from '../../context/AuthContext';
 import { ToastProvider } from '../../context/ToastContext';
+import { formatCurrency } from '../../lib/format';
 
 global.fetch = vi.fn();
 
@@ -127,9 +128,9 @@ describe('Supplier detail page', () => {
     renderSupplier();
 
     // The stacked mobile list and the desktop table both render the values.
-    expect((await screen.findAllByText('50.00 EUR')).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('65.48 EUR').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/\(-23\.6%\)/).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('50,00 €')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('65,48 €').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\(-23,6\s%\)/).length).toBeGreaterThan(0);
   });
 
   it('stacks the billed period so the values stay readable on phones', async () => {
@@ -137,8 +138,8 @@ describe('Supplier detail page', () => {
     renderSupplier();
 
     const stacked = await screen.findByTestId('bills-stacked');
-    expect(stacked.textContent).toContain('50.00 EUR');
-    expect(stacked.textContent).toContain('65.48 EUR');
+    expect(stacked.textContent).toContain(formatCurrency(50));
+    expect(stacked.textContent).toContain(formatCurrency(65.48));
     expect(stacked.textContent).toContain('100 kWh');
   });
 

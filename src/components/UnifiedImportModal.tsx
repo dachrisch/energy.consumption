@@ -8,6 +8,7 @@ import { parseFlexibleDate } from '../lib/dateUtils';
 import MeterForm from './MeterForm';
 import EmptyState from './EmptyState';
 import Icon from './Icon';
+import { formatDate } from '../lib/format';
 
 interface Meter {
   _id: string;
@@ -240,7 +241,7 @@ const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; 
                  <div class="flex items-center justify-between p-3 bg-base-200/50 rounded-xl border border-base-content/5">
                    <div class="flex flex-col">
                      <span class="font-bold text-sm">{c.providerName}</span>
-                     <span class="text-[10px] opacity-50">{getMeterName(c.meterId)} • Starts {new Date(c.startDate).toLocaleDateString()}</span>
+                     <span class="text-[10px] opacity-50">{getMeterName(c.meterId)} • Starts {formatDate(c.startDate)}</span>
                    </div>
                    <div class="flex items-center gap-3">
                      <Icon name={(props.backupInfo?.data?.meters?.find(m => m.id === c.meterId)?.type || props.existingMeters.find(em => em._id === c.meterId)?.type || 'power') as 'power' | 'gas'} class="h-3 w-3 opacity-30" />
@@ -258,7 +259,7 @@ const StepPreview: Component<{ data: PreviewReading[]; backupInfo?: ImportData; 
           <table class="table table-xs table-pin-rows">
             <thead><tr><th class="font-bold text-xs">Meter</th><th class="font-bold text-xs">Date</th><th class="font-bold text-xs text-right">Value</th></tr></thead>
             <tbody><For each={props.data}>{(row) => (
-              <tr><td class="text-[10px] font-bold opacity-70 truncate max-w-[120px]">{getMeterName(row.meterId)}</td><td class="text-xs">{row.date.toLocaleDateString()}</td><td class="font-bold text-xs text-right">{row.value}</td></tr>
+              <tr><td class="text-[10px] font-bold opacity-70 truncate max-w-[120px]">{getMeterName(row.meterId)}</td><td class="text-xs">{formatDate(row.date)}</td><td class="font-bold text-xs text-right">{row.value}</td></tr>
             )}</For></tbody>
           </table>
         </div>
