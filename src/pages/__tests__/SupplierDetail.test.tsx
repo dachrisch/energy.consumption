@@ -100,6 +100,8 @@ describe('Supplier detail page', () => {
   afterEach(() => {
     cleanup();
     (fetch as unknown as { mockReset: () => void }).mockReset();
+    // Restore the URL so later suites in the same worker (isolate: false) are unaffected.
+    window.history.pushState({}, '', '/');
   });
 
   it('lists the supplier, staged items and ingested documents', async () => {
@@ -326,6 +328,7 @@ describe('Supplier detail — Google connection', () => {
   afterEach(() => {
     cleanup();
     (fetch as unknown as { mockReset: () => void }).mockReset();
+    window.history.pushState({}, '', '/');
   });
 
   it('offers the connect link and opts it out of client-side routing', async () => {
