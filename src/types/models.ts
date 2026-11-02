@@ -1,3 +1,5 @@
+export type ReadingKind = 'regular' | 'meterChange';
+
 export interface IMeter {
   _id: string;
   name: string;
@@ -20,6 +22,7 @@ export interface IReading {
   meterId: string;
   value: number;
   date: string | Date;
+  kind?: ReadingKind;
   userId: string;
   createdAt?: string;
   updatedAt?: string;

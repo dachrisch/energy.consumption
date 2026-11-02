@@ -4,6 +4,7 @@ import { Router, Route } from '@solidjs/router';
 import SupplierDetail from '../SupplierDetail';
 import { AuthProvider } from '../../context/AuthContext';
 import { ToastProvider } from '../../context/ToastContext';
+import { formatCurrency } from '../../lib/format';
 
 global.fetch = vi.fn();
 
@@ -82,7 +83,7 @@ function mockApi(
 const renderSupplier = () =>
   render(() => (
     <Router>
-      <Route path="/contracts/:id" component={() => (
+      <Route path="/suppliers/:id" component={() => (
         <AuthProvider>
           <ToastProvider>
             <SupplierDetail />
@@ -94,7 +95,7 @@ const renderSupplier = () =>
 
 describe('Supplier detail page', () => {
   beforeEach(() => {
-    window.history.pushState({}, '', '/contracts/s1');
+    window.history.pushState({}, '', '/suppliers/s1');
   });
 
   afterEach(() => {
@@ -115,14 +116,21 @@ describe('Supplier detail page', () => {
     expect(await screen.findByText('PDF extraction needs a Gemini API key')).toBeTruthy();
   });
 
+  it('explains which supplier emails are imported in plain language', async () => {
+    mockApi();
+    renderSupplier();
+
+    expect(await screen.findByText('Which emails from this supplier to import. Applies to all its contracts.')).toBeTruthy();
+  });
+
   it('shows the metered variance next to the billed amount', async () => {
     mockApi();
     renderSupplier();
 
     // The stacked mobile list and the desktop table both render the values.
-    expect((await screen.findAllByText('50.00 EUR')).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('65.48 EUR').length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/\(-23\.6%\)/).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('50,00 €')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('65,48 €').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\(-23,6\s%\)/).length).toBeGreaterThan(0);
   });
 
   it('stacks the billed period so the values stay readable on phones', async () => {
@@ -130,8 +138,8 @@ describe('Supplier detail page', () => {
     renderSupplier();
 
     const stacked = await screen.findByTestId('bills-stacked');
-    expect(stacked.textContent).toContain('50.00 EUR');
-    expect(stacked.textContent).toContain('65.48 EUR');
+    expect(stacked.textContent).toContain(formatCurrency(50));
+    expect(stacked.textContent).toContain(formatCurrency(65.48));
     expect(stacked.textContent).toContain('100 kWh');
   });
 
@@ -229,7 +237,7 @@ describe('Supplier detail page', () => {
   });
 
   it('files an unassigned document under a supplier', async () => {
-    window.history.pushState({}, '', '/contracts/unassigned');
+    window.history.pushState({}, '', '/suppliers/unassigned');
     const calls = mockApi({
       'GET /api/suppliers': () => ({
         suppliers: [supplier],
@@ -347,7 +355,7 @@ describe('Supplier detail page', () => {
  */
 describe('Supplier detail — Google connection', () => {
   beforeEach(() => {
-    window.history.pushState({}, '', '/contracts/s1');
+    window.history.pushState({}, '', '/suppliers/s1');
   });
 
   afterEach(() => {

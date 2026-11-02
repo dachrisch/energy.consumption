@@ -2,6 +2,7 @@ import { Component } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Gap } from '../lib/gapDetection';
 import Icon from './Icon';
+import { formatDate } from '../lib/format';
 
 interface Meter {
   _id: string;
@@ -39,7 +40,7 @@ const ContractTemplateCard: Component<ContractTemplateCardProps> = (props) => {
           <p class="text-xs font-bold opacity-40">Period for {props.meter.name}:</p>
           <div class="flex items-center gap-2">
             <p class="text-sm font-black">
-              {props.gap.startDate.toLocaleDateString()} — {props.gap.endDate.toLocaleDateString()}
+              {formatDate(props.gap.startDate)} – {formatDate(props.gap.endDate)}
             </p>
             <div 
               class="p-1 rounded-lg"

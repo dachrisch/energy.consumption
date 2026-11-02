@@ -19,7 +19,8 @@ export async function recalculateUserStats(userId: string) {
       .filter(r => r.meterId.toString() === meter._id.toString())
       .map(r => ({
         value: r.value,
-        date: new Date(r.date)
+        date: new Date(r.date),
+        kind: r.kind ?? 'regular'
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 

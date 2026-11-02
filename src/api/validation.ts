@@ -31,10 +31,13 @@ export const meterSchema = z.object({
 }).strict();
 
 // Reading Schemas
+export const readingKindSchema = z.enum(['regular', 'meterChange']);
+
 export const readingSchema = z.object({
   meterId: objectIdSchema,
   value: z.number().nonnegative('Reading value cannot be negative'),
   date: z.string().pipe(z.coerce.date()),
+  kind: readingKindSchema.optional(),
 }).strict();
 
 export const bulkReadingSchema = z.array(z.object({
@@ -102,7 +105,8 @@ export const unifiedExportSchema = z.object({
       id: z.string(),
       meterId: z.string(),
       value: z.number(),
-      date: z.string()
+      date: z.string(),
+      kind: readingKindSchema.optional()
     })),
     contracts: z.array(z.object({
       id: z.string(),

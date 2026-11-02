@@ -1,4 +1,4 @@
-import { IReading, IMeter, IContract, ISupplier } from '../types/models';
+import { IReading, IMeter, IContract, ISupplier, ReadingKind } from '../types/models';
 import { Model } from 'mongoose';
 
 interface BulkImportResult {
@@ -10,7 +10,7 @@ interface BulkImportResult {
 interface UnifiedImportData {
   suppliers?: Array<{ id?: string; name: string; senders?: string[]; subjectHints?: string[]; gmailQuery?: string | null }>;
   meters?: Array<{ id: string; name: string; meterNumber: string; type: 'power' | 'gas'; unit: string }>;
-  readings?: Array<{ meterId: string; date: string; value: number }>;
+  readings?: Array<{ meterId: string; date: string; value: number; kind?: ReadingKind }>;
   contracts?: Array<{ meterId: string; providerName?: string; supplierId?: string; supplierName?: string; startDate: string; endDate?: string; basePrice: number; workingPrice: number }>;
 }
 
@@ -102,6 +102,7 @@ async function importReadings(options: ReadingImportOptions): Promise<void> {
         meterId: newMeterId,
         value: rData.value,
         date: new Date(rData.date),
+        kind: rData.kind ?? 'regular',
         userId
       });
     } catch (err) {

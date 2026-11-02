@@ -54,6 +54,34 @@ describe('calculateAggregates', () => {
     expect(result.totalYearlyCost).toBeCloseTo(2006.2, 1);
   });
 
+  it('sums segment consumption instead of an upward meter-change jump', () => {
+    const meters = [{ _id: 'm1', type: 'power', name: 'Power Meter' }];
+    const readings = [
+      { meterId: 'm1', value: 100, date: new Date('2026-01-01') },
+      { meterId: 'm1', value: 200, date: new Date('2026-02-01') },
+      { meterId: 'm1', value: 1000, date: new Date('2026-02-02'), kind: 'meterChange' },
+      { meterId: 'm1', value: 1100, date: new Date('2026-03-01') },
+    ];
+    const contracts = [{
+      meterId: 'm1',
+      type: 'power',
+      startDate: new Date('2026-01-01'),
+      basePrice: 0,
+      workingPrice: 1,
+    }];
+
+    const result = calculateAggregates(
+      meters as any,
+      readings as any,
+      contracts as any,
+      new Date('2026-03-01'),
+    ) as any;
+
+    expect(result.yearlyHistory[0].consumption).toBe(200);
+    expect(result.yearlyHistory[0].powerCostActual).toBe(200);
+    expect(result.ytdCostCurrent).toBe(200);
+  });
+
   it('should calculate actual and prognosis for current year', () => {
     const currentYear = new Date().getFullYear();
     const meters = [{ _id: 'm1', type: 'power', name: 'Power Meter' }];

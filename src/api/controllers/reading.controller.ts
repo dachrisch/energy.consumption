@@ -65,7 +65,8 @@ export async function exportFullBackup(userId: string) {
         id: r._id.toString(),
         meterId: r.meterId.toString(),
         value: r.value,
-        date: r.date.toISOString().split('T')[0]
+        date: r.date.toISOString().split('T')[0],
+        kind: r.kind ?? 'regular'
       })),
       contracts: contracts.map(c => ({
         id: c._id.toString(),
@@ -110,7 +111,8 @@ export async function exportUnifiedFormat(userId: string, options: { includeMete
         id: r._id.toString(),
         meterId: r.meterId.toString(),
         value: r.value,
-        date: r.date.toISOString().split('T')[0]
+        date: r.date.toISOString().split('T')[0],
+        kind: r.kind ?? 'regular'
       })),
       contracts: contracts.map(c => ({
         id: c._id.toString(),
@@ -207,10 +209,16 @@ export async function handleReadingItem({ req, res, userId, path }: RouteParams)
       return;
     }
     const updated = await Reading.findOneAndUpdate({ _id: { $eq: id } }, { $set: result.data }, { new: true }).setOptions({ userId });
-    
+    if (!updated) {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ error: 'Reading not found' }));
+      return;
+    }
+
     // Recalculate stats for the user after updating a reading
     await recalculateUserStats(userId);
-    
+
+    res.statusCode = 200;
     res.end(JSON.stringify(updated));
     return;
   }

@@ -4,11 +4,66 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import PageHeader from '../components/PageHeader';
 import Icon from '../components/Icon';
+import type { ReadingKind } from '../types/models';
+import { formatDate, formatNumber } from '../lib/format';
 
-interface Meter { _id: string; name: string; meterNumber: string; unit: string; }
+interface Meter { _id: string; name: string; meterNumber: string; unit: string; stats?: { dailyAverage?: number }; }
+interface ExistingReading { _id: string; value: number; date: string; kind?: ReadingKind; }
 interface ScanResult { value: number; meterId: string; meterName: string; type: string; unit: string; }
 
 const fetchMeters = async () => (await fetch('/api/meters')).json();
+const fetchMeterReadings = async (meterId: string): Promise<ExistingReading[]> => {
+  const res = await fetch(`/api/readings?meterId=${encodeURIComponent(meterId)}&limit=1000`);
+  return res.ok ? res.json() : [];
+};
+const DAY_MS = 1000 * 60 * 60 * 24;
+const PLAUSIBILITY_FACTOR = 10;
+
+/** The newest reading before the given date, ignoring the reading being edited. */
+export function findPreviousReading(readings: ExistingReading[], date: string, excludeId?: string): ExistingReading | undefined {
+  const target = new Date(date).getTime();
+  return readings
+    .filter(r => r._id !== excludeId && new Date(r.date).getTime() < target)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+}
+
+type ReadingWarning = 'lower' | 'implausible' | null;
+
+/** Non-blocking plausibility check of a new value against the previous reading. */
+export function checkReadingPlausibility(p: { value: number; date: string; previous?: ExistingReading; dailyAverage?: number; meterChange: boolean }): ReadingWarning {
+  if (!p.previous || p.meterChange || Number.isNaN(p.value)) { return null; }
+  if (p.value < p.previous.value) { return 'lower'; }
+  const days = (new Date(p.date).getTime() - new Date(p.previous.date).getTime()) / DAY_MS;
+  const average = p.dailyAverage ?? 0;
+  if (days > 0 && average > 0 && (p.value - p.previous.value) / days > PLAUSIBILITY_FACTOR * average) { return 'implausible'; }
+  return null;
+}
+
+const ReadingGuidance: Component<{ previous?: ExistingReading; unit: string; warning: ReadingWarning }> = (props) => (
+  <div class="px-1 space-y-2">
+    <Show when={props.previous}>{(prev) => (
+      <p class="text-sm font-bold opacity-60">Last reading: {formatNumber(prev().value, 3)} {props.unit} on {formatDate(prev().date)}</p>
+    )}</Show>
+    <Show when={props.warning === 'lower'}>
+      <div role="status" class="alert alert-warning text-sm py-2 rounded-xl">
+        <span>This value is lower than the last reading.</span>
+        <span>If the meter was replaced, tick “This is a new meter” below.</span>
+      </div>
+    </Show>
+    <Show when={props.warning === 'implausible'}>
+      <div role="status" class="alert alert-warning text-sm py-2 rounded-xl">
+        <span>This implies a daily consumption more than 10× the current average. Please check the value.</span>
+      </div>
+    </Show>
+  </div>
+);
+
+const MeterChangeToggle: Component<{ checked: boolean; onChange: (v: boolean) => void }> = (props) => (
+  <label for="meter-change" class="flex items-center gap-3 px-1 cursor-pointer">
+    <input id="meter-change" type="checkbox" class="checkbox checkbox-primary" checked={props.checked} onChange={(e) => props.onChange(e.currentTarget.checked)} />
+    <span class="text-sm font-bold">This is a new meter (meter was replaced)</span>
+  </label>
+);
 
 const EntrySelection: Component<{ isScanning: boolean; googleApiKey?: string; hasMeters: boolean; onScan: (e: Event) => void; onEnterManually: () => void; onAddMeter: () => void; }> = (props) => (
   <div class="card bg-base-100 shadow-sm border border-base-content/5 p-12 rounded-3xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
@@ -56,7 +111,7 @@ const MeterMismatchBanner: Component<{ detectedName: string; onResolve: (useDete
           <button type="button" onClick={() => props.onResolve(false)} class="btn btn-ghost btn-sm rounded-xl font-black uppercase text-[10px] opacity-60">Keep manual</button></div></div></div></div>
 );
 
-const ReadingForm: Component<{ meters: Meter[]; selectedMeterId: string; setSelectedMeterId: (id: string) => void; value: string; setValue: (v: string) => void; date: string; setDate: (v: string) => void; isScanning: boolean; scanPreview: string | null; setScanPreview: (v: string | null) => void; pendingScan: ScanResult | null; googleApiKey?: string; onScan: (e: Event) => void; onResolveMismatch: (useDetected: boolean) => void; onSubmit: (e: Event) => void; onCancel: () => void; onAddMeter: () => void; }> = (props) => {
+const ReadingForm: Component<{ meters: Meter[]; selectedMeterId: string; setSelectedMeterId: (id: string) => void; value: string; setValue: (v: string) => void; date: string; setDate: (v: string) => void; isScanning: boolean; scanPreview: string | null; setScanPreview: (v: string | null) => void; pendingScan: ScanResult | null; googleApiKey?: string; onScan: (e: Event) => void; onResolveMismatch: (useDetected: boolean) => void; onSubmit: (e: Event) => void; onCancel: () => void; onAddMeter: () => void; previous?: ExistingReading; warning: ReadingWarning; meterChange: boolean; setMeterChange: (v: boolean) => void; }> = (props) => {
   const selectedMeter = () => props.meters.find(m => m._id === props.selectedMeterId);
   return (<div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden"><div class="card-body p-8 md:p-12"><form onSubmit={props.onSubmit} class="space-y-8">
     <div class="form-control w-full flex flex-col gap-2"><label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Select Meter</span></label>
@@ -68,18 +123,20 @@ const ReadingForm: Component<{ meters: Meter[]; selectedMeterId: string; setSele
           {!props.scanPreview && <ReadingPhotoActions googleApiKey={props.googleApiKey} isScanning={props.isScanning} onScan={props.onScan} />}</div>
         {!props.googleApiKey && <p class="text-[10px] font-black uppercase text-warning mt-1 text-right tracking-widest opacity-80 px-1">⚠️ AI Scan requires Key</p>}
         {props.pendingScan && <MeterMismatchBanner detectedName={props.pendingScan!.meterName} onResolve={props.onResolveMismatch} />}
-        {props.scanPreview && <div class="mt-2 flex justify-center"><div class="relative"><img src={props.scanPreview!} class="h-24 w-auto rounded-xl border-2 border-primary/20 shadow-md" /><button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => props.setScanPreview(null)}>✕</button></div></div>}</div>)}</Show>
+        {props.scanPreview && <div class="mt-2 flex justify-center"><div class="relative"><img src={props.scanPreview!} class="h-24 w-auto rounded-xl border-2 border-primary/20 shadow-md" /><button type="button" class="btn btn-circle btn-xs absolute -top-2 -right-2 btn-error" onClick={() => props.setScanPreview(null)}>✕</button></div></div>}
+        <ReadingGuidance previous={props.previous} unit={meter().unit} warning={props.warning} /></div>)}</Show>
     <div class="form-control w-full flex flex-col gap-2"><label class="px-1"><span class="label-text font-black uppercase text-xs tracking-widest opacity-60">Date</span></label>
       <input type="date" class="input input-bordered h-14 rounded-2xl bg-base-200/50 border-none font-bold text-lg focus:ring-2 focus:ring-primary px-6" value={props.date} onInput={(e) => props.setDate(e.currentTarget.value)} required /></div>
+    <MeterChangeToggle checked={props.meterChange} onChange={props.setMeterChange} />
     <div class="card-actions justify-end pt-6"><button type="button" onClick={props.onCancel} class="btn btn-ghost btn-lg px-10 font-bold rounded-xl">Cancel</button>
       <button type="submit" class="btn btn-primary btn-lg px-12 font-black rounded-xl shadow-sm shadow-primary/20">Save Reading</button></div></form></div></div>);
 };
 
-const ReadingPageHeader: Component = () => (
+const ReadingPageHeader: Component<{ editing: boolean }> = (props) => (
   <PageHeader
     eyebrow="Readings"
-    title="Add reading"
-    subtitle="Record a meter value, or scan a photo with AI."
+    title={props.editing ? 'Edit reading' : 'Add reading'}
+    subtitle={props.editing ? 'Correct the value, date or meter change.' : 'Record a meter value, or scan a photo with AI.'}
   />
 );
 
@@ -118,12 +175,34 @@ const useAddReadingData = (paramsId: string | undefined, setShowForm: (v: boolea
   return { selectedMeterId, setSelectedMeterId, meters, refetch };
 };
 
+const useReadingContext = (p: { readingId?: string; selectedMeterId: () => string; setValue: (v: string) => void; setDate: (v: string) => void; setMeterChange: (v: boolean) => void }) => {
+  const [readings] = createResource(p.selectedMeterId, (id) => (id ? fetchMeterReadings(id) : Promise.resolve([])));
+  let prefilled = false;
+  createEffect(() => {
+    const list = readings(); if (!p.readingId || prefilled || !list) { return; }
+    const existing = list.find(r => r._id === p.readingId); if (!existing) { return; }
+    prefilled = true;
+    p.setValue(String(existing.value)); p.setDate(new Date(existing.date).toISOString().split('T')[0]); p.setMeterChange(existing.kind === 'meterChange');
+  });
+  return readings;
+};
+
+const saveReading = (p: { readingId?: string; meterId: string; value: number; date: string; kind: ReadingKind }) => {
+  const body = JSON.stringify({ ...(p.readingId ? {} : { meterId: p.meterId }), value: p.value, date: new Date(p.date), kind: p.kind });
+  const url = p.readingId ? `/api/readings/${p.readingId}` : '/api/readings';
+  return fetch(url, { method: p.readingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body });
+};
+
 const AddReading: Component = () => {
   const params = useParams(); const navigate = useNavigate(); const toast = useToast(); const auth = useAuth();
   const [showForm, setShowForm] = createSignal(!!params.id); const [value, setValue] = createSignal(''); const [date, setDate] = createSignal(new Date().toISOString().split('T')[0]);
   const [isScanning, setIsScanning] = createSignal(false); const [scanPreview, setScanPreview] = createSignal<string | null>(null); const [pendingScan, setPendingScan] = createSignal<ScanResult | null>(null);
   const { selectedMeterId, setSelectedMeterId, meters, refetch } = useAddReadingData(params.id, setShowForm);
   const selectedMeter = () => meters()?.find(m => m._id === selectedMeterId());
+  const [meterChange, setMeterChange] = createSignal(false);
+  const readings = useReadingContext({ readingId: params.readingId, selectedMeterId, setValue, setDate, setMeterChange });
+  const previous = () => findPreviousReading(readings() ?? [], date(), params.readingId);
+  const warning = () => checkReadingPlausibility({ value: value() === '' ? NaN : Number(value()), date: date(), previous: previous(), dailyAverage: selectedMeter()?.stats?.dailyAverage, meterChange: meterChange() });
   const processScanResult = (res: ScanResult) => {
     const meter = selectedMeter(); setShowForm(true);
     if (meter && res.meterId && res.meterId !== meter._id) { setPendingScan(res); return toast.showToast('Meter mismatch', 'warning'); }
@@ -139,14 +218,14 @@ const AddReading: Component = () => {
   const handleSubmit = async (e: Event) => {
     e.preventDefault(); const mId = selectedMeterId(); if (!mId) { return toast.showToast('Select meter', 'warning'); }
     try {
-      const res = await fetch('/api/readings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ meterId: mId, value: Number(value()), date: new Date(date()) }) });
+      const res = await saveReading({ readingId: params.readingId, meterId: mId, value: Number(value()), date: date(), kind: meterChange() ? 'meterChange' : 'regular' });
       if (res.ok) { localStorage.setItem('lastMeterId', mId); toast.showToast('Saved!', 'success'); navigate(`/meters/${mId}/readings`); }
       else { toast.showToast('Failed', 'error'); }
     } catch (_err) { toast.showToast('Error', 'error'); }
   };
   return (<div class="p-6 md:p-10 lg:p-12 max-w-2xl mx-auto flex-1 flex flex-col justify-center"><Show when={!meters.loading} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
     <Show when={showForm()} fallback={<EntrySelection isScanning={isScanning()} googleApiKey={auth.user()?.googleApiKey} hasMeters={!!meters()?.length} onScan={handleScan} onEnterManually={() => setShowForm(true)} onAddMeter={() => navigate('/meters/add')} />}>
-      <ReadingPageHeader /><ReadingForm meters={meters() || []} selectedMeterId={selectedMeterId()} setSelectedMeterId={setSelectedMeterId} value={value()} setValue={setValue} date={date()} setDate={setDate} isScanning={isScanning()} scanPreview={scanPreview()} setScanPreview={setScanPreview} pendingScan={pendingScan()} googleApiKey={auth.user()?.googleApiKey} onScan={handleScan} onResolveMismatch={resolveMismatch} onSubmit={handleSubmit} onCancel={() => navigate('/dashboard')} onAddMeter={() => navigate('/meters/add')} />
+      <ReadingPageHeader editing={!!params.readingId} /><ReadingForm meters={meters() || []} selectedMeterId={selectedMeterId()} setSelectedMeterId={setSelectedMeterId} value={value()} setValue={setValue} date={date()} setDate={setDate} isScanning={isScanning()} scanPreview={scanPreview()} setScanPreview={setScanPreview} pendingScan={pendingScan()} googleApiKey={auth.user()?.googleApiKey} onScan={handleScan} onResolveMismatch={resolveMismatch} onSubmit={handleSubmit} onCancel={() => navigate('/dashboard')} onAddMeter={() => navigate('/meters/add')} previous={previous()} warning={warning()} meterChange={meterChange()} setMeterChange={setMeterChange} />
     </Show></Show></div>);
 };
 

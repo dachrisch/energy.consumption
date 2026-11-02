@@ -1,11 +1,14 @@
-import { interpolateValueAtDate, calculateDailyAverage } from './consumption';
+import {
+  calculateConsumptionBetween,
+  calculateDailyAverage,
+  type Reading,
+} from './consumption';
+import { buildDailyRateSeries, buildRateProjection } from './consumptionChartData';
 import { calculateIntervalCost, Contract } from './pricing';
 import { IMeter, IReading, IContract } from '../types/models';
+import { formatCurrency as formatEuro, formatDate as formatDisplayDate } from './format';
 
-export interface TimeRangeReading {
-  date: Date;
-  value: number;
-}
+export type TimeRangeReading = Reading;
 
 export interface MeterCostBreakdown {
   meterId: string;
@@ -26,7 +29,7 @@ export interface TimeRangeCostResult {
 
 export interface ChartDataPoint {
   x: number; // timestamp
-  y: number | null; // value
+  y: number | null; // consumption per day; null breaks the line
 }
 
 export interface ChartDataset {
@@ -50,7 +53,7 @@ export function filterReadingsByDateRange(
 ): TimeRangeReading[] {
   return readings
     .filter(r => r.meterId === meterId)
-    .map(r => ({ date: new Date(r.date), value: r.value }))
+    .map(r => ({ date: new Date(r.date), value: r.value, kind: r.kind ?? 'regular' }))
     .filter(r => r.date >= startDate && r.date <= endDate)
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
@@ -61,7 +64,7 @@ export function filterReadingsByDateRange(
 function getAllMeterReadings(readings: IReading[], meterId: string): TimeRangeReading[] {
   return readings
     .filter(r => r.meterId === meterId)
-    .map(r => ({ date: new Date(r.date), value: r.value }))
+    .map(r => ({ date: new Date(r.date), value: r.value, kind: r.kind ?? 'regular' }))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
@@ -82,32 +85,8 @@ function getMeterContracts(meterId: string, contracts: IContract[]): Contract[] 
     }));
 }
 
-function resolveBoundaryValues(
-  readings: TimeRangeReading[],
-  startDate: Date,
-  endDate: Date,
-  allReadings: TimeRangeReading[]
-): { startValue: number | null; endValue: number | null } {
-  let startValue: number | null = null;
-  let endValue: number | null = null;
-
-  if (allReadings.length >= 2) {
-    startValue = interpolateValueAtDate(startDate, allReadings as unknown as { date: Date; value: number }[]);
-    endValue = interpolateValueAtDate(endDate, allReadings as unknown as { date: Date; value: number }[]);
-  }
-
-  if (startValue === null && readings.length > 0) {
-    startValue = readings[0].value;
-  }
-  if (endValue === null && readings.length > 0) {
-    endValue = readings[readings.length - 1].value;
-  }
-
-  return { startValue, endValue };
-}
-
 /**
- * Calculate consumption for a meter within a time range
+ * Calculate consumption for a meter within a time range.
  */
 export function calculateConsumptionInRange(
   readings: TimeRangeReading[],
@@ -115,56 +94,35 @@ export function calculateConsumptionInRange(
   endDate: Date,
   allReadings: TimeRangeReading[]
 ): number {
-  if (readings.length === 0 && allReadings.length < 2) {
+  if (allReadings.length < 2) {
     return 0;
   }
 
-  const { startValue, endValue } = resolveBoundaryValues(readings, startDate, endDate, allReadings);
-
-  if (startValue === null || endValue === null) {
-    // Range is entirely beyond all readings — extrapolate from daily average
-    if (allReadings.length >= 2) {
-      const dailyAvg = calculateDailyAverage(allReadings as unknown as { value: number; date: Date }[]);
-      const daysInRange = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-      return Math.max(0, dailyAvg * daysInRange);
-    }
-    return 0;
+  const sorted = [...allReadings].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const isOutsideReadings = endDate < sorted[0].date || startDate > sorted[sorted.length - 1].date;
+  if (readings.length === 0 && isOutsideReadings) {
+    const dailyAvg = calculateDailyAverage(allReadings);
+    const daysInRange = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    return Math.max(0, dailyAvg * daysInRange);
   }
 
-  // Build ordered sequence: synthetic boundary values + actual readings in range
-  const sequence = [
-    { date: startDate, value: startValue },
-    ...readings,
-    { date: endDate, value: endValue },
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  return sumPositiveDeltas(sequence);
-}
-
-function sumPositiveDeltas(sequence: { date: Date; value: number }[]): number {
-  let total = 0;
-  for (let i = 1; i < sequence.length; i++) {
-    const delta = sequence[i].value - sequence[i - 1].value;
-    if (delta > 0) {
-      total += delta;
-    }
-  }
-  return total;
+  return calculateConsumptionBetween(allReadings, startDate, endDate);
 }
 
 /**
- * Generate chart data with actual readings as points and interpolated line
+ * Chart data for one meter: consumption per day between readings within the
+ * range (gaps at meter changes and decreases), plus a dashed projection of the
+ * current daily rate from the last reading to the end of the range.
  */
 export function generateChartDataForMeter({
   meter,
   allReadings,
-  rangeReadings,
   startDate,
   endDate
 }: {
   meter: IMeter;
   allReadings: TimeRangeReading[];
-  rangeReadings: TimeRangeReading[];
+  rangeReadings?: TimeRangeReading[];
   startDate: Date;
   endDate: Date;
 }): ChartDataset | null {
@@ -177,46 +135,16 @@ export function generateChartDataForMeter({
     gas: '#f59e0b'
   };
 
-  const borderColor = meterColors[meter.type] || '#9311fb';
-
-  // Actual data points from readings in range
-  const actualPoints: ChartDataPoint[] = rangeReadings.map(r => ({
-    x: r.date.getTime(),
-    y: r.value
-  }));
-
-  // Generate interpolated line with hourly points for smooth visualization
-  const interpolatedLine: ChartDataPoint[] = [];
-  if (allReadings.length >= 2) {
-    const hourInMs = 60 * 60 * 1000;
-    const msPerDay = 24 * 60 * 60 * 1000;
-    let currentTime = startDate.getTime();
-    const endTime = endDate.getTime();
-    const lastReading = allReadings[allReadings.length - 1];
-    const dailyAvg = calculateDailyAverage(allReadings as unknown as { value: number; date: Date }[]);
-
-    while (currentTime <= endTime) {
-      const currentDate = new Date(currentTime);
-      let value = interpolateValueAtDate(currentDate, allReadings as unknown as { date: Date; value: number }[]);
-      // Extrapolate beyond the last reading using the daily average rate
-      if (value === null && currentDate > lastReading.date) {
-        const daysSince = (currentTime - lastReading.date.getTime()) / msPerDay;
-        value = lastReading.value + dailyAvg * daysSince;
-      }
-      if (value !== null) {
-        interpolatedLine.push({ x: currentTime, y: value });
-      }
-      currentTime += hourInMs;
-    }
-  }
+  const interpolatedLine = buildRateProjection(allReadings, 0, endDate)
+    .map(p => ({ ...p, x: Math.max(p.x, startDate.getTime()) }));
 
   return {
     label: meter.name,
     meterId: meter._id,
     meterType: meter.type,
-    actualPoints,
+    actualPoints: buildDailyRateSeries(allReadings, startDate, endDate),
     interpolatedLine,
-    borderColor,
+    borderColor: meterColors[meter.type] || '#9311fb',
     unit: meter.unit
   };
 }
@@ -291,21 +219,12 @@ export function calculateTimeRangeCosts({
  * Format a cost value as EUR currency string
  */
 export function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('de-DE', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(Math.max(0, value));
+  return formatEuro(Math.max(0, value));
 }
 
 /**
  * Format a date for display (DD.MM.YYYY)
  */
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).format(date);
+  return formatDisplayDate(date);
 }

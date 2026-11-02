@@ -5,6 +5,9 @@ import { useToast } from '../context/ToastContext';
 import type { ToastType } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
+import MeterTabs from '../components/MeterTabs';
+import type { ReadingKind } from '../types/models';
+import { formatDayMonth, formatNumber } from '../lib/format';
 
 interface Meter {
   _id: string;
@@ -18,6 +21,9 @@ interface Reading {
   value: number;
   delta?: number;
   source?: string;
+  kind?: ReadingKind;
+  anomaly?: 'decrease';
+  isFirst?: boolean;
 }
 
 interface ApiReading {
@@ -25,6 +31,7 @@ interface ApiReading {
   value: number;
   date: string | Date;
   source?: string;
+  kind?: ReadingKind;
 }
 
 const fetchMeterReadings = async (id: string) => {
@@ -45,8 +52,32 @@ const fetchMeterReadings = async (id: string) => {
   };
 };
 
+const ReadingDeltaCell: Component<{ reading: Reading; unit: string }> = (props) => {
+  const status = () => {
+    if (props.reading.isFirst) { return 'first'; }
+    if (props.reading.kind === 'meterChange') { return 'meterChange'; }
+    if (props.reading.anomaly === 'decrease') { return 'anomaly'; }
+    return (props.reading.delta ?? 0) > 0 ? 'delta' : 'zero';
+  };
+  return (
+    <>
+      <Show when={status() === 'first'}><span class="badge badge-ghost font-bold text-[10px]">First reading</span></Show>
+      <Show when={status() === 'meterChange'}><span class="badge badge-ghost font-bold text-[10px]">Meter change</span></Show>
+      <Show when={status() === 'anomaly'}><span class="badge badge-warning font-bold text-[10px]">Lower than previous — check value</span></Show>
+      <Show when={status() === 'zero'}><span class="text-lg font-black opacity-60">+0 {props.unit}</span></Show>
+      <Show when={status() === 'delta'}>
+        <div class="flex items-center gap-2">
+          <span class="text-lg font-black">+{formatNumber(props.reading.delta ?? 0)}</span>
+          <span class="text-[10px] font-bold opacity-40 uppercase tracking-tighter">{props.unit}</span>
+        </div>
+      </Show>
+    </>
+  );
+};
+
 const ReadingTableRow: Component<{
   reading: Reading;
+  meterId: string;
   unit: string;
   isDeleting: boolean;
   highlighted: boolean;
@@ -66,27 +97,28 @@ const ReadingTableRow: Component<{
   >
     <td class="p-6 text-center">
       <span class="font-mono font-bold opacity-60">
-        {props.reading.date.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}
+        {formatDayMonth(props.reading.date)}
       </span>
       <div class="text-[10px] font-black opacity-30 uppercase">{props.reading.date.getFullYear()}</div>
     </td>
     <td class="p-6">
       <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-xl font-black">{props.reading.value.toLocaleString()}</span>
+        <span class="text-xl font-black">{formatNumber(props.reading.value, 3)}</span>
         <Show when={props.reading.source === 'provider'}>
           <span class="badge badge-primary badge-outline badge-sm font-black text-[9px] uppercase tracking-widest">provider</span>
         </Show>
       </div>
     </td>
-     <td class="p-6">
-       <Show when={(props.reading.delta ?? 0) > 0} fallback={<span class="badge badge-ghost opacity-30 font-black text-[10px]">INITIAL</span>}>
-         <div class="flex items-center gap-2">
-           <span class="text-lg font-black text-secondary">+{(props.reading.delta ?? 0).toLocaleString()}</span>
-           <span class="text-[10px] font-bold opacity-40 uppercase tracking-tighter">{props.unit}</span>
-         </div>
-       </Show>
-     </td>
-    <td class="p-6 text-right">
+ <td class="p-6">
+      <ReadingDeltaCell reading={props.reading} unit={props.unit} />
+    </td>
+    <td class="p-6 text-right whitespace-nowrap">
+      <A
+        href={`/meters/${props.meterId}/readings/${props.reading._id}/edit`}
+        class="btn btn-ghost btn-sm font-black rounded-xl"
+      >
+        Edit
+      </A>
       <button 
         onClick={() => props.onDelete(props.reading._id)} 
         class="btn btn-ghost btn-sm text-error font-black hover:bg-error/10 rounded-xl"
@@ -199,10 +231,12 @@ const MeterReadings: Component = () => {
            
             <div class="flex gap-3 flex-wrap">
               <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-xl shadow-sm shadow-primary/20 px-8">
-                Add New Entry
+                Add reading
               </A>
             </div>
          </div>
+
+        <MeterTabs meterId={data()!.meter._id} active="history" />
 
         <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
           <Show when={filteredReadings().length > 0} fallback={
@@ -210,7 +244,7 @@ const MeterReadings: Component = () => {
               <EmptyState 
                 title="No readings recorded"
                 description="Start tracking your consumption by adding your first reading."
-                actionLabel="Add Reading"
+                actionLabel="Add reading"
                 actionLink={`/meters/${data()?.meter._id}/add-reading`}
                 icon={<Icon name="reading" class="h-12 w-12" />}
               />
@@ -231,6 +265,7 @@ const MeterReadings: Component = () => {
                      {(reading: Reading) => (
                       <ReadingTableRow 
                         reading={reading} 
+                        meterId={data()?.meter._id || ''}
                         unit={data()?.meter.unit || ''} 
                         isDeleting={deleting() === reading._id} 
                         highlighted={isHighlighted(reading)}

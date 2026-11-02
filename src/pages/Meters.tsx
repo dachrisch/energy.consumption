@@ -1,11 +1,12 @@
 import { Component, createResource, For, Show } from 'solid-js';
-import { A, useNavigate } from '@solidjs/router';
+import { A } from '@solidjs/router';
 import { findContractGaps } from '../lib/gapDetection';
 import { useToast } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import PageHeader from '../components/PageHeader';
 import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
+import { formatCurrency, formatFixed } from '../lib/format';
 
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
@@ -18,7 +19,6 @@ interface MeterCardProps {
   readings: Reading[];
   contracts: Contract[];
   onDelete: (id: string) => void;
-  navigate: (path: string) => void;
 }
 
 const MeterCard: Component<MeterCardProps> = (props) => {
@@ -42,10 +42,7 @@ const MeterCard: Component<MeterCardProps> = (props) => {
   const meterColor = () => props.meter.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
   
   return (
-    <div 
-      class="card bg-base-100 border border-base-content/5 shadow-sm hover:border-primary/30 transition-all group overflow-hidden hover:shadow-md cursor-pointer"
-      onClick={() => props.navigate(`/meters/${props.meter._id}`)}
-    >
+    <div class="card bg-base-100 border border-base-content/5 shadow-sm hover:border-primary/30 transition-all group overflow-hidden hover:shadow-md">
       <div class="card-body p-6 md:p-7">
         
         <div class="flex justify-between items-start mb-5">
@@ -58,7 +55,14 @@ const MeterCard: Component<MeterCardProps> = (props) => {
           </div>
         </div>
 
-        <h3 class="text-2xl font-black tracking-tight mb-1">{props.meter.name}</h3>
+        <h3 class="text-2xl font-black tracking-tight mb-1">
+          <A
+            href={`/meters/${props.meter._id}`}
+            class="rounded-sm transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          >
+            {props.meter.name}
+          </A>
+        </h3>
         <div class="mb-6 flex gap-2 items-center">
             <div 
               class="p-1.5 rounded-lg"
@@ -78,15 +82,15 @@ const MeterCard: Component<MeterCardProps> = (props) => {
         <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Consumption</p>
-            <p class="text-xl font-black">{stats().dailyAverage.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">{props.meter.unit}/day</span></p>
+            <p class="text-xl font-black">{formatFixed(stats().dailyAverage, 2)}<span class="text-xs font-bold opacity-40 ml-1">{props.meter.unit}/day</span></p>
             <Show when={stats().dailyCost > 0}>
-              <p class="text-[10px] font-bold text-success mt-0.5">€{stats().dailyCost.toFixed(2)}/day</p>
+              <p class="text-[10px] font-bold text-success mt-0.5">{formatCurrency(stats().dailyCost)}/day</p>
             </Show>
           </div>
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Yearly Cost</p>
             <Show when={hasContract() && !hasGaps()} fallback={<p class="text-xs font-bold opacity-20 mt-1">N/A</p>}>
-              <p class="text-xl font-black text-primary">€{Math.round(stats().estimatedYearlyCost)}</p>
+              <p class="text-xl font-black text-primary">{formatCurrency(stats().estimatedYearlyCost, 0)}</p>
             </Show>
           </div>
         </div>
@@ -109,7 +113,7 @@ const MeterCard: Component<MeterCardProps> = (props) => {
         </Show>
         
         <div class="flex justify-between items-center mt-6 pt-4 border-t border-base-content/5">
-            <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Log Reading</A>
+            <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-sm rounded-xl font-black px-4 text-[10px] h-8" onClick={(e) => e.stopPropagation()}>Add reading</A>
             <div class="flex gap-1">
                 <A href={`/meters/${props.meter._id}/edit`} class="btn btn-ghost btn-xs rounded-xl font-bold opacity-40 hover:opacity-100 hover:bg-base-200" title="Edit Meter" onClick={(e) => e.stopPropagation()}>
                     <Icon name="edit" class="h-4 w-4" />
@@ -129,7 +133,6 @@ const MeterCard: Component<MeterCardProps> = (props) => {
 const Meters: Component = () => {
     const [data, { refetch }] = createResource(fetchDashboardData);
     const toast = useToast();
-    const navigate = useNavigate();
  
     const handleDeleteMeter = async (id: string) => {
      const confirmed = await toast.confirm('Are you sure you want to delete this meter? This will also remove all its readings and contracts.');
@@ -190,7 +193,6 @@ const Meters: Component = () => {
                   readings={meterReadings()} 
                   contracts={meterContracts()} 
                   onDelete={handleDeleteMeter}
-                  navigate={navigate}
                 />
                );
              }}

@@ -46,7 +46,6 @@ const UserDropdown: Component<{ auth: ReturnType<typeof useAuth>, closeDropdown:
                 {props.auth.user()?.name || 'User'}
               </Show>
             </p>
-            <p class="text-[9px] uppercase tracking-widest opacity-40 font-black">Operator</p>
           </div>
           <div class="w-10 h-10 rounded-xl bg-primary text-primary-content flex items-center justify-center font-black text-sm shadow-md shadow-primary/20 group-hover:scale-110 transition-all">
             {props.auth.user()?.name?.substring(0, 2).toUpperCase() || 'U'}

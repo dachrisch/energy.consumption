@@ -1,10 +1,15 @@
+import type { ReadingKind } from '../types/models';
+
 export interface Reading {
   value: number;
   date: Date;
+  kind?: ReadingKind;
 }
 
 export interface ReadingWithDelta extends Reading {
   delta: number;
+  anomaly?: 'decrease';
+  isFirst: boolean;
 }
 
 export function calculateDailyAverage(readings: Reading[]): number {
@@ -39,7 +44,7 @@ export function calculateStats(readings: Reading[]) {
  * Calculates deltas for a list of readings.
  * Assumes readings are for the same meter.
  * Returns readings in descending order (newest first).
- * Handles meter resets by treating negative deltas as 0 (or optionally rollover logic).
+ * Starts a new segment at meter changes and flags unexpected decreases.
  */
 export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
   if (readings.length === 0) {return [];}
@@ -49,11 +54,14 @@ export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
   
   const result: ReadingWithDelta[] = sorted.map((r, i) => {
     const prev = sorted[i - 1];
-    // Use Math.max(0, ...) to handle resets/swaps/typos gracefully
-    const delta = prev ? Math.max(0, r.value - prev.value) : 0;
+    const difference = prev ? r.value - prev.value : 0;
+    const isMeterChange = r.kind === 'meterChange';
+    const anomaly = prev && !isMeterChange && difference < 0 ? 'decrease' as const : undefined;
     return {
       ...r,
-      delta
+      delta: prev && !isMeterChange && difference > 0 ? difference : 0,
+      anomaly,
+      isFirst: !prev
     };
   });
   
@@ -64,18 +72,51 @@ export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
     return result.sort((a, b) => b.date.getTime() - a.date.getTime());
   
   }
+
+function splitIntoMeterSegments(readings: Reading[]): Reading[][] {
+  const segments: Reading[][] = [];
+  const sorted = [...readings].sort((a, b) => a.date.getTime() - b.date.getTime());
+  for (const reading of sorted) {
+    if (segments.length === 0 || reading.kind === 'meterChange') {
+      segments.push([]);
+    }
+    segments[segments.length - 1].push(reading);
+  }
+  return segments;
+}
+
+function calculateSegmentConsumption(segment: Reading[], startDate: Date, endDate: Date): number {
+  const inRange = segment.filter(reading => reading.date >= startDate && reading.date <= endDate);
+  const startValue = interpolateValueAtDate(startDate, segment);
+  const endValue = interpolateValueAtDate(endDate, segment);
+  const sequence: Reading[] = [];
+  if (startValue !== null) {
+    sequence.push({ date: startDate, value: startValue });
+  }
+  sequence.push(...inRange);
+  if (endValue !== null) {
+    sequence.push({ date: endDate, value: endValue });
+  }
+  return calculateDeltas(sequence).reduce((sum, reading) => sum + reading.delta, 0);
+}
+
+/** Calculates known consumption in a range, summing each physical meter segment. */
+export function calculateConsumptionBetween(readings: Reading[], startDate: Date, endDate: Date): number {
+  return splitIntoMeterSegments(readings).reduce(
+    (total, segment) => total + calculateSegmentConsumption(segment, startDate, endDate),
+    0
+  );
+}
+  
+  function findSurroundingReadings(targetTime: number, readings: Reading[]) {
   
   
   
-  function findSurroundingReadings(targetTime: number, readings: { date: Date; value: number }[]) {
+    let before: Reading | null = null;
   
   
   
-    let before: { date: Date; value: number } | null = null;
-  
-  
-  
-    let after: { date: Date; value: number } | null = null;
+    let after: Reading | null = null;
   
   
   
@@ -143,7 +184,7 @@ export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
   
   
   
-  export function interpolateValueAtDate(targetDate: Date, readings: { date: Date; value: number }[]): number | null {
+  export function interpolateValueAtDate(targetDate: Date, readings: Reading[]): number | null {
   
   
   
@@ -203,6 +244,10 @@ export function calculateDeltas(readings: Reading[]): ReadingWithDelta[] {
   
   
   
+    if (after.kind === 'meterChange') {
+      return null;
+    }
+
     const timeDiff = after.date.getTime() - before.date.getTime();
   
   

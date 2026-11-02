@@ -1,3 +1,5 @@
+import { calculateDailyAverage, type Reading } from './consumption';
+
 export interface Contract {
   startDate: Date;
   endDate: Date | null;
@@ -57,25 +59,12 @@ export interface MeterStats {
 /**
  * Unified calculation for meter statistics used across the application.
  */
-export function calculateMeterStats(readings: { value: number; date: Date }[], contracts: Contract[]): MeterStats {
+export function calculateMeterStats(readings: Reading[], contracts: Contract[]): MeterStats {
   if (readings.length < 2) {
     return { dailyAverage: 0, yearlyProjection: 0, estimatedYearlyCost: 0, dailyCost: 0 };
   }
 
-  const sorted = [...readings].sort((a, b) => a.date.getTime() - b.date.getTime());
-  
-  // Basic consumption: last - first (handles most cases, resets are handled by dailyAverage in consumption.ts but here we do a simple version)
-  // To match calculateDailyAverage exactly, we should sum positive deltas.
-  let totalConsumption = 0;
-  for (let i = 1; i < sorted.length; i++) {
-    totalConsumption += Math.max(0, sorted[i].value - sorted[i - 1].value);
-  }
-
-  const first = sorted[0];
-  const last = sorted[sorted.length - 1];
-  const days = (last.date.getTime() - first.date.getTime()) / (1000 * 60 * 60 * 24);
-  
-  const dailyAverage = days > 0 ? totalConsumption / days : 0;
+  const dailyAverage = calculateDailyAverage(readings);
   const yearlyProjection = dailyAverage * 365.25;
 
   const activeContract = findActiveOrLastContract(contracts, new Date());

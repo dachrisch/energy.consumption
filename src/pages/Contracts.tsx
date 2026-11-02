@@ -2,12 +2,14 @@ import { Component, createResource, createSignal, For, Show } from 'solid-js';
 import { A, useNavigate, useSearchParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 import { findContractGaps, Gap } from '../lib/gapDetection';
+import { getContractStatus, type ContractStatus } from '../lib/contractStatus';
 import ContractTemplateCard from '../components/ContractTemplateCard';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
 import FormInput from '../components/FormInput';
+import { formatCurrency, formatDateRange } from '../lib/format';
 
 interface Meter {
   _id: string;
@@ -54,6 +56,12 @@ interface DashboardData {
   contracts: Contract[];
 }
 
+const contractStatusTone: Record<ContractStatus, string> = {
+  Active: 'badge-success',
+  Ended: 'badge-ghost',
+  Upcoming: 'badge-info',
+};
+
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
   if (!res.ok) { throw new Error('Failed to fetch dashboard data'); }
@@ -86,7 +94,7 @@ const ContractHeader: Component<{
   <PageHeader
     eyebrow="Contracts"
     title="Suppliers & contracts"
-    subtitle="One supplier owns the mail settings and the inbox; contracts carry the pricing and validity."
+    subtitle="Your suppliers and the prices you pay per meter."
     actions={
       <>
         <Show when={props.meters.length > 0}>
@@ -117,6 +125,7 @@ const ContractCard: Component<{
   onDelete: (id: string) => void;
 }> = (props) => {
   const contractColor = () => props.contract.meterId.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
+  const status = () => getContractStatus(props.contract.startDate, props.contract.endDate);
   
   return (
     <div class="card bg-base-100 border border-base-content/5 shadow-sm overflow-hidden hover:border-primary/30 transition-all hover:shadow-md">
@@ -128,9 +137,9 @@ const ContractCard: Component<{
           <div class="text-right">
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40">Validity period</p>
             <p class="font-bold text-sm">
-              {new Date(props.contract.startDate).toLocaleDateString()} – 
-              {props.contract.endDate ? new Date(props.contract.endDate).toLocaleDateString() : 'Present'}
+              {formatDateRange(props.contract.startDate, props.contract.endDate)}
             </p>
+            <span class={`badge badge-sm rounded-full font-bold ${contractStatusTone[status()]}`}>{status()}</span>
           </div>
         </div>
 
@@ -157,11 +166,11 @@ const ContractCard: Component<{
         <div class="grid grid-cols-2 gap-4 pt-6 border-t border-base-content/5">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Base Price</p>
-            <p class="text-xl font-black">€{props.contract.basePrice.toFixed(2)}<span class="text-xs font-bold opacity-40 ml-1">/mo</span></p>
+            <p class="text-xl font-black">{formatCurrency(props.contract.basePrice)}<span class="text-xs font-bold opacity-40 ml-1">/mo</span></p>
           </div>
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider opacity-40 mb-1">Working Price</p>
-            <p class="text-xl font-black">€{props.contract.workingPrice.toFixed(4)}<span class="text-xs font-bold opacity-40 ml-1">/{props.contract.meterId.type === 'power' ? 'kWh' : 'm³'}</span></p>
+            <p class="text-xl font-black">{formatCurrency(props.contract.workingPrice, 4)}<span class="text-xs font-bold opacity-40 ml-1">/{props.contract.meterId.type === 'power' ? 'kWh' : 'm³'}</span></p>
           </div>
         </div>
 
@@ -225,8 +234,8 @@ const SupplierGroup: Component<{
             {props.syncing ? 'Syncing…' : 'Sync'}
           </button>
         </Show>
-        <A href={`/contracts/${props.supplierId}`} class="btn btn-primary btn-sm rounded-xl font-bold">
-          Open <Icon name="external-link" class="h-3.5 w-3.5" />
+        <A href={`/suppliers/${props.supplierId}`} class="btn btn-primary btn-sm rounded-xl font-bold">
+          View supplier <Icon name="chevron-right" class="h-3.5 w-3.5" />
         </A>
       </Show>
     </header>
@@ -458,7 +467,7 @@ const Contracts: Component = () => {
             {unassigned()?.documents} document{unassigned()?.documents === 1 ? '' : 's'} could not be matched to a supplier
             <Show when={unassigned()?.staged}><span> · {unassigned()?.staged} staged</span></Show>
           </p>
-          <A href="/contracts/unassigned" class="btn btn-ghost btn-sm rounded-xl font-bold">Review</A>
+          <A href="/suppliers/unassigned" class="btn btn-ghost btn-sm rounded-xl font-bold">Review</A>
         </div>
       </Show>
 

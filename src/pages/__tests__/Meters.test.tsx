@@ -41,6 +41,22 @@ describe('Meters Page', () => {
     expect(grid.className).not.toContain('lg:grid-cols-3');
   });
 
+  it('links the meter name to its detail page and labels the reading action consistently', async () => {
+    (fetch as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        meters: [{ _id: 'meter-1', name: 'Meter A', unit: 'kWh', type: 'power', meterNumber: '001' }],
+        readings: [],
+        contracts: []
+      })
+    });
+
+    renderMeters();
+
+    expect(await screen.findByRole('link', { name: 'Meter A' })).toHaveAttribute('href', '/meters/meter-1');
+    expect(screen.getByRole('link', { name: 'Add reading' })).toHaveAttribute('href', '/meters/meter-1/add-reading');
+  });
+
   it('uses a 2-column grid layout on medium screens when there are multiple meters', async () => {
     (fetch as any).mockResolvedValue({
       ok: true,
