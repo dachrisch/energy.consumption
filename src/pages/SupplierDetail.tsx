@@ -355,6 +355,64 @@ const LinkMeterSheet: Component<{
   );
 };
 
+const AssignSupplierSheet: Component<{
+  document: IProviderDocument | null;
+  suppliers: ISupplier[];
+  assigning: boolean;
+  onClose: () => void;
+  onSelect: (supplierId: string) => void;
+}> = (props) => (
+  <Show when={props.document}>
+    <div class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box overflow-hidden rounded-t-3xl border border-base-content/5 p-0 sm:rounded-3xl">
+        <div class="px-5 pb-2 pt-5">
+          <p class="text-[10px] font-black uppercase tracking-[0.18em] opacity-40">Assign supplier</p>
+          <h3 class="mt-1 break-all font-mono text-sm font-black tracking-tight">{props.document?.fileName}</h3>
+          <p class="mt-1 text-xs font-bold opacity-50">
+            The document and the bills extracted from it move with it.
+          </p>
+        </div>
+
+        <ul class="max-h-[55vh] space-y-1 overflow-y-auto px-3 pb-3">
+          <For each={props.suppliers}>
+            {(supplier) => (
+              <li>
+                <button
+                  class="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors hover:bg-base-200 disabled:opacity-50"
+                  disabled={props.assigning}
+                  onClick={() => props.onSelect(supplier._id)}
+                >
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-base-200">
+                    <Icon name="contract" class="h-4 w-4" />
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate font-bold">{supplier.name}</span>
+                    <span class="block truncate text-[11px] opacity-50">
+                      {supplier.senders.length > 0 ? supplier.senders.join(', ') : 'No mail senders configured'}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            )}
+          </For>
+          <Show when={props.suppliers.length === 0}>
+            <li class="px-3 py-8 text-center text-sm font-bold opacity-50">
+              No suppliers yet. <A href="/contracts" class="link link-primary">Add one</A> first.
+            </li>
+          </Show>
+        </ul>
+
+        <div class="border-t border-base-content/5 p-3">
+          <button class="btn btn-ghost w-full rounded-2xl font-bold" onClick={props.onClose}>
+            Cancel
+          </button>
+        </div>
+      </div>
+      <div class="modal-backdrop bg-base-content/30" onClick={props.onClose} />
+    </div>
+  </Show>
+);
+
 const GoogleStatus: Component = () => {
   const auth = useAuth();
   const expired = () => auth.user()?.google?.status === 'reconnect_required';
@@ -423,6 +481,9 @@ const SupplierDetail: Component = () => {
   const [retrying, setRetrying] = createSignal<string | null>(null);
   const [linkTarget, setLinkTarget] = createSignal<IStagedItem | null>(null);
   const [linking, setLinking] = createSignal(false);
+  const [assignTarget, setAssignTarget] = createSignal<IProviderDocument | null>(null);
+  const [assigning, setAssigning] = createSignal(false);
+  const [supplierOptions, setSupplierOptions] = createSignal<ISupplier[]>([]);
   const [autoArchiveTried, setAutoArchiveTried] = createSignal(false);
 
   const loadSupplier = async () => {
@@ -453,14 +514,36 @@ const SupplierDetail: Component = () => {
     setBills(data.bills);
   };
 
+  /** Only the unassigned view can file a document, so only it needs the list. */
+  const loadSupplierOptions = async () => {
+    if (!unassigned()) { return; }
+    const data = await api<{ suppliers: ISupplier[] }>('/api/suppliers');
+    setSupplierOptions(data.suppliers ?? []);
+  };
+
   const loadAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([loadSupplier(), loadItems(), loadDocuments(), loadBills(), loadMeters()]);
+      await Promise.all([loadSupplier(), loadItems(), loadDocuments(), loadBills(), loadMeters(), loadSupplierOptions()]);
     } catch (error) {
       toast.showToast(error instanceof Error ? error.message : 'Could not load supplier data', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const assignSupplier = async (document: IProviderDocument, targetSupplierId: string) => {
+    setAssigning(true);
+    try {
+      await api(`/api/intake/documents/${document._id}`, sendJson('PATCH', { supplierId: targetSupplierId }));
+      const name = supplierOptions().find((option) => option._id === targetSupplierId)?.name ?? 'supplier';
+      setAssignTarget(null);
+      toast.showToast(`Filed under ${name}`, 'success');
+      await Promise.all([loadDocuments(), loadItems(), loadSupplierOptions()]);
+    } catch (error) {
+      toast.showToast(error instanceof Error ? error.message : 'Could not file the document', 'error');
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -939,6 +1022,17 @@ const SupplierDetail: Component = () => {
                           </Show>
                         </div>
                       </Show>
+                      <Show when={unassigned()}>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                          <button
+                            class="btn btn-outline btn-primary btn-sm rounded-xl font-bold"
+                            disabled={assigning()}
+                            onClick={() => setAssignTarget(document)}
+                          >
+                            <Icon name="contract" class="h-3.5 w-3.5" /> Assign supplier
+                          </button>
+                        </div>
+                      </Show>
                     </li>
                   )}
                 </For>
@@ -956,6 +1050,19 @@ const SupplierDetail: Component = () => {
             const item = linkTarget();
             if (item) {
               void linkItem(item, meterId);
+            }
+          }}
+        />
+
+        <AssignSupplierSheet
+          document={assignTarget()}
+          suppliers={supplierOptions()}
+          assigning={assigning()}
+          onClose={() => setAssignTarget(null)}
+          onSelect={(targetSupplierId) => {
+            const document = assignTarget();
+            if (document) {
+              void assignSupplier(document, targetSupplierId);
             }
           }}
         />

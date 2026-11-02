@@ -8,6 +8,7 @@ import Meter from '../../models/Meter';
 import Contract from '../../models/Contract';
 import Supplier, { normalizeSupplierName } from '../../models/Supplier';
 import { RouteParams, sanitizeString } from '../utils';
+import { documentSupplierSchema, formatZodError } from '../validation';
 import { decrypt } from '../../lib/encryption';
 import {
   GOOGLE_SCOPES, isGoogleConfigured, buildConsentUrl, signState, verifyState,
@@ -165,6 +166,24 @@ async function resetFailedDocument(
   return { _id: documentId };
 }
 
+/**
+ * Attribute an already-ingested document to the supplier whose sync found it.
+ * Only fills a gap: a document filed under another supplier is never stolen.
+ */
+async function stampMissingSupplier(
+  userId: string,
+  documentId: mongoose.Types.ObjectId | string,
+  supplierId: mongoose.Types.ObjectId | string,
+): Promise<void> {
+  await ProviderDocument.updateOne(
+    {
+      _id: documentId,
+      $or: [{ supplierId: { $exists: false } }, { supplierId: null }],
+    },
+    { $set: { supplierId } },
+  ).setOptions({ userId });
+}
+
 export async function handleGoogleSync({ req, res, userId }: RouteParams): Promise<void> {
   const account = await getUserGoogleAccount(userId);
   if (!account) {
@@ -221,6 +240,11 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
         const sha = crypto.createHash('sha256').update(buffer).digest('hex');
         const mimeType = resolveMimeType(att.mimeType, att.fileName, buffer);
         const exists = await ProviderDocument.findOne({ userId, sha256: sha }).setOptions({ userId }).lean();
+        if (exists) {
+          // A legacy document may predate the Supplier collection; a sync that
+          // finds it is proof enough to file it under this supplier.
+          await stampMissingSupplier(userId, exists._id, supplier._id);
+        }
         // Failed documents are retried (e.g. after a format fix); anything else is done.
         if (exists && exists.status !== 'failed') {
           processed.push({ messageId: m.id, attachment: att.fileName, status: 'already_processed', documentId: exists._id.toString() });
@@ -859,15 +883,92 @@ export async function handleIntakeArchive({ req, res, userId }: RouteParams): Pr
 }
 
 /**
+ * `PATCH /api/intake/documents/<id>` with `{ supplierId }` files the document
+ * (and the bills extracted from it) under that supplier. `null` moves it back
+ * to unassigned so leftover mail can be reviewed again.
+ */
+async function assignDocumentSupplier(
+  params: RouteParams,
+  documentId: string,
+): Promise<void> {
+  const { req, res, userId } = params;
+  if (!mongoose.Types.ObjectId.isValid(documentId)) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Document not found' })); return;
+  }
+  const result = documentSupplierSchema.safeParse(req.body ?? {});
+  if (!result.success) {
+    res.statusCode = 400; res.end(JSON.stringify({ error: formatZodError(result.error) })); return;
+  }
+  const supplierId = result.data.supplierId;
+
+  const document = await ProviderDocument.findOne({ _id: documentId })
+    .setOptions({ userId })
+    .lean();
+  if (!document) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Document not found' })); return;
+  }
+
+  const supplier = supplierId
+    ? await Supplier.findOne({ _id: supplierId }).setOptions({ userId }).lean()
+    : null;
+  if (supplierId && !supplier) {
+    res.statusCode = 404; res.end(JSON.stringify({ error: 'Supplier not found' })); return;
+  }
+
+  await ProviderDocument.updateOne(
+    { _id: documentId },
+    supplierId ? { $set: { supplierId } } : { $unset: { supplierId: '' } },
+  ).setOptions({ userId });
+
+  // Bills extracted from this document follow it, but a bill the user filed
+  // under a different supplier by hand is left alone.
+  const unassigned = { $or: [{ supplierId: { $exists: false } }, { supplierId: null }] };
+  const followsDocument = document.supplierId
+    ? { $or: [{ supplierId: { $exists: false } }, { supplierId: null }, { supplierId: document.supplierId }] }
+    : unassigned;
+  if (supplier) {
+    await Bill.updateMany(
+      { documentId: document._id, ...followsDocument },
+      { $set: { supplierId: supplier._id, providerName: supplier.name } },
+    ).setOptions({ userId });
+  } else {
+    await Bill.updateMany(
+      { documentId: document._id, ...(document.supplierId ? { supplierId: document.supplierId } : unassigned) },
+      { $unset: { supplierId: '' } },
+    ).setOptions({ userId });
+  }
+
+  res.statusCode = 200;
+  res.end(JSON.stringify({
+    document: {
+      _id: document._id,
+      fileName: document.fileName,
+      status: document.status,
+      supplierId: supplierId ?? undefined,
+    },
+    supplier: supplier ? { _id: supplier._id, name: supplier.name } : null,
+  }));
+}
+
+/**
  * `POST /api/intake/documents/<id>/retry` → download the original again and run
  * the pipeline on it. Sync only sees mail inside its search window, so a
  * document that failed before a fix (mime type, extractor) could never be
  * reprocessed; this uses the stored Gmail ids instead.
+ *
+ * `PATCH /api/intake/documents/<id>` is handled by `assignDocumentSupplier`.
  */
-export async function handleIntakeDocumentAction({ req, res, userId, url }: RouteParams): Promise<void> {
+export async function handleIntakeDocumentAction(params: RouteParams): Promise<void> {
+  const { req, res, userId, url } = params;
   const segments = url.pathname.split('/').filter(Boolean);
   const documentId = segments[3];
   const action = segments[4];
+
+  if (req.method === 'PATCH' && documentId && !action) {
+    await assignDocumentSupplier(params, documentId);
+    return;
+  }
+
   if (req.method !== 'POST' || !documentId || action !== 'retry') {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Not found' })); return;
   }

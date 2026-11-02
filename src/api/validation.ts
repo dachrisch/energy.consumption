@@ -74,6 +74,11 @@ export const supplierSchema = z.object({
 
 export const supplierUpdateSchema = supplierSchema.partial().strict();
 
+/** File an ingested document under a supplier; null moves it back to unassigned. */
+export const documentSupplierSchema = z.object({
+  supplierId: objectIdSchema.nullable(),
+}).strict();
+
 // Unified Export Schema
 export const unifiedExportSchema = z.object({
   exportDate: z.string().datetime(),
