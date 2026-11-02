@@ -42,7 +42,7 @@ const DashboardHeader: Component<{ onImport: () => void }> = (p) => (
       <>
         <button class="btn btn-ghost btn-sm rounded-xl font-bold" onClick={p.onImport}>Import</button>
         <A href="/add-reading" class="btn btn-primary btn-sm rounded-xl font-bold">
-          <Icon name="add" class="h-4 w-4" /> Quick add
+          <Icon name="add" class="h-4 w-4" /> Add reading
         </A>
       </>
     }
@@ -300,22 +300,6 @@ const Dashboard: Component = () => {
                 contracts={data()!.contracts}
               />
             </Show>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-            <Show when={data()}>{(_d) => <>
-              <div class="card bg-base-100 border border-base-content/5 shadow-sm p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
-                <div class="bg-base-200 p-4 rounded-2xl text-base-content/30"><Icon name="meter" class="h-10 w-10" /></div>
-                <h3 class="text-lg font-black tracking-tight">Meter management</h3>
-                <p class="text-sm font-bold opacity-60">Manage your individual meters, history and infrastructure.</p>
-                <A href="/meters" class="btn btn-outline btn-wide rounded-xl font-bold">Go to meters</A>
-              </div>
-              <div class="card bg-base-100 border border-base-content/5 shadow-sm p-8 rounded-3xl flex flex-col items-center text-center space-y-4 relative">
-                <div class="bg-base-200 p-4 rounded-2xl text-base-content/30"><Icon name="contract" class="h-10 w-10" /></div>
-                <h3 class="text-lg font-black tracking-tight">Contract management</h3>
-                <p class="text-sm font-bold opacity-60">Manage provider pricing, active contracts and historical gaps.</p>
-                <A href="/contracts" class="btn btn-outline btn-wide rounded-xl font-bold">Go to contracts</A>
-              </div>
-            </>}</Show>
           </div>
         </div>
       </Show>
