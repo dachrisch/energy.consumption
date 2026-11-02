@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import type { ToastType } from '../context/ToastContext';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
+import MeterTabs from '../components/MeterTabs';
 
 interface Meter {
   _id: string;
@@ -199,10 +200,12 @@ const MeterReadings: Component = () => {
            
             <div class="flex gap-3 flex-wrap">
               <A href={`/meters/${data()?.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-xl shadow-sm shadow-primary/20 px-8">
-                Add New Entry
+                Add reading
               </A>
             </div>
          </div>
+
+        <MeterTabs meterId={data()!.meter._id} active="history" />
 
         <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
           <Show when={filteredReadings().length > 0} fallback={
@@ -210,7 +213,7 @@ const MeterReadings: Component = () => {
               <EmptyState 
                 title="No readings recorded"
                 description="Start tracking your consumption by adding your first reading."
-                actionLabel="Add Reading"
+                actionLabel="Add reading"
                 actionLink={`/meters/${data()?.meter._id}/add-reading`}
                 icon={<Icon name="reading" class="h-12 w-12" />}
               />

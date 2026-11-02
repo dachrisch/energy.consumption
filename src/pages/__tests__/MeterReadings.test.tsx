@@ -42,6 +42,17 @@ describe('Meter readings page', () => {
     window.history.replaceState({}, '', '/');
   });
 
+  it('shows meter tabs and a consistently labelled add-reading action', async () => {
+    mockApi();
+    renderReadings();
+
+    expect(await screen.findByText('999')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Overview' })).toHaveAttribute('href', '/meters/m1');
+    expect(screen.getByRole('link', { name: 'History' })).toHaveAttribute('href', '/meters/m1/readings');
+    expect(screen.getByRole('link', { name: 'Contracts' })).toHaveAttribute('href', '/meters/m1?tab=contracts');
+    expect(screen.getByRole('link', { name: 'Add reading' })).toHaveAttribute('href', '/meters/m1/add-reading');
+  });
+
   it('labels datapoints that came from a provider document', async () => {
     mockApi();
     renderReadings();

@@ -1,7 +1,8 @@
-import { Component, createResource, Show, ErrorBoundary } from 'solid-js';
-import { useParams, A } from '@solidjs/router';
-import { IMeter as Meter, IReading as Reading } from '../types/models';
+import { Component, createResource, For, Show, ErrorBoundary } from 'solid-js';
+import { useParams, useSearchParams, A } from '@solidjs/router';
+import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../types/models';
 import ConsumptionChart from '../components/ConsumptionChart';
+import MeterTabs from '../components/MeterTabs';
 import { findContractGaps, Gap } from '../lib/gapDetection';
 import { calculateProjection } from '../lib/projectionUtils';
 import Icon from '../components/Icon';
@@ -44,11 +45,61 @@ const MeterDetailHeader: Component<{ meter: Meter }> = (props) => {
       
       <div class="flex gap-3">
         <A href={`/meters/${props.meter._id}/readings`} class="btn btn-ghost btn-md rounded-xl border border-base-content/10 font-bold px-8">View History</A>
-        <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-xl shadow-sm shadow-primary/20 px-8">Log Reading</A>
+        <A href={`/meters/${props.meter._id}/add-reading`} class="btn btn-primary btn-md rounded-xl shadow-sm shadow-primary/20 px-8">Add reading</A>
       </div>
     </div>
   );
 };
+
+const supplierIdOf = (contract: Contract) =>
+  typeof contract.supplierId === 'string' ? contract.supplierId : contract.supplierId?._id;
+
+const MeterContracts: Component<{ contracts: Contract[], meterId: string }> = (props) => (
+  <section class="card bg-base-100 shadow-sm border border-base-content/5" aria-label="Meter contracts">
+    <div class="card-body p-6 md:p-8">
+      <div class="flex items-center justify-between gap-4 mb-6">
+        <h2 class="text-xl font-black tracking-tight">Contracts</h2>
+        <A href={`/contracts/add?meterId=${props.meterId}`} class="btn btn-primary btn-sm rounded-xl font-bold">
+          Add contract
+        </A>
+      </div>
+      <Show when={props.contracts.length > 0} fallback={
+        <p class="rounded-2xl border border-dashed border-base-content/10 p-6 text-sm font-bold opacity-50">
+          No contracts configured for this meter.
+        </p>
+      }>
+        <ul class="divide-y divide-base-content/5">
+          <For each={props.contracts}>
+            {(contract) => {
+              const supplierId = supplierIdOf(contract);
+              return (
+                <li class="flex flex-wrap items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
+                  <div>
+                    <Show when={supplierId} fallback={<p class="font-black">{contract.providerName}</p>}>
+                      <A href={`/contracts/${supplierId}`} class="link link-hover font-black hover:text-primary">
+                        {contract.providerName}
+                      </A>
+                    </Show>
+                    <p class="mt-1 text-xs font-bold opacity-50">
+                      {new Date(contract.startDate).toLocaleDateString()} – {contract.endDate ? new Date(contract.endDate).toLocaleDateString() : 'Present'}
+                    </p>
+                  </div>
+                  <A
+                    href={`/contracts/${contract._id}/edit`}
+                    class="btn btn-ghost btn-sm rounded-xl font-bold"
+                    aria-label={`Edit ${contract.providerName} contract`}
+                  >
+                    Edit
+                  </A>
+                </li>
+              );
+            }}
+          </For>
+        </ul>
+      </Show>
+    </div>
+  </section>
+);
 
 const MeterStatsGrid: Component<{ meter: Meter, stats: {
   dailyAverage: number;
@@ -140,7 +191,9 @@ const ConsumptionChartCard: Component<{
 
 const MeterDetail: Component = () => {
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const [data] = createResource(() => params.id, fetchMeterData);
+  const showContracts = () => searchParams.tab === 'contracts';
 
   const stats = () => {
     const meter = data()?.meter;
@@ -159,13 +212,20 @@ const MeterDetail: Component = () => {
       <ErrorBoundary fallback={(err) => <div class="alert alert-error font-bold">Something went wrong rendering meter details: {err instanceof Error ? err.message : 'Unknown error'}</div>}>
         <Show when={data()?.meter} fallback={<div class="flex justify-center py-20"><span class="loading loading-spinner loading-lg text-primary"></span></div>}>
           <MeterDetailHeader meter={data()!.meter} />
-          <MeterStatsGrid meter={data()!.meter} stats={stats()} hasContracts={(data()?.contracts?.length || 0) > 0} />
-          <ConsumptionChartCard 
-            meter={data()!.meter} 
-            readings={data()?.readings || []} 
-            projection={projection()}
-            hasContracts={(data()?.contracts?.length || 0) > 0}
-          />
+          <MeterTabs meterId={data()!.meter._id} active={showContracts() ? 'contracts' : 'overview'} />
+          <Show when={showContracts()} fallback={
+            <>
+              <MeterStatsGrid meter={data()!.meter} stats={stats()} hasContracts={(data()?.contracts?.length || 0) > 0} />
+              <ConsumptionChartCard
+                meter={data()!.meter}
+                readings={data()?.readings || []}
+                projection={projection()}
+                hasContracts={(data()?.contracts?.length || 0) > 0}
+              />
+            </>
+          }>
+            <MeterContracts contracts={data()?.contracts || []} meterId={data()!.meter._id} />
+          </Show>
         </Show>
       </ErrorBoundary>
     </div>
