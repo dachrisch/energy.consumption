@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.0](https://github.com/dachrisch/energy.consumption/compare/v3.24.1...v3.25.0) (2026-11-02)
+
+
+### Features
+
+* meter change with kind field, delta segments, anomaly detection, interpolation boundaries, and test coverage ([32d64d0](https://github.com/dachrisch/energy.consumption/commit/32d64d06f74d975b76eba6c2a6bf1a9399d9ed98))
+* **readings:** edit readings, mark meter changes, flag implausible values ([4d999ac](https://github.com/dachrisch/energy.consumption/commit/4d999ac3f6517d37f96f1ceb8bad5e9d41fca95f))
+
+
+### Bug Fixes
+
+* **charts:** plot daily consumption with gaps at meter changes ([2f3f6d7](https://github.com/dachrisch/energy.consumption/commit/2f3f6d74089f14794315690222a4fce4c58dd273))
+* **dashboard:** remove duplicate navigation actions ([ca72871](https://github.com/dachrisch/energy.consumption/commit/ca7287163cbacfecb09ae010957c1cad28e4a6e5))
+* **format:** one de-DE formatter for numbers, money and dates; exact day ranges ([e01ef8c](https://github.com/dachrisch/energy.consumption/commit/e01ef8c87eece69d3c038cdcfc70aa2275a97719))
+* **format:** one de-DE formatter for numbers, money and dates; exact day ranges ([0db7495](https://github.com/dachrisch/energy.consumption/commit/0db7495205d3ddad8d1128b5d3e1835f67fc8278))
+* **nav:** add accessible meter section navigation ([93f72ad](https://github.com/dachrisch/energy.consumption/commit/93f72ad236f00538567f27b15ae0e92b285dd32d))
+* **nav:** redirect authenticated root and link contracts ([80921ea](https://github.com/dachrisch/energy.consumption/commit/80921ea82350d57461309b9022f6b237a4caa75e))
+* **nav:** use dedicated supplier routes ([3090ce9](https://github.com/dachrisch/energy.consumption/commit/3090ce9406d40b31c7e29fdd842d89fb56148ed3))
+
 ## [3.24.1](https://github.com/dachrisch/energy.consumption/compare/v3.24.0...v3.24.1) (2026-11-02)
 
 
