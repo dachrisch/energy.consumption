@@ -114,7 +114,17 @@ Follow the **Google TypeScript Style Guide** as a baseline.
 - **Conventional Commits:** Use clear, descriptive commit messages.
 - **Documentation:** Update this file or other relevant docs if project conventions evolve.
 
-## 📋 Recent Updates & Known Issues (v3.16.0)
+## 📋 Recent Updates & Known Issues (unreleased)
+
+### Supplier + contract merge (unreleased)
+- **Model:** new `Supplier` collection (`src/models/Supplier.ts`) owns the supplier identity and the mail settings (`senders`, `subjectHints`, `gmailQuery`). `Contract` references it via `supplierId` and keeps `providerName` as a display snapshot.
+- **Intake merged into contracts:** `/contracts` groups contracts by supplier; `/contracts/:supplierId` hosts mail settings, staged items, bills and documents. `/intake` redirects to `/contracts`; the standalone Intake page is gone.
+- **Staged facts:** `IntakeItem` was folded into `ProviderDocument.facts[]`; accept/reject/link endpoints still live under `/api/intake/items/:factId/*`.
+- **Auto-created suppliers:** `POST /api/contracts` accepts `supplierId` or `supplierName` and upserts the supplier by normalized name.
+- **Migrations:** `scripts/migrate-suppliers.cjs` (providerName → Supplier) and `scripts/migrate-document-facts.cjs` (IntakeItem → Document.facts), both idempotent and run with `MONGODB_URI=... node <script>`.
+- **Import/export:** unified backups now include a `suppliers` array; old backups still import because contracts keep `providerName`.
+
+## 📋 Previous Updates (v3.16.0)
 
 ### Time Range Cost Calculator (v3.16.0)
 - **Feature:** New dashboard card for calculating costs over custom date ranges.

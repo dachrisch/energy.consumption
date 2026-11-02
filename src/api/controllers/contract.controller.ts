@@ -2,6 +2,7 @@ import Contract from '../../models/Contract';
 import { RouteParams, sanitizeString } from '../utils';
 import { contractSchema, contractUpdateSchema, formatZodError } from '../validation';
 import { recalculateUserStats } from '../../lib/recalculationService';
+import { resolveSupplierIdentity } from '../../lib/supplierService';
 
 interface OverlapParams {
   meterId: string;
@@ -42,9 +43,18 @@ async function checkContractOverlap(params: OverlapParams): Promise<string | nul
 export async function handleContracts({ req, res, userId, url }: RouteParams) {
   if (req.method === 'GET') {
     const meterId = sanitizeString(url.searchParams.get('meterId'));
+    const supplierId = sanitizeString(url.searchParams.get('supplierId'));
     const id = sanitizeString(url.searchParams.get('id'));
-    const query = id ? { _id: { $eq: id } } : (meterId ? { meterId: { $eq: meterId } } : {});
-    const contracts = await Contract.find(query).populate('meterId').setOptions({ userId }).sort({ startDate: -1 });
+    const query = id
+      ? { _id: { $eq: id } }
+      : (meterId
+        ? { meterId: { $eq: meterId } }
+        : (supplierId ? { supplierId: { $eq: supplierId } } : {}));
+    const contracts = await Contract.find(query)
+      .populate('meterId')
+      .populate('supplierId')
+      .setOptions({ userId })
+      .sort({ startDate: -1 });
     res.end(JSON.stringify(contracts));
     return;
   }
@@ -56,7 +66,7 @@ export async function handleContracts({ req, res, userId, url }: RouteParams) {
       return;
     }
 
-    const { meterId, startDate, endDate } = result.data;
+    const { meterId, startDate, endDate, supplierId, supplierName, providerName } = result.data;
     
     // Validate overlaps
     const overlapError = await checkContractOverlap({
@@ -71,7 +81,22 @@ export async function handleContracts({ req, res, userId, url }: RouteParams) {
       return;
     }
 
-    const contract = await Contract.create({ ...result.data, userId });
+    let supplier;
+    try {
+      supplier = await resolveSupplierIdentity(userId, { supplierId, supplierName, providerName });
+    } catch (error) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Supplier required' }));
+      return;
+    }
+
+    const { supplierId: _ignoredId, supplierName: _ignoredName, providerName: _ignoredProvider, ...fields } = result.data;
+    const contract = await Contract.create({
+      ...fields,
+      supplierId: supplier._id,
+      providerName: supplier.name,
+      userId,
+    });
     
     // Recalculate stats for the user after creating a contract
     await recalculateUserStats(userId);
@@ -98,10 +123,10 @@ async function validateContractUpdate(
   }
 
   return checkContractOverlap({
-    meterId: meterId || (current.meterId as string), 
+    meterId: meterId || String(current.meterId),
     userId, 
     start: startDate || current.startDate, 
-    end: endDate === undefined ? current.endDate : (endDate ?? null), 
+    end: endDate === undefined ? (current.endDate ?? null) : endDate,
     excludeId: id
   });
 }
@@ -142,7 +167,25 @@ export async function handleContractItem({ req, res, userId, path }: RouteParams
     return;
   }
 
-  const updated = await Contract.findOneAndUpdate({ _id: { $eq: id } }, { $set: result.data }, { new: true }).setOptions({ userId });
+  const { supplierId, supplierName, providerName, ...fields } = result.data;
+  const updateFields: Record<string, unknown> = { ...fields };
+  if (supplierId || supplierName || providerName) {
+    try {
+      const supplier = await resolveSupplierIdentity(userId, { supplierId, supplierName, providerName });
+      updateFields.supplierId = supplier._id;
+      updateFields.providerName = supplier.name;
+    } catch (error) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Supplier required' }));
+      return;
+    }
+  }
+
+  const updated = await Contract.findOneAndUpdate(
+    { _id: { $eq: id } },
+    { $set: updateFields },
+    { new: true },
+  ).setOptions({ userId });
   
   // Recalculate stats for the user after updating a contract
   await recalculateUserStats(userId);

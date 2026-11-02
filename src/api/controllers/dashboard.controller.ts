@@ -11,7 +11,7 @@ export async function handleAggregatedRoutes({ res, userId, path }: RouteParams)
   const [user, meters, contracts, readings] = await Promise.all([
     User.findById(userId),
     Meter.find({}).setOptions({ userId }),
-    Contract.find({}).setOptions({ userId }).populate('meterId'),
+    Contract.find({}).setOptions({ userId }).populate('meterId').populate('supplierId'),
     Reading.find({}).setOptions({ userId }).sort({ date: -1 }).limit(2000)
   ]);
   

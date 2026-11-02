@@ -1,5 +1,5 @@
 import { Component, For, Show, createEffect, createSignal, onMount } from 'solid-js';
-import { A } from '@solidjs/router';
+import { A, useParams } from '@solidjs/router';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
 import PageHeader from '../components/PageHeader';
@@ -7,7 +7,7 @@ import SectionCard from '../components/SectionCard';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { findMeterByNumber } from '../lib/intake/reconcile';
-import type { IBillComparison, IIntakeItem, IMeter, IProvider, IProviderDocument } from '../types/models';
+import type { IBillComparison, IMeter, IProviderDocument, IStagedItem, ISupplier } from '../types/models';
 
 interface SyncEntry {
   messageId: string;
@@ -22,6 +22,16 @@ interface SyncResponse {
   count: number;
   linked?: number;
   processed: SyncEntry[];
+}
+
+interface SupplierContract {
+  _id: string;
+  providerName: string;
+  startDate: string;
+  endDate?: string;
+  basePrice: number;
+  workingPrice: number;
+  meterId?: { _id: string; name: string; type: string } | string;
 }
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -79,7 +89,7 @@ const needsArchive = (document: IProviderDocument): boolean =>
   ARCHIVABLE_STATUSES.has(document.status) && !driveLink(document);
 
 /** Meter + reading the staged item belongs to, with the datapoint highlighted. */
-const readingLink = (item: IIntakeItem): string | undefined => {
+const readingLink = (item: IStagedItem): string | undefined => {
   if (item.kind !== 'reading' || !item.meterId) {
     return undefined;
   }
@@ -133,105 +143,64 @@ const BillMobileRow: Component<{ bill: IBillComparison }> = (props) => (
 
 const Section = SectionCard;
 
-const ProviderCard: Component<{
-  provider: IProvider;
-  syncing: boolean;
-  onSave: (provider: IProvider, settings: { senders: string[]; subjectHints: string[]; gmailQuery: string | null }) => void;
-  onSync: (provider: IProvider) => void;
+const MailSettings: Component<{
+  supplier: ISupplier;
+  saving: boolean;
+  onSave: (settings: { senders: string[]; subjectHints: string[]; gmailQuery: string | null }) => void;
 }> = (props) => {
-  const [open, setOpen] = createSignal(false);
-  const [senders, setSenders] = createSignal(props.provider.senders.join(', '));
-  const [subjectHints, setSubjectHints] = createSignal(props.provider.subjectHints.join(', '));
-  const [gmailQuery, setGmailQuery] = createSignal(props.provider.gmailQuery ?? '');
+  const [senders, setSenders] = createSignal(props.supplier.senders.join(', '));
+  const [subjectHints, setSubjectHints] = createSignal(props.supplier.subjectHints.join(', '));
+  const [gmailQuery, setGmailQuery] = createSignal(props.supplier.gmailQuery ?? '');
 
   const toList = (value: string) => value.split(/[,\n]/).map((entry) => entry.trim()).filter(Boolean);
 
+  createEffect(() => {
+    setSenders(props.supplier.senders.join(', '));
+    setSubjectHints(props.supplier.subjectHints.join(', '));
+    setGmailQuery(props.supplier.gmailQuery ?? '');
+  });
+
   return (
-    <div class="rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <p class="truncate font-black tracking-tight">{props.provider.name}</p>
-          <p class="truncate font-mono text-[11px] opacity-50">
-            {props.provider.senders.join(', ') || 'no sender addresses yet'}
-          </p>
-        </div>
-        <button
-          class="btn btn-ghost btn-xs shrink-0 rounded-lg font-bold"
-          onClick={() => setOpen((value) => !value)}
-        >
-          <Icon name="settings" class="h-3.5 w-3.5" />
-          <span class="hidden sm:inline">Mail settings</span>
-          <span class="sr-only sm:hidden">Mail settings</span>
-        </button>
-      </div>
-
-      <div class="mt-3 flex flex-wrap items-center gap-2">
-        <span class="rounded-full bg-base-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider opacity-60">
-          {props.provider.contractCount} contract{props.provider.contractCount === 1 ? '' : 's'}
-        </span>
-        <Show when={props.provider.unit}>
-          <span class="rounded-full bg-base-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider opacity-60">
-            {props.provider.unit}
-          </span>
-        </Show>
-        <button
-          class="btn btn-primary btn-sm ml-auto rounded-xl font-bold"
-          disabled={props.syncing || props.provider.senders.length === 0}
-          onClick={() => props.onSync(props.provider)}
-        >
-          <Icon name="refresh" class={`h-3.5 w-3.5 ${props.syncing ? 'animate-spin' : ''}`} />
-          {props.syncing ? 'Syncing…' : 'Sync now'}
-        </button>
-      </div>
-      <Show when={props.provider.senders.length === 0}>
-        <p class="mt-2 text-[11px] font-bold text-warning">Add sender addresses to enable syncing.</p>
-      </Show>
-
-      <Show when={open()}>
-        <div class="mt-3 space-y-2 rounded-2xl bg-base-100 p-3">
-          <input
-            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
-            placeholder="Sender addresses, comma separated"
-            value={senders()}
-            onInput={(event) => setSenders(event.currentTarget.value)}
-          />
-          <input
-            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
-            placeholder="Subject hints (optional)"
-            value={subjectHints()}
-            onInput={(event) => setSubjectHints(event.currentTarget.value)}
-          />
-          <input
-            class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
-            placeholder="Raw Gmail query (optional, wins over senders)"
-            value={gmailQuery()}
-            onInput={(event) => setGmailQuery(event.currentTarget.value)}
-          />
-          <p class="text-[10px] font-bold uppercase tracking-wider opacity-40">
-            Stored on every contract of this provider.
-          </p>
-          <button
-            class="btn btn-primary btn-sm w-full rounded-xl font-bold"
-            onClick={() => props.onSave(props.provider, {
-              senders: toList(senders()),
-              subjectHints: toList(subjectHints()),
-              gmailQuery: gmailQuery().trim() || null,
-            })}
-          >
-            Save
-          </button>
-        </div>
-      </Show>
+    <div class="space-y-2">
+      <input
+        class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
+        placeholder="Sender addresses, comma separated"
+        value={senders()}
+        onInput={(event) => setSenders(event.currentTarget.value)}
+      />
+      <input
+        class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
+        placeholder="Subject hints (optional)"
+        value={subjectHints()}
+        onInput={(event) => setSubjectHints(event.currentTarget.value)}
+      />
+      <input
+        class="input input-sm input-bordered w-full rounded-xl font-mono text-xs"
+        placeholder="Raw Gmail query (optional, wins over senders)"
+        value={gmailQuery()}
+        onInput={(event) => setGmailQuery(event.currentTarget.value)}
+      />
+      <button
+        class="btn btn-primary btn-sm w-full rounded-xl font-bold"
+        disabled={props.saving}
+        onClick={() => props.onSave({
+          senders: toList(senders()),
+          subjectHints: toList(subjectHints()),
+          gmailQuery: gmailQuery().trim() || null,
+        })}
+      >
+        {props.saving ? 'Saving…' : 'Save mail settings'}
+      </button>
     </div>
   );
 };
 
 const ItemCard: Component<{
-  item: IIntakeItem;
+  item: IStagedItem;
   hasMeters: boolean;
-  onAccept: (item: IIntakeItem) => void;
-  onReject: (item: IIntakeItem) => void;
-  onLinkRequest: (item: IIntakeItem) => void;
+  onAccept: (item: IStagedItem) => void;
+  onReject: (item: IStagedItem) => void;
+  onLinkRequest: (item: IStagedItem) => void;
 }> = (props) => {
   const decidable = () => props.item.status === 'pending' || props.item.status === 'conflict';
   return (
@@ -307,7 +276,7 @@ const ItemCard: Component<{
 };
 
 const LinkMeterSheet: Component<{
-  item: IIntakeItem | null;
+  item: IStagedItem | null;
   meters: IMeter[];
   linking: boolean;
   onClose: () => void;
@@ -409,11 +378,9 @@ const GoogleStatus: Component = () => {
         <p class="truncate text-[11px] font-bold opacity-50">
           {connected()
             ? auth.user()?.google?.email ?? 'Gmail + Drive'
-            : 'Connect to pull provider bills and archive them to Drive.'}
+            : 'Connect to pull supplier bills and archive them to Drive.'}
         </p>
       </div>
-      {/* rel="external" keeps @solidjs/router from intercepting these:
-          they are API redirects, not client-side routes. */}
       <Show when={!auth.user()?.google}>
         <a href="/api/google/connect" rel="external" class="btn btn-primary btn-sm rounded-xl font-bold">
           <Icon name="google" class="h-4 w-4" /> Connect Google
@@ -433,38 +400,46 @@ const GoogleStatus: Component = () => {
   );
 };
 
-const Intake: Component = () => {
+const SupplierDetail: Component = () => {
+  const params = useParams();
   const toast = useToast();
   const auth = useAuth();
-  const [providers, setProviders] = createSignal<IProvider[]>([]);
-  const [items, setItems] = createSignal<IIntakeItem[]>([]);
+  const supplierId = () => params.id;
+  const unassigned = () => supplierId() === 'unassigned';
+  const scope = () => unassigned() ? 'unassigned=1' : `supplierId=${supplierId()}`;
+
+  const [supplier, setSupplier] = createSignal<ISupplier | null>(null);
+  const [contracts, setContracts] = createSignal<SupplierContract[]>([]);
+  const [items, setItems] = createSignal<IStagedItem[]>([]);
   const [meters, setMeters] = createSignal<IMeter[]>([]);
   const [documents, setDocuments] = createSignal<IProviderDocument[]>([]);
   const [bills, setBills] = createSignal<IBillComparison[]>([]);
   const [showDecided, setShowDecided] = createSignal(false);
-  const [syncing, setSyncing] = createSignal<string | null>(null);
-  const [syncingAll, setSyncingAll] = createSignal(false);
+  const [syncing, setSyncing] = createSignal(false);
+  const [saving, setSaving] = createSignal(false);
   const [lastSync, setLastSync] = createSignal<SyncResponse | null>(null);
   const [loading, setLoading] = createSignal(true);
   const [archiving, setArchiving] = createSignal<string | null>(null);
   const [retrying, setRetrying] = createSignal<string | null>(null);
-  const [linkTarget, setLinkTarget] = createSignal<IIntakeItem | null>(null);
+  const [linkTarget, setLinkTarget] = createSignal<IStagedItem | null>(null);
   const [linking, setLinking] = createSignal(false);
   const [autoArchiveTried, setAutoArchiveTried] = createSignal(false);
 
-  const loadProviders = async () => {
-    const data = await api<{ providers: IProvider[] }>('/api/providers');
-    setProviders(data.providers);
+  const loadSupplier = async () => {
+    if (unassigned()) { return; }
+    const data = await api<{ supplier: ISupplier; contracts: SupplierContract[] }>(`/api/suppliers/${supplierId()}`);
+    setSupplier(data.supplier);
+    setContracts(data.contracts ?? []);
   };
 
   const loadItems = async () => {
-    const filter = showDecided() ? '' : '?status=pending,conflict';
-    const data = await api<{ items: IIntakeItem[] }>(`/api/intake/items${filter}`);
+    const filter = showDecided() ? '' : '&status=pending,conflict';
+    const data = await api<{ items: IStagedItem[] }>(`/api/intake/items?${scope()}${filter}`);
     setItems(data.items);
   };
 
   const loadDocuments = async () => {
-    const data = await api<{ documents: IProviderDocument[] }>('/api/intake/documents?limit=15');
+    const data = await api<{ documents: IProviderDocument[] }>(`/api/intake/documents?${scope()}&limit=15`);
     setDocuments(data.documents);
   };
 
@@ -474,16 +449,16 @@ const Intake: Component = () => {
   };
 
   const loadBills = async () => {
-    const data = await api<{ bills: IBillComparison[] }>('/api/intake/bills');
+    const data = await api<{ bills: IBillComparison[] }>(`/api/intake/bills?${scope()}`);
     setBills(data.bills);
   };
 
   const loadAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([loadProviders(), loadItems(), loadDocuments(), loadBills(), loadMeters()]);
+      await Promise.all([loadSupplier(), loadItems(), loadDocuments(), loadBills(), loadMeters()]);
     } catch (error) {
-      toast.showToast(error instanceof Error ? error.message : 'Could not load intake data', 'error');
+      toast.showToast(error instanceof Error ? error.message : 'Could not load supplier data', 'error');
     } finally {
       setLoading(false);
     }
@@ -502,8 +477,8 @@ const Intake: Component = () => {
   onMount(() => { void loadAll(); });
 
   /**
-   * Archive to Drive. Passing no id archives every ingested document that has
-   * no Drive copy yet; the server skips the ones that already have one.
+   * Archive to Drive. Passing no id archives every ingested document of this
+   * supplier that has no Drive copy yet; the server skips the ones that do.
    */
   const archiveDocuments = async (documentId?: string, silent = false) => {
     setArchiving(documentId ?? 'all');
@@ -514,7 +489,10 @@ const Intake: Component = () => {
         documents?: { fileName?: string; status: string; error?: string }[];
       }>(
         '/api/intake/documents/archive',
-        sendJson('POST', documentId ? { documentId } : {}),
+        sendJson('POST', {
+          ...(documentId ? { documentId } : {}),
+          ...(unassigned() ? { unassigned: true } : { supplierId: supplierId() }),
+        }),
       );
       if (result.archived > 0) {
         toast.showToast(
@@ -610,7 +588,7 @@ const Intake: Component = () => {
   // Documents ingested before archiving existed get their Drive copy on first
   // visit; afterwards they carry a link and this stops.
   createEffect(() => {
-    if (autoArchiveTried() || loading() || !auth.user()) {
+    if (autoArchiveTried() || loading() || !auth.user() || unassigned()) {
       return;
     }
     if (auth.user()?.google?.status !== 'ok') {
@@ -625,30 +603,30 @@ const Intake: Component = () => {
     void archiveDocuments(undefined, true);
   });
 
-  const saveSettings = async (
-    provider: IProvider,
-    settings: { senders: string[]; subjectHints: string[]; gmailQuery: string | null },
-  ) => {
+  const saveSettings = async (settings: { senders: string[]; subjectHints: string[]; gmailQuery: string | null }) => {
+    setSaving(true);
     try {
-      const { provider: saved } = await api<{ provider: IProvider }>('/api/providers', sendJson('PATCH', {
-        providerName: provider.name,
-        ...settings,
-      }));
-      setProviders((current) => current.map((entry) => (entry.name === saved.name ? saved : entry)));
+      const { supplier: saved } = await api<{ supplier: ISupplier }>(
+        `/api/suppliers/${supplierId()}`,
+        sendJson('PATCH', settings),
+      );
+      setSupplier({ ...(supplier() as ISupplier), ...saved });
       toast.showToast(`${saved.name} mail settings saved`, 'success');
     } catch (error) {
-      toast.showToast(error instanceof Error ? error.message : 'Could not save provider settings', 'error');
+      toast.showToast(error instanceof Error ? error.message : 'Could not save supplier settings', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSync = async (provider: IProvider) => {
-    setSyncing(provider.name);
+  const handleSync = async () => {
+    setSyncing(true);
     try {
-      const result = await api<SyncResponse>('/api/intake/sync', sendJson('POST', { providerName: provider.name }));
+      const result = await api<SyncResponse>(`/api/suppliers/${supplierId()}/sync`, { method: 'POST' });
       setLastSync(result);
       const failed = result.processed.filter((entry) => entry.status === 'failed').length;
       toast.showToast(
-        `${provider.name}: ${result.count} document${result.count === 1 ? '' : 's'}${failed ? `, ${failed} failed` : ''}${result.linked ? `, ${result.linked} linked` : ''}`,
+        `${result.provider}: ${result.count} document${result.count === 1 ? '' : 's'}${failed ? `, ${failed} failed` : ''}${result.linked ? `, ${result.linked} linked` : ''}`,
         failed ? 'warning' : 'success',
       );
       await Promise.all([loadItems(), loadDocuments(), loadBills()]);
@@ -656,30 +634,14 @@ const Intake: Component = () => {
       const message = error instanceof Error ? error.message : 'Sync failed';
       toast.showToast(message, message.includes('expired') ? 'warning' : 'error');
       if (message.includes('expired')) {
-        await loadProviders();
+        await loadSupplier();
       }
     } finally {
-      setSyncing(null);
+      setSyncing(false);
     }
   };
 
-  const syncAll = async () => {
-    const ready = providers().filter((provider) => provider.senders.length > 0 || provider.gmailQuery);
-    if (ready.length === 0) {
-      toast.showToast('Add sender addresses to a provider first', 'warning');
-      return;
-    }
-    setSyncingAll(true);
-    try {
-      for (const provider of ready) {
-        await handleSync(provider);
-      }
-    } finally {
-      setSyncingAll(false);
-    }
-  };
-
-  const decide = async (item: IIntakeItem, action: 'accept' | 'reject') => {
+  const decide = async (item: IStagedItem, action: 'accept' | 'reject') => {
     try {
       await api(`/api/intake/items/${item._id}/${action}`, { method: 'POST' });
       toast.showToast(`Item ${action === 'accept' ? 'accepted' : 'rejected'}`, 'success');
@@ -689,11 +651,11 @@ const Intake: Component = () => {
     }
   };
 
-  const linkItem = async (item: IIntakeItem, meterId: string) => {
+  const linkItem = async (item: IStagedItem, meterId: string) => {
     setLinking(true);
     try {
       // Linking can auto-verify the item against that meter's readings.
-      const { item: updated } = await api<{ item: IIntakeItem }>(
+      const { item: updated } = await api<{ item: IStagedItem }>(
         `/api/intake/items/${item._id}/link`,
         sendJson('POST', { meterId }),
       );
@@ -710,14 +672,23 @@ const Intake: Component = () => {
     }
   };
 
-  const syncableCount = () => providers().filter((provider) => provider.senders.length > 0 || provider.gmailQuery).length;
+  const title = () => unassigned() ? 'Unassigned documents' : (supplier()?.name ?? 'Supplier');
 
   return (
     <div class="mx-auto w-full max-w-5xl p-4 md:p-10">
       <PageHeader
-        eyebrow="Intake"
-        title="Provider mail"
-        subtitle="Bills and meter readings pulled from Gmail, staged for your decision. Nothing here overwrites what you entered."
+        eyebrow={unassigned() ? 'Intake' : 'Supplier'}
+        title={title()}
+        subtitle={unassigned()
+          ? 'Documents whose sender matched no supplier. Assign a supplier to file them.'
+          : 'Mail settings, staged readings, bills and documents for this supplier.'}
+        actions={
+          <Show when={!unassigned()}>
+            <A href={`/contracts/add?supplierId=${supplierId()}`} class="btn btn-primary btn-sm rounded-xl font-bold">
+              <Icon name="add" class="h-4 w-4" /> Add contract
+            </A>
+          </Show>
+        }
       />
 
       <Show when={loading()}>
@@ -726,79 +697,86 @@ const Intake: Component = () => {
 
       <Show when={!loading()}>
         <div class="space-y-5">
-          <GoogleStatus />
+          <Show when={!unassigned()}>
+            <GoogleStatus />
 
-          <Section
-            title="Providers"
-            hint="Mail settings live on your contracts."
-            actions={
-              <Show when={providers().length > 0}>
+            <Section
+              title="Mail settings"
+              hint="Stored once on the supplier; every contract of this supplier shares it."
+              actions={
                 <button
                   class="btn btn-primary btn-sm rounded-xl font-bold"
-                  disabled={syncing() !== null || syncingAll() || syncableCount() === 0}
-                  onClick={() => void syncAll()}
+                  disabled={syncing() || (supplier()?.senders.length ?? 0) === 0}
+                  onClick={() => void handleSync()}
                 >
-                  <Icon name="refresh" class={`h-3.5 w-3.5 ${syncingAll() ? 'animate-spin' : ''}`} />
-                  {syncingAll() ? 'Syncing…' : 'Sync all'}
+                  <Icon name="refresh" class={`h-3.5 w-3.5 ${syncing() ? 'animate-spin' : ''}`} />
+                  {syncing() ? 'Syncing…' : 'Sync now'}
                 </button>
-              </Show>
-            }
-          >
-            <Show
-              when={providers().length > 0}
-              fallback={
-                <div class="mt-4 rounded-2xl border border-dashed border-base-content/10 p-4 text-sm font-bold opacity-50">
-                  Providers come from your contracts — there is no separate provider to create.
-                  <A href="/contracts/add" class="link link-primary ml-1">Add a contract</A> and its
-                  provider shows up here with its mail settings.
-                </div>
               }
             >
-              <div class="mt-4 grid gap-3 md:grid-cols-2">
-                <For each={providers()}>
-                  {(provider) => (
-                    <ProviderCard
-                      provider={provider}
-                      syncing={syncing() === provider.name}
-                      onSave={saveSettings}
-                      onSync={handleSync}
-                    />
+              <div class="mt-4 grid gap-4 md:grid-cols-2">
+                <Show when={supplier()}>
+                  {(current) => (
+                    <MailSettings supplier={current()} saving={saving()} onSave={saveSettings} />
                   )}
-                </For>
-              </div>
-            </Show>
-
-            <Show when={lastSync()}>
-              {(result) => (
-                <div class="mt-4 rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
-                  <p class="text-[10px] font-black uppercase tracking-wider opacity-40">
-                    Last sync · {result().provider} · {result().count} document{result().count === 1 ? '' : 's'}
-                    <Show when={result().linked}><span> · {result().linked} linked</span></Show>
-                  </p>
+                </Show>
+                <div class="rounded-2xl bg-base-200/50 p-4">
+                  <p class="text-[10px] font-black uppercase tracking-wider opacity-40">Contracts</p>
                   <Show
-                    when={result().processed.length > 0}
-                    fallback={<p class="mt-2 text-xs font-bold opacity-50">No new mail matched.</p>}
+                    when={contracts().length > 0}
+                    fallback={<p class="mt-2 text-xs font-bold opacity-50">No contracts yet.</p>}
                   >
-                    <ul class="mt-2 space-y-1.5">
-                      <For each={result().processed}>
-                        {(entry) => (
+                    <ul class="mt-2 space-y-2">
+                      <For each={contracts()}>
+                        {(contract) => (
                           <li class="flex flex-wrap items-center gap-2 text-[11px] font-bold">
-                            <StatusBadge status={entry.status} />
-                            <span class="break-all font-mono opacity-70">{entry.attachment}</span>
-                            <Show when={entry.error}><span class="opacity-50">{entry.error}</span></Show>
+                            <A href={`/contracts/${contract._id}/edit`} class="link link-primary">
+                              {formatDate(contract.startDate)} – {contract.endDate ? formatDate(contract.endDate) : 'Present'}
+                            </A>
+                            <span class="opacity-50">
+                              {typeof contract.meterId === 'string' ? '' : contract.meterId?.name}
+                              {' · '}€{contract.basePrice.toFixed(2)}/mo · €{contract.workingPrice.toFixed(4)}
+                            </span>
                           </li>
                         )}
                       </For>
                     </ul>
                   </Show>
                 </div>
-              )}
-            </Show>
-          </Section>
+              </div>
+
+              <Show when={lastSync()}>
+                {(result) => (
+                  <div class="mt-4 rounded-2xl border border-base-content/5 bg-base-200/50 p-4">
+                    <p class="text-[10px] font-black uppercase tracking-wider opacity-40">
+                      Last sync · {result().provider} · {result().count} document{result().count === 1 ? '' : 's'}
+                      <Show when={result().linked}><span> · {result().linked} linked</span></Show>
+                    </p>
+                    <Show
+                      when={result().processed.length > 0}
+                      fallback={<p class="mt-2 text-xs font-bold opacity-50">No new mail matched.</p>}
+                    >
+                      <ul class="mt-2 space-y-1.5">
+                        <For each={result().processed}>
+                          {(entry) => (
+                            <li class="flex flex-wrap items-center gap-2 text-[11px] font-bold">
+                              <StatusBadge status={entry.status} />
+                              <span class="break-all font-mono opacity-70">{entry.attachment}</span>
+                              <Show when={entry.error}><span class="opacity-50">{entry.error}</span></Show>
+                            </li>
+                          )}
+                        </For>
+                      </ul>
+                    </Show>
+                  </div>
+                )}
+              </Show>
+            </Section>
+          </Show>
 
           <Section
             title="Staged items"
-            hint="Provider values never overwrite your readings — they wait here."
+            hint="Supplier values never overwrite your readings — they wait here."
             actions={
               <label class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider opacity-60">
                 <input
@@ -817,7 +795,7 @@ const Intake: Component = () => {
                 <div class="mt-4">
                   <EmptyState
                     title="Nothing staged"
-                    description="Run a sync on a provider and anything recognised will show up here for review."
+                    description={unassigned() ? 'No unassigned facts to review.' : 'Run a sync and anything recognised will show up here for review.'}
                   />
                 </div>
               }
@@ -843,7 +821,6 @@ const Intake: Component = () => {
               when={bills().length > 0}
               fallback={<p class="mt-3 text-sm font-bold opacity-50">No billed periods yet.</p>}
             >
-              {/* Stacked on phones: five columns do not fit a 360px card. */}
               <ul class="mt-4 space-y-2 md:hidden" data-testid="bills-stacked">
                 <For each={bills()}>{(bill) => <BillMobileRow bill={bill} />}</For>
               </ul>
@@ -987,4 +964,4 @@ const Intake: Component = () => {
   );
 };
 
-export default Intake;
+export default SupplierDetail;

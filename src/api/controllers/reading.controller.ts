@@ -1,6 +1,7 @@
 import Reading from '../../models/Reading';
 import Meter from '../../models/Meter';
 import Contract from '../../models/Contract';
+import Supplier from '../../models/Supplier';
 import { processBulkReadings, processUnifiedImport } from '../../lib/readingService';
 import { RouteParams, sanitizeString } from '../utils';
 import { readingSchema, bulkReadingSchema, unifiedExportSchema, formatZodError } from '../validation';
@@ -40,11 +41,19 @@ export async function exportFullBackup(userId: string) {
   const meters = await Meter.find({}).setOptions({ userId });
   const readings = await Reading.find({}).setOptions({ userId });
   const contracts = await Contract.find({}).setOptions({ userId });
+  const suppliers = await Supplier.find({}).setOptions({ userId });
 
   return {
     exportDate: new Date().toISOString(),
     version: '1.0',
     data: {
+      suppliers: suppliers.map(s => ({
+        id: s._id.toString(),
+        name: s.name,
+        senders: s.senders ?? [],
+        subjectHints: s.subjectHints ?? [],
+        gmailQuery: s.gmailQuery ?? null
+      })),
       meters: meters.map(m => ({
         id: m._id.toString(),
         name: m.name,
@@ -60,6 +69,8 @@ export async function exportFullBackup(userId: string) {
       })),
       contracts: contracts.map(c => ({
         id: c._id.toString(),
+        supplierId: c.supplierId?.toString(),
+        supplierName: c.providerName,
         providerName: c.providerName,
         startDate: c.startDate.toISOString().split('T')[0],
         endDate: c.endDate ? c.endDate.toISOString().split('T')[0] : null,
@@ -75,11 +86,19 @@ export async function exportUnifiedFormat(userId: string, options: { includeMete
   const meters = options.includeMeters ? await Meter.find({}).setOptions({ userId }) : [];
   const readings = options.includeReadings ? await Reading.find({}).setOptions({ userId }) : [];
   const contracts = options.includeContracts ? await Contract.find({}).setOptions({ userId }) : [];
+  const suppliers = options.includeContracts ? await Supplier.find({}).setOptions({ userId }) : [];
 
   return {
     exportDate: new Date().toISOString(),
     version: '1.0',
     data: {
+      suppliers: suppliers.map(s => ({
+        id: s._id.toString(),
+        name: s.name,
+        senders: s.senders ?? [],
+        subjectHints: s.subjectHints ?? [],
+        gmailQuery: s.gmailQuery ?? null
+      })),
       meters: meters.map(m => ({
         id: m._id.toString(),
         name: m.name,
@@ -95,6 +114,8 @@ export async function exportUnifiedFormat(userId: string, options: { includeMete
       })),
       contracts: contracts.map(c => ({
         id: c._id.toString(),
+        supplierId: c.supplierId?.toString(),
+        supplierName: c.providerName,
         providerName: c.providerName,
         startDate: c.startDate.toISOString().split('T')[0],
         endDate: c.endDate ? c.endDate.toISOString().split('T')[0] : null,
@@ -209,7 +230,8 @@ export async function handleUnifiedImport({ req, res, userId }: RouteParams) {
       userId, 
       MeterModel: Meter, 
       ReadingModel: Reading, 
-      ContractModel: Contract
+      ContractModel: Contract,
+      SupplierModel: Supplier
     });
 
     // Recalculate stats for the user after unified import

@@ -1,4 +1,4 @@
-import { IReading, IMeter, IContract } from '../types/models';
+import { IReading, IMeter, IContract, ISupplier } from '../types/models';
 import { Model } from 'mongoose';
 
 interface BulkImportResult {
@@ -8,9 +8,10 @@ interface BulkImportResult {
 }
 
 interface UnifiedImportData {
+  suppliers?: Array<{ id?: string; name: string; senders?: string[]; subjectHints?: string[]; gmailQuery?: string | null }>;
   meters?: Array<{ id: string; name: string; meterNumber: string; type: 'power' | 'gas'; unit: string }>;
   readings?: Array<{ meterId: string; date: string; value: number }>;
-  contracts?: Array<{ meterId: string; providerName: string; startDate: string; endDate?: string; basePrice: number; workingPrice: number }>;
+  contracts?: Array<{ meterId: string; providerName?: string; supplierId?: string; supplierName?: string; startDate: string; endDate?: string; basePrice: number; workingPrice: number }>;
 }
 
 interface MeterImportOptions {
@@ -115,17 +116,72 @@ async function importReadings(options: ReadingImportOptions): Promise<void> {
   }
 }
 
+interface SupplierImportOptions {
+  data: UnifiedImportData;
+  userId: string;
+  SupplierModel: Model<ISupplier>;
+  result: { suppliersCreated: number; errors: Array<{ index: number; message: string }> };
+}
+
+function supplierKey(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+// Helper: import suppliers and build a name -> id map
+async function importSuppliers(options: SupplierImportOptions): Promise<Map<string, string>> {
+  const { data, userId, SupplierModel, result } = options;
+  const supplierIdMap = new Map<string, string>();
+  if (!Array.isArray(data.suppliers)) {
+    return supplierIdMap;
+  }
+
+  for (let i = 0; i < data.suppliers.length; i++) {
+    const sData = data.suppliers[i];
+    try {
+      const nameKey = supplierKey(sData.name);
+      const existing = await SupplierModel.findOne({
+        nameKey: { $eq: nameKey },
+        userId: { $eq: userId }
+      });
+      const supplier = existing
+        ? existing
+        : await SupplierModel.create({
+            name: sData.name.trim().replace(/\s+/g, ' '),
+            nameKey,
+            senders: sData.senders ?? [],
+            subjectHints: sData.subjectHints ?? [],
+            gmailQuery: sData.gmailQuery ?? null,
+            userId
+          });
+      if (!existing) {
+        result.suppliersCreated++;
+      }
+      if (sData.id) {
+        supplierIdMap.set(sData.id, supplier._id.toString());
+      }
+      supplierIdMap.set(nameKey, supplier._id.toString());
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      result.errors.push({ index: i, message: `Failed to import supplier ${sData.name}: ${msg}` });
+    }
+  }
+
+  return supplierIdMap;
+}
+
 interface ContractImportOptions {
   data: UnifiedImportData;
   userId: string;
   meterIdMap: Map<string, string>;
+  supplierIdMap: Map<string, string>;
   ContractModel: Model<IContract>;
+  SupplierModel: Model<ISupplier>;
   result: { contractsCreated: number; errors: Array<{ index: number; message: string }> };
 }
 
 // Helper: Import contracts
 async function importContracts(options: ContractImportOptions): Promise<void> {
-  const { data, userId, meterIdMap, ContractModel, result } = options;
+  const { data, userId, meterIdMap, supplierIdMap, ContractModel, SupplierModel, result } = options;
   if (!Array.isArray(data.contracts)) {
     return;
   }
@@ -141,9 +197,31 @@ async function importContracts(options: ContractImportOptions): Promise<void> {
     }
 
     try {
+      const supplierName = cData.supplierName ?? cData.providerName ?? 'Unknown';
+      const nameKey = supplierKey(supplierName);
+      let supplierId = cData.supplierId
+        ? supplierIdMap.get(cData.supplierId)
+        : supplierIdMap.get(nameKey);
+
+      if (!supplierId) {
+        const existing = await SupplierModel.findOne({
+          nameKey: { $eq: nameKey },
+          userId: { $eq: userId }
+        });
+        const supplier = existing
+          ? existing
+          : await SupplierModel.create({
+              name: supplierName.trim().replace(/\s+/g, ' '),
+              nameKey,
+              userId
+            });
+        supplierId = supplier._id.toString();
+        supplierIdMap.set(nameKey, supplierId);
+      }
+
       const existing = await ContractModel.findOne({
         meterId: { $eq: newMeterId },
-        providerName: { $eq: cData.providerName },
+        providerName: { $eq: supplierName },
         startDate: { $eq: new Date(cData.startDate) },
         userId: { $eq: userId }
       });
@@ -154,7 +232,8 @@ async function importContracts(options: ContractImportOptions): Promise<void> {
 
       contractsToInsert.push({
         meterId: newMeterId,
-        providerName: cData.providerName,
+        supplierId,
+        providerName: supplierName,
         startDate: new Date(cData.startDate),
         endDate: cData.endDate ? new Date(cData.endDate) : undefined,
         basePrice: cData.basePrice,
@@ -164,7 +243,7 @@ async function importContracts(options: ContractImportOptions): Promise<void> {
       result.contractsCreated++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      result.errors.push({ index: i, message: `Failed to process contract for ${cData.providerName}: ${msg}` });
+      result.errors.push({ index: i, message: `Failed to process contract for ${cData.providerName ?? cData.supplierName}: ${msg}` });
     }
   }
 
@@ -179,15 +258,16 @@ interface UnifiedImportOptions {
   MeterModel: Model<IMeter>;
   ReadingModel: Model<IReading>;
   ContractModel: Model<IContract>;
+  SupplierModel: Model<ISupplier>;
 }
 
 /**
- * Processes a full unified import including meters, readings, and contracts.
+ * Processes a full unified import including suppliers, meters, readings, and contracts.
  */
 export async function processUnifiedImport(
   options: UnifiedImportOptions
-): Promise<BulkImportResult & { metersCreated: number; contractsCreated: number }> {
-  const { backupData, userId, MeterModel, ReadingModel, ContractModel } = options;
+): Promise<BulkImportResult & { metersCreated: number; contractsCreated: number; suppliersCreated: number }> {
+  const { backupData, userId, MeterModel, ReadingModel, ContractModel, SupplierModel } = options;
   if (typeof backupData !== 'object' || backupData === null || !('data' in backupData)) {
     throw new Error('Invalid backup data structure');
   }
@@ -200,17 +280,21 @@ export async function processUnifiedImport(
     skippedCount: 0,
     metersCreated: 0,
     contractsCreated: 0,
+    suppliersCreated: 0,
     errors: [] as Array<{ index: number; message: string }>
   };
 
-  // 1. Import Meters
+  // 1. Import Suppliers
+  const supplierIdMap = await importSuppliers({ data, userId, SupplierModel, result });
+
+  // 2. Import Meters
   const meterIdMap = await importMeters({ data, userId, MeterModel, result });
 
-  // 2. Import Readings
+  // 3. Import Readings
   await importReadings({ data, userId, meterIdMap, ReadingModel, result });
 
-  // 3. Import Contracts
-  await importContracts({ data, userId, meterIdMap, ContractModel, result });
+  // 4. Import Contracts
+  await importContracts({ data, userId, meterIdMap, supplierIdMap, ContractModel, SupplierModel, result });
 
   return result;
 }

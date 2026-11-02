@@ -9,7 +9,7 @@ import {
 } from 'vitest';
 import User from '../../models/User';
 import ProviderDocument from '../../models/ProviderDocument';
-import IntakeItem from '../../models/IntakeItem';
+import Supplier from '../../models/Supplier';
 import Bill from '../../models/Bill';
 import Reading from '../../models/Reading';
 import Meter from '../../models/Meter';
@@ -20,8 +20,9 @@ import { signState, verifyState } from '../../lib/google/oauth';
 import {
   handleCallback, handleConnect, handleGoogleSync, handleIntakeArchive, handleIntakeBills,
   handleIntakeDocumentAction, handleIntakeDocuments, handleIntakeItemAction, handleIntakeItemLink,
-  handleIntakeItems, handleProviders,
+  handleIntakeItems,
 } from './intake.controller';
+import { handleSuppliers, handleSupplierItem } from './supplier.controller';
 import type { ApiRequest, ApiResponse, RouteParams } from '../utils';
 
 const env = {
@@ -171,6 +172,7 @@ describe('intake controller', () => {
   let mongoServer: MongoMemoryServer;
   let ownerId: string;
   let otherId: string;
+  let supplierId: string;
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
@@ -197,7 +199,7 @@ describe('intake controller', () => {
     vi.restoreAllMocks();
     await User.deleteMany({});
     await ProviderDocument.deleteMany({});
-    await IntakeItem.deleteMany({});
+    await Supplier.deleteMany({});
     await Bill.deleteMany({});
     await Reading.deleteMany({});
     await Meter.deleteMany({});
@@ -342,15 +344,22 @@ describe('intake controller', () => {
       const meter = await Meter.create({
         name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
       });
+      const supplier = await Supplier.create({
+        name: 'Stadtwerke',
+        nameKey: 'stadtwerke',
+        senders: ['rechnung@stadtwerke.example'],
+        subjectHints: [],
+        userId: ownerId,
+      });
+      supplierId = supplier._id.toString();
       await Contract.create({
+        supplierId: supplier._id,
         providerName: 'Stadtwerke',
         startDate: new Date('2024-01-01'),
         endDate: null,
         basePrice: 12,
         workingPrice: 0.3,
         meterId: meter._id,
-        senders: ['rechnung@stadtwerke.example'],
-        subjectHints: [],
         userId: ownerId,
       });
     });
@@ -362,13 +371,13 @@ describe('intake controller', () => {
         res: response.res,
         userId: otherId,
         method: 'POST',
-        body: { providerName: 'Stadtwerke' },
+        body: { supplierId },
       }));
 
       expect(response.res.statusCode).toBe(401);
     });
 
-    it('requires a provider name and an existing provider', async () => {
+    it('requires a supplier id and an existing supplier', async () => {
       const missing = mockResponse();
       await handleGoogleSync(params({ res: missing.res, userId: ownerId, method: 'POST', body: {} }));
       expect(missing.res.statusCode).toBe(400);
@@ -378,13 +387,16 @@ describe('intake controller', () => {
         res: unknown.res,
         userId: ownerId,
         method: 'POST',
-        body: { providerName: 'Unknown' },
+        body: { supplierId: new mongoose.Types.ObjectId().toString() },
       }));
       expect(unknown.res.statusCode).toBe(404);
     });
 
-    it('refuses to sync a provider without sender addresses', async () => {
-      await Contract.updateMany({}, { $set: { senders: [], subjectHints: [], gmailQuery: null } }).setOptions({ userId: ownerId });
+    it('refuses to sync a supplier without sender addresses', async () => {
+      await Supplier.updateOne(
+        { _id: supplierId },
+        { $set: { senders: [], subjectHints: [], gmailQuery: null } },
+      ).setOptions({ userId: ownerId });
       const gmail = stubGmail();
       const response = mockResponse();
 
@@ -392,7 +404,7 @@ describe('intake controller', () => {
         res: response.res,
         userId: ownerId,
         method: 'POST',
-        body: { providerName: 'Stadtwerke' },
+        body: { supplierId },
       }));
 
       expect(response.res.statusCode).toBe(400);
@@ -410,7 +422,7 @@ describe('intake controller', () => {
         res: first.res,
         userId: ownerId,
         method: 'POST',
-        body: { providerName: 'Stadtwerke' },
+        body: { supplierId },
       }));
 
       expect(first.res.statusCode).toBe(200);
@@ -440,7 +452,7 @@ describe('intake controller', () => {
         res: second.res,
         userId: ownerId,
         method: 'POST',
-        body: { providerName: 'Stadtwerke' },
+        body: { supplierId },
       }));
 
       // A failed document is retried on the next sync, reusing the same record.
@@ -457,14 +469,15 @@ describe('intake controller', () => {
       const sync = async () => {
         const response = mockResponse();
         await handleGoogleSync(params({
-          res: response.res, userId: ownerId, method: 'POST', body: { providerName: 'Stadtwerke' },
+          res: response.res, userId: ownerId, method: 'POST', body: { supplierId },
         }));
         return JSON.parse(response.body()) as { processed: { status: string }[] };
       };
 
       expect((await sync()).processed[0].status).toBe('parsed');
       expect((await sync()).processed[0].status).toBe('already_processed');
-      expect(await IntakeItem.countDocuments({ userId: ownerId })).toBe(2);
+      const stored = await ProviderDocument.findOne({ userId: ownerId }).lean();
+      expect(stored?.facts).toHaveLength(2);
     });
 
     it('treats a .pdf sent as application/octet-stream as a PDF', async () => {
@@ -474,7 +487,7 @@ describe('intake controller', () => {
       const response = mockResponse();
 
       await handleGoogleSync(params({
-        res: response.res, userId: ownerId, method: 'POST', body: { providerName: 'Stadtwerke' },
+        res: response.res, userId: ownerId, method: 'POST', body: { supplierId },
       }));
 
       const payload = JSON.parse(response.body()) as { processed: { status: string; error?: string }[] };
@@ -503,7 +516,7 @@ describe('intake controller', () => {
       const response = mockResponse();
 
       await handleGoogleSync(params({
-        res: response.res, userId: ownerId, method: 'POST', body: { providerName: 'Stadtwerke' },
+        res: response.res, userId: ownerId, method: 'POST', body: { supplierId },
       }));
 
       const payload = JSON.parse(response.body()) as { processed: { status: string }[] };
@@ -524,7 +537,7 @@ describe('intake controller', () => {
         res: response.res,
         userId: ownerId,
         method: 'POST',
-        body: { providerName: 'Stadtwerke' },
+        body: { supplierId },
       }));
 
       expect(response.res.statusCode).toBe(200);
@@ -542,7 +555,7 @@ describe('intake controller', () => {
       expect(document?.driveFileId).toBeTruthy();
       expect(document?.processedAt).toBeInstanceOf(Date);
 
-      const items = await IntakeItem.find({ userId: ownerId }).lean();
+      const items: Array<{ value?: number; status?: string; meterId?: unknown }> = document?.facts ?? [];
       expect(items).toHaveLength(2);
       expect(items.map((item) => item.value).sort()).toEqual([500, 620]);
       // No meter number in the CSV → the user has to link a meter later.
@@ -562,14 +575,23 @@ describe('intake controller', () => {
       await Meter.updateMany({}, { $set: { meterNumber: 'SWM 600044' } }).setOptions({ userId: ownerId });
       stubGmail({ files: [{ name: 'lastgang.csv', mimeType: 'text/csv', bytes: csvBytes }] });
       stubDrive();
-      await IntakeItem.create({
-        documentId: new mongoose.Types.ObjectId(),
-        kind: 'reading',
-        date: new Date('2023-12-01'),
-        value: 100,
-        meterNumber: '600044',
-        status: 'pending',
+      await ProviderDocument.create({
         userId: ownerId,
+        supplierId,
+        providerName: 'Stadtwerke',
+        source: 'gmail',
+        fileName: 'old.csv',
+        mimeType: 'text/csv',
+        sha256: 'old-doc',
+        status: 'parsed',
+        facts: [{
+          _id: new mongoose.Types.ObjectId(),
+          kind: 'reading',
+          date: new Date('2023-12-01'),
+          value: 100,
+          meterNumber: '600044',
+          status: 'pending',
+        }],
       });
       const response = mockResponse();
 
@@ -577,14 +599,14 @@ describe('intake controller', () => {
         res: response.res,
         userId: ownerId,
         method: 'POST',
-        body: { providerName: 'Stadtwerke' },
+        body: { supplierId },
       }));
 
       expect(response.res.statusCode).toBe(200);
       const payload = JSON.parse(response.body()) as { linked: number };
       expect(payload.linked).toBe(1);
-      const linked = await IntakeItem.findOne({ userId: ownerId, meterNumber: '600044' }).lean();
-      expect(linked?.meterId).toBeTruthy();
+      const linkedDocument = await ProviderDocument.findOne({ userId: ownerId, sha256: 'old-doc' }).lean();
+      expect(linkedDocument?.facts?.[0]?.meterId).toBeTruthy();
     });
 
     it('marks the account for reconnection when Google rejects the refresh token', async () => {
@@ -602,7 +624,7 @@ describe('intake controller', () => {
         res: response.res,
         userId: ownerId,
         method: 'POST',
-        body: { providerName: 'Stadtwerke' },
+        body: { supplierId },
       }));
 
       expect(response.res.statusCode).toBe(409);
@@ -804,6 +826,16 @@ describe('intake controller', () => {
   });
 
   describe('intake items', () => {
+    beforeEach(async () => {
+      const supplier = await Supplier.create({
+        name: 'Stadtwerke',
+        nameKey: 'stadtwerke',
+        senders: ['rechnung@stadtwerke.example'],
+        userId: ownerId,
+      });
+      supplierId = supplier._id.toString();
+    });
+
     async function createMeter() {
       return Meter.create({
         name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
@@ -811,37 +843,58 @@ describe('intake controller', () => {
     }
 
     async function createItem(overrides: Record<string, unknown> = {}) {
-      return IntakeItem.create({
-        documentId: new mongoose.Types.ObjectId(),
-        kind: 'reading',
-        date: new Date('2024-01-01'),
-        value: 500,
-        unit: 'kWh',
-        status: 'pending',
+      const document = await ProviderDocument.create({
         userId: ownerId,
-        ...overrides,
+        supplierId,
+        providerName: 'Stadtwerke',
+        source: 'gmail',
+        fileName: 'doc.csv',
+        mimeType: 'text/csv',
+        sha256: `sha-${Math.random()}`,
+        status: 'parsed',
+        facts: [{
+          _id: new mongoose.Types.ObjectId(),
+          kind: 'reading',
+          date: new Date('2024-01-01'),
+          value: 500,
+          unit: 'kWh',
+          status: 'pending',
+          ...overrides,
+        }],
       });
+      const fact = document.facts[0];
+      return {
+        _id: fact._id,
+        documentId: document._id,
+        get: async () => {
+          const stored = await ProviderDocument.findById(document._id).lean();
+          return stored?.facts?.find((entry: { _id: unknown }) => String(entry._id) === String(fact._id));
+        },
+      };
     }
 
-    it('lists the user\'s items and filters by status', async () => {
+    it('lists the user\'s items, scoped to the supplier and filtered by status', async () => {
       await createItem({ status: 'pending' });
       await createItem({ status: 'rejected', date: new Date('2024-02-01') });
-      await IntakeItem.create({
-        documentId: new mongoose.Types.ObjectId(),
-        kind: 'reading',
-        status: 'pending',
+      await ProviderDocument.create({
         userId: otherId,
+        source: 'gmail',
+        fileName: 'other.csv',
+        mimeType: 'text/csv',
+        sha256: 'other-doc',
+        status: 'parsed',
+        facts: [{ kind: 'reading', status: 'pending' }],
       });
 
       const all = mockResponse();
-      await handleIntakeItems(params({ res: all.res, userId: ownerId }));
+      await handleIntakeItems(params({ res: all.res, userId: ownerId, url: `/api/intake/items?supplierId=${supplierId}` }));
       expect(JSON.parse(all.body()).count).toBe(2);
 
       const pending = mockResponse();
       await handleIntakeItems(params({
         res: pending.res,
         userId: ownerId,
-        url: '/api/intake/items?status=pending,conflict',
+        url: `/api/intake/items?supplierId=${supplierId}&status=pending,conflict`,
       }));
       const payload = JSON.parse(pending.body()) as { count: number; items: { status: string }[] };
       expect(payload.count).toBe(1);
@@ -865,7 +918,7 @@ describe('intake controller', () => {
       }));
 
       expect(response.res.statusCode).toBe(200);
-      const updated = await IntakeItem.findById(item._id).lean();
+      const updated = await item.get();
       expect(String(updated?.meterId)).toBe(meter._id.toString());
       // The provider value (500) disagrees with the existing 510 on that date.
       expect(updated?.status).toBe('conflict');
@@ -889,8 +942,7 @@ describe('intake controller', () => {
       }));
 
       expect(response.res.statusCode).toBe(404);
-      const stored = await IntakeItem.findById(item._id).lean();
-      expect(stored?.meterId).toBeUndefined();
+      expect((await item.get())?.meterId).toBeUndefined();
     });
 
     it('promotes an accepted reading with source "provider"', async () => {
@@ -911,8 +963,7 @@ describe('intake controller', () => {
       expect(readings[0]).toMatchObject({ value: 500, source: 'provider' });
       expect(String(readings[0].meterId)).toBe(meter._id.toString());
 
-      const updated = await IntakeItem.findById(item._id).lean();
-      expect(updated?.status).toBe('accepted');
+      expect((await item.get())?.status).toBe('accepted');
     });
 
     it('refuses to accept an item whose meter number is unknown', async () => {
@@ -970,7 +1021,7 @@ describe('intake controller', () => {
       }));
 
       expect(response.res.statusCode).toBe(404);
-      expect((await IntakeItem.findById(item._id).lean())?.status).toBe('pending');
+      expect((await item.get())?.status).toBe('pending');
     });
 
     it('rejects without writing a reading', async () => {
@@ -986,7 +1037,7 @@ describe('intake controller', () => {
       }));
 
       expect(response.res.statusCode).toBe(200);
-      expect((await IntakeItem.findById(item._id).lean())?.status).toBe('rejected');
+      expect((await item.get())?.status).toBe('rejected');
       expect(await Reading.countDocuments({ userId: ownerId })).toBe(0);
     });
 
@@ -1080,86 +1131,102 @@ describe('intake controller', () => {
     });
   });
 
-  describe('providers (derived from contracts)', () => {
-    let meterCounter = 0;
-
-    async function createContract(overrides: Record<string, unknown> = {}) {
-      meterCounter += 1;
-      const meter = await Meter.create({
-        name: 'Strom', meterNumber: `1-234-${600 + meterCounter}`, type: 'power', unit: 'kWh', userId: ownerId,
-      });
-      return Contract.create({
-        providerName: 'Stadtwerke',
-        startDate: new Date('2024-01-01'),
-        endDate: null,
-        basePrice: 12,
-        workingPrice: 0.3,
-        meterId: meter._id,
+  describe('suppliers', () => {
+    async function createSupplier(overrides: Record<string, unknown> = {}) {
+      return Supplier.create({
+        name: 'Stadtwerke',
+        nameKey: 'stadtwerke',
         senders: ['rechnung@stadtwerke.example'],
         subjectHints: ['Abrechnung'],
+        gmailQuery: null,
         userId: ownerId,
         ...overrides,
       });
     }
 
-    it('is derived from the contracts, one entry per provider name', async () => {
-      await createContract();
-      await createContract({ startDate: new Date('2024-06-01'), senders: ['neu@stadtwerke.example'] });
-      await createContract({ providerName: 'Netz AG', senders: ['info@netz.example'] });
+    it('creates a supplier and reuses it for the same normalized name', async () => {
+      const first = mockResponse();
+      await handleSuppliers(params({
+        res: first.res, userId: ownerId, method: 'POST',
+        body: { name: 'Stadtwerke', senders: ['a@stadtwerke.example'] },
+      }));
+      expect(first.res.statusCode).toBe(201);
 
-      const response = mockResponse();
-      await handleProviders(params({ res: response.res, userId: ownerId }));
-
-      const payload = JSON.parse(response.body()) as {
-        count: number;
-        providers: { name: string; senders: string[]; contractCount: number; unit?: string }[];
-      };
-      expect(payload.count).toBe(2);
-      const stadtwerke = payload.providers.find((provider) => provider.name === 'Stadtwerke');
-      expect(stadtwerke?.contractCount).toBe(2);
-      // Settings are read as the union over the provider's contracts.
-      expect(stadtwerke?.senders).toEqual(['neu@stadtwerke.example', 'rechnung@stadtwerke.example']);
-      expect(stadtwerke?.unit).toBe('kWh');
+      const second = mockResponse();
+      await handleSuppliers(params({
+        res: second.res, userId: ownerId, method: 'POST',
+        body: { name: '  stadtwerke  ' },
+      }));
+      expect(second.res.statusCode).toBe(201);
+      expect(await Supplier.countDocuments({ userId: ownerId })).toBe(1);
+      const stored = await Supplier.findOne({ userId: ownerId }).lean();
+      expect(stored?.name).toBe('Stadtwerke');
+      expect(stored?.senders).toEqual(['a@stadtwerke.example']);
     });
 
-    it('has no providers before a contract exists', async () => {
-      const response = mockResponse();
-      await handleProviders(params({ res: response.res, userId: ownerId }));
-
-      expect(JSON.parse(response.body()).count).toBe(0);
-    });
-
-    it('does not leak another user\'s providers', async () => {
-      const foreignMeter = await Meter.create({
-        name: 'Gas', meterNumber: '9-999', type: 'gas', unit: 'm³', userId: otherId,
+    it('lists suppliers with contract and staged counts', async () => {
+      const supplier = await createSupplier();
+      const meter = await Meter.create({
+        name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
       });
       await Contract.create({
-        providerName: 'Fremd AG',
-        startDate: new Date('2024-01-01'),
-        endDate: null,
-        basePrice: 1,
-        workingPrice: 1,
-        meterId: foreignMeter._id,
-        senders: ['x@fremd.example'],
-        userId: otherId,
+        supplierId: supplier._id, providerName: 'Stadtwerke', startDate: new Date('2024-01-01'),
+        basePrice: 12, workingPrice: 0.3, meterId: meter._id, userId: ownerId,
+      });
+      await ProviderDocument.create({
+        userId: ownerId, supplierId: supplier._id, source: 'gmail', fileName: 'doc.csv',
+        mimeType: 'text/csv', sha256: 'doc', status: 'parsed',
+        facts: [{ kind: 'reading', status: 'pending' }, { kind: 'reading', status: 'accepted' }],
+      });
+      await ProviderDocument.create({
+        userId: ownerId, source: 'gmail', fileName: 'unassigned.csv',
+        mimeType: 'text/csv', sha256: 'unassigned', status: 'parsed',
+        facts: [{ kind: 'reading', status: 'conflict' }],
       });
 
       const response = mockResponse();
-      await handleProviders(params({ res: response.res, userId: ownerId }));
-      expect(JSON.parse(response.body()).count).toBe(0);
+      await handleSuppliers(params({ res: response.res, userId: ownerId }));
+      const payload = JSON.parse(response.body()) as {
+        suppliers: { name: string; contractCount: number; stagedCount: number }[];
+        unassigned: { documents: number; staged: number };
+      };
+      expect(payload.suppliers).toHaveLength(1);
+      expect(payload.suppliers[0]).toMatchObject({ name: 'Stadtwerke', contractCount: 1, stagedCount: 1 });
+      expect(payload.unassigned).toEqual({ documents: 1, staged: 1 });
     });
 
-    it('writes mail settings onto every contract of that provider', async () => {
-      const first = await createContract();
-      const second = await createContract({ startDate: new Date('2024-06-01') });
+    it('returns the supplier detail with its contracts', async () => {
+      const supplier = await createSupplier();
+      const meter = await Meter.create({
+        name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
+      });
+      await Contract.create({
+        supplierId: supplier._id, providerName: 'Stadtwerke', startDate: new Date('2024-01-01'),
+        basePrice: 12, workingPrice: 0.3, meterId: meter._id, userId: ownerId,
+      });
 
       const response = mockResponse();
-      await handleProviders(params({
+      await handleSupplierItem(params({
+        res: response.res, userId: ownerId, url: `/api/suppliers/${supplier._id}`,
+      }));
+      const payload = JSON.parse(response.body()) as {
+        supplier: { name: string; contractCount: number };
+        contracts: { providerName: string }[];
+      };
+      expect(payload.supplier).toMatchObject({ name: 'Stadtwerke', contractCount: 1 });
+      expect(payload.contracts).toHaveLength(1);
+    });
+
+    it('writes mail settings on the supplier only', async () => {
+      const supplier = await createSupplier();
+      const response = mockResponse();
+
+      await handleSupplierItem(params({
         res: response.res,
         userId: ownerId,
         method: 'PATCH',
+        url: `/api/suppliers/${supplier._id}`,
         body: {
-          providerName: 'Stadtwerke',
           senders: ['mail@stadtwerke.example'],
           subjectHints: ['Jahresabrechnung'],
           gmailQuery: null,
@@ -1167,45 +1234,71 @@ describe('intake controller', () => {
       }));
 
       expect(response.res.statusCode).toBe(200);
-      const payload = JSON.parse(response.body()) as { contractsUpdated: number; provider: { senders: string[] } };
-      expect(payload.contractsUpdated).toBe(2);
-      expect(payload.provider.senders).toEqual(['mail@stadtwerke.example']);
-
-      const stored = await Contract.find({ providerName: 'Stadtwerke' }).setOptions({ userId: ownerId }).lean();
-      expect(stored).toHaveLength(2);
-      expect(stored.every((contract) => contract.senders[0] === 'mail@stadtwerke.example')).toBe(true);
-      expect([first, second].every((contract) => contract.senders.length === 1)).toBe(true);
+      const stored = await Supplier.findById(supplier._id).lean();
+      expect(stored?.senders).toEqual(['mail@stadtwerke.example']);
+      expect(stored?.subjectHints).toEqual(['Jahresabrechnung']);
     });
 
-    it('validates the settings payload and unknown providers', async () => {
-      await createContract();
+    it('refuses to rename a supplier onto an existing name', async () => {
+      const first = await createSupplier();
+      await createSupplier({ name: 'Netz AG', nameKey: 'netz ag' });
 
-      const missingName = mockResponse();
-      await handleProviders(params({
-        res: missingName.res, userId: ownerId, method: 'PATCH',
-        body: { senders: [], subjectHints: [] },
-      }));
-      expect(missingName.res.statusCode).toBe(400);
-
-      const unknownField = mockResponse();
-      await handleProviders(params({
-        res: unknownField.res, userId: ownerId, method: 'PATCH',
-        body: { providerName: 'Stadtwerke', senders: [], subjectHints: [], userId: otherId },
-      }));
-      expect(unknownField.res.statusCode).toBe(400);
-
-      const unknownProvider = mockResponse();
-      await handleProviders(params({
-        res: unknownProvider.res, userId: ownerId, method: 'PATCH',
-        body: { providerName: 'Niemand', senders: [], subjectHints: [] },
-      }));
-      expect(unknownProvider.res.statusCode).toBe(404);
-    });
-
-    it('rejects unsupported methods', async () => {
       const response = mockResponse();
-      await handleProviders(params({ res: response.res, userId: ownerId, method: 'DELETE' }));
-      expect(response.res.statusCode).toBe(405);
+      await handleSupplierItem(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'PATCH',
+        url: `/api/suppliers/${first._id}`,
+        body: { name: 'Netz AG' },
+      }));
+
+      expect(response.res.statusCode).toBe(409);
+    });
+
+    it('refuses to delete a supplier that still has contracts', async () => {
+      const supplier = await createSupplier();
+      const meter = await Meter.create({
+        name: 'Strom', meterNumber: '1-234-567', type: 'power', unit: 'kWh', userId: ownerId,
+      });
+      await Contract.create({
+        supplierId: supplier._id, providerName: 'Stadtwerke', startDate: new Date('2024-01-01'),
+        basePrice: 12, workingPrice: 0.3, meterId: meter._id, userId: ownerId,
+      });
+
+      const blocked = mockResponse();
+      await handleSupplierItem(params({
+        res: blocked.res, userId: ownerId, method: 'DELETE', url: `/api/suppliers/${supplier._id}`,
+      }));
+      expect(blocked.res.statusCode).toBe(409);
+
+      await Contract.deleteMany({}).setOptions({ userId: ownerId });
+      const deleted = mockResponse();
+      await handleSupplierItem(params({
+        res: deleted.res, userId: ownerId, method: 'DELETE', url: `/api/suppliers/${supplier._id}`,
+      }));
+      expect(deleted.res.statusCode).toBe(200);
+      expect(await Supplier.countDocuments({ userId: ownerId })).toBe(0);
+    });
+
+    it('keeps suppliers private to their owner', async () => {
+      const supplier = await createSupplier();
+
+      const detail = mockResponse();
+      await handleSupplierItem(params({
+        res: detail.res, userId: otherId, url: `/api/suppliers/${supplier._id}`,
+      }));
+      expect(detail.res.statusCode).toBe(404);
+
+      const patch = mockResponse();
+      await handleSupplierItem(params({
+        res: patch.res, userId: otherId, method: 'PATCH',
+        url: `/api/suppliers/${supplier._id}`, body: { name: 'Stolen' },
+      }));
+      expect(patch.res.statusCode).toBe(404);
+
+      const list = mockResponse();
+      await handleSuppliers(params({ res: list.res, userId: otherId }));
+      expect(JSON.parse(list.body()).suppliers).toHaveLength(0);
     });
   });
 
