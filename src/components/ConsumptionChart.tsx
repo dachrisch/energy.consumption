@@ -1,79 +1,64 @@
 import { Component, onMount, onCleanup, createSignal, createMemo } from 'solid-js';
-import { Chart, Title, Tooltip, Legend, Colors, LineController, LineElement, PointElement, LinearScale, TimeScale, TimeSeriesScale } from 'chart.js';
+import { Chart, Title, Tooltip, Legend, Colors, LineController, LineElement, PointElement, LinearScale, TimeScale, TimeSeriesScale, Filler } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { Line } from 'solid-chartjs';
 import { getChartOptions } from '../lib/chartConfig';
+import { buildDailyRateSeries, buildRateProjection, findMeterChangeDates } from '../lib/consumptionChartData';
+import type { ReadingKind } from '../types/models';
 
 interface Reading {
   date: string | Date;
   value: number;
-}
-
-interface ProjectionPoint {
-  date: string | Date;
-  value: number;
-}
-
-interface ChartPoint {
-  x: number;
-  y: number | null;
-}
-
-interface ChartDataset {
-  label: string;
-  data: ChartPoint[];
-  borderColor: string;
-  backgroundColor?: string;
-  tension: number;
-  fill: boolean;
-  borderDash?: number[];
-  pointRadius?: number;
+  kind?: ReadingKind;
 }
 
 interface ConsumptionChartProps {
   readings: Reading[];
-  projection?: ProjectionPoint[];
   unit: string;
+  /** Days to project the current daily rate forward (0 = no projection). */
+  projectionDays?: number;
 }
 
-const transformData = (props: ConsumptionChartProps, isMobile: boolean): { datasets: ChartDataset[] } => {
-  const sorted = [...props.readings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  const actualPoints: ChartPoint[] = sorted.map(r => {
-    const time = new Date(r.date).getTime();
-    const value = r.value;
-    return isMobile ? { x: value, y: time } : { x: time, y: value };
-  });
+const LINE_COLOR = '#9311fb';
+const CHANGE_COLOR = '#f59e0b';
 
-  const datasets: ChartDataset[] = [
-    {
-      label: `Consumption (${props.unit})`,
-      data: actualPoints,
-      borderColor: '#9311fb',
-      backgroundColor: 'rgba(147, 17, 251, 0.1)',
-      tension: 0.4,
-      fill: true
-    }
-  ];
+export const buildConsumptionChartData = (props: ConsumptionChartProps) => {
+  const readings = props.readings.map(r => ({ value: r.value, date: new Date(r.date), kind: r.kind }));
+  const rates = buildDailyRateSeries(readings);
+  const projection = buildRateProjection(readings, props.projectionDays ?? 0);
+  const changes = findMeterChangeDates(readings).map(date => ({ x: date.getTime(), y: 0 }));
+  const unitPerDay = `${props.unit}/day`;
 
-  if (props.projection && props.projection.length > 0) {
-    const projectionPoints: ChartPoint[] = props.projection.map(p => {
-      const time = new Date(p.date).getTime();
-      const value = p.value;
-      return isMobile ? { x: value, y: time } : { x: time, y: value };
-    });
-
+  const datasets: Array<Record<string, unknown>> = [{
+    label: `Consumption (${unitPerDay})`,
+    data: rates,
+    borderColor: LINE_COLOR,
+    backgroundColor: 'rgba(147, 17, 251, 0.1)',
+    fill: true,
+    spanGaps: false,
+    pointRadius: 0,
+  }];
+  if (projection.length > 0) {
     datasets.push({
-      label: `Projection (365 days)`,
-      data: projectionPoints,
-      borderColor: '#9311fb',
+      label: `Projection (current rate, ${unitPerDay})`,
+      data: projection,
+      borderColor: LINE_COLOR,
       borderDash: [5, 5],
-      tension: 0.4,
       fill: false,
-      pointRadius: 0
+      pointRadius: 0,
     });
   }
-  
+  if (changes.length > 0) {
+    datasets.push({
+      label: 'Meter change',
+      data: changes,
+      borderColor: CHANGE_COLOR,
+      backgroundColor: CHANGE_COLOR,
+      showLine: false,
+      pointStyle: 'triangle',
+      pointRadius: 7,
+    });
+  }
   return { datasets };
 };
 
@@ -81,22 +66,21 @@ const ConsumptionChart: Component<ConsumptionChartProps> = (props) => {
   const [isMobile, setIsMobile] = createSignal(window.innerWidth < 768);
 
   onMount(() => {
-    Chart.register(Title, Tooltip, Legend, Colors, LineController, LineElement, PointElement, LinearScale, TimeScale, TimeSeriesScale);
+    Chart.register(Title, Tooltip, Legend, Colors, LineController, LineElement, PointElement, LinearScale, TimeScale, TimeSeriesScale, Filler);
 
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     onCleanup(() => window.removeEventListener('resize', handleResize));
   });
 
-  const chartData = createMemo(() => transformData(props, isMobile()));
-  const chartOptions = createMemo(() => getChartOptions(isMobile()));
+  const chartData = createMemo(() => buildConsumptionChartData(props));
+  const chartOptions = createMemo(() => getChartOptions(isMobile(), [{ id: 'y', title: `${props.unit}/day` }]));
 
   return (
-    <div class={`w-full min-w-0 max-w-full overflow-hidden transition-all duration-300 relative ${isMobile() ? 'h-[500px]' : 'h-64'}`}>
-       {/* Re-render chart when mode changes to ensure full option re-application */}
-       <div class="absolute inset-0">
-         <Line data={chartData()} options={chartOptions()} />
-       </div>
+    <div class={`w-full min-w-0 max-w-full overflow-hidden relative ${isMobile() ? 'h-72' : 'h-64'}`}>
+      <div class="absolute inset-0">
+        <Line data={chartData()} options={chartOptions()} />
+      </div>
     </div>
   );
 };

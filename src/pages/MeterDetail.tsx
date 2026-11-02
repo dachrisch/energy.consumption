@@ -4,7 +4,6 @@ import { IMeter as Meter, IReading as Reading, IContract as Contract } from '../
 import ConsumptionChart from '../components/ConsumptionChart';
 import MeterTabs from '../components/MeterTabs';
 import { findContractGaps, Gap } from '../lib/gapDetection';
-import { calculateProjection } from '../lib/projectionUtils';
 import Icon from '../components/Icon';
 
 const fetchMeterData = async (id: string) => {
@@ -163,26 +162,19 @@ const MeterStatsGrid: Component<{ meter: Meter, stats: {
   </div>
 );
 
-const calculateMeterProjection = (d: { readings: Reading[] } | undefined) => {
-  const readings = d?.readings;
-  if (!readings) {return [];}
-  return calculateProjection(readings, 365);
-};
-
 const ConsumptionChartCard: Component<{ 
   meter: Meter, 
   readings: Reading[], 
-  projection: Array<{ date: string | Date, value: number }>,
   hasContracts: boolean 
 }> = (props) => (
   <div class="card bg-base-100 shadow-sm border border-base-content/5 overflow-hidden">
     <div class="card-body p-8 md:p-12">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <h2 class="text-sm font-bold uppercase tracking-[0.18em] opacity-40">Consumption trend & projection</h2>
+        <h2 class="text-sm font-bold uppercase tracking-[0.18em] opacity-40">Daily consumption & projection</h2>
       </div>
       <ConsumptionChart 
         readings={props.readings} 
-        projection={props.projection}
+        projectionDays={365}
         unit={props.meter.unit} 
       />
     </div>
@@ -205,7 +197,6 @@ const MeterDetail: Component = () => {
         gaps: findContractGaps(data()?.readings || [], data()?.contracts || [])
     };
   };
-  const projection = () => calculateMeterProjection(data());
 
   return (
     <div class="p-4 md:p-10 lg:p-12 max-w-6xl mx-auto space-y-6 md:space-y-10 flex-1 min-w-0">
@@ -219,7 +210,6 @@ const MeterDetail: Component = () => {
               <ConsumptionChartCard
                 meter={data()!.meter}
                 readings={data()?.readings || []}
-                projection={projection()}
                 hasContracts={(data()?.contracts?.length || 0) > 0}
               />
             </>

@@ -1,101 +1,61 @@
 import { ChartOptions } from 'chart.js';
 
-export const getChartOptions = (isMobile: boolean): ChartOptions => {
-  if (isMobile) {
-    return {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleFont: { weight: 'bold' },
-          padding: 12,
-          cornerRadius: 12
-        }
-      },
-      scales: {
-        x: {
-          type: 'linear',
-          position: 'bottom',
-          grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
-          },
-          ticks: {
-            color: 'rgba(255, 255, 255, 0.4)',
-            font: { size: 10, weight: 'bold' }
-          }
-        },
-        y: {
-          type: 'time',
-          time: {
-            unit: 'month',
-            displayFormats: {
-              month: 'MMM yy',
-              day: 'dd MMM'
-            }
-          },
-          reverse: false, // Newer dates at the top (timestamp increases upwards)
-          grid: {
-            color: 'rgba(255, 255, 255, 0.05)',
-          },
-          ticks: {
-            color: 'rgba(255, 255, 255, 0.6)',
-            font: { size: 10, weight: 'bold' },
-            autoSkip: true,
-            maxTicksLimit: 10
-          }
-        }
-      }
-    };
+/** A y axis with its unit label, e.g. { id: 'y', title: 'kWh/day' }. */
+export interface ValueAxis {
+  id: string;
+  title: string;
+  position?: 'left' | 'right';
+}
+
+const GRID_COLOR = 'rgba(255, 255, 255, 0.05)';
+const TICK_COLOR = 'rgba(255, 255, 255, 0.5)';
+const TITLE_COLOR = 'rgba(255, 255, 255, 0.6)';
+
+const valueScale = (axis: ValueAxis, isMobile: boolean) => ({
+  type: 'linear' as const,
+  position: axis.position ?? 'left',
+  beginAtZero: true,
+  title: { display: true, text: axis.title, color: TITLE_COLOR, font: { size: 11, weight: 'bold' as const } },
+  grid: { color: GRID_COLOR, drawOnChartArea: (axis.position ?? 'left') === 'left' },
+  ticks: { color: TICK_COLOR, font: { size: 10, weight: 'bold' as const }, maxTicksLimit: isMobile ? 5 : 8 },
+});
+
+/**
+ * Shared line chart options. Lines never overshoot (monotone interpolation),
+ * the legend is shown, and every value axis carries its unit. The same
+ * orientation is used on mobile, with fewer ticks.
+ */
+export const getChartOptions = (isMobile: boolean, axes: ValueAxis[] = [{ id: 'y', title: '' }]): ChartOptions => {
+  const scales: Record<string, unknown> = {
+    x: {
+      type: 'time',
+      time: { unit: 'month', displayFormats: { month: isMobile ? 'MMM yy' : 'MMM yyyy' } },
+      grid: { color: GRID_COLOR },
+      ticks: { color: TICK_COLOR, font: { size: 10, weight: 'bold' }, autoSkip: true, maxRotation: 0, maxTicksLimit: isMobile ? 4 : 10 },
+    },
+  };
+  for (const axis of axes) {
+    scales[axis.id] = valueScale(axis, isMobile);
   }
 
   return {
     responsive: true,
     maintainAspectRatio: false,
+    elements: { line: { tension: 0, cubicInterpolationMode: 'monotone' } },
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: { color: TITLE_COLOR, boxWidth: 12, font: { size: 11, weight: 'bold' } },
+      },
       tooltip: {
-        mode: 'index',
+        mode: 'nearest',
         intersect: false,
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         padding: 12,
-        cornerRadius: 12
-      }
-    },
-    scales: {
-      x: {
-        type: 'time',
-        time: {
-          unit: 'month',
-          displayFormats: {
-            month: 'MMM yyyy'
-          }
-        },
-        grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
-        },
-        ticks: {
-          color: 'rgba(255, 255, 255, 0.4)',
-          font: { size: 10, weight: 'bold' },
-          autoSkip: true,
-          maxRotation: 0
-        }
+        cornerRadius: 12,
       },
-      y: {
-        type: 'linear',
-        beginAtZero: false,
-        grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
-        },
-        ticks: {
-          color: 'rgba(255, 255, 255, 0.4)',
-          font: { size: 10, weight: 'bold' }
-        }
-      }
-    }
+    },
+    scales: scales as ChartOptions['scales'],
   };
 };

@@ -55,7 +55,7 @@ const TrendValue: Component<{ current: number, previous: number }> = (p) => {
   const isUp = () => diff() > 0;
   return (<Show when={p.previous > 0}><div class={`text-[11px] font-bold flex items-center gap-1 mt-1 ${isUp() ? 'text-rose-300' : 'text-emerald-300'} overflow-hidden whitespace-nowrap`}>
     <Icon name={isUp() ? 'arrow-up' : 'arrow-down'} class="h-3 w-3 flex-shrink-0" />
-    <span class="truncate">{isUp() ? '+' : '−'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(pct()).toFixed(1)}%)</span>
+    <span class="truncate">{isUp() ? '+' : '−'}€{Math.abs(diff()).toFixed(2)} ({Math.abs(pct()).toFixed(1)}%) <span class="opacity-70 font-medium">YTD vs. last year</span></span>
   </div></Show>);
 };
 
@@ -72,7 +72,7 @@ const getChartData = (agg: Aggregates) => {
     labels: agg.yearlyHistory.map(h => h.year.toString()),
     datasets: [
       { 
-        label: 'Power (€)', 
+        label: 'Power', 
         data: agg.yearlyHistory.map(h => h.powerCostActual), 
         backgroundColor: pc, 
         hoverBackgroundColor: getThemeColor('--color-meter-power'), 
@@ -82,7 +82,7 @@ const getChartData = (agg: Aggregates) => {
         stack: 'power'
       },
       { 
-        label: 'Power (Prognosis) (€)', 
+        label: 'Power (projected)', 
         data: agg.yearlyHistory.map(h => h.powerCostPrognosis), 
         backgroundColor: pc + '40', // 25% opacity
         borderColor: pc,
@@ -95,7 +95,7 @@ const getChartData = (agg: Aggregates) => {
         stack: 'power'
       },
       { 
-        label: 'Gas (€)', 
+        label: 'Gas', 
         data: agg.yearlyHistory.map(h => h.gasCostActual), 
         backgroundColor: gc, 
         hoverBackgroundColor: getThemeColor('--color-meter-gas'), 
@@ -105,7 +105,7 @@ const getChartData = (agg: Aggregates) => {
         stack: 'gas'
       },
       { 
-        label: 'Gas (Prognosis) (€)', 
+        label: 'Gas (projected)', 
         data: agg.yearlyHistory.map(h => h.gasCostPrognosis), 
         backgroundColor: gc + '40', // 25% opacity
         borderColor: gc,
@@ -131,7 +131,11 @@ const getChartOpts = (isMob: boolean) => ({
     intersect: false,
   },
   plugins: { 
-    legend: { display: false }, 
+    legend: {
+      display: true,
+      position: 'bottom' as const,
+      labels: { color: 'rgba(255,255,255,0.8)', boxWidth: 10, font: { size: 10, weight: 'bold' as const } }
+    }, 
     tooltip: { 
       backgroundColor: '#2b2d42', 
       padding: 12, 
