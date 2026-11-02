@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@solidjs/testing-library';
 import { Router, Route } from '@solidjs/router';
-import Intake from '../Intake';
+import SupplierDetail from '../SupplierDetail';
 import { AuthProvider } from '../../context/AuthContext';
 import { ToastProvider } from '../../context/ToastContext';
 
@@ -9,17 +9,16 @@ global.fetch = vi.fn();
 
 const session = { _id: 'u1', name: 'Chris', email: 'chris@example.com' };
 
-const providers = [
-  {
-    name: 'Stadtwerke',
-    senders: ['rechnung@stadtwerke.example'],
-    subjectHints: ['Abrechnung'],
-    gmailQuery: null,
-    unit: 'kWh',
-    contractCount: 1,
-    meterIds: ['m1'],
-  },
-];
+const supplier = {
+  _id: 's1',
+  name: 'Stadtwerke',
+  senders: ['rechnung@stadtwerke.example'],
+  subjectHints: ['Abrechnung'],
+  gmailQuery: null,
+  contractCount: 1,
+  stagedCount: 0,
+  meterIds: ['m1'],
+};
 
 const items = [
   {
@@ -70,7 +69,7 @@ function mockApi(
       : {
           '/api/session': sessionUser,
           '/api/meters': meters,
-          '/api/providers': { providers },
+          '/api/suppliers/s1': { supplier, contracts: [] },
           '/api/intake/items': { items },
           '/api/intake/documents': { documents },
           '/api/intake/bills': { bills },
@@ -80,39 +79,43 @@ function mockApi(
   return calls;
 }
 
-const renderIntake = () =>
+const renderSupplier = () =>
   render(() => (
     <Router>
-      <Route path="/" component={() => (
+      <Route path="/contracts/:id" component={() => (
         <AuthProvider>
           <ToastProvider>
-            <Intake />
+            <SupplierDetail />
           </ToastProvider>
         </AuthProvider>
       )} />
     </Router>
   ));
 
-describe('Intake page', () => {
+describe('Supplier detail page', () => {
+  beforeEach(() => {
+    window.history.pushState({}, '', '/contracts/s1');
+  });
+
   afterEach(() => {
     cleanup();
     (fetch as unknown as { mockReset: () => void }).mockReset();
   });
 
-  it('lists providers, staged items and ingested documents', async () => {
+  it('lists the supplier, staged items and ingested documents', async () => {
     mockApi();
-    renderIntake();
+    renderSupplier();
 
     expect(await screen.findByText('Stadtwerke')).toBeTruthy();
-    expect(screen.getByText('500 kWh')).toBeTruthy();
-    expect(screen.getByText('620 kWh')).toBeTruthy();
-    expect(screen.getByText('lastgang.csv')).toBeTruthy();
-    expect(screen.getByText('PDF extraction needs a Gemini API key')).toBeTruthy();
+    expect(await screen.findByText('500 kWh')).toBeTruthy();
+    expect(await screen.findByText('620 kWh')).toBeTruthy();
+    expect(await screen.findByText('lastgang.csv')).toBeTruthy();
+    expect(await screen.findByText('PDF extraction needs a Gemini API key')).toBeTruthy();
   });
 
   it('shows the metered variance next to the billed amount', async () => {
     mockApi();
-    renderIntake();
+    renderSupplier();
 
     // The stacked mobile list and the desktop table both render the values.
     expect((await screen.findAllByText('50.00 EUR')).length).toBeGreaterThan(0);
@@ -122,7 +125,7 @@ describe('Intake page', () => {
 
   it('stacks the billed period so the values stay readable on phones', async () => {
     mockApi();
-    renderIntake();
+    renderSupplier();
 
     const stacked = await screen.findByTestId('bills-stacked');
     expect(stacked.textContent).toContain('50.00 EUR');
@@ -130,46 +133,40 @@ describe('Intake page', () => {
     expect(stacked.textContent).toContain('100 kWh');
   });
 
-  it('asks for the staged items only, unless decided items are requested', async () => {
+  it('asks for the staged items of this supplier only, unless decided items are requested', async () => {
     const calls = mockApi();
-    renderIntake();
+    renderSupplier();
     await screen.findByText('Stadtwerke');
 
-    expect(calls.some((call) => call.url === '/api/intake/items?status=pending,conflict')).toBe(true);
+    expect(calls.some((call) => call.url === '/api/intake/items?supplierId=s1&status=pending,conflict')).toBe(true);
 
-    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(await screen.findByRole('checkbox'));
     await waitFor(() => {
-      expect(calls.some((call) => call.url === '/api/intake/items')).toBe(true);
+      expect(calls.some((call) => call.url === '/api/intake/items?supplierId=s1')).toBe(true);
     });
   });
 
-  it('saves mail settings for a provider through the PATCH endpoint', async () => {
+  it('saves mail settings on the supplier through the PATCH endpoint', async () => {
     const calls = mockApi({
-      'PATCH /api/providers': () => ({
-        provider: {
-          name: 'Stadtwerke',
+      'PATCH /api/suppliers/s1': () => ({
+        supplier: {
+          ...supplier,
           senders: ['a@b.example', 'c@d.example'],
           subjectHints: [],
           gmailQuery: null,
-          contractCount: 1,
-          meterIds: ['m1'],
         },
-        contractsUpdated: 1,
       }),
     });
-    renderIntake();
+    renderSupplier();
     await screen.findByText('Stadtwerke');
-    expect(screen.getByText(/1 contract/)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /mail settings/i }));
-    fireEvent.input(screen.getByPlaceholderText(/sender addresses/i), { target: { value: 'a@b.example, c@d.example' } });
+    fireEvent.input(await screen.findByPlaceholderText(/sender addresses/i), { target: { value: 'a@b.example, c@d.example' } });
     fireEvent.input(screen.getByPlaceholderText(/subject hints/i), { target: { value: '' } });
-    fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save mail settings/i }));
 
-    await waitFor(() => expect(calls.some((call) => call.method === 'PATCH' && call.url === '/api/providers')).toBe(true));
-    const patch = calls.find((call) => call.method === 'PATCH' && call.url === '/api/providers');
+    await waitFor(() => expect(calls.some((call) => call.method === 'PATCH' && call.url === '/api/suppliers/s1')).toBe(true));
+    const patch = calls.find((call) => call.method === 'PATCH' && call.url === '/api/suppliers/s1');
     expect(JSON.parse(patch?.body ?? '{}')).toEqual({
-      providerName: 'Stadtwerke',
       senders: ['a@b.example', 'c@d.example'],
       subjectHints: [],
       gmailQuery: null,
@@ -182,7 +179,7 @@ describe('Intake page', () => {
         item: { ...items[1], meterId: 'm1', status: 'pending' },
       }),
     });
-    renderIntake();
+    renderSupplier();
     await screen.findByText('620 kWh');
 
     // One button opens the picker; the meter is chosen there, not inline.
@@ -197,18 +194,9 @@ describe('Intake page', () => {
     expect(await screen.findByText(/meter linked/i)).toBeTruthy();
   });
 
-  it('points at contracts when no provider exists yet', async () => {
-    mockApi({ 'GET /api/providers': () => ({ providers: [], count: 0 }) });
-    renderIntake();
-
-    expect(await screen.findByText(/providers come from your contracts/i)).toBeTruthy();
-    const link = screen.getByRole('link', { name: /add a contract/i });
-    expect(link.getAttribute('href')).toBe('/contracts/add');
-  });
-
   it('accepts a staged item through the accept endpoint', async () => {
     const calls = mockApi({ 'POST /api/intake/items/i1/accept': () => ({ item: { id: 'i1', status: 'accepted' } }) });
-    renderIntake();
+    renderSupplier();
     await screen.findByText('500 kWh');
 
     const acceptButtons = screen.getAllByRole('button', { name: /^accept$/i });
@@ -219,30 +207,28 @@ describe('Intake page', () => {
     });
   });
 
-  it('runs a sync for a provider and reports the result', async () => {
+  it('runs a sync for the supplier and reports the result', async () => {
     const calls = mockApi({
-      'POST /api/intake/sync': () => ({
+      'POST /api/suppliers/s1/sync': () => ({
         provider: 'Stadtwerke',
         count: 1,
         processed: [{ messageId: 'm1', attachment: 'lastgang.csv', status: 'parsed' }],
       }),
     });
-    renderIntake();
+    renderSupplier();
     await screen.findByText('Stadtwerke');
 
-    fireEvent.click(screen.getByRole('button', { name: /sync now/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /sync now/i }));
 
     await waitFor(() => {
-      expect(calls.some((call) => call.method === 'POST' && call.url === '/api/intake/sync')).toBe(true);
+      expect(calls.some((call) => call.method === 'POST' && call.url === '/api/suppliers/s1/sync')).toBe(true);
     });
-    const sync = calls.find((call) => call.url === '/api/intake/sync');
-    expect(JSON.parse(sync?.body ?? '{}')).toEqual({ providerName: 'Stadtwerke' });
     expect(await screen.findByText(/last sync/i)).toBeTruthy();
   });
 
   it('links a staged reading to the datapoint on the meter readings page', async () => {
     mockApi();
-    renderIntake();
+    renderSupplier();
 
     const link = await screen.findByRole('link', { name: /view reading/i });
 
@@ -259,7 +245,7 @@ describe('Intake page', () => {
         ],
       }),
     });
-    renderIntake();
+    renderSupplier();
 
     const links = await screen.findAllByRole('link', { name: /^drive$/i });
 
@@ -274,7 +260,7 @@ describe('Intake page', () => {
     const calls = mockApi({
       'POST /api/intake/documents/archive': () => ({ archived: 1, failed: 0, documents: [] }),
     });
-    renderIntake();
+    renderSupplier();
     await screen.findByText('lastgang.csv');
 
     const saveButtons = screen.getAllByRole('button', { name: /save to drive/i });
@@ -288,7 +274,7 @@ describe('Intake page', () => {
       expect(calls.some((call) => call.method === 'POST' && call.url === '/api/intake/documents/archive')).toBe(true);
     });
     const archive = calls.find((call) => call.url === '/api/intake/documents/archive');
-    expect(JSON.parse(archive?.body ?? '{}')).toEqual({ documentId: 'd1' });
+    expect(JSON.parse(archive?.body ?? '{}')).toEqual({ documentId: 'd1', supplierId: 's1' });
   });
 
   it('explains why a parsed document could not be archived', async () => {
@@ -299,7 +285,7 @@ describe('Intake page', () => {
         documents: [{ documentId: 'd1', status: 'failed', error: 'Original is no longer available in Gmail' }],
       }),
     });
-    renderIntake();
+    renderSupplier();
     await screen.findByText('lastgang.csv');
 
     fireEvent.click(screen.getByRole('button', { name: /save to drive/i }));
@@ -314,7 +300,7 @@ describe('Intake page', () => {
         result: { status: 'parsed' },
       }),
     });
-    renderIntake();
+    renderSupplier();
     await screen.findByText('bill.pdf');
 
     const row = screen.getByText('bill.pdf').closest('li');
@@ -332,7 +318,11 @@ describe('Intake page', () => {
  * point at an API redirect, so they must opt out with rel="external" — without
  * it the URL changes but no request is made and the page goes blank.
  */
-describe('Intake — Google connection', () => {
+describe('Supplier detail — Google connection', () => {
+  beforeEach(() => {
+    window.history.pushState({}, '', '/contracts/s1');
+  });
+
   afterEach(() => {
     cleanup();
     (fetch as unknown as { mockReset: () => void }).mockReset();
@@ -340,7 +330,7 @@ describe('Intake — Google connection', () => {
 
   it('offers the connect link and opts it out of client-side routing', async () => {
     mockApi();
-    renderIntake();
+    renderSupplier();
 
     const link = await screen.findByRole('link', { name: /connect google/i });
 
@@ -350,7 +340,7 @@ describe('Intake — Google connection', () => {
 
   it('asks for a reconnect when the authorization expired', async () => {
     mockApi({}, { ...session, google: { status: 'reconnect_required' } });
-    renderIntake();
+    renderSupplier();
 
     const expired = await screen.findByRole('link', { name: /reconnect google/i });
     expect(expired.getAttribute('rel')).toBe('external');
@@ -359,7 +349,7 @@ describe('Intake — Google connection', () => {
 
   it('shows the connected state and lets the account reconnect', async () => {
     mockApi({}, { ...session, google: { status: 'ok', email: 'chris@example.com' } });
-    renderIntake();
+    renderSupplier();
 
     expect(await screen.findByText(/google connected/i)).toBeTruthy();
     expect(screen.getByText('chris@example.com')).toBeTruthy();

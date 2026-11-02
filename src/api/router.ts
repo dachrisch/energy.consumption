@@ -8,8 +8,9 @@ import { handleAggregatedRoutes } from './controllers/dashboard.controller';
 import {
   handleIntakeSync, handleIntakeVerify, handleConnect, handleCallback, handleIntakeItems,
   handleIntakeItemAction, handleIntakeBills, handleIntakeDocuments, handleIntakeArchive,
-  handleIntakeDocumentAction, handleProviders,
+  handleIntakeDocumentAction,
 } from './controllers/intake.controller';
+import { handleSuppliers, handleSupplierItem, handleProvidersAlias } from './controllers/supplier.controller';
 
 export async function router(params: RouteParams) {
   const { req, res, userId, path } = params;
@@ -99,7 +100,8 @@ export async function router(params: RouteParams) {
     '/api/intake/documents/archive': async () => {
       if (req.method === 'POST') { await handleIntakeArchive(params); } else { res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); }
     },
-    '/api/providers': async () => handleProviders(params),
+    '/api/suppliers': async () => handleSuppliers(params),
+    '/api/providers': async () => handleProvidersAlias(params),
   };
 
   if (routes[path]) {
@@ -112,6 +114,7 @@ export async function router(params: RouteParams) {
   if (path.startsWith('/api/meters/')) { return handleMeterItem(params); }
   if (path.startsWith('/api/readings/')) { return handleReadingItem(params); }
   if (path.startsWith('/api/contracts/')) { return handleContractItem(params); }
+  if (path.startsWith('/api/suppliers/')) { return handleSupplierItem(params); }
   if (path.startsWith('/api/intake/items/')) { return handleIntakeItemAction(params); }
   if (path.startsWith('/api/intake/documents/')) { return handleIntakeDocumentAction(params); }
 

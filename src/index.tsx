@@ -1,7 +1,7 @@
 /* @refresh reload */
 import { render } from 'solid-js/web';
-import { Router, Route, A } from "@solidjs/router";
-import { lazy } from 'solid-js';
+import { Router, Route, A, Navigate } from "@solidjs/router";
+import { lazy, Show } from 'solid-js';
 import 'solid-devtools';
 
 import './index.css';
@@ -56,8 +56,8 @@ const MeterDetail = lazy(() => import("./pages/MeterDetail"));
 const MeterReadings = lazy(() => import("./pages/MeterReadings"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const AddContract = lazy(() => import("./pages/AddContract"));
+const SupplierDetail = lazy(() => import("./pages/SupplierDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
-const Intake = lazy(() => import("./pages/Intake"));
 const ImportExport = lazy(() => import("./pages/ImportExport"));
 
 const root = document.getElementById('root');
@@ -91,8 +91,9 @@ render(() => (
     <Route path="/contracts" component={() => <ProtectedRoute><Contracts /></ProtectedRoute>} />
     <Route path="/contracts/add" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
      <Route path="/contracts/:id/edit" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
+     <Route path="/contracts/:id" component={() => <ProtectedRoute><SupplierDetail /></ProtectedRoute>} />
      <Route path="/profile" component={() => <ProtectedRoute><Profile /></ProtectedRoute>} />
-     <Route path="/intake" component={() => <ProtectedRoute><Intake /></ProtectedRoute>} />
+     <Route path="/intake" component={() => <Navigate href="/contracts" />} />
      <Route path="/import-export" component={() => <ProtectedRoute><ImportExport /></ProtectedRoute>} />
    </Router>
 ), root!);

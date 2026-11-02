@@ -44,38 +44,48 @@ export const bulkReadingSchema = z.array(z.object({
 }));
 
 // Contract Schemas
-export const contractSchema = z.object({
+const contractFields = {
   meterId: objectIdSchema,
-  providerName: z.string().min(1, 'Provider name is required'),
+  /** Existing supplier, or a name that is upserted on save. */
+  supplierId: objectIdSchema.optional(),
+  supplierName: z.string().trim().min(1).max(120).optional(),
+  /** Legacy alias accepted from imports and older clients. */
+  providerName: z.string().trim().min(1).max(120).optional(),
   basePrice: z.number().nonnegative(),
   workingPrice: z.number().nonnegative(),
   startDate: z.string().pipe(z.coerce.date()),
   endDate: z.string().pipe(z.coerce.date()).nullable().optional(),
-  // Provider mail settings for the Google intake (see models/Contract.ts).
+};
+
+export const contractSchema = z.object(contractFields).strict().refine(
+  (data) => Boolean(data.supplierId || data.supplierName || data.providerName),
+  { message: 'supplierId or supplierName is required', path: ['supplierId'] },
+);
+
+export const contractUpdateSchema = z.object(contractFields).partial().strict();
+
+/** Supplier master data plus the mail settings the intake uses. */
+export const supplierSchema = z.object({
+  name: z.string().trim().min(1, 'Supplier name is required').max(120),
   senders: z.array(z.string().trim().min(3)).max(20).optional(),
   subjectHints: z.array(z.string().trim().min(1)).max(20).optional(),
   gmailQuery: z.string().trim().max(300).nullable().optional(),
 }).strict();
 
-export const contractUpdateSchema = contractSchema.partial().strict();
-
-/**
- * Provider mail settings. Providers are not a collection of their own — they are
- * the `providerName` of the user's contracts — so this is a write to every
- * contract of that provider.
- */
-export const providerSettingsSchema = z.object({
-  providerName: z.string().min(1, 'Provider name is required').max(120),
-  senders: z.array(z.string().trim().min(3)).max(20),
-  subjectHints: z.array(z.string().trim().min(1)).max(20),
-  gmailQuery: z.string().trim().max(300).nullable().optional(),
-}).strict();
+export const supplierUpdateSchema = supplierSchema.partial().strict();
 
 // Unified Export Schema
 export const unifiedExportSchema = z.object({
   exportDate: z.string().datetime(),
   version: z.literal('1.0'),
   data: z.object({
+    suppliers: z.array(z.object({
+      id: z.string().optional(),
+      name: z.string(),
+      senders: z.array(z.string()).optional(),
+      subjectHints: z.array(z.string()).optional(),
+      gmailQuery: z.string().nullable().optional(),
+    })).optional(),
     meters: z.array(z.object({
       id: z.string(),
       name: z.string(),
@@ -91,7 +101,9 @@ export const unifiedExportSchema = z.object({
     })),
     contracts: z.array(z.object({
       id: z.string(),
-      providerName: z.string(),
+      providerName: z.string().optional(),
+      supplierId: z.string().optional(),
+      supplierName: z.string().optional(),
       startDate: z.string(),
       endDate: z.string().nullable().optional(),
       basePrice: z.number(),

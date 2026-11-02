@@ -7,7 +7,7 @@ import { classifyReading, findMeterByNumber } from './reconcile';
 import type { ClassifiedReading, ItemStatus } from './reconcile';
 import ProviderDocument from '../../models/ProviderDocument';
 import Bill from '../../models/Bill';
-import IntakeItem from '../../models/IntakeItem';
+import mongoose from 'mongoose';
 
 export interface ProcessableDocument {
   _id: string;
@@ -21,8 +21,9 @@ export interface ProcessableDocument {
   status?: string;
 }
 
-/** Providers are the contracts' provider names; only the name and unit matter here. */
-export interface ProviderRef {
+/** Suppliers are the contracts' owning companies; only the name and unit matter here. */
+export interface SupplierRef {
+  id?: string;
   name: string;
   defaultUnit?: string;
 }
@@ -71,7 +72,7 @@ export interface PlannedIntake {
 
 export interface ProcessDocumentArgs {
   document: ProcessableDocument;
-  provider: ProviderRef;
+  supplier: SupplierRef;
   userId: string;
   meters?: MeterRef[];
   readings?: ReadingRef[];
@@ -166,7 +167,7 @@ function toDate(value: string | undefined): Date | undefined {
  */
 export async function processDocument(args: ProcessDocumentArgs): Promise<ProcessResult> {
   const {
-    document, provider, userId, meters = [], readings = [], apiKey, drive, rootFolderId,
+    document, supplier, userId, meters = [], readings = [], apiKey, drive, rootFolderId,
   } = args;
 
   if (document.status && ALREADY_PROCESSED.has(document.status)) {
@@ -191,7 +192,7 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
         mimeType: document.mimeType,
         buffer: document.buffer,
         textBody: document.textBody,
-        unitHint: provider.defaultUnit,
+        unitHint: supplier.defaultUnit,
         apiKey,
       });
     } catch (error) {
@@ -211,7 +212,7 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
     try {
       const archived = await archiveDocument(drive, {
         rootFolderId,
-        providerName: provider.name,
+        providerName: supplier.name,
         year: folderYear(extracted.bill?.periodEnd, document.receivedAt),
         fileName: document.fileName,
         mimeType: document.mimeType,
@@ -227,16 +228,11 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
     }
   }
 
-  const intakeItemIds: string[] = [];
-  for (const item of plan.items) {
-    const created = await IntakeItem.create({
-      documentId: document._id,
-      providerName: provider.name,
-      ...item,
-      userId,
-    });
-    intakeItemIds.push(created._id.toString());
-  }
+  // Facts live on the document; accepting one is what promotes it.
+  const facts = plan.items.map((item) => ({
+    _id: new mongoose.Types.ObjectId(),
+    ...item,
+  }));
 
   let billId: string | undefined;
   if (plan.bill) {
@@ -244,7 +240,8 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
       ...plan.bill,
       periodStart: toDate(plan.bill.periodStart),
       periodEnd: toDate(plan.bill.periodEnd),
-      providerName: provider.name,
+      supplierId: supplier.id,
+      providerName: supplier.name,
       documentId: document._id,
       userId,
     });
@@ -254,6 +251,7 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
   await ProviderDocument.findByIdAndUpdate(document._id, {
     $set: {
       extracted,
+      facts,
       status: 'parsed',
       processedAt: new Date(),
       ...(driveFileId ? { driveFileId, driveWebLink, sidecarDriveId } : {}),
@@ -261,5 +259,12 @@ export async function processDocument(args: ProcessDocumentArgs): Promise<Proces
     $unset: { error: '' },
   }).setOptions({ userId });
 
-  return { status: 'parsed', intakeItemIds, billId, driveFileId, driveWebLink, sidecarDriveId };
+  return {
+    status: 'parsed',
+    intakeItemIds: facts.map((fact) => fact._id.toString()),
+    billId,
+    driveFileId,
+    driveWebLink,
+    sidecarDriveId,
+  };
 }

@@ -27,19 +27,32 @@ export interface IReading {
 
 export interface IContract {
   _id: string;
+  supplierId?: string | ISupplier;
   providerName: string;
   startDate: string | Date;
   endDate?: string | Date;
   basePrice: number;
   workingPrice: number;
   meterId: string;
-  /** Provider mail settings, shared by every contract of the same provider. */
-  senders?: string[];
-  subjectHints?: string[];
-  gmailQuery?: string | null;
   userId: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** A utility supplier; owns the mail settings the intake uses. */
+export interface ISupplier {
+  _id: string;
+  name: string;
+  nameKey?: string;
+  senders: string[];
+  subjectHints: string[];
+  gmailQuery: string | null;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  contractCount?: number;
+  stagedCount?: number;
+  meterIds?: string[];
 }
 
 export interface IUser {
@@ -52,26 +65,13 @@ export interface IUser {
   stats?: Record<string, unknown>;
 }
 
-/**
- * A provider is the `providerName` of a contract, not a collection of its own.
- * The API derives this view from the user's contracts.
- */
-export interface IProvider {
-  name: string;
-  senders: string[];
-  subjectHints: string[];
-  gmailQuery: string | null;
-  unit?: string;
-  contractCount: number;
-  meterIds: string[];
-}
-
 export type IntakeStatus = 'pending' | 'agrees' | 'conflict' | 'accepted' | 'rejected';
 
 /** One extracted fact staged for the user to accept or reject. */
-export interface IIntakeItem {
+export interface IStagedItem {
   _id: string;
   documentId: string;
+  supplierId?: string;
   kind: 'reading' | 'bill';
   providerName?: string;
   meterNumber?: string;
@@ -89,11 +89,14 @@ export interface IIntakeItem {
   confidence?: number;
   status: IntakeStatus;
   note?: string;
-  createdAt?: string;
+  fileName?: string;
+  documentStatus?: string;
+  receivedAt?: string;
 }
 
 export interface IProviderDocument {
   _id: string;
+  supplierId?: string;
   providerName?: string;
   fileName: string;
   mimeType: string;
@@ -110,6 +113,7 @@ export interface IProviderDocument {
 export interface IBillComparison {
   _id: string;
   meterId: string;
+  supplierId?: string;
   periodStart?: string;
   periodEnd?: string;
   consumption?: number;

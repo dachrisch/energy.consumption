@@ -8,6 +8,7 @@ import { applyPreFilter } from './sessionFilter';
  */
 const billSchema = new mongoose.Schema({
   meterId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meter', required: true },
+  supplierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
   providerName: { type: String },
   documentId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProviderDocument' },
   periodStart: { type: Date },

@@ -2,13 +2,12 @@ import crypto from 'crypto';
 import mongoose from 'mongoose';
 import User from '../../models/User';
 import ProviderDocument from '../../models/ProviderDocument';
-import IntakeItem from '../../models/IntakeItem';
 import Bill from '../../models/Bill';
 import Reading from '../../models/Reading';
 import Meter from '../../models/Meter';
 import Contract from '../../models/Contract';
+import Supplier, { normalizeSupplierName } from '../../models/Supplier';
 import { RouteParams, sanitizeString } from '../utils';
-import { formatZodError, providerSettingsSchema } from '../validation';
 import { decrypt } from '../../lib/encryption';
 import {
   GOOGLE_SCOPES, isGoogleConfigured, buildConsentUrl, signState, verifyState,
@@ -171,26 +170,33 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
   if (!account) {
     res.statusCode = 401; res.end(JSON.stringify({ error: 'Google not connected' })); return;
   }
-  const providerName = sanitizeString(req.body.providerName);
-  if (!providerName) {
-    res.statusCode = 400; res.end(JSON.stringify({ error: 'providerName required' })); return;
+  const supplierId = sanitizeString(req.body.supplierId);
+  const legacyName = sanitizeString(req.body.providerName);
+  let supplier = supplierId && mongoose.Types.ObjectId.isValid(supplierId)
+    ? await Supplier.findOne({ _id: supplierId }).setOptions({ userId }).lean()
+    : null;
+  if (!supplier && legacyName) {
+    // Older clients still send providerName; resolve it to the supplier.
+    supplier = await Supplier.findOne({
+      nameKey: normalizeSupplierName(legacyName),
+    }).setOptions({ userId }).lean();
   }
-  const provider = await resolveProvider(userId, providerName);
-  if (!provider) {
-    res.statusCode = 404;
-    res.end(JSON.stringify({ error: `No contract for provider "${providerName}" — add one first` }));
+  if (!supplier) {
+    res.statusCode = supplierId ? 404 : 400;
+    res.end(JSON.stringify({ error: supplierId ? 'Supplier not found' : 'supplierId required' }));
     return;
   }
+  const providerName = supplier.name;
   // Without senders (or an explicit query) the search would match every
-  // attachment in the mailbox instead of this provider's mail.
-  if (provider.senders.length === 0 && !provider.gmailQuery) {
+  // attachment in the mailbox instead of this supplier's mail.
+  if ((supplier.senders ?? []).length === 0 && !supplier.gmailQuery) {
     res.statusCode = 400;
     res.end(JSON.stringify({ error: `Add sender addresses for "${providerName}" before syncing` }));
     return;
   }
   try {
     const { gmail, drive, rootFolderId } = await archiveContextFor(userId, account);
-    const query = buildProviderQuery({ senders: provider.senders ?? [], subjectHints: provider.subjectHints ?? [], gmailQuery: provider.gmailQuery ?? null });
+    const query = buildProviderQuery({ senders: supplier.senders ?? [], subjectHints: supplier.subjectHints ?? [], gmailQuery: supplier.gmailQuery ?? null });
     const listRes = await gmail.users.messages.list({ userId: 'me', q: query, maxResults: 20 });
     const messages = listRes.data.messages ?? [];
 
@@ -225,7 +231,8 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
           ? await resetFailedDocument(userId, exists._id, mimeType)
           : await ProviderDocument.create({
             userId,
-            providerName: provider.name,
+            supplierId: supplier._id,
+            providerName,
             source: 'gmail',
             gmailMessageId: m.id,
             gmailAttachmentId: att.attachmentId,
@@ -252,7 +259,7 @@ export async function handleGoogleSync({ req, res, userId }: RouteParams): Promi
               textBody,
               status: 'new',
             },
-            provider: { name: provider.name, defaultUnit: provider.unit },
+            supplier: { id: supplier._id.toString(), name: providerName, defaultUnit: undefined },
             userId,
             meters,
             readings,
@@ -314,7 +321,7 @@ export async function handleIntakeVerify({ res }: RouteParams): Promise<void> {
   res.statusCode = 200; res.end(JSON.stringify({ status: 'verify endpoint ready — retry after sync' }));
 }
 
-/** `/api/intake/items/<id>/<action>` → the id segment, or null. */
+/** `/api/intake/items/<id>/<action>` → the fact id segment, or null. */
 function intakeItemId(pathname: string): string | null {
   const segments = pathname.split('/').filter(Boolean);
   const index = segments.indexOf('items');
@@ -325,16 +332,113 @@ function intakeItemId(pathname: string): string | null {
   return id;
 }
 
+interface StagedFact {
+  _id: unknown;
+  kind: string;
+  status: string;
+  meterNumber?: string;
+  meterId?: unknown;
+  date?: Date | null;
+  value?: number | null;
+  unit?: string;
+  periodStart?: Date | null;
+  periodEnd?: Date | null;
+  consumption?: number;
+  amountGross?: number;
+  amountNet?: number;
+  currency?: string;
+  matchedReadingId?: unknown;
+  confidence?: number;
+  note?: string;
+}
+
+interface DocumentWithFacts {
+  _id: unknown;
+  supplierId?: unknown;
+  providerName?: string;
+  fileName?: string;
+  status?: string;
+  receivedAt?: Date | null;
+  facts?: StagedFact[];
+}
+
+function flattenFacts(document: DocumentWithFacts): Array<StagedFact & Record<string, unknown>> {
+  return (document.facts ?? []).map((fact) => ({
+    ...fact,
+    _id: String(fact._id),
+    documentId: String(document._id),
+    supplierId: document.supplierId ? String(document.supplierId) : undefined,
+    providerName: document.providerName,
+    documentStatus: document.status,
+    fileName: document.fileName,
+    receivedAt: document.receivedAt,
+  }));
+}
+
+async function findFactById(
+  userId: string,
+  factId: string,
+): Promise<{ document: DocumentWithFacts; fact: StagedFact } | null> {
+  const document = await ProviderDocument.findOne({ 'facts._id': factId })
+    .setOptions({ userId })
+    .lean() as DocumentWithFacts | null;
+  if (!document) {
+    return null;
+  }
+  const fact = (document.facts ?? []).find((entry) => String(entry._id) === factId);
+  return fact ? { document, fact } : null;
+}
+
+/** Update one embedded fact; `arrayFilters` keeps the other facts untouched. */
+async function updateFact(
+  userId: string,
+  documentId: unknown,
+  factId: string,
+  set: Record<string, unknown>,
+  unset: string[] = [],
+): Promise<void> {
+  const update: Record<string, unknown> = {};
+  if (Object.keys(set).length > 0) {
+    update.$set = Object.fromEntries(
+      Object.entries(set).map(([key, value]) => [`facts.$[fact].${key}`, value]),
+    );
+  }
+  if (unset.length > 0) {
+    update.$unset = Object.fromEntries(unset.map((key) => [`facts.$[fact].${key}`, '']));
+  }
+  if (Object.keys(update).length === 0) {
+    return;
+  }
+  await ProviderDocument.updateOne(
+    { _id: documentId },
+    update,
+    { arrayFilters: [{ 'fact._id': new mongoose.Types.ObjectId(factId) }] },
+  ).setOptions({ userId });
+}
+
 export async function handleIntakeItems({ res, userId, url }: RouteParams): Promise<void> {
   const statusParam = url.searchParams.get('status');
-  const query: { userId: string; status?: { $in: string[] } } = { userId };
-  if (statusParam) {
-    const statuses = statusParam.split(',').map((status) => status.trim()).filter(Boolean);
-    if (statuses.length > 0) {
-      query.status = { $in: statuses };
-    }
+  const statuses = statusParam
+    ? statusParam.split(',').map((status) => status.trim()).filter(Boolean)
+    : null;
+  const supplierId = sanitizeString(url.searchParams.get('supplierId'));
+  const unassigned = url.searchParams.get('unassigned') === '1';
+
+  const query: Record<string, unknown> = {};
+  if (supplierId && mongoose.Types.ObjectId.isValid(supplierId)) {
+    query.supplierId = supplierId;
+  } else if (unassigned) {
+    query.supplierId = null;
   }
-  const items = await IntakeItem.find(query).setOptions({ userId }).lean();
+
+  const documents = await ProviderDocument.find(query)
+    .setOptions({ userId })
+    .sort({ receivedAt: -1 })
+    .lean() as DocumentWithFacts[];
+
+  const items = documents
+    .flatMap(flattenFacts)
+    .filter((item) => !statuses || statuses.includes(String(item.status)));
   res.statusCode = 200; res.end(JSON.stringify({ items, count: items.length }));
 }
 
@@ -343,40 +447,42 @@ export async function handleIntakeItemAccept({ res, userId, url }: RouteParams):
   if (!id) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
   }
-  const item = await IntakeItem.findOne({ _id: id, userId }).setOptions({ userId }).lean();
-  if (!item) {
+  const found = await findFactById(userId, id);
+  if (!found) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
   }
-  if (item.status !== 'pending' && item.status !== 'conflict') {
-    res.statusCode = 409; res.end(JSON.stringify({ error: `Item already ${item.status}` })); return;
+  const { document, fact } = found;
+  if (fact.status !== 'pending' && fact.status !== 'conflict') {
+    res.statusCode = 409; res.end(JSON.stringify({ error: `Item already ${fact.status}` })); return;
   }
   // Unknown meter: the user must create/link one first, never auto-create.
-  if (!item.meterId) {
+  if (!fact.meterId) {
     res.statusCode = 409; res.end(JSON.stringify({ error: 'Unknown meter number — create meter first' })); return;
   }
 
   try {
-    if (item.kind === 'reading') {
+    if (fact.kind === 'reading') {
       await Reading.create({
-        meterId: item.meterId,
-        date: item.date,
-        value: item.value,
+        meterId: fact.meterId,
+        date: fact.date,
+        value: fact.value,
         source: 'provider',
-        providerDocId: item.documentId,
+        providerDocId: document._id,
         userId,
       });
     } else {
       await Bill.create({
-        meterId: item.meterId,
-        providerName: item.providerName,
-        documentId: item.documentId,
-        periodStart: item.periodStart,
-        periodEnd: item.periodEnd,
-        consumption: item.consumption,
-        unit: item.unit,
-        amountGross: item.amountGross,
-        amountNet: item.amountNet,
-        currency: item.currency ?? 'EUR',
+        meterId: fact.meterId,
+        supplierId: document.supplierId,
+        providerName: document.providerName,
+        documentId: document._id,
+        periodStart: fact.periodStart,
+        periodEnd: fact.periodEnd,
+        consumption: fact.consumption,
+        unit: fact.unit,
+        amountGross: fact.amountGross,
+        amountNet: fact.amountNet,
+        currency: fact.currency ?? 'EUR',
         userId,
       });
     }
@@ -387,29 +493,26 @@ export async function handleIntakeItemAccept({ res, userId, url }: RouteParams):
     throw error;
   }
 
-  await IntakeItem.findByIdAndUpdate(id, { $set: { status: 'accepted' } }).setOptions({ userId });
+  await updateFact(userId, document._id, id, { status: 'accepted' });
   res.statusCode = 200; res.end(JSON.stringify({ item: { id, status: 'accepted' } }));
 }
 
-/** Fields needed to point an item at a meter. */
-interface LinkableItem {
-  _id: unknown;
-  kind: string;
-  date?: Date | null;
-  value?: number | null;
-}
-
 /**
- * Attach an item to a meter and re-classify it against that meter's readings;
+ * Attach a fact to a meter and re-classify it against that meter's readings;
  * linking can therefore turn a pending item into `agrees`/`conflict`.
  */
-async function applyMeterLink(userId: string, item: LinkableItem, meterId: unknown): Promise<void> {
+async function applyMeterLink(
+  userId: string,
+  documentId: unknown,
+  fact: StagedFact,
+  meterId: unknown,
+): Promise<void> {
   const set: Record<string, unknown> = { meterId };
-  const unset: Record<string, ''> = {};
-  if (item.kind === 'reading' && item.date && typeof item.value === 'number') {
+  const unset: string[] = [];
+  if (fact.kind === 'reading' && fact.date && typeof fact.value === 'number') {
     const meterReadings = await Reading.find({ meterId }).setOptions({ userId }).lean();
     const classified = classifyReading(
-      { date: new Date(item.date).toISOString(), value: item.value },
+      { date: new Date(fact.date).toISOString(), value: fact.value },
       meterReadings.map((reading) => ({
         _id: reading._id.toString(),
         date: reading.date,
@@ -420,40 +523,41 @@ async function applyMeterLink(userId: string, item: LinkableItem, meterId: unkno
     if (classified.matchedReadingId) {
       set.matchedReadingId = classified.matchedReadingId;
     } else {
-      unset.matchedReadingId = '';
+      unset.push('matchedReadingId');
     }
     if (classified.note) {
       set.note = classified.note;
     } else {
-      unset.note = '';
+      unset.push('note');
     }
   }
-  await IntakeItem.findByIdAndUpdate(item._id, {
-    $set: set,
-    ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}),
-  }).setOptions({ userId });
+  await updateFact(userId, documentId, String(fact._id), set, unset);
 }
 
 /**
- * Pending items whose printed meter number now matches a stored meter (the
+ * Pending facts whose printed meter number now matches a stored meter (the
  * provider often prefixes its own id, "SWM 600044") are attached automatically.
  */
 async function linkUnmatchedItems(
   userId: string,
   meters: { _id: string; meterNumber: string }[],
 ): Promise<number> {
-  const items = await IntakeItem.find({
-    meterId: { $exists: false },
-    status: { $in: ['pending', 'conflict'] },
+  const documents = await ProviderDocument.find({
+    facts: { $elemMatch: { status: { $in: ['pending', 'conflict'] }, meterId: { $exists: false } } },
   })
     .setOptions({ userId })
-    .lean();
+    .lean() as DocumentWithFacts[];
   let linked = 0;
-  for (const item of items) {
-    const meter = findMeterByNumber(meters, item.meterNumber);
-    if (!meter) continue;
-    await applyMeterLink(userId, item, meter._id);
-    linked += 1;
+  for (const document of documents) {
+    for (const fact of document.facts ?? []) {
+      if (fact.meterId || !['pending', 'conflict'].includes(fact.status)) {
+        continue;
+      }
+      const meter = findMeterByNumber(meters, fact.meterNumber);
+      if (!meter) continue;
+      await applyMeterLink(userId, document._id, fact, meter._id);
+      linked += 1;
+    }
   }
   return linked;
 }
@@ -470,24 +574,26 @@ export async function handleIntakeItemLink({ req, res, userId, url }: RouteParam
     res.statusCode = 400; res.end(JSON.stringify({ error: 'meterId required' })); return;
   }
 
-  const [item, meter] = await Promise.all([
-    IntakeItem.findOne({ _id: id, userId }).setOptions({ userId }).lean(),
+  const [found, meter] = await Promise.all([
+    findFactById(userId, id),
     Meter.findOne({ _id: meterId }).setOptions({ userId }).lean(),
   ]);
-  if (!item) {
+  if (!found) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
   }
   if (!meter) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Meter not found' })); return;
   }
-  if (item.status !== 'pending' && item.status !== 'conflict') {
-    res.statusCode = 409; res.end(JSON.stringify({ error: `Item already ${item.status}` })); return;
+  const { document, fact } = found;
+  if (fact.status !== 'pending' && fact.status !== 'conflict') {
+    res.statusCode = 409; res.end(JSON.stringify({ error: `Item already ${fact.status}` })); return;
   }
 
-  await applyMeterLink(userId, item, meter._id);
-  const updated = await IntakeItem.findById(id).setOptions({ userId }).lean();
+  await applyMeterLink(userId, document._id, fact, meter._id);
+  const updated = await findFactById(userId, id);
+  const item = updated ? flattenFacts(updated.document).find((entry) => entry._id === id) : undefined;
   res.statusCode = 200;
-  res.end(JSON.stringify({ item: updated }));
+  res.end(JSON.stringify({ item }));
 }
 
 export async function handleIntakeItemReject({ res, userId, url }: RouteParams): Promise<void> {
@@ -495,11 +601,11 @@ export async function handleIntakeItemReject({ res, userId, url }: RouteParams):
   if (!id) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
   }
-  const item = await IntakeItem.findOne({ _id: id, userId }).setOptions({ userId }).lean();
-  if (!item) {
+  const found = await findFactById(userId, id);
+  if (!found) {
     res.statusCode = 404; res.end(JSON.stringify({ error: 'Item not found' })); return;
   }
-  await IntakeItem.findByIdAndUpdate(id, { $set: { status: 'rejected' } }).setOptions({ userId });
+  await updateFact(userId, found.document._id, id, { status: 'rejected' });
   res.statusCode = 200; res.end(JSON.stringify({ item: { id, status: 'rejected' } }));
 }
 
@@ -528,9 +634,18 @@ export async function handleIntakeItemAction(params: RouteParams): Promise<void>
  * Bills against what the contract rates would have charged — the data behind
  * the comparison view. Variance is derived here, never stored.
  */
-export async function handleIntakeBills({ res, userId }: RouteParams): Promise<void> {
+export async function handleIntakeBills({ res, userId, url }: RouteParams): Promise<void> {
+  const supplierId = sanitizeString(url.searchParams.get('supplierId'));
+  const unassigned = url.searchParams.get('unassigned') === '1';
+  const billQuery: Record<string, unknown> = {};
+  if (supplierId && mongoose.Types.ObjectId.isValid(supplierId)) {
+    billQuery.supplierId = supplierId;
+  } else if (unassigned) {
+    billQuery.supplierId = null;
+  }
+
   const [bills, contracts] = await Promise.all([
-    Bill.find({}).setOptions({ userId }).lean(),
+    Bill.find(billQuery).setOptions({ userId }).lean(),
     Contract.find({}).setOptions({ userId }).lean(),
   ]);
 
@@ -561,83 +676,19 @@ export async function handleIntakeBills({ res, userId }: RouteParams): Promise<v
   res.statusCode = 200; res.end(JSON.stringify({ bills: rows, count: rows.length }));
 }
 
-export interface ProviderView {
-  name: string;
-  senders: string[];
-  subjectHints: string[];
-  gmailQuery: string | null;
-  unit?: string;
-  contractCount: number;
-  meterIds: string[];
-}
-
-/**
- * A provider is the `providerName` of the user's contracts — there is no
- * provider collection. Mail settings are read as the union over that
- * provider's contracts, so editing any one of them cannot hide the others.
- */
-async function resolveProvider(userId: string, providerName: string): Promise<ProviderView | null> {
-  const [contracts, meters] = await Promise.all([
-    Contract.find({ providerName }).setOptions({ userId }).sort({ startDate: -1 }).lean(),
-    Meter.find({}).setOptions({ userId }).lean(),
-  ]);
-  if (contracts.length === 0) {
-    return null;
-  }
-  const units = new Map(meters.map((meter) => [meter._id.toString(), meter.unit]));
-  const meterIds = [...new Set(contracts.map((contract) => contract.meterId.toString()))];
-  const newestQuery = contracts.find((contract) => contract.gmailQuery)?.gmailQuery ?? null;
-  // Sorted so the derived view does not depend on the contracts' start dates.
-  const union = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
-  return {
-    name: providerName,
-    senders: union(contracts.flatMap((contract) => contract.senders ?? [])),
-    subjectHints: union(contracts.flatMap((contract) => contract.subjectHints ?? [])),
-    gmailQuery: newestQuery,
-    unit: units.get(meterIds[0]),
-    contractCount: contracts.length,
-    meterIds,
-  };
-}
-
-/** Providers derived from the user's contracts, with their mail settings. */
-export async function handleProviders({ req, res, userId }: RouteParams): Promise<void> {
-  if (req.method === 'GET') {
-    const contracts = await Contract.find({}).setOptions({ userId }).sort({ startDate: -1 }).lean();
-    const names = [...new Set(contracts.map((contract) => contract.providerName))].sort((a, b) => a.localeCompare(b));
-    const providers = (await Promise.all(names.map((name) => resolveProvider(userId, name))))
-      .filter((provider): provider is ProviderView => provider !== null);
-    res.statusCode = 200; res.end(JSON.stringify({ providers, count: providers.length }));
-    return;
-  }
-
-  if (req.method !== 'PATCH') {
-    res.statusCode = 405; res.end(JSON.stringify({ error: 'Method not allowed' })); return;
-  }
-
-  const result = providerSettingsSchema.safeParse(req.body);
-  if (!result.success) {
-    res.statusCode = 400; res.end(JSON.stringify({ error: formatZodError(result.error) })); return;
-  }
-  const { providerName, senders, subjectHints, gmailQuery } = result.data;
-  const updated = await Contract.updateMany(
-    { providerName },
-    { $set: { senders, subjectHints, gmailQuery: gmailQuery ?? null } },
-  ).setOptions({ userId });
-  if (updated.matchedCount === 0) {
-    res.statusCode = 404;
-    res.end(JSON.stringify({ error: `No contract for provider "${providerName}"` }));
-    return;
-  }
-  const provider = await resolveProvider(userId, providerName);
-  res.statusCode = 200; res.end(JSON.stringify({ provider, contractsUpdated: updated.modifiedCount }));
-}
-
-/** Most recent ingested documents, for the intake page's document list. */
+/** Most recent ingested documents, for the supplier detail page's document list. */
 export async function handleIntakeDocuments({ res, userId, url }: RouteParams): Promise<void> {
   const requested = Number(url.searchParams.get('limit') ?? 25);
   const limit = Number.isFinite(requested) && requested > 0 ? Math.min(requested, 100) : 25;
-  const documents = await ProviderDocument.find({})
+  const supplierId = sanitizeString(url.searchParams.get('supplierId'));
+  const unassigned = url.searchParams.get('unassigned') === '1';
+  const query: Record<string, unknown> = {};
+  if (supplierId && mongoose.Types.ObjectId.isValid(supplierId)) {
+    query.supplierId = supplierId;
+  } else if (unassigned) {
+    query.supplierId = null;
+  }
+  const documents = await ProviderDocument.find(query)
     .setOptions({ userId })
     .sort({ receivedAt: -1 })
     .limit(limit)
@@ -754,8 +805,10 @@ export async function handleIntakeArchive({ req, res, userId }: RouteParams): Pr
   if (!account) {
     res.statusCode = 401; res.end(JSON.stringify({ error: 'Google not connected' })); return;
   }
-  const body = (req.body ?? {}) as { documentId?: unknown };
+  const body = (req.body ?? {}) as { documentId?: unknown; supplierId?: unknown; unassigned?: unknown };
   const documentId = sanitizeString(body.documentId ?? undefined);
+  const supplierId = sanitizeString(body.supplierId ?? undefined);
+  const unassigned = body.unassigned === true;
 
   try {
     const context = await archiveContextFor(userId, account);
@@ -768,6 +821,11 @@ export async function handleIntakeArchive({ req, res, userId }: RouteParams): Pr
         driveFileId: { $exists: false },
         gmailMessageId: { $exists: true },
         gmailAttachmentId: { $exists: true },
+        ...(supplierId && mongoose.Types.ObjectId.isValid(supplierId)
+          ? { supplierId }
+          : unassigned
+            ? { supplierId: null }
+            : {}),
       })
         .setOptions({ userId })
         .sort({ receivedAt: -1 })
@@ -845,7 +903,9 @@ export async function handleIntakeDocumentAction({ req, res, userId, url }: Rout
     const buffer = decodeBase64Url(attachment.data.data);
     // Re-resolve the type: the stored one may be what made the first run fail.
     const mimeType = resolveMimeType(document.mimeType, document.fileName, buffer);
-    const provider = await resolveProvider(userId, document.providerName ?? '');
+    const supplier = document.supplierId
+      ? await Supplier.findOne({ _id: document.supplierId }).setOptions({ userId }).lean()
+      : null;
     const { meters, readings } = await pipelineRefs(userId);
 
     await ProviderDocument.findByIdAndUpdate(document._id, {
@@ -863,7 +923,10 @@ export async function handleIntakeDocumentAction({ req, res, userId, url }: Rout
         buffer,
         status: 'new',
       },
-      provider: { name: provider?.name ?? document.providerName ?? 'Unknown', defaultUnit: provider?.unit },
+      supplier: {
+        id: document.supplierId ? String(document.supplierId) : undefined,
+        name: supplier?.name ?? document.providerName ?? 'Unknown',
+      },
       userId,
       meters,
       readings,

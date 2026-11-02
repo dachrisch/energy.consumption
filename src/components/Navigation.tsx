@@ -60,7 +60,6 @@ const UserDropdown: Component<{ auth: ReturnType<typeof useAuth>, closeDropdown:
          </div>
          <li><A href="/profile" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Profile Settings</A></li>
          <li><A href="/import-export" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Import / Export</A></li>
-        <li><A href="/intake" onClick={props.closeDropdown} class="rounded-lg font-black uppercase text-[10px] tracking-widest py-3 hover:bg-primary/5 hover:text-primary text-base-content">Provider Intake</A></li>
          <li>
            <a
              href={getVersionLink()}
@@ -91,7 +90,6 @@ const Navigation: Component = () => {
     { name: 'Dashboard', path: '/dashboard' },
     { name: 'Meters', path: '/meters' },
     { name: 'Contracts', path: '/contracts' },
-    { name: 'Intake', path: '/intake' },
   ];
 
   return (

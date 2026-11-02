@@ -41,18 +41,19 @@ first; the user (or an unambiguous match) promotes it.
 
 | Model | Purpose |
 |---|---|
-| `Contract` | rates + period, **plus the provider's mail settings** (`senders`, `subjectHints`, `gmailQuery`). `providerName` is the provider identity. |
-| `ProviderDocument` | one ingested file; `sha256` makes sync idempotent; `driveFileId` + `sidecarDriveId`; `providerName` |
-| `IntakeItem` | one extracted fact: `pending`/`agrees`/`conflict`/`accepted`/`rejected` |
+| `Supplier` | supplier identity + the mail settings (`senders`, `subjectHints`, `gmailQuery`); one per user and normalized name |
+| `Contract` | rates + period, `supplierId` + `providerName` display snapshot |
+| `ProviderDocument` | one ingested file; `sha256` makes sync idempotent; `driveFileId` + `sidecarDriveId`; `supplierId`, `facts[]` |
+| `IntakeItem` | **removed** — staged facts now live in `ProviderDocument.facts[]` |
 | `Bill` | period consumption + billed amount vs what contract rates compute |
 | `User.google` | `sub`, `email`, `refreshToken` (encrypted), `scopes`, `status: ok\|reconnect_required` |
 | `Reading.source` | `manual\|ocr\|import\|provider`; `providerDocId` |
 
-There is no `Provider` collection: a provider *is* the `providerName` of the
-user's contracts, so its mail settings are stored on them. `GET /api/providers`
-returns the derived view (one entry per name, settings as the union over that
-provider's contracts); `PATCH /api/providers` writes the settings onto every
-contract of that provider.
+A supplier is a real collection. Contracts reference it (`supplierId`), and the API upserts a
+supplier when a contract names one (`supplierName`). Mail settings are stored once on the
+supplier — `GET /api/suppliers` returns the supplier view with contract/staged counts, and
+`PATCH /api/suppliers/:id` writes the settings. `/api/providers` remains a read-only alias for
+one release.
 
 ## Extraction
 
