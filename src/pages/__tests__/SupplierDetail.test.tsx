@@ -82,7 +82,7 @@ function mockApi(
 const renderSupplier = () =>
   render(() => (
     <Router>
-      <Route path="/contracts/:id" component={() => (
+      <Route path="/suppliers/:id" component={() => (
         <AuthProvider>
           <ToastProvider>
             <SupplierDetail />
@@ -94,7 +94,7 @@ const renderSupplier = () =>
 
 describe('Supplier detail page', () => {
   beforeEach(() => {
-    window.history.pushState({}, '', '/contracts/s1');
+    window.history.pushState({}, '', '/suppliers/s1');
   });
 
   afterEach(() => {
@@ -113,6 +113,13 @@ describe('Supplier detail page', () => {
     expect(await screen.findByText('620 kWh')).toBeTruthy();
     expect(await screen.findByText('lastgang.csv')).toBeTruthy();
     expect(await screen.findByText('PDF extraction needs a Gemini API key')).toBeTruthy();
+  });
+
+  it('explains which supplier emails are imported in plain language', async () => {
+    mockApi();
+    renderSupplier();
+
+    expect(await screen.findByText('Which emails from this supplier to import. Applies to all its contracts.')).toBeTruthy();
   });
 
   it('shows the metered variance next to the billed amount', async () => {
@@ -229,7 +236,7 @@ describe('Supplier detail page', () => {
   });
 
   it('files an unassigned document under a supplier', async () => {
-    window.history.pushState({}, '', '/contracts/unassigned');
+    window.history.pushState({}, '', '/suppliers/unassigned');
     const calls = mockApi({
       'GET /api/suppliers': () => ({
         suppliers: [supplier],
@@ -347,7 +354,7 @@ describe('Supplier detail page', () => {
  */
 describe('Supplier detail — Google connection', () => {
   beforeEach(() => {
-    window.history.pushState({}, '', '/contracts/s1');
+    window.history.pushState({}, '', '/suppliers/s1');
   });
 
   afterEach(() => {

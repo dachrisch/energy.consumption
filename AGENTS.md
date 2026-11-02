@@ -118,7 +118,7 @@ Follow the **Google TypeScript Style Guide** as a baseline.
 
 ### Supplier + contract merge (unreleased)
 - **Model:** new `Supplier` collection (`src/models/Supplier.ts`) owns the supplier identity and the mail settings (`senders`, `subjectHints`, `gmailQuery`). `Contract` references it via `supplierId` and keeps `providerName` as a display snapshot.
-- **Intake merged into contracts:** `/contracts` groups contracts by supplier; `/contracts/:supplierId` hosts mail settings, staged items, bills and documents. `/intake` redirects to `/contracts`; the standalone Intake page is gone.
+- **Intake merged into contracts:** `/contracts` groups contracts by supplier; `/suppliers/:supplierId` hosts mail settings, staged items, bills and documents. Legacy `/contracts/:supplierId` URLs redirect there. `/intake` redirects to `/contracts`; the standalone Intake page is gone.
 - **Staged facts:** `IntakeItem` was folded into `ProviderDocument.facts[]`; accept/reject/link endpoints still live under `/api/intake/items/:factId/*`.
 - **Auto-created suppliers:** `POST /api/contracts` accepts `supplierId` or `supplierName` and upserts the supplier by normalized name.
 - **Migrations:** `scripts/migrate-suppliers.cjs` (providerName → Supplier) and `scripts/migrate-document-facts.cjs` (IntakeItem → Document.facts), both idempotent and run with `MONGODB_URI=... node <script>`. The supplier migration matches names case/punctuation-insensitively and also links documents whose `providerName` has no contract; preview with `--dry-run`, attribute aliases with `--map "Doc Name=Supplier Name"`. Documents left over can be filed from the unassigned review page (`PATCH /api/intake/documents/:id`).

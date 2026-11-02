@@ -11,6 +11,7 @@ import Landing from './pages/Landing';
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SupplierRedirect from "./pages/SupplierRedirect";
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -57,7 +58,8 @@ render(() => (
     <Route path="/contracts" component={() => <ProtectedRoute><Contracts /></ProtectedRoute>} />
     <Route path="/contracts/add" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
      <Route path="/contracts/:id/edit" component={() => <ProtectedRoute><AddContract /></ProtectedRoute>} />
-     <Route path="/contracts/:id" component={() => <ProtectedRoute><SupplierDetail /></ProtectedRoute>} />
+     <Route path="/contracts/:id" component={SupplierRedirect} />
+     <Route path="/suppliers/:id" component={() => <ProtectedRoute><SupplierDetail /></ProtectedRoute>} />
      <Route path="/profile" component={() => <ProtectedRoute><Profile /></ProtectedRoute>} />
      <Route path="/intake" component={() => <Navigate href="/contracts" />} />
      <Route path="/import-export" component={() => <ProtectedRoute><ImportExport /></ProtectedRoute>} />

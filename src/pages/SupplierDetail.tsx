@@ -785,7 +785,7 @@ const SupplierDetail: Component = () => {
 
             <Section
               title="Mail settings"
-              hint="Stored once on the supplier; every contract of this supplier shares it."
+              hint="Which emails from this supplier to import. Applies to all its contracts."
               actions={
                 <button
                   class="btn btn-primary btn-sm rounded-xl font-bold"

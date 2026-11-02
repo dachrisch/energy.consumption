@@ -2,6 +2,7 @@ import { Component, createResource, createSignal, For, Show } from 'solid-js';
 import { A, useNavigate, useSearchParams } from '@solidjs/router';
 import { useToast } from '../context/ToastContext';
 import { findContractGaps, Gap } from '../lib/gapDetection';
+import { getContractStatus, type ContractStatus } from '../lib/contractStatus';
 import ContractTemplateCard from '../components/ContractTemplateCard';
 import EmptyState from '../components/EmptyState';
 import Icon from '../components/Icon';
@@ -54,6 +55,12 @@ interface DashboardData {
   contracts: Contract[];
 }
 
+const contractStatusTone: Record<ContractStatus, string> = {
+  Active: 'badge-success',
+  Ended: 'badge-ghost',
+  Upcoming: 'badge-info',
+};
+
 const fetchDashboardData = async () => {
   const res = await fetch('/api/dashboard');
   if (!res.ok) { throw new Error('Failed to fetch dashboard data'); }
@@ -86,7 +93,7 @@ const ContractHeader: Component<{
   <PageHeader
     eyebrow="Contracts"
     title="Suppliers & contracts"
-    subtitle="One supplier owns the mail settings and the inbox; contracts carry the pricing and validity."
+    subtitle="Your suppliers and the prices you pay per meter."
     actions={
       <>
         <Show when={props.meters.length > 0}>
@@ -117,6 +124,7 @@ const ContractCard: Component<{
   onDelete: (id: string) => void;
 }> = (props) => {
   const contractColor = () => props.contract.meterId.type === 'power' ? 'var(--color-meter-power)' : 'var(--color-meter-gas)';
+  const status = () => getContractStatus(props.contract.startDate, props.contract.endDate);
   
   return (
     <div class="card bg-base-100 border border-base-content/5 shadow-sm overflow-hidden hover:border-primary/30 transition-all hover:shadow-md">
@@ -131,6 +139,7 @@ const ContractCard: Component<{
               {new Date(props.contract.startDate).toLocaleDateString()} – 
               {props.contract.endDate ? new Date(props.contract.endDate).toLocaleDateString() : 'Present'}
             </p>
+            <span class={`badge badge-sm rounded-full font-bold ${contractStatusTone[status()]}`}>{status()}</span>
           </div>
         </div>
 
@@ -225,8 +234,8 @@ const SupplierGroup: Component<{
             {props.syncing ? 'Syncing…' : 'Sync'}
           </button>
         </Show>
-        <A href={`/contracts/${props.supplierId}`} class="btn btn-primary btn-sm rounded-xl font-bold">
-          Open <Icon name="external-link" class="h-3.5 w-3.5" />
+        <A href={`/suppliers/${props.supplierId}`} class="btn btn-primary btn-sm rounded-xl font-bold">
+          View supplier <Icon name="chevron-right" class="h-3.5 w-3.5" />
         </A>
       </Show>
     </header>
@@ -458,7 +467,7 @@ const Contracts: Component = () => {
             {unassigned()?.documents} document{unassigned()?.documents === 1 ? '' : 's'} could not be matched to a supplier
             <Show when={unassigned()?.staged}><span> · {unassigned()?.staged} staged</span></Show>
           </p>
-          <A href="/contracts/unassigned" class="btn btn-ghost btn-sm rounded-xl font-bold">Review</A>
+          <A href="/suppliers/unassigned" class="btn btn-ghost btn-sm rounded-xl font-bold">Review</A>
         </div>
       </Show>
 
