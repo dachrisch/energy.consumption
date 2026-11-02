@@ -228,6 +228,31 @@ describe('Supplier detail page', () => {
     expect(await screen.findByText(/last sync/i)).toBeTruthy();
   });
 
+  it('files an unassigned document under a supplier', async () => {
+    window.history.pushState({}, '', '/contracts/unassigned');
+    const calls = mockApi({
+      'GET /api/suppliers': () => ({
+        suppliers: [supplier],
+        unassigned: { documents: 1, staged: 1 },
+      }),
+      'PATCH /api/intake/documents/d1': () => ({
+        document: { ...documents[0], supplierId: 's1' },
+      }),
+    });
+    renderSupplier();
+    await screen.findByText('lastgang.csv');
+
+    const assignButtons = await screen.findAllByRole('button', { name: /assign supplier/i });
+    fireEvent.click(assignButtons[0]);
+    fireEvent.click(await screen.findByRole('button', { name: /Stadtwerke/ }));
+
+    await waitFor(() => {
+      expect(calls.some((call) => call.method === 'PATCH' && call.url === '/api/intake/documents/d1')).toBe(true);
+    });
+    const patch = calls.find((call) => call.method === 'PATCH' && call.url === '/api/intake/documents/d1');
+    expect(JSON.parse(patch?.body ?? '{}')).toEqual({ supplierId: 's1' });
+  });
+
   it('links a staged reading to the datapoint on the meter readings page', async () => {
     mockApi();
     renderSupplier();

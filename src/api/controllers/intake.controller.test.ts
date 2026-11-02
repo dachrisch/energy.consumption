@@ -480,6 +480,64 @@ describe('intake controller', () => {
       expect(stored?.facts).toHaveLength(2);
     });
 
+    it('claims an existing unassigned document for the synced supplier without reprocessing it', async () => {
+      const existing = await ProviderDocument.create({
+        userId: ownerId,
+        providerName: 'Legacy Provider',
+        source: 'gmail',
+        fileName: 'lastgang.csv',
+        mimeType: 'text/csv',
+        size: csvBytes.length,
+        receivedAt: new Date(),
+        sha256: crypto.createHash('sha256').update(csvBytes).digest('hex'),
+        status: 'parsed',
+      });
+      stubGmail({ files: [{ name: 'lastgang.csv', mimeType: 'text/csv', bytes: csvBytes }] });
+      stubDrive();
+      const response = mockResponse();
+
+      await handleGoogleSync(params({
+        res: response.res, userId: ownerId, method: 'POST', body: { supplierId },
+      }));
+
+      const payload = JSON.parse(response.body()) as { processed: { status: string }[] };
+      expect(payload.processed[0].status).toBe('already_processed');
+      const stored = await ProviderDocument.findById(existing._id).lean();
+      expect(stored?.supplierId?.toString()).toBe(supplierId);
+      // The original name stays as a display snapshot.
+      expect(stored?.providerName).toBe('Legacy Provider');
+    });
+
+    it('does not steal a document already filed under another supplier', async () => {
+      const otherSupplier = await Supplier.create({
+        name: 'Anderer Versorger',
+        nameKey: 'anderer versorger',
+        senders: ['mail@anderer.example'],
+        userId: ownerId,
+      });
+      const existing = await ProviderDocument.create({
+        userId: ownerId,
+        supplierId: otherSupplier._id,
+        providerName: 'Anderer Versorger',
+        source: 'gmail',
+        fileName: 'lastgang.csv',
+        mimeType: 'text/csv',
+        size: csvBytes.length,
+        receivedAt: new Date(),
+        sha256: crypto.createHash('sha256').update(csvBytes).digest('hex'),
+        status: 'parsed',
+      });
+      stubGmail({ files: [{ name: 'lastgang.csv', mimeType: 'text/csv', bytes: csvBytes }] });
+      stubDrive();
+
+      await handleGoogleSync(params({
+        res: mockResponse().res, userId: ownerId, method: 'POST', body: { supplierId },
+      }));
+
+      const stored = await ProviderDocument.findById(existing._id).lean();
+      expect(stored?.supplierId?.toString()).toBe(otherSupplier._id.toString());
+    });
+
     it('treats a .pdf sent as application/octet-stream as a PDF', async () => {
       stubGmail({ files: [{ name: 'Rechnung_433876866.pdf', mimeType: 'application/octet-stream', bytes: pdfBytes }] });
       stubDrive();
@@ -822,6 +880,143 @@ describe('intake controller', () => {
       expect(response.res.statusCode).toBe(404);
       const stored = await ProviderDocument.findById(document._id).lean();
       expect(stored?.status).toBe('failed');
+    });
+  });
+
+  describe('handleIntakeDocumentAction — assign supplier', () => {
+    async function createDocument(overrides: Record<string, unknown> = {}) {
+      return ProviderDocument.create({
+        userId: ownerId,
+        providerName: 'Octo',
+        source: 'gmail',
+        gmailMessageId: 'msg-1',
+        gmailAttachmentId: 'att-1',
+        fileName: 'Abrechnung.pdf',
+        mimeType: 'application/pdf',
+        receivedAt: new Date('2024-02-10'),
+        sha256: `sha-${Math.random()}`,
+        status: 'parsed',
+        ...overrides,
+      });
+    }
+
+    async function createSupplier(userId: string, name = 'Octo') {
+      return Supplier.create({
+        userId,
+        name,
+        nameKey: name.toLowerCase(),
+        senders: [`mail@${name.toLowerCase().replace(/\s+/g, '')}.example`],
+      });
+    }
+
+    it('files the document and its bills under the supplier', async () => {
+      const supplier = await createSupplier(ownerId);
+      const document = await createDocument();
+      const bill = await Bill.create({
+        userId: ownerId,
+        documentId: document._id,
+        supplierId: null,
+        providerName: 'Octo',
+        meterId: new mongoose.Types.ObjectId(),
+      });
+      const response = mockResponse();
+
+      await handleIntakeDocumentAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'PATCH',
+        url: `/api/intake/documents/${document._id.toString()}`,
+        body: { supplierId: supplier._id.toString() },
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      const stored = await ProviderDocument.findById(document._id).lean();
+      expect(stored?.supplierId?.toString()).toBe(supplier._id.toString());
+      const storedBill = await Bill.findById(bill._id).lean();
+      expect(storedBill?.supplierId?.toString()).toBe(supplier._id.toString());
+      expect(storedBill?.providerName).toBe('Octo');
+    });
+
+    it('moves a document back to unassigned', async () => {
+      const supplier = await createSupplier(ownerId);
+      const document = await createDocument({ supplierId: supplier._id });
+      const bill = await Bill.create({
+        userId: ownerId,
+        documentId: document._id,
+        supplierId: supplier._id,
+        providerName: 'Octo',
+        meterId: new mongoose.Types.ObjectId(),
+      });
+      const response = mockResponse();
+
+      await handleIntakeDocumentAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'PATCH',
+        url: `/api/intake/documents/${document._id.toString()}`,
+        body: { supplierId: null },
+      }));
+
+      expect(response.res.statusCode).toBe(200);
+      expect((await ProviderDocument.findById(document._id).lean())?.supplierId).toBeUndefined();
+      expect((await Bill.findById(bill._id).lean())?.supplierId).toBeUndefined();
+    });
+
+    it('rejects a supplier that belongs to another user', async () => {
+      const foreign = await createSupplier(otherId, 'Fremd');
+      const document = await createDocument();
+      const response = mockResponse();
+
+      await handleIntakeDocumentAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'PATCH',
+        url: `/api/intake/documents/${document._id.toString()}`,
+        body: { supplierId: foreign._id.toString() },
+      }));
+
+      expect(response.res.statusCode).toBe(404);
+      expect((await ProviderDocument.findById(document._id).lean())?.supplierId).toBeUndefined();
+    });
+
+    it('validates the supplier id and keeps documents private', async () => {
+      const invalid = mockResponse();
+      const document = await createDocument();
+      await handleIntakeDocumentAction(params({
+        res: invalid.res,
+        userId: ownerId,
+        method: 'PATCH',
+        url: `/api/intake/documents/${document._id.toString()}`,
+        body: { supplierId: 'not-an-id' },
+      }));
+      expect(invalid.res.statusCode).toBe(400);
+
+      const supplier = await createSupplier(ownerId);
+      const foreignDocument = mockResponse();
+      await handleIntakeDocumentAction(params({
+        res: foreignDocument.res,
+        userId: otherId,
+        method: 'PATCH',
+        url: `/api/intake/documents/${document._id.toString()}`,
+        body: { supplierId: supplier._id.toString() },
+      }));
+      expect(foreignDocument.res.statusCode).toBe(404);
+      expect((await ProviderDocument.findById(document._id).lean())?.supplierId).toBeUndefined();
+    });
+
+    it('still requires POST for retry', async () => {
+      const document = await createDocument({ status: 'failed' });
+      const response = mockResponse();
+
+      await handleIntakeDocumentAction(params({
+        res: response.res,
+        userId: ownerId,
+        method: 'PATCH',
+        url: `/api/intake/documents/${document._id.toString()}/retry`,
+        body: { supplierId: null },
+      }));
+
+      expect(response.res.statusCode).toBe(404);
     });
   });
 
