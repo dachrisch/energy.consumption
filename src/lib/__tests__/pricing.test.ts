@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateIntervalCost, Contract } from '../pricing';
+import { calculateIntervalCost, calculateMeterStats, Contract } from '../pricing';
 
 describe('Pricing Library - Interval Cost', () => {
   const contracts: Contract[] = [
@@ -65,5 +65,18 @@ describe('Pricing Library - Interval Cost', () => {
     
     const cost = calculateIntervalCost(new Date('2022-12-22'), new Date('2023-01-11'), 100, contracts);
     expect(cost).toBeCloseTo(18.285, 2);
+  });
+});
+
+describe('calculateMeterStats', () => {
+  it('excludes a meter-change jump from the daily average', () => {
+    const stats = calculateMeterStats([
+      { date: new Date('2026-01-01'), value: 100 },
+      { date: new Date('2026-01-11'), value: 1000, kind: 'meterChange' },
+      { date: new Date('2026-01-21'), value: 1100 },
+    ], []);
+
+    expect(stats.dailyAverage).toBe(5);
+    expect(stats.yearlyProjection).toBe(5 * 365.25);
   });
 });

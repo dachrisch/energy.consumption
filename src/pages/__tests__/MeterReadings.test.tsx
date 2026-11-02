@@ -11,12 +11,12 @@ const readings = [
   { _id: 'r1', value: 888, date: '2024-01-01T00:00:00.000Z', source: 'manual' },
 ];
 
-function mockApi() {
+function mockApi(apiReadings: unknown = readings) {
   (fetch as unknown as { mockImplementation: (fn: unknown) => void }).mockImplementation(async (url: string) => ({
     ok: true,
     json: async () => (url.startsWith('/api/meters')
       ? [{ _id: 'm1', name: 'Strom', unit: 'kWh' }]
-      : readings),
+      : apiReadings),
   }));
 }
 
@@ -80,5 +80,28 @@ describe('Meter readings page', () => {
     expect(await screen.findByText('888')).toBeTruthy();
     expect(rowFor('888')?.className).toContain('bg-primary/10');
     expect(rowFor('999')?.className).not.toContain('bg-primary/10');
+  });
+
+  it('labels first, equal, anomalous, and meter-change rows and offers edit actions', async () => {
+    mockApi([
+      { _id: 'r5', value: 25, date: '2024-01-05T00:00:00.000Z' },
+      { _id: 'r4', value: 0, date: '2024-01-04T00:00:00.000Z', kind: 'meterChange' },
+      { _id: 'r3', value: 50, date: '2024-01-03T00:00:00.000Z' },
+      { _id: 'r2', value: 100, date: '2024-01-02T00:00:00.000Z' },
+      { _id: 'r1', value: 100, date: '2024-01-01T00:00:00.000Z' },
+    ]);
+    renderReadings();
+
+    expect(await screen.findByText('First reading')).toBeTruthy();
+    expect(screen.getByText('+0 kWh')).toBeTruthy();
+    expect(screen.getByText('Meter change').className).toContain('badge-ghost');
+    const anomaly = screen.getByText('Lower than previous — check value');
+    expect(anomaly.className).toContain('badge-warning');
+    expect(rowFor('50')?.textContent).toContain('Edit');
+    expect(screen.getAllByRole('link', { name: 'Edit' })).toHaveLength(5);
+    expect(screen.getAllByRole('link', { name: 'Edit' })[0].getAttribute('href')).toMatch(
+      /^\/meters\/m1\/readings\/r[1-5]\/edit$/,
+    );
+    expect(screen.getByText('+25').className).not.toContain('text-secondary');
   });
 });

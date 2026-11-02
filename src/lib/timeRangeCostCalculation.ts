@@ -1,11 +1,13 @@
-import { interpolateValueAtDate, calculateDailyAverage } from './consumption';
+import {
+  calculateConsumptionBetween,
+  interpolateValueAtDate,
+  calculateDailyAverage,
+  type Reading,
+} from './consumption';
 import { calculateIntervalCost, Contract } from './pricing';
 import { IMeter, IReading, IContract } from '../types/models';
 
-export interface TimeRangeReading {
-  date: Date;
-  value: number;
-}
+export type TimeRangeReading = Reading;
 
 export interface MeterCostBreakdown {
   meterId: string;
@@ -50,7 +52,7 @@ export function filterReadingsByDateRange(
 ): TimeRangeReading[] {
   return readings
     .filter(r => r.meterId === meterId)
-    .map(r => ({ date: new Date(r.date), value: r.value }))
+    .map(r => ({ date: new Date(r.date), value: r.value, kind: r.kind ?? 'regular' }))
     .filter(r => r.date >= startDate && r.date <= endDate)
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
@@ -61,7 +63,7 @@ export function filterReadingsByDateRange(
 function getAllMeterReadings(readings: IReading[], meterId: string): TimeRangeReading[] {
   return readings
     .filter(r => r.meterId === meterId)
-    .map(r => ({ date: new Date(r.date), value: r.value }))
+    .map(r => ({ date: new Date(r.date), value: r.value, kind: r.kind ?? 'regular' }))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
@@ -82,32 +84,8 @@ function getMeterContracts(meterId: string, contracts: IContract[]): Contract[] 
     }));
 }
 
-function resolveBoundaryValues(
-  readings: TimeRangeReading[],
-  startDate: Date,
-  endDate: Date,
-  allReadings: TimeRangeReading[]
-): { startValue: number | null; endValue: number | null } {
-  let startValue: number | null = null;
-  let endValue: number | null = null;
-
-  if (allReadings.length >= 2) {
-    startValue = interpolateValueAtDate(startDate, allReadings as unknown as { date: Date; value: number }[]);
-    endValue = interpolateValueAtDate(endDate, allReadings as unknown as { date: Date; value: number }[]);
-  }
-
-  if (startValue === null && readings.length > 0) {
-    startValue = readings[0].value;
-  }
-  if (endValue === null && readings.length > 0) {
-    endValue = readings[readings.length - 1].value;
-  }
-
-  return { startValue, endValue };
-}
-
 /**
- * Calculate consumption for a meter within a time range
+ * Calculate consumption for a meter within a time range.
  */
 export function calculateConsumptionInRange(
   readings: TimeRangeReading[],
@@ -115,41 +93,19 @@ export function calculateConsumptionInRange(
   endDate: Date,
   allReadings: TimeRangeReading[]
 ): number {
-  if (readings.length === 0 && allReadings.length < 2) {
+  if (allReadings.length < 2) {
     return 0;
   }
 
-  const { startValue, endValue } = resolveBoundaryValues(readings, startDate, endDate, allReadings);
-
-  if (startValue === null || endValue === null) {
-    // Range is entirely beyond all readings — extrapolate from daily average
-    if (allReadings.length >= 2) {
-      const dailyAvg = calculateDailyAverage(allReadings as unknown as { value: number; date: Date }[]);
-      const daysInRange = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-      return Math.max(0, dailyAvg * daysInRange);
-    }
-    return 0;
+  const sorted = [...allReadings].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const isOutsideReadings = endDate < sorted[0].date || startDate > sorted[sorted.length - 1].date;
+  if (readings.length === 0 && isOutsideReadings) {
+    const dailyAvg = calculateDailyAverage(allReadings);
+    const daysInRange = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    return Math.max(0, dailyAvg * daysInRange);
   }
 
-  // Build ordered sequence: synthetic boundary values + actual readings in range
-  const sequence = [
-    { date: startDate, value: startValue },
-    ...readings,
-    { date: endDate, value: endValue },
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  return sumPositiveDeltas(sequence);
-}
-
-function sumPositiveDeltas(sequence: { date: Date; value: number }[]): number {
-  let total = 0;
-  for (let i = 1; i < sequence.length; i++) {
-    const delta = sequence[i].value - sequence[i - 1].value;
-    if (delta > 0) {
-      total += delta;
-    }
-  }
-  return total;
+  return calculateConsumptionBetween(allReadings, startDate, endDate);
 }
 
 /**

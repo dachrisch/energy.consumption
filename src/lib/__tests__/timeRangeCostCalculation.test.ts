@@ -20,6 +20,39 @@ describe('calculateConsumptionInRange', () => {
     expect(consumption).toBeCloseTo(700, 1);
   });
 
+  it('sums the old and new meter segments for the real replacement range', () => {
+    const allReadings: TimeRangeReading[] = [
+      { date: new Date('2025-07-03'), value: 6575 },
+      { date: new Date('2025-09-16'), value: 7255 },
+      { date: new Date('2025-09-17'), value: 0, kind: 'meterChange' },
+      { date: new Date('2026-01-20'), value: 426 },
+    ];
+
+    const consumption = calculateConsumptionInRange(
+      allReadings,
+      new Date('2025-07-03'),
+      new Date('2026-01-20'),
+      allReadings,
+    );
+
+    expect(consumption).toBe(1106);
+  });
+
+  it('does not count an upward meter change as consumption', () => {
+    const allReadings: TimeRangeReading[] = [
+      { date: new Date('2026-01-01'), value: 100 },
+      { date: new Date('2026-01-02'), value: 1000, kind: 'meterChange' },
+      { date: new Date('2026-01-03'), value: 1100 },
+    ];
+
+    expect(calculateConsumptionInRange(
+      allReadings,
+      new Date('2026-01-01'),
+      new Date('2026-01-03'),
+      allReadings,
+    )).toBe(100);
+  });
+
   it('extrapolates from daily average when range is entirely beyond all readings', () => {
     // Readings from Jan 1 to Feb 1 (31 days), 310 kWh consumed → 10 kWh/day average
     const allReadings: TimeRangeReading[] = [
