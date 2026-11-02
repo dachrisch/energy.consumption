@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.24.0](https://github.com/dachrisch/energy.consumption/compare/v3.23.2...v3.24.0) (2026-11-02)
+
+
+### Features
+
+* merge intake into suppliers and contracts ([576c6a1](https://github.com/dachrisch/energy.consumption/commit/576c6a173e0ee7948f675c71f9c7586715ab8f62))
+
 ## [3.23.2](https://github.com/dachrisch/energy.consumption/compare/v3.23.1...v3.23.2) (2026-11-02)
 
 
