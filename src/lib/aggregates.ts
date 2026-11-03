@@ -203,11 +203,12 @@ function calculateHistoricalYearlyStats(options: HistoryOptions) {
     return;
   }
 
-  const firstYear = meterReadings[0].date.getFullYear();
+  const firstYear = meterReadings[0].date.getUTCFullYear();
 
   for (let year = firstYear; year <= currentYear; year++) {
-    const yearStart = new Date(year, 0, 1);
-    const yearEnd = new Date(year, 11, 31, 23, 59, 59);
+    // Readings and contracts are stored as UTC midnight dates, so year bounds are UTC too
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59));
 
     let yearTotalConsumption = 0;
     let yearTotalCost = 0;
@@ -365,13 +366,14 @@ export function calculateAggregates(
   let ytdGasCurrent = 0;
   let ytdGasPrevious = 0;
 
-  const currentYear = now.getFullYear();
+  const currentYear = now.getUTCFullYear();
   const lastYear = currentYear - 1;
   const yearlyStatsMap = new Map<number, YearStatsMapValue>();
 
-  const jan1Current = new Date(currentYear, 0, 1);
-  const jan1Prev = new Date(lastYear, 0, 1);
-  const todayPrevYear = new Date(lastYear, now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+  // UTC bounds: stored dates are UTC midnight, so local midnight would shift a period by the TZ offset
+  const jan1Current = new Date(Date.UTC(currentYear, 0, 1));
+  const jan1Prev = new Date(Date.UTC(lastYear, 0, 1));
+  const todayPrevYear = new Date(Date.UTC(lastYear, now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()));
 
   for (const meter of meters) {
     const result = processMeter({ meter, readings, contracts, now, jan1Current, jan1Prev, todayPrevYear, yearlyStatsMap, currentYear });
