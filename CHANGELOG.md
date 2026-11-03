@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.1](https://github.com/dachrisch/energy.consumption/compare/v3.25.0...v3.25.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **aggregates:** use UTC year bounds to match stored dates ([e27cf27](https://github.com/dachrisch/energy.consumption/commit/e27cf27f77e8302b10f5084d465a35ce71ee789b))
+* **aggregates:** use UTC year bounds to match stored dates ([7a39b93](https://github.com/dachrisch/energy.consumption/commit/7a39b93a812f6f1ed332a6409c9bfe630ef951e2))
+
 ## [3.25.0](https://github.com/dachrisch/energy.consumption/compare/v3.24.1...v3.25.0) (2026-11-02)
 
 
