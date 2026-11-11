@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.11](https://github.com/dachrisch/energy.consumption/compare/v3.25.10...v3.25.11) (2026-11-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @solidjs/router to v1.0.3 ([#791](https://github.com/dachrisch/energy.consumption/issues/791)) ([d64a92a](https://github.com/dachrisch/energy.consumption/commit/d64a92aa2aa6f222d009a35df72247eec3391537))
+* **deps:** update dependency solid-js to v1.9.19 ([#792](https://github.com/dachrisch/energy.consumption/issues/792)) ([c5143b7](https://github.com/dachrisch/energy.consumption/commit/c5143b73899afa3f557c3ed60fa6fef22be80348))
+
 ## [3.25.10](https://github.com/dachrisch/energy.consumption/compare/v3.25.9...v3.25.10) (2026-11-10)
 
 
