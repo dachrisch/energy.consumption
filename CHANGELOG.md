@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.16](https://github.com/dachrisch/energy.consumption/compare/v3.25.15...v3.25.16) (2026-11-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @playwright/test to v1.65.1 ([#804](https://github.com/dachrisch/energy.consumption/issues/804)) ([a954780](https://github.com/dachrisch/energy.consumption/commit/a95478035978b5805737a1bb05239ecbbea87f79))
+
 ## [3.25.15](https://github.com/dachrisch/energy.consumption/compare/v3.25.14...v3.25.15) (2026-11-13)
 
 
