@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.21](https://github.com/dachrisch/energy.consumption/compare/v3.25.20...v3.25.21) (2026-11-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @testing-library/jest-dom to v8 ([#817](https://github.com/dachrisch/energy.consumption/issues/817)) ([92ca49f](https://github.com/dachrisch/energy.consumption/commit/92ca49f983fdeceff25083984698207dba704492))
+* **deps:** update dependency express-rate-limit to v8.7.5 ([#816](https://github.com/dachrisch/energy.consumption/issues/816)) ([835de4b](https://github.com/dachrisch/energy.consumption/commit/835de4bcde02a2ff8a0f14742ae50fd529744f87))
+
 ## [3.25.20](https://github.com/dachrisch/energy.consumption/compare/v3.25.19...v3.25.20) (2026-11-18)
 
 
