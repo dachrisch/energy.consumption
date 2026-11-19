@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.22](https://github.com/dachrisch/energy.consumption/compare/v3.25.21...v3.25.22) (2026-11-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency googleapis to v190 ([#800](https://github.com/dachrisch/energy.consumption/issues/800)) ([c216ba7](https://github.com/dachrisch/energy.consumption/commit/c216ba7462b1f20af5cd7057fc368f69dc64e942))
+* **deps:** update dependency vite-plugin-solid to v2.11.17 ([#798](https://github.com/dachrisch/energy.consumption/issues/798)) ([afffd3a](https://github.com/dachrisch/energy.consumption/commit/afffd3a9b48565a57b86c983ce06b69f55efe431))
+
 ## [3.25.21](https://github.com/dachrisch/energy.consumption/compare/v3.25.20...v3.25.21) (2026-11-19)
 
 
