@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.24](https://github.com/dachrisch/energy.consumption/compare/v3.25.23...v3.25.24) (2026-11-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency daisyui to v5.8.2 ([#823](https://github.com/dachrisch/energy.consumption/issues/823)) ([e3e3268](https://github.com/dachrisch/energy.consumption/commit/e3e3268a7fabf31a69c5c1a6395dc789399fcc42))
+* **deps:** update dependency mongoose to v9.12.3 ([#824](https://github.com/dachrisch/energy.consumption/issues/824)) ([0a57707](https://github.com/dachrisch/energy.consumption/commit/0a577077e74571b867370a9fb185d4cc77313cf7))
+
 ## [3.25.23](https://github.com/dachrisch/energy.consumption/compare/v3.25.22...v3.25.23) (2026-11-19)
 
 
