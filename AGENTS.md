@@ -1,6 +1,6 @@
 # Energy Consumption Monitor - Agent Guidelines
 
-This document serves as the primary technical reference for agentic coding agents operating within this repository. It outlines the technology stack, development workflows, code style, and security mandates.
+This document serves as the primary technical reference for agentic coding agents operating within this repository. It outlines the technology stack, development workflows, code style, and security mandates. Directory-specific rules live in the linked guides below.
 
 ## 🛠 Build & Development Commands
 
@@ -11,8 +11,8 @@ This document serves as the primary technical reference for agentic coding agent
 | `npm run vite-dev` | Start Vite dev server only (no backend). |
 | `npm run build` | Build frontend and server. |
 | `npm run start:prod` | Run production server. |
-| `npm run lint` | Run ESLint across the project. |
-| `npm test` | Run all unit tests using Vitest. |
+| `npm run lint` | Run oxlint across the project (config: `.oxlintrc.json`). |
+| `npm test` | Run all unit tests using Vitest (`vitest --run`). |
 | `npm run test:e2e` | Run Playwright E2E tests. |
 
 ### Testing
@@ -30,7 +30,7 @@ The project uses **GitHub Actions** for continuous integration and deployment.
   - `ci.yaml` - Runs on tags (build, test, docker push)
   - `ci_branch.yaml` - Runs on branches and PRs (build and docker test)
 - **Configuration:** `.github/workflows/`
-- **Secrets required:** `DOCKER_USER`, `DOCKER_TOKEN` (for pushing images to Docker Hub).
+- **Secrets required:** `DOCKER_TOKEN` only (Docker Hub token; the registry username is `github.actor`).
 
 ## 📏 Code Style & Guidelines
 
@@ -60,54 +60,23 @@ Follow the **Google TypeScript Style Guide** as a baseline.
   4. Relative paths.
 
 ### 3. TypeScript & Types
-- **No `any`:** Strictly forbidden in production code (`@typescript-eslint/no-explicit-any: error`). 
-  - Use `unknown` with type guards or define specific interfaces.
-  - `any` is permitted as a warning ONLY in test files.
+- **Avoid `any` in application code:** Prefer `unknown` with type guards or define specific interfaces.
+  - Note: this is a convention, not an enforced lint error — the project lints with oxlint and `typescript/no-explicit-any` is `off` in `.oxlintrc.json`. `any` still appears in config/legacy code such as `vite.config.ts`.
 - **Type Inference:** Use for simple assignments. Be explicit for function return types and complex objects.
 - **Strict Null Checks:** Always handle `null` or `undefined`. Use optional chaining (`?.`) and nullish coalescing (`??`) appropriately.
 
-### 4. Component Structure (SolidJS)
-- **State Management:** Use `createSignal` for local state and `createStore` for complex/nested state.
-- **Reactivity:** Avoid destructuring props (breaks reactivity). Use `props.propName` or `splitProps`.
-- **Modularity:** 
-  - Adhere to `max-lines-per-function: 100`.
-  - Adhere to `complexity: 10`.
-  - Extract complex JSX into sub-components.
-- **Styling:** Use Tailwind CSS 4 utility classes. Prefer DaisyUI components where applicable.
-
-### 5. Backend & Database (Node.js/Mongoose)
-- **API Architecture:** Integrated API middleware handled in `src/api/handler.ts`.
-- **Security (Multi-tenancy):**
-  - **CRITICAL:** Every database query MUST be isolated by `userId`.
-  - All Mongoose models must use the `applyPreFilter` middleware from `src/models/sessionFilter.ts`.
-  - Always pass `{ userId }` in `.setOptions()` when calling Mongoose queries:
-    ```typescript
-    const meters = await Meter.find({}).setOptions({ userId });
-    ```
-- **Validation:** Sanitize all incoming request bodies to prevent NoSQL injection.
-
-### 6. Error Handling & Logging
+### 4. Error Handling & Logging
 - **Async/Await:** Wrap async operations in `try/catch` blocks.
-- **API Responses:** Always return consistent JSON error objects: `{ error: "Message" }`.
 - **Logging:** Use `console.warn` or `console.error` for legitimate issues. `console.log` is flagged by the linter and should be avoided in production code.
 
-## 🧪 Testing Guidelines
-- **TDD (Test-Driven Development):** Highly encouraged. Implement tests before logic.
-- **Database Isolation:** Use `mongodb-memory-server` for all tests requiring a database.
-- **Component Tests:** Use `@solidjs/testing-library` for UI testing.
-- **Mocking:** Use Vitest's mocking capabilities for external services (like Gemini OCR).
+## 📂 Component guides
 
-## 📂 Project Structure Overview
+Repo-wide rules stay in this file; directory-specific rules live in exactly one place — the linked guide.
 
-- `src/api/`: Express server logic and main API handler.
-- `src/components/`: Reusable SolidJS UI components.
-- `src/context/`: SolidJS Context providers (Auth, Toast, etc.).
-- `src/lib/`: Business logic, services (OCR, Pricing, Consumption), and utilities.
-- `src/models/`: Mongoose schemas and models with multi-tenancy logic.
-- `src/pages/`: Top-level route components.
-- `src/types/`: Global TypeScript definitions and model interfaces.
-- `scripts/`: Development and build scripts.
-- `e2e/`: Playwright end-to-end tests.
+- [`src/AGENTS.md`](src/AGENTS.md) — SolidJS frontend, integrated Express API and Mongoose models, unit-test conventions.
+- [`e2e/AGENTS.md`](e2e/AGENTS.md) — Playwright end-to-end specs and their runtime conventions.
+
+Other top-level directories carry no separate agent rules: `scripts/` (dev, migration and build scripts), `public/` and `src/assets/` (static assets), and generated/archival output (`dist/`, `dist-server/`, `history/`, `test-results/`).
 
 ## 🤖 AI Interaction Guidelines
 - **Self-Correction:** If a linting error or test failure is introduced, fix it immediately.
