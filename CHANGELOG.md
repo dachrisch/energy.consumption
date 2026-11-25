@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.25.29](https://github.com/dachrisch/energy.consumption/compare/v3.25.28...v3.25.29) (2026-11-25)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @types/body-parser to v2 ([#837](https://github.com/dachrisch/energy.consumption/issues/837)) ([64f4111](https://github.com/dachrisch/energy.consumption/commit/64f41112d733478f249e29c405f42c4d6e123796))
+* **deps:** update vitest monorepo to v5.1.2 ([#836](https://github.com/dachrisch/energy.consumption/issues/836)) ([028a1be](https://github.com/dachrisch/energy.consumption/commit/028a1bed6691cec1ab23105e4632e6b1fefea360))
+
 ## [3.25.28](https://github.com/dachrisch/energy.consumption/compare/v3.25.27...v3.25.28) (2026-11-24)
 
 
